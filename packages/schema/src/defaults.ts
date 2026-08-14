@@ -49,6 +49,7 @@ export interface NormalizedControls {
   basemapSwitcher: false | { position: string };
   legend: false | { position: string; open: boolean };
   print: boolean;
+  coordinates: false | { crs?: Array<{ code: string; label?: string; def?: string }> };
 }
 
 export interface NormalizedConfig {
@@ -157,6 +158,10 @@ export function normalizeConfig(cfg: Map0Config): NormalizedConfig {
             open: typeof c.legend === "object" ? (c.legend.open ?? false) : false,
           },
     print: c.print ?? true,
+    coordinates:
+      c.coordinates === false
+        ? false
+        : { crs: typeof c.coordinates === "object" ? c.coordinates.crs : undefined },
   };
 
   return {

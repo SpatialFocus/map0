@@ -223,6 +223,7 @@ export class Map0Viewer extends LitElement {
             ? { x: e.point[0], y: e.point[1], html: DOMPurify.sanitize(e.html) }
             : null;
         }),
+        core.events.on("coordinates", (e) => this.showCoordinates(e)),
         core.events.on("error", (e) => this.emit("map0:error", e)),
       );
       if (cfg.controls.print) {
@@ -270,6 +271,53 @@ export class Map0Viewer extends LitElement {
       .addTo(this.core.map);
     this.popup.on("close", () => this.core?.clearHighlight());
     this.emit("map0:featureclick", e);
+  }
+
+  private showCoordinates(e: {
+    lngLat: [number, number];
+    entries: Array<{ code: string; label: string; text: string }>;
+  }): void {
+    if (!this.core) return;
+    const t = this.core.t;
+    this.popup?.remove();
+    /* built entirely with textContent — nothing here comes from remote services */
+    const container = document.createElement("div");
+    container.className = "m0-popup m0-coords";
+    const heading = document.createElement("p");
+    heading.className = "m0-layer-title";
+    heading.textContent = t("coords.title");
+    container.appendChild(heading);
+    const table = document.createElement("table");
+    table.className = "m0-fields";
+    for (const entry of e.entries) {
+      const row = table.insertRow();
+      const th = document.createElement("th");
+      th.scope = "row";
+      th.textContent = entry.label;
+      th.title = entry.code;
+      row.appendChild(th);
+      const td = row.insertCell();
+      const value = document.createElement("span");
+      value.textContent = entry.text;
+      td.appendChild(value);
+      const copy = document.createElement("button");
+      copy.className = "icon-btn copy-btn";
+      copy.title = t("coords.copy");
+      copy.setAttribute("aria-label", `${t("coords.copy")} (${entry.label})`);
+      copy.textContent = "⧉";
+      copy.addEventListener("click", () => {
+        void navigator.clipboard
+          .writeText(entry.text)
+          .then(() => this.notify("info", t("coords.copied")))
+          .catch(() => this.notify("error", t("coords.copyFailed")));
+      });
+      td.appendChild(copy);
+    }
+    container.appendChild(table);
+    this.popup = new Popup({ closeButton: true, maxWidth: "340px" })
+      .setLngLat(e.lngLat)
+      .setDOMContent(container)
+      .addTo(this.core.map);
   }
 
   /* --------------------------------- render -------------------------------- */

@@ -10,6 +10,7 @@ import {
 import { BasemapManager, basemapStyle, resolveBasemapStyle } from "./basemaps.js";
 import { applyControls, type InitialView } from "./controls.js";
 import type { CoreEvents } from "./events.js";
+import { formatCoordinates } from "./coordinates.js";
 import { wireFeatureInfo } from "./featureinfo.js";
 import { HighlightManager } from "./highlight.js";
 import { makeT, maplibreLocale, resolveLocale, type Translate } from "./i18n.js";
@@ -24,6 +25,7 @@ export { buildGetFeatureInfoUrl, buildLegendUrl, buildWmsTileUrl } from "./adapt
 export { buildWmtsTemplate, isMercatorCrs, type WmtsTemplateParts } from "./adapters/wmts.js";
 export { basemapStyle, BasemapManager } from "./basemaps.js";
 export { geojsonBounds } from "./bbox.js";
+export { autoGkCode, autoUtmCode, formatCoordinates, type CoordinateEntry } from "./coordinates.js";
 export { HighlightManager };
 export type { CoreEvents } from "./events.js";
 export { makeT, resolveLocale, type Translate } from "./i18n.js";
@@ -147,6 +149,48 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
     /* surface tile/source errors without crashing; adapters track their own status */
     console.warn("[map0]", e.error ?? e);
   });
+
+  /* coordinate readout: right-click (desktop) + long-press (touch), F5.6 */
+  if (cfg.controls.coordinates !== false) {
+    const crsList = cfg.controls.coordinates.crs;
+    const emitAt = (lngLat: { lng: number; lat: number }): void => {
+      events.emit("coordinates", {
+        lngLat: [lngLat.lng, lngLat.lat],
+        entries: formatCoordinates(lngLat.lng, lngLat.lat, crsList),
+      });
+    };
+    map.on("contextmenu", (e) => {
+      e.preventDefault();
+      emitAt(e.lngLat);
+    });
+    /* long-press: pointerdown that stays put for 600 ms */
+    const canvas = map.getCanvas();
+    let pressTimer: ReturnType<typeof setTimeout> | undefined;
+    let pressStart: { x: number; y: number } | null = null;
+    canvas.addEventListener("pointerdown", (e) => {
+      if (e.pointerType !== "touch") return;
+      pressStart = { x: e.clientX, y: e.clientY };
+      pressTimer = setTimeout(() => {
+        const rect = canvas.getBoundingClientRect();
+        const lngLat = map.unproject([pressStart!.x - rect.left, pressStart!.y - rect.top]);
+        emitAt(lngLat);
+      }, 600);
+    });
+    const cancelPress = (e: PointerEvent): void => {
+      if (
+        e.type === "pointermove" &&
+        pressStart &&
+        Math.hypot(e.clientX - pressStart.x, e.clientY - pressStart.y) < 8
+      ) {
+        return;
+      }
+      clearTimeout(pressTimer);
+      pressStart = null;
+    };
+    canvas.addEventListener("pointermove", cancelPress);
+    canvas.addEventListener("pointerup", cancelPress);
+    canvas.addEventListener("pointercancel", cancelPress);
+  }
 
   return {
     map,

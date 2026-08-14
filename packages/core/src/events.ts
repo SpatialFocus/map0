@@ -5,5 +5,10 @@ export interface CoreEvents {
   featureclick: { lngLat: [number, number]; results: FeatureInfoResult[] };
   /** hover tooltip payload (html is a rendered template — UI must sanitize); null = hide */
   featurehover: { point: [number, number]; html: string } | null;
+  /** right-click / long-press coordinate readout (F5.6) */
+  coordinates: {
+    lngLat: [number, number];
+    entries: Array<{ code: string; label: string; text: string }>;
+  };
   error: { message: string; layerId?: string };
 }

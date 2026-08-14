@@ -25,7 +25,7 @@ importers:
     dependencies:
       '@camptocamp/ogc-client':
         specifier: ^1.3.0
-        version: 1.3.0
+        version: 1.3.0(proj4@2.21.0)
       '@map0/schema':
         specifier: workspace:*
         version: link:../schema
@@ -35,10 +35,16 @@ importers:
       pmtiles:
         specifier: ^4.5.0
         version: 4.5.0
+      proj4:
+        specifier: ^2.21.0
+        version: 2.21.0
     devDependencies:
       '@types/geojson':
         specifier: ^7946.0.14
         version: 7946.0.16
+      '@types/proj4':
+        specifier: ^2.19.0
+        version: 2.19.0
 
   packages/schema:
     devDependencies:
@@ -50,7 +56,7 @@ importers:
     dependencies:
       '@camptocamp/ogc-client':
         specifier: ^1.3.0
-        version: 1.3.0
+        version: 1.3.0(proj4@2.21.0)
       '@map0/core':
         specifier: workspace:*
         version: link:../core
@@ -439,6 +445,10 @@ packages:
   '@types/geojson@7946.0.16':
     resolution: {integrity: sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg==}
 
+  '@types/proj4@2.19.0':
+    resolution: {integrity: sha512-mirdnXu5sW9+IphQ4r+ZVii2JVLDbXgMp1lxqbiCppdgL22EwMwL4Dy/cyHVaJ2y/mi7LUQHghpILd3w3j2bnA==}
+    deprecated: This is a stub types definition. proj4 provides its own type definitions, so you do not need this installed.
+
   '@types/trusted-types@2.0.7':
     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
 
@@ -586,6 +596,9 @@ packages:
     resolution: {integrity: sha512-F0Is48MTzn3DvOEidPjh68E0kuSA7hdzY1YIR0ypPtFgcif3WPtzI1oZFgsv9WtHmarQnbwIXfsf+EfQYvM00A==}
     engines: {node: '>=16.14.0', npm: '>=8.1.0'}
 
+  mgrs@1.0.0:
+    resolution: {integrity: sha512-awNbTOqCxK1DBGjalK3xqWIstBZgN6fxsMSiXLs9/spqWkF2pAhb2rrYCFSsr1/tT7PhcDGjZndG8SWYn0byYA==}
+
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
 
@@ -646,6 +659,14 @@ packages:
 
   potpack@2.1.0:
     resolution: {integrity: sha512-pcaShQc1Shq0y+E7GqJqvZj8DTthWV1KeHGdi0Z6IAin2Oi3JnLCOfwnCo84qc+HAp52wT9nK9H7FAJp5a44GQ==}
+
+  proj4@2.21.0:
+    resolution: {integrity: sha512-33HfDftqw8kY+Cl1dcL16SJuqTSzYxmz4re7Nmhk+fs1/N1fFrAkkF579msQTR/4fLeJVSNne8/gpoCz0fk1uw==}
+    peerDependencies:
+      geotiff: '*'
+    peerDependenciesMeta:
+      geotiff:
+        optional: true
 
   protocol-buffers-schema@3.6.1:
     resolution: {integrity: sha512-VG2K63Igkiv9p76tk1lilczEK1cT+kCjKtkdhw1dQZV3k3IXJbd3o6Ho8b9zJZaHSnT2hKe4I+ObmX9w6m5SmQ==}
@@ -789,12 +810,17 @@ packages:
     engines: {node: '>=8'}
     hasBin: true
 
+  wkt-parser@1.5.6:
+    resolution: {integrity: sha512-cqHU3lzGt/gt2OqIORP0uVy5yeOX43WABmgFkmJsmcqH3HhQo9PiJG6ftytwGKmpQUbegeX7+pQc2BuNCRfcrw==}
+
 snapshots:
 
-  '@camptocamp/ogc-client@1.3.0':
+  '@camptocamp/ogc-client@1.3.0(proj4@2.21.0)':
     dependencies:
       '@rgrove/parse-xml': 4.2.3
       node-fetch: 3.3.2
+    optionalDependencies:
+      proj4: 2.21.0
 
   '@esbuild/aix-ppc64@0.25.12':
     optional: true
@@ -1010,6 +1036,12 @@ snapshots:
 
   '@types/geojson@7946.0.16': {}
 
+  '@types/proj4@2.19.0':
+    dependencies:
+      proj4: 2.21.0
+    transitivePeerDependencies:
+      - geotiff
+
   '@types/trusted-types@2.0.7': {}
 
   '@vitest/expect@3.2.7':
@@ -1190,6 +1222,8 @@ snapshots:
       quickselect: 3.0.0
       tinyqueue: 3.0.0
 
+  mgrs@1.0.0: {}
+
   minimist@1.2.8: {}
 
   ms@2.1.3: {}
@@ -1237,6 +1271,11 @@ snapshots:
       source-map-js: 1.2.1
 
   potpack@2.1.0: {}
+
+  proj4@2.21.0:
+    dependencies:
+      mgrs: 1.0.0
+      wkt-parser: 1.5.6
 
   protocol-buffers-schema@3.6.1: {}
 
@@ -1386,3 +1425,5 @@ snapshots:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
+
+  wkt-parser@1.5.6: {}

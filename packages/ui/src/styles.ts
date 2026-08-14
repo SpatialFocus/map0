@@ -708,6 +708,17 @@ export const componentStyles = css`
     height: 20px;
   }
 
+  .m0-coords td {
+    white-space: nowrap;
+  }
+  .m0-coords .copy-btn {
+    width: 20px;
+    height: 20px;
+    margin-left: 6px;
+    vertical-align: middle;
+    font-size: 13px;
+  }
+
   /* ------------------------------- notices ------------------------------ */
 
   .notices {

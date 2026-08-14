@@ -157,6 +157,53 @@ describe("legend", () => {
   });
 });
 
+describe("coordinates", () => {
+  it("picks the Austrian GK strip and UTM zone by longitude", async () => {
+    const { autoGkCode, autoUtmCode } = await import("./coordinates.js");
+    expect(autoGkCode(9.8)).toBe("EPSG:31254"); // Vorarlberg
+    expect(autoGkCode(13.0)).toBe("EPSG:31255"); // Salzburg
+    expect(autoGkCode(16.37)).toBe("EPSG:31256"); // Wien
+    expect(autoUtmCode(16.37, 48.2)).toBe("EPSG:32633");
+    expect(autoUtmCode(9.8, 47.5)).toBe("EPSG:32632");
+    expect(autoUtmCode(151.2, -33.8)).toBe("EPSG:32756"); // Sydney, southern hemisphere
+  });
+
+  it("formats Vienna in WGS84, GK M34 and UTM 33N with plausible values", async () => {
+    const { formatCoordinates } = await import("./coordinates.js");
+    const entries = formatCoordinates(16.3725, 48.2083);
+    expect(entries).toHaveLength(3);
+    expect(entries[0]?.text).toBe("48.208300, 16.372500");
+    const gk = entries[1]!;
+    expect(gk.code).toBe("EPSG:31256");
+    const [gkX, gkY] = gk.text.split(", ").map(Number);
+    expect(gkX).toBeGreaterThan(1500);
+    expect(gkX).toBeLessThan(4500);
+    expect(gkY).toBeGreaterThan(338000);
+    expect(gkY).toBeLessThan(345000);
+    const utm = entries[2]!;
+    const [utmX, utmY] = utm.text.split(", ").map(Number);
+    expect(utmX).toBeGreaterThan(597000);
+    expect(utmX).toBeLessThan(607000);
+    expect(utmY).toBeGreaterThan(5335000);
+    expect(utmY).toBeLessThan(5345000);
+  });
+
+  it("skips unknown CRS without a def, accepts custom defs", async () => {
+    const { formatCoordinates } = await import("./coordinates.js");
+    const missing = formatCoordinates(16.37, 48.2, [{ code: "EPSG:99999" }]);
+    expect(missing).toHaveLength(0);
+    const custom = formatCoordinates(16.37, 48.2, [
+      { code: "EPSG:31287", label: "Lambert" },
+    ]);
+    expect(custom[0]?.label).toBe("Lambert");
+    const [x, y] = custom[0]!.text.split(", ").map(Number);
+    expect(x).toBeGreaterThan(600000); // Vienna in Austria Lambert
+    expect(x).toBeLessThan(640000);
+    expect(y).toBeGreaterThan(460000);
+    expect(y).toBeLessThan(500000);
+  });
+});
+
 describe("i18n overrides", () => {
   it("config overrides win over built-ins, fallback chain holds", async () => {
     const { makeT, resolveLocale } = await import("./i18n.js");
