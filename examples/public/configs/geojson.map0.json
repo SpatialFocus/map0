@@ -1,29 +1,14 @@
 {
   "version": 1,
+  "extends": "/configs/_base.map0.json",
   "meta": {
     "title": "GeoJSON & Cluster",
-    "description": "Remote-GeoJSON (WFS-Ausgabe, geclustert) + lokale Demo-Daten mit Popup-Templates."
+    "description": "Erbt Basemaps/Locale aus _base.map0.json (extends, C6); überschreibt das Theme."
   },
   "map": {
     "center": [16.3725, 48.2083],
     "zoom": 12
   },
-  "basemaps": [
-    {
-      "id": "bmapv",
-      "title": "basemap.at",
-      "type": "style",
-      "url": "https://mapsneu.wien.gv.at/basemapv/bmapv/3857/resources/styles/root.json",
-      "default": true
-    },
-    {
-      "id": "grau",
-      "title": "Grau",
-      "type": "raster",
-      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
-      "attribution": "© basemap.at"
-    }
-  ],
   "layers": [
     {
       "id": "trinkbrunnen",

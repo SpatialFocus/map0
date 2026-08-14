@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeConfig, validateConfig } from "./index.js";
+import { mergeConfigs, normalizeConfig, resolveConfigExtends, validateConfig } from "./index.js";
 import type { Map0Config } from "./index.js";
 
 const minimal: Map0Config = {
@@ -52,6 +52,78 @@ describe("validateConfig", () => {
   it("rejects unknown layer types", () => {
     const r = validateConfig({ ...minimal, layers: [{ type: "wfs", url: "x" }] });
     expect(r.errors.some((e) => e.path === "$.layers[0].type")).toBe(true);
+  });
+});
+
+describe("extends (C6)", () => {
+  it("merges objects deep, child wins, arrays replace", () => {
+    const base = {
+      basemaps: [{ type: "style", url: "https://base.example/s.json" }],
+      theme: { primary: "#0e7490", radius: "md" },
+      i18n: { locale: "de" },
+    };
+    const child = {
+      version: 1,
+      theme: { primary: "#7c3aed" },
+      basemaps: [{ type: "empty" }],
+    };
+    const merged = mergeConfigs(base, child);
+    expect(merged.version).toBe(1);
+    expect(merged.theme).toEqual({ primary: "#7c3aed", radius: "md" }); // deep merge
+    expect(merged.basemaps).toEqual([{ type: "empty" }]); // arrays replace
+    expect(merged.i18n).toEqual({ locale: "de" }); // inherited
+  });
+
+  it("resolves a chain with relative URLs and strips the extends key", async () => {
+    const files: Record<string, unknown> = {
+      "https://sdi.example/configs/map.json": {
+        version: 1,
+        extends: "./org.json",
+        theme: { primary: "#111111" },
+      },
+      "https://sdi.example/configs/org.json": {
+        extends: "/global.json",
+        theme: { primary: "#222222", radius: "lg" },
+        i18n: { locale: "de" },
+      },
+      "https://sdi.example/global.json": {
+        basemaps: [{ type: "style", url: "https://sdi.example/style.json" }],
+        theme: { font: "Inter" },
+      },
+    };
+    const fetchImpl = (async (url: string) => ({
+      ok: true,
+      url,
+      json: async () => files[url],
+    })) as never;
+    const merged = (await resolveConfigExtends(files["https://sdi.example/configs/map.json"], {
+      baseUrl: "https://sdi.example/configs/map.json",
+      fetchImpl,
+    })) as Record<string, unknown>;
+    expect(merged.extends).toBeUndefined();
+    expect(merged.version).toBe(1);
+    expect(merged.theme).toEqual({ primary: "#111111", radius: "lg", font: "Inter" });
+    expect(merged.i18n).toEqual({ locale: "de" });
+    expect(Array.isArray(merged.basemaps)).toBe(true);
+  });
+
+  it("detects cycles", async () => {
+    const files: Record<string, unknown> = {
+      "https://e.org/a.json": { extends: "./b.json", version: 1 },
+      "https://e.org/b.json": { extends: "./a.json" },
+    };
+    const fetchImpl = (async (url: string) => ({ ok: true, url, json: async () => files[url] })) as never;
+    await expect(
+      resolveConfigExtends(files["https://e.org/a.json"], {
+        baseUrl: "https://e.org/a.json",
+        fetchImpl,
+      }),
+    ).rejects.toThrow(/cycle/);
+  });
+
+  it("passes through configs without extends untouched", async () => {
+    const cfg = { version: 1, basemaps: [] };
+    expect(await resolveConfigExtends(cfg)).toBe(cfg);
   });
 });
 

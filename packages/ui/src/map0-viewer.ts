@@ -15,7 +15,7 @@ import {
   type NormalizedConfig,
   type ValidationError,
 } from "@map0/core";
-import type { TocNode } from "@map0/schema";
+import { resolveConfigExtends, type TocNode } from "@map0/schema";
 import { buildPopupContent } from "./popup.js";
 import { componentStyles } from "./styles.js";
 import "./add-layer-dialog.js";
@@ -163,18 +163,19 @@ export class Map0Viewer extends LitElement {
   }
 
   private async loadRawConfig(): Promise<unknown> {
-    if (this.config) return this.config;
+    if (this.config) return resolveConfigExtends(this.config);
     if (this.configSrc) {
       const res = await fetch(this.configSrc);
       if (!res.ok) throw new Error(`could not fetch config: HTTP ${res.status} (${this.configSrc})`);
-      return res.json();
+      /* relative `extends` URLs resolve against the config file's own URL */
+      return resolveConfigExtends(await res.json(), { baseUrl: res.url || this.configSrc });
     }
     const inline = this.querySelector('script[type="application/json"]');
     if (inline?.textContent?.trim()) {
       try {
-        return JSON.parse(inline.textContent);
+        return await resolveConfigExtends(JSON.parse(inline.textContent));
       } catch (e) {
-        throw new Error(`inline config is not valid JSON: ${e instanceof Error ? e.message : e}`);
+        throw new Error(`config could not be loaded: ${e instanceof Error ? e.message : e}`);
       }
     }
     throw new Error(

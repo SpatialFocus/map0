@@ -1,0 +1,23 @@
+{
+  "basemaps": [
+    {
+      "id": "bmapv",
+      "title": "basemap.at",
+      "type": "style",
+      "url": "https://mapsneu.wien.gv.at/basemapv/bmapv/3857/resources/styles/root.json",
+      "default": true
+    },
+    {
+      "id": "grau",
+      "title": "Grau",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at"
+    }
+  ],
+  "theme": {
+    "primary": "#0e7490",
+    "radius": "md"
+  },
+  "i18n": { "locale": "de" }
+}
