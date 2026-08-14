@@ -686,6 +686,51 @@ export const componentStyles = css`
     accent-color: var(--map0-primary);
   }
 
+  /* ------------------------------- notices ------------------------------ */
+
+  .notices {
+    position: absolute;
+    z-index: 30;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 34px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+    pointer-events: none;
+    max-width: min(92%, 480px);
+  }
+  .notice {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--map0-bg);
+    color: var(--map0-fg);
+    border: 1px solid var(--map0-border);
+    border-left: 3px solid var(--map0-primary);
+    border-radius: var(--map0-radius-sm);
+    box-shadow: var(--map0-shadow);
+    padding: 8px 6px 8px 12px;
+    font-size: 12.5px;
+    animation: m0slide 0.18s ease;
+  }
+  .notice[data-kind="error"] {
+    border-left-color: #dc2626;
+  }
+  @keyframes m0slide {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .notice {
+      animation: none;
+    }
+  }
+
   /* --------------------------- error / loading -------------------------- */
 
   .error-panel {

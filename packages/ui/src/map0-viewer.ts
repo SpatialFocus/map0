@@ -79,6 +79,10 @@ export class Map0Viewer extends LitElement {
   @state() private _printOpen = false;
   @state() private _groupCollapsed: Record<string, boolean> = {};
   @state() private _ready = false;
+  @state() private _notices: Array<{ id: number; kind: "error" | "info"; text: string }> = [];
+
+  private noticeSeq = 0;
+  private statusSeen = new Map<string, string>();
 
   @query(".map") private mapEl?: HTMLDivElement;
 
@@ -127,6 +131,8 @@ export class Map0Viewer extends LitElement {
   private teardown(): void {
     for (const u of this.unsubs) u();
     this.unsubs = [];
+    this.statusSeen.clear();
+    this._notices = [];
     this.popup?.remove();
     this.popup = undefined;
     this.core?.destroy();
@@ -135,6 +141,15 @@ export class Map0Viewer extends LitElement {
 
   private emit(name: string, detail: unknown): void {
     this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
+  }
+
+  /** transient notice toast (auto-dismisses; also used by copy/share actions) */
+  notify(kind: "error" | "info", text: string): void {
+    const id = ++this.noticeSeq;
+    this._notices = [...this._notices, { id, kind, text }];
+    setTimeout(() => {
+      this._notices = this._notices.filter((n) => n.id !== id);
+    }, 6000);
   }
 
   private async loadRawConfig(): Promise<unknown> {
@@ -182,7 +197,19 @@ export class Map0Viewer extends LitElement {
       this.core = core;
       this._basemapId = core.basemaps.current.value;
       this.unsubs.push(
-        core.layers.state.subscribe((v) => (this._layers = v), { immediate: true }),
+        core.layers.state.subscribe(
+          (v) => {
+            this._layers = v;
+            /* one toast per layer entering the error state (F2.5 feedback) */
+            for (const l of v) {
+              if (l.status === "error" && this.statusSeen.get(l.id) !== "error") {
+                this.notify("error", `${l.title}: ${core.t("layers.error")}`);
+              }
+              this.statusSeen.set(l.id, l.status);
+            }
+          },
+          { immediate: true },
+        ),
         core.basemaps.current.subscribe((v) => (this._basemapId = v)),
         core.events.on("ready", () => {
           this.emit("map0:ready", { api: core });
@@ -261,6 +288,25 @@ export class Map0Viewer extends LitElement {
               .t=${this.core.t}
               @close=${() => (this._printOpen = false)}
             ></map0-print>`
+          : nothing}
+        ${this._notices.length > 0
+          ? html`<div class="notices" role="status" aria-live="polite">
+              ${this._notices.map(
+                (n) => html`
+                  <div class="notice" data-kind=${n.kind}>
+                    <span>${n.text}</span>
+                    <button
+                      class="icon-btn"
+                      aria-label=${this.core?.t("popup.close") ?? "Close"}
+                      @click=${() =>
+                        (this._notices = this._notices.filter((x) => x.id !== n.id))}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                `,
+              )}
+            </div>`
           : nothing}
       </div>
     `;
