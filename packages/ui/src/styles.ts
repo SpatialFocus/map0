@@ -526,6 +526,31 @@ export const componentStyles = css`
     color: #dc2626;
     margin: 8px 0 0;
   }
+  .service-toggle {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--map0-border);
+    border-radius: var(--map0-radius-sm);
+    margin-bottom: 10px;
+  }
+  .service-toggle button {
+    all: unset;
+    padding: 4px 12px;
+    border-radius: calc(var(--map0-radius-sm) - 2px);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--map0-muted);
+  }
+  .service-toggle button[data-active] {
+    background: var(--map0-primary);
+    color: #fff;
+  }
+  .service-toggle button:focus-visible {
+    outline: 2px solid var(--map0-primary);
+  }
+
   .url-row {
     display: flex;
     gap: 8px;

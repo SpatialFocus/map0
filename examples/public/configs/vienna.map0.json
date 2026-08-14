@@ -50,6 +50,15 @@
           "attribution": "Stadt Wien — data.wien.gv.at"
         },
         {
+          "id": "bmapoverlay",
+          "type": "wmts",
+          "title": "Beschriftung (WMTS)",
+          "url": "https://mapsneu.wien.gv.at/basemap/1.0.0/WMTSCapabilities.xml",
+          "layer": "bmapoverlay",
+          "visible": false,
+          "attribution": "© basemap.at"
+        },
+        {
           "id": "baumkataster",
           "type": "wms",
           "title": "Baumkataster",

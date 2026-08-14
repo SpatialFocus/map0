@@ -63,6 +63,7 @@ export interface BasemapDef {
 export type LayerDef =
   | GroupLayerDef
   | WmsLayerDef
+  | WmtsLayerDef
   | RasterLayerDef
   | GeoJsonLayerDef
   | VectorLayerDef;
@@ -86,6 +87,8 @@ export interface LayerCommon {
   opacity?: number;
   minZoom?: number;
   maxZoom?: number;
+  /** [west, south, east, north] — used for "zoom to layer" (auto-filled from capabilities where possible) */
+  bounds?: [number, number, number, number];
   attribution?: string;
   metadata?: { url?: string; title?: string };
   /**
@@ -131,6 +134,20 @@ export interface WmsLayerDef extends LayerCommon {
   params?: Record<string, string>;
   /** presence enables GetFeatureInfo on click */
   info?: (PopupConfig & { format?: string }) | false;
+}
+
+export interface WmtsLayerDef extends LayerCommon {
+  type: "wmts";
+  /** WMTS GetCapabilities URL */
+  url: string;
+  /** layer identifier from the capabilities */
+  layer: string;
+  /** tile matrix set identifier; default: the first WebMercator-compatible one (D-02) */
+  matrixSet?: string;
+  /** style identifier; default: the layer's default style */
+  style?: string;
+  /** preferred tile format (e.g. "image/png") */
+  format?: string;
 }
 
 export interface RasterLayerDef extends LayerCommon {

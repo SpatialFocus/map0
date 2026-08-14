@@ -18,7 +18,7 @@ export interface ValidationResult {
 }
 
 const BASEMAP_TYPES = ["style", "raster", "empty"];
-const LAYER_TYPES = ["group", "wms", "raster", "geojson", "vector"];
+const LAYER_TYPES = ["group", "wms", "wmts", "raster", "geojson", "vector"];
 
 function isObject(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -144,6 +144,12 @@ function validateLayers(
           layer.version !== "1.3.0"
         )
           err(`${p}.version`, 'wms version must be "1.1.1" or "1.3.0"');
+        break;
+      case "wmts":
+        if (typeof layer.url !== "string")
+          err(`${p}.url`, 'a "wmts" layer needs a "url" (GetCapabilities URL)');
+        if (typeof layer.layer !== "string")
+          err(`${p}.layer`, 'a "wmts" layer needs a "layer" (identifier from the capabilities)');
         break;
       case "raster":
         if (typeof layer.url !== "string")

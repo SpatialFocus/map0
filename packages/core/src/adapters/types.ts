@@ -53,9 +53,9 @@ export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer>
     return [];
   }
 
-  mount(ctx: AdapterContext): void {
+  async mount(ctx: AdapterContext): Promise<void> {
     this.ctx = ctx;
-    this.addToMap();
+    await this.addToMap();
     this.applyVisibility(this.def.visible);
     if (this.def.opacity !== 1) this.applyOpacity(this.def.opacity);
     this.trackStatus();
@@ -72,7 +72,8 @@ export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer>
     }
   }
 
-  protected abstract addToMap(): void;
+  /** may be async (e.g. WMTS resolves its capabilities first) */
+  protected abstract addToMap(): void | Promise<void>;
 
   applyVisibility(visible: boolean): void {
     const { map } = this.ctx;

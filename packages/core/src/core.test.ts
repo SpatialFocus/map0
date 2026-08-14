@@ -157,6 +157,64 @@ describe("legend", () => {
   });
 });
 
+describe("wmts", () => {
+  it("recognizes Mercator CRS spellings", async () => {
+    const { isMercatorCrs } = await import("./adapters/wmts.js");
+    expect(isMercatorCrs("EPSG:3857")).toBe(true);
+    expect(isMercatorCrs("urn:ogc:def:crs:EPSG:6.18:3:3857")).toBe(true);
+    expect(isMercatorCrs("http://www.opengis.net/def/crs/EPSG/0/900913")).toBe(true);
+    expect(isMercatorCrs("EPSG:31256")).toBe(false);
+    expect(isMercatorCrs("EPSG:4326")).toBe(false);
+  });
+
+  it("builds REST templates with plain-numeric matrix ids", async () => {
+    const { buildWmtsTemplate } = await import("./adapters/wmts.js");
+    const tpl = buildWmtsTemplate({
+      encoding: "REST",
+      resourceUrl:
+        "https://maps.example.at/basemap/geolandbasemap/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png",
+      layer: "geolandbasemap",
+      style: "normal",
+      matrixSet: "google3857",
+      format: "image/png",
+      matrixIds: ["0", "1", "2", "3"],
+    });
+    expect(tpl).toBe(
+      "https://maps.example.at/basemap/geolandbasemap/normal/google3857/{z}/{y}/{x}.png",
+    );
+  });
+
+  it("handles prefixed matrix ids (GeoServer style)", async () => {
+    const { buildWmtsTemplate } = await import("./adapters/wmts.js");
+    const tpl = buildWmtsTemplate({
+      encoding: "REST",
+      resourceUrl: "https://e.org/wmts/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}?format=image/png",
+      layer: "x",
+      style: "default",
+      matrixSet: "EPSG:900913",
+      format: "image/png",
+      matrixIds: ["EPSG:900913:0", "EPSG:900913:1", "EPSG:900913:2"],
+    });
+    expect(tpl).toContain("/EPSG:900913/EPSG:900913:{z}/{y}/{x}");
+  });
+
+  it("builds KVP GetTile templates", async () => {
+    const { buildWmtsTemplate } = await import("./adapters/wmts.js");
+    const tpl = buildWmtsTemplate({
+      encoding: "KVP",
+      resourceUrl: "https://e.org/wmts",
+      layer: "roads",
+      style: "default",
+      matrixSet: "WebMercatorQuad",
+      format: "image/png",
+      matrixIds: ["0", "1"],
+    });
+    expect(tpl).toContain("REQUEST=GetTile");
+    expect(tpl).toContain("TILEMATRIXSET=WebMercatorQuad");
+    expect(tpl.endsWith("TILEMATRIX={z}&TILEROW={y}&TILECOL={x}")).toBe(true);
+  });
+});
+
 describe("mercator", () => {
   it("projects Vienna roughly correctly", () => {
     const [x, y] = lngLatToMercator(16.3725, 48.2083);

@@ -1,7 +1,7 @@
 import { LitElement, html, nothing, type TemplateResult } from "lit";
 import { property, state } from "lit/decorators.js";
-import type { Map0Core, Translate } from "@map0/core";
-import type { WmsLayerDef } from "@map0/schema";
+import { isMercatorCrs, type Map0Core, type Translate } from "@map0/core";
+import type { LayerDef, WmsLayerDef, WmtsLayerDef } from "@map0/schema";
 
 interface Candidate {
   name: string;
@@ -10,6 +10,7 @@ interface Candidate {
   queryable: boolean;
   has3857: boolean;
   minZoom?: number;
+  bounds?: [number, number, number, number];
   metadataUrl?: string;
   attribution?: string;
   selected: boolean;
@@ -20,7 +21,7 @@ function scaleDenominatorToZoom(sd: number): number {
   return Math.max(0, Math.ceil(Math.log2(559082264.028 / sd)));
 }
 
-const MERCATOR_CRS = new Set(["EPSG:3857", "EPSG:900913", "EPSG:102100", "EPSG:102113"]);
+type ServiceKind = "wms" | "wmts";
 
 /**
  * "Add layer" dialog (F3.1, D-05): paste a WMS URL, pick layers from its
@@ -32,6 +33,7 @@ export class Map0AddLayerDialog extends LitElement {
   @property({ attribute: false }) t: Translate = (k) => k;
 
   @state() private url = "";
+  @state() private service: ServiceKind = "wms";
   @state() private loading = false;
   @state() private error = "";
   @state() private candidates: Candidate[] = [];
@@ -57,38 +59,10 @@ export class Map0AddLayerDialog extends LitElement {
          (Do NOT call enableFallbackWithoutWorker: its handler module can be
          dropped by dep optimizers, leaving requests queued forever.) */
       const ogc = await import("@camptocamp/ogc-client");
-      const endpoint = new ogc.WmsEndpoint(url);
-      await endpoint.isReady();
-      const infoFormats = endpoint.getServiceInfo()?.infoFormats ?? [];
-      this.infoFormat = infoFormats.includes("application/json")
-        ? "application/json"
-        : infoFormats.find((f: string) => f.includes("json") || f.includes("html"));
-
-      const found: Candidate[] = [];
-      const walk = (nodes: Array<{ name?: string; children?: unknown[] }>): void => {
-        for (const node of nodes ?? []) {
-          if (node.name && !node.children?.length) {
-            const full = endpoint.getLayerByName(node.name);
-            const crs = full.availableCrs ?? [];
-            found.push({
-              name: node.name,
-              title: full.title ?? node.name,
-              abstract: full.abstract,
-              queryable: full.queryable,
-              /* unknown CRS list → benefit of the doubt (inheritance quirks) */
-              has3857: crs.length === 0 || crs.some((c: string) => MERCATOR_CRS.has(c)),
-              minZoom: full.maxScaleDenominator
-                ? scaleDenominatorToZoom(full.maxScaleDenominator)
-                : undefined,
-              metadataUrl: full.metadata?.[0]?.url,
-              attribution: full.attribution?.title,
-              selected: false,
-            });
-          }
-          walk((node.children ?? []) as never);
-        }
-      };
-      walk(endpoint.getLayers() as never);
+      const found: Candidate[] =
+        this.service === "wms"
+          ? await this.loadWms(ogc, url)
+          : await this.loadWmts(ogc, url);
       this.candidates = found;
       if (found.length === 0) this.error = this.t("addLayer.empty");
     } catch (e) {
@@ -96,6 +70,65 @@ export class Map0AddLayerDialog extends LitElement {
     } finally {
       this.loading = false;
     }
+  }
+
+  private async loadWms(
+    ogc: typeof import("@camptocamp/ogc-client"),
+    url: string,
+  ): Promise<Candidate[]> {
+    const endpoint = new ogc.WmsEndpoint(url);
+    await endpoint.isReady();
+    const infoFormats = endpoint.getServiceInfo()?.infoFormats ?? [];
+    this.infoFormat = infoFormats.includes("application/json")
+      ? "application/json"
+      : infoFormats.find((f: string) => f.includes("json") || f.includes("html"));
+
+    const found: Candidate[] = [];
+    const walk = (nodes: Array<{ name?: string; children?: unknown[] }>): void => {
+      for (const node of nodes ?? []) {
+        if (node.name && !node.children?.length) {
+          const full = endpoint.getLayerByName(node.name);
+          const crs = full.availableCrs ?? [];
+          const bbox = full.boundingBoxes?.["EPSG:4326"] ?? full.boundingBoxes?.["CRS:84"];
+          found.push({
+            name: node.name,
+            title: full.title ?? node.name,
+            abstract: full.abstract,
+            queryable: full.queryable,
+            /* unknown CRS list → benefit of the doubt (inheritance quirks) */
+            has3857: crs.length === 0 || crs.some((c: string) => isMercatorCrs(c)),
+            minZoom: full.maxScaleDenominator
+              ? scaleDenominatorToZoom(full.maxScaleDenominator)
+              : undefined,
+            ...(bbox ? { bounds: bbox as [number, number, number, number] } : {}),
+            metadataUrl: full.metadata?.[0]?.url,
+            attribution: full.attribution?.title,
+            selected: false,
+          });
+        }
+        walk((node.children ?? []) as never);
+      }
+    };
+    walk(endpoint.getLayers() as never);
+    return found;
+  }
+
+  private async loadWmts(
+    ogc: typeof import("@camptocamp/ogc-client"),
+    url: string,
+  ): Promise<Candidate[]> {
+    const endpoint = new ogc.WmtsEndpoint(url);
+    await endpoint.isReady();
+    return endpoint.getLayers().map((layer) => ({
+      name: layer.name,
+      title: layer.name,
+      queryable: false,
+      has3857: layer.matrixSets.some((m) => isMercatorCrs(m.crs)),
+      ...(layer.latLonBoundingBox
+        ? { bounds: layer.latLonBoundingBox as [number, number, number, number] }
+        : {}),
+      selected: false,
+    }));
   }
 
   /** base URL without WMS operation params (they are re-added per request) */
@@ -115,19 +148,26 @@ export class Map0AddLayerDialog extends LitElement {
 
   private async add(): Promise<void> {
     if (!this.core) return;
-    const url = this.cleanedUrl();
+    const url = this.service === "wms" ? this.cleanedUrl() : this.url.trim();
     for (const c of this.candidates.filter((c) => c.selected)) {
-      const def: WmsLayerDef = {
-        type: "wms",
+      const common = {
         title: c.title,
-        url,
-        layers: c.name,
-        ...(c.queryable ? { info: { format: this.infoFormat ?? "application/json" } } : {}),
         ...(c.minZoom !== undefined ? { minZoom: c.minZoom } : {}),
+        ...(c.bounds ? { bounds: c.bounds } : {}),
         ...(c.metadataUrl ? { metadata: { url: c.metadataUrl } } : {}),
         ...(c.attribution ? { attribution: c.attribution } : {}),
       };
-      await this.core.addLayer(def);
+      const def: LayerDef =
+        this.service === "wms"
+          ? ({
+              type: "wms",
+              url,
+              layers: c.name,
+              ...(c.queryable ? { info: { format: this.infoFormat ?? "application/json" } } : {}),
+              ...common,
+            } satisfies WmsLayerDef)
+          : ({ type: "wmts", url, layer: c.name, ...common } satisfies WmtsLayerDef);
+      await this.core.addLayer(def as Exclude<LayerDef, { type: "group" }>);
     }
     this.close();
   }
@@ -152,6 +192,25 @@ export class Map0AddLayerDialog extends LitElement {
           </div>
           <div class="dialog-body">
             <p class="dialog-intro">${t("addLayer.intro")}</p>
+            <div class="service-toggle" role="radiogroup" aria-label="Service">
+              ${(["wms", "wmts"] as const).map(
+                (kind) => html`
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked=${this.service === kind ? "true" : "false"}
+                    ?data-active=${this.service === kind}
+                    @click=${() => {
+                      this.service = kind;
+                      this.candidates = [];
+                      this.error = "";
+                    }}
+                  >
+                    ${kind.toUpperCase()}
+                  </button>
+                `,
+              )}
+            </div>
             <form
               class="url-row"
               @submit=${(e: Event) => {

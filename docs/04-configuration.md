@@ -252,7 +252,7 @@ Result: full-quality map with default controls (zoom, attribution, fullscreen), 
 | `style` | MapLibre style URL | basemaps only |
 | `raster` | XYZ/WMTS-REST template | basemap or overlay |
 | `wms` | WMS 1.1.1/1.3.0 GetMap | tiled raster source; `info` enables GetFeatureInfo; `legend:"auto"` → GetLegendGraphic |
-| `wmts` | WMTS KVP/REST via capabilities URL + layer name | convenience resolver on top of `raster` |
+| `wmts` | capabilities URL + `layer` (+ optional `matrixSet`/`style`/`format`) | REST & KVP; picks the first WebMercator matrix set (D-02), bounds/legend from capabilities |
 | `geojson` | URL or inline | clustering, simplified style or full style layers |
 | `vector` | TileJSON / `{z}/{x}/{y}` / `pmtiles://` | needs `sourceLayer` + style layers |
 | `wfs` | WFS 2.0 GetFeature → GeoJSON | **v1.x** (deferred per D-03); paging/limits; styled like `geojson` |

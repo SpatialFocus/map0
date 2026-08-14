@@ -20,6 +20,7 @@ export { deriveFromStyleLayers, entryFromPaint } from "./adapters/legend-derive.
 export { registerAdapter } from "./adapters/registry.js";
 export { expandSimpleStyle } from "./adapters/geojson.js";
 export { buildGetFeatureInfoUrl, buildLegendUrl, buildWmsTileUrl } from "./adapters/wms.js";
+export { buildWmtsTemplate, isMercatorCrs, type WmtsTemplateParts } from "./adapters/wmts.js";
 export { basemapStyle, BasemapManager } from "./basemaps.js";
 export type { CoreEvents } from "./events.js";
 export { makeT, resolveLocale, type Translate } from "./i18n.js";

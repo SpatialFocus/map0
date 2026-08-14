@@ -98,7 +98,7 @@ export class LayerManager {
       const adapter = createAdapter(def);
       if (!adapter) continue; // validator prevents unknown types; belt & braces
       try {
-        adapter.mount(ctx);
+        await adapter.mount(ctx); // sequential keeps config order = drawing order
       } catch (e) {
         adapter.status.value = "error";
         console.error(`[map0] failed to mount layer "${def.id}"`, e);
@@ -121,7 +121,7 @@ export class LayerManager {
     const adapter = createAdapter(norm);
     if (!adapter) return null;
     try {
-      adapter.mount(this.ctx);
+      await adapter.mount(this.ctx);
     } catch (e) {
       console.error(`[map0] failed to add layer "${norm.id}"`, e);
       return null;

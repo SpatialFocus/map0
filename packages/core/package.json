@@ -10,6 +10,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@camptocamp/ogc-client": "^1.3.0",
     "@map0/schema": "workspace:*",
     "maplibre-gl": "^6.3.0",
     "pmtiles": "^4.5.0"

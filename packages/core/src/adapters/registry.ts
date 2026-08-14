@@ -4,12 +4,14 @@ import { GeoJsonAdapter } from "./geojson.js";
 import { RasterAdapter } from "./raster.js";
 import { VectorAdapter } from "./vector.js";
 import { WmsAdapter } from "./wms.js";
+import { WmtsAdapter } from "./wmts.js";
 
 type AdapterFactory = (def: NormalizedLayer) => SourceAdapter;
 
 /** Public extension point: register additional layer types (docs/06-architecture.md). */
 const factories = new Map<string, AdapterFactory>([
   ["wms", (def) => new WmsAdapter(def as never)],
+  ["wmts", (def) => new WmtsAdapter(def as never)],
   ["raster", (def) => new RasterAdapter(def as never)],
   ["geojson", (def) => new GeoJsonAdapter(def as never)],
   ["vector", (def) => new VectorAdapter(def as never)],

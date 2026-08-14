@@ -23,6 +23,9 @@ importers:
 
   packages/core:
     dependencies:
+      '@camptocamp/ogc-client':
+        specifier: ^1.3.0
+        version: 1.3.0
       '@map0/schema':
         specifier: workspace:*
         version: link:../schema
