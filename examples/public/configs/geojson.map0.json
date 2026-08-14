@@ -41,6 +41,7 @@
         "title": "{{BASIS_TYP_TXT}}",
         "fields": [{ "key": "OBJECTID", "label": "Objekt-ID" }]
       },
+      "hover": { "content": "{{BASIS_TYP_TXT}}" },
       "metadata": {
         "url": "https://www.data.gv.at/katalog/dataset?q=Trinkbrunnen+Wien",
         "title": "Datensatz auf data.gv.at"

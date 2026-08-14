@@ -137,6 +137,8 @@ app.setLayerVisibility("noise-2024", false);
             "url": "https://catalog.example.gv.at/geonetwork/srv/ger/catalog.search#/metadata/abc-123",
             "title": "Datensatzbeschreibung im Katalog"
           },
+          "bounds": [16.18, 48.12, 16.55, 48.32],  // optional; enables "zoom to layer" (F2.2);
+                                                   // auto-filled from capabilities for dialog-added layers
           "attribution": "© Stadt Musterstadt"
         },
         {

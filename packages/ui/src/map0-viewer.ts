@@ -1,5 +1,7 @@
 import { LitElement, html, nothing, unsafeCSS, type PropertyValues, type TemplateResult } from "lit";
 import { property, query, state } from "lit/decorators.js";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
+import DOMPurify from "dompurify";
 import { Popup } from "maplibre-gl";
 import maplibreCss from "maplibre-gl/dist/maplibre-gl.css?inline";
 import {
@@ -80,6 +82,7 @@ export class Map0Viewer extends LitElement {
   @state() private _groupCollapsed: Record<string, boolean> = {};
   @state() private _ready = false;
   @state() private _notices: Array<{ id: number; kind: "error" | "info"; text: string }> = [];
+  @state() private _hover: { x: number; y: number; html: string } | null = null;
 
   private noticeSeq = 0;
   private statusSeen = new Map<string, string>();
@@ -215,6 +218,11 @@ export class Map0Viewer extends LitElement {
           this.emit("map0:ready", { api: core });
         }),
         core.events.on("featureclick", (e) => this.showPopup(e)),
+        core.events.on("featurehover", (e) => {
+          this._hover = e
+            ? { x: e.point[0], y: e.point[1], html: DOMPurify.sanitize(e.html) }
+            : null;
+        }),
         core.events.on("error", (e) => this.emit("map0:error", e)),
       );
       if (cfg.controls.print) {
@@ -260,6 +268,7 @@ export class Map0Viewer extends LitElement {
       .setLngLat(e.lngLat)
       .setDOMContent(content)
       .addTo(this.core.map);
+    this.popup.on("close", () => this.core?.clearHighlight());
     this.emit("map0:featureclick", e);
   }
 
@@ -274,6 +283,14 @@ export class Map0Viewer extends LitElement {
         <div class="loading" ?data-done=${this._ready} aria-hidden="true">
           <div class="spinner"></div>
         </div>
+        ${this._hover
+          ? html`<div
+              class="hover-tip"
+              style=${`left:${this._hover.x + 12}px;top:${this._hover.y + 12}px`}
+            >
+              ${unsafeHTML(this._hover.html)}
+            </div>`
+          : nothing}
         ${this.renderToc()} ${this.renderBasemaps()} ${this.renderLegend()}
         ${this._addOpen && this.core
           ? html`<map0-add-layer
@@ -490,6 +507,16 @@ export class Map0Viewer extends LitElement {
                 data-status=${l.status}
                 title=${l.status === "error" ? t("layers.error") : ""}
               ></span>`}
+          ${l.canZoom
+            ? html`<button
+                class="icon-btn zoom-btn"
+                title=${t("layers.zoomTo")}
+                aria-label=${t("layers.zoomTo")}
+                @click=${() => void this.core?.zoomToLayer(l.id)}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8V5a2 2 0 0 1 2-2h3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><circle cx="12" cy="12" r="2.5"/></svg>
+              </button>`
+            : nothing}
           ${l.metadataUrl
             ? html`<a
                 class="meta-link"

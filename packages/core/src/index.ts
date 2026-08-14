@@ -11,6 +11,7 @@ import { BasemapManager, basemapStyle, resolveBasemapStyle } from "./basemaps.js
 import { applyControls, type InitialView } from "./controls.js";
 import type { CoreEvents } from "./events.js";
 import { wireFeatureInfo } from "./featureinfo.js";
+import { HighlightManager } from "./highlight.js";
 import { makeT, maplibreLocale, resolveLocale, type Translate } from "./i18n.js";
 import { LayerManager } from "./layers.js";
 import { Emitter } from "./signals.js";
@@ -22,6 +23,8 @@ export { expandSimpleStyle } from "./adapters/geojson.js";
 export { buildGetFeatureInfoUrl, buildLegendUrl, buildWmsTileUrl } from "./adapters/wms.js";
 export { buildWmtsTemplate, isMercatorCrs, type WmtsTemplateParts } from "./adapters/wmts.js";
 export { basemapStyle, BasemapManager } from "./basemaps.js";
+export { geojsonBounds } from "./bbox.js";
+export { HighlightManager };
 export type { CoreEvents } from "./events.js";
 export { makeT, resolveLocale, type Translate } from "./i18n.js";
 export { LayerManager, type LayerUIState } from "./layers.js";
@@ -59,6 +62,8 @@ export interface Map0Core {
   setLayerOpacity(id: string, opacity: number): void;
   addLayer(def: Parameters<LayerManager["addLayer"]>[0]): Promise<string | null>;
   removeLayer(id: string): boolean;
+  zoomToLayer(id: string): Promise<boolean>;
+  clearHighlight(): void;
   destroy(): void;
 }
 
@@ -105,11 +110,17 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
   }
 
   const layers = new LayerManager(map, cfg);
+  const highlight = new HighlightManager(map, cfg.theme.primary);
   const basemaps = new BasemapManager(
     map,
     cfg.basemaps,
     cfg.defaultBasemapId,
-    () => layers.overlayIds,
+    () => {
+      const overlay = layers.overlayIds;
+      for (const s of highlight.ids.sources) overlay.sources.add(s);
+      for (const l of highlight.ids.layers) overlay.layers.add(l);
+      return overlay;
+    },
     background,
   );
 
@@ -123,7 +134,7 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
       } catch (e) {
         events.emit("error", { message: String(e) });
       }
-      wireFeatureInfo(map, layers, events);
+      wireFeatureInfo(map, layers, events, highlight);
       if (!initialView.center && !initialView.bounds) {
         initialView.center = [map.getCenter().lng, map.getCenter().lat];
         initialView.zoom = map.getZoom();
@@ -150,6 +161,8 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
     setLayerOpacity: (id, o) => layers.setOpacity(id, o),
     addLayer: (def) => layers.addLayer(def),
     removeLayer: (id) => layers.removeLayer(id),
+    zoomToLayer: (id) => layers.zoomTo(id),
+    clearHighlight: () => highlight.clear(),
     destroy: () => {
       map.remove();
       events.clear();

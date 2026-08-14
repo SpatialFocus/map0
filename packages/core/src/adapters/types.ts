@@ -30,6 +30,8 @@ export interface FeatureInfoResult {
   features: Array<Record<string, unknown>>;
   /** raw HTML/text response (WMS html/plain GetFeatureInfo) — must be sanitized by the UI */
   html?: string;
+  /** geometries for selection highlight (vector sources only, F5.7) */
+  highlightFeatures?: import("geojson").Feature[];
 }
 
 export interface FeatureInfoQuery {
@@ -117,6 +119,16 @@ export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer>
 
   protected autoLegend(): LegendSpec | null {
     return null;
+  }
+
+  /** whether "zoom to layer" is available (F2.2) */
+  get zoomable(): boolean {
+    return !!this.def.bounds;
+  }
+
+  /** [west, south, east, north] or null when unknown */
+  async bounds(): Promise<[number, number, number, number] | null> {
+    return this.def.bounds ?? null;
   }
 
   /** default status tracking via source events; adapters may override */

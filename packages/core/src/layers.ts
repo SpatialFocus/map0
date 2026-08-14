@@ -24,6 +24,8 @@ export interface LayerUIState {
   /** false when the layer is configured with a zoom range the map is currently outside of (F2.5) */
   inZoomRange: boolean;
   legend: LegendSpec | null;
+  /** "zoom to layer" available (F2.2) */
+  canZoom: boolean;
   /** true for layers added at runtime via the add-layer dialog (removable) */
   userAdded: boolean;
   metadataUrl?: string;
@@ -77,6 +79,23 @@ export class LayerManager {
 
   get all(): SourceAdapter[] {
     return [...this.adapters.values()];
+  }
+
+  /** adapter owning a given MapLibre layer id (for hit → layer-config lookups) */
+  adapterForMapLayer(mapLayerId: string): SourceAdapter | undefined {
+    for (const a of this.adapters.values()) {
+      if (a.layerIds.includes(mapLayerId)) return a;
+    }
+    return undefined;
+  }
+
+  /** fit the map to a layer's extent; false when no bounds are known (F2.2) */
+  async zoomTo(id: string): Promise<boolean> {
+    const adapter = this.adapters.get(id);
+    const bounds = await adapter?.bounds();
+    if (!bounds) return false;
+    this.map.fitBounds(bounds, { padding: 40, maxZoom: 17 });
+    return true;
   }
 
   /** adapters that can answer clicks, top-most first, only when visible */
@@ -182,6 +201,7 @@ export class LayerManager {
         maxZoom: def.maxZoom,
         inZoomRange: this.inZoomRange(def),
         legend: adapter?.legend() ?? null,
+        canZoom: adapter?.zoomable ?? false,
         metadataUrl: def.metadata?.url,
         metadataTitle: def.metadata?.title,
         attribution: def.attribution,

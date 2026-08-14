@@ -11,6 +11,7 @@ const dictionaries: Record<string, Record<string, string>> = {
     "layers.zoomHintMax": "visible up to zoom",
     "layers.remove": "Remove layer",
     "layers.added": "Added layers",
+    "layers.zoomTo": "Zoom to layer",
     "addLayer.title": "Add layer",
     "addLayer.intro":
       "Paste a WMS URL. The service is queried directly in the browser (it must allow CORS).",
@@ -53,6 +54,7 @@ const dictionaries: Record<string, Record<string, string>> = {
     "layers.zoomHintMax": "sichtbar bis Zoom",
     "layers.remove": "Layer entfernen",
     "layers.added": "Hinzugefügte Layer",
+    "layers.zoomTo": "Auf Ebene zoomen",
     "addLayer.title": "Layer hinzufügen",
     "addLayer.intro":
       "WMS-URL einfügen. Der Dienst wird direkt im Browser abgefragt (muss CORS erlauben).",

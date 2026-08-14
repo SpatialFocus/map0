@@ -686,6 +686,28 @@ export const componentStyles = css`
     accent-color: var(--map0-primary);
   }
 
+  /* ------------------------------ hover tip ----------------------------- */
+
+  .hover-tip {
+    position: absolute;
+    z-index: 15;
+    pointer-events: none;
+    max-width: 260px;
+    background: var(--map0-bg);
+    color: var(--map0-fg);
+    border: 1px solid var(--map0-border);
+    border-radius: var(--map0-radius-sm);
+    box-shadow: var(--map0-shadow);
+    padding: 4px 8px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .zoom-btn {
+    width: 20px;
+    height: 20px;
+  }
+
   /* ------------------------------- notices ------------------------------ */
 
   .notices {

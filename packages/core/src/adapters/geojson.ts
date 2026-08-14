@@ -199,6 +199,29 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
       : null;
   }
 
+  override get zoomable(): boolean {
+    return true;
+  }
+
+  private cachedBounds: [number, number, number, number] | null | undefined;
+
+  override async bounds(): Promise<[number, number, number, number] | null> {
+    if (this.def.bounds) return this.def.bounds;
+    if (this.cachedBounds !== undefined) return this.cachedBounds;
+    const { geojsonBounds } = await import("../bbox.js");
+    if (typeof this.def.data === "string") {
+      try {
+        const res = await fetch(this.def.data); // usually served from HTTP cache
+        this.cachedBounds = res.ok ? geojsonBounds(await res.json()) : null;
+      } catch {
+        this.cachedBounds = null;
+      }
+    } else {
+      this.cachedBounds = geojsonBounds(this.def.data);
+    }
+    return this.cachedBounds;
+  }
+
   private registerOpacity(
     layerId: string,
     type: string,
@@ -218,15 +241,14 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
       [query.point.x - pad, query.point.y - pad],
       [query.point.x + pad, query.point.y + pad],
     ];
-    const hits = map.queryRenderedFeatures(box, { layers: this.interactive.filter((id) => map.getLayer(id)) });
-    const features = hits
-      .filter((f) => !(f.properties && "point_count" in f.properties))
-      .map((f) => (f.properties ?? {}) as Record<string, unknown>);
-    if (features.length === 0) return null;
+    const hits = map
+      .queryRenderedFeatures(box, { layers: this.interactive.filter((id) => map.getLayer(id)) })
+      .filter((f) => !(f.properties && "point_count" in f.properties));
+    if (hits.length === 0) return null;
     /* de-duplicate (tiled sources can return a feature multiple times) */
     const seen = new Set<string>();
-    const unique = features.filter((p) => {
-      const key = JSON.stringify(p);
+    const unique = hits.filter((f) => {
+      const key = JSON.stringify(f.properties ?? {});
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -235,7 +257,12 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
       layerId: this.def.id,
       layerTitle: this.def.title,
       popup: this.def.popup,
-      features: unique.slice(0, 10),
+      features: unique.slice(0, 10).map((f) => (f.properties ?? {}) as Record<string, unknown>),
+      highlightFeatures: unique.slice(0, 10).map((f) => ({
+        type: "Feature" as const,
+        geometry: f.geometry,
+        properties: {},
+      })),
     };
   }
 }

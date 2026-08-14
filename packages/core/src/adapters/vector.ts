@@ -99,6 +99,11 @@ export class VectorAdapter extends SourceAdapter<NormalizedVector> {
       layerTitle: this.def.title,
       popup: this.def.popup,
       features: hits.slice(0, 10).map((f) => (f.properties ?? {}) as Record<string, unknown>),
+      highlightFeatures: hits.slice(0, 10).map((f) => ({
+        type: "Feature" as const,
+        geometry: f.geometry,
+        properties: {},
+      })),
     };
   }
 }

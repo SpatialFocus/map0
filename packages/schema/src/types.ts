@@ -170,6 +170,8 @@ export interface GeoJsonLayerDef extends LayerCommon {
   style?: SimpleStyle | StyleLayerSpec[];
   cluster?: boolean | { enabled?: boolean; radius?: number; maxZoom?: number };
   popup?: PopupConfig | false;
+  /** short tooltip template shown on hover (F5.4) */
+  hover?: { content: string } | false;
   promoteId?: string;
 }
 
@@ -180,6 +182,8 @@ export interface VectorLayerDef extends LayerCommon {
   sourceLayer?: string;
   style: StyleLayerSpec[];
   popup?: PopupConfig | false;
+  /** short tooltip template shown on hover (F5.4) */
+  hover?: { content: string } | false;
 }
 
 /* ------------------------------- controls ------------------------------- */
