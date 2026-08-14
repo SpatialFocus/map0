@@ -157,6 +157,36 @@ describe("legend", () => {
   });
 });
 
+describe("permalink", () => {
+  it("round-trips share state through base64url", async () => {
+    const { encodeShareState, decodeShareState } = await import("./permalink.js");
+    const state = {
+      v: [16.3725, 48.2083, 13.5],
+      b: "ortho",
+      l: { widmung: [0, 55] as [number, number] },
+      u: [{ type: "wms", url: "https://e.org/ows", layers: "x", title: "Ä layer" }],
+    };
+    const encoded = encodeShareState(state as never);
+    expect(encoded).not.toMatch(/[+/=]/); // url-safe
+    expect(decodeShareState(encoded)).toEqual(state);
+  });
+
+  it("rejects garbage", async () => {
+    const { decodeShareState } = await import("./permalink.js");
+    expect(decodeShareState("nicht-base64!!")).toBeNull();
+    expect(decodeShareState(btoa('{"x":1}'))).toBeNull();
+  });
+
+  it("reads and writes the hash param without clobbering other hash content", async () => {
+    const { readShareParam, writeShareParam } = await import("./permalink.js");
+    expect(readShareParam("#map0=abc", "map0")).toBe("abc");
+    expect(readShareParam("#route=/x&map0=abc", "map0")).toBe("abc");
+    expect(readShareParam("#route=/x", "map0")).toBeNull();
+    expect(writeShareParam("", "map0", "xyz")).toBe("#map0=xyz");
+    expect(writeShareParam("#route=/x&map0=old", "map0", "new")).toBe("#route=/x&map0=new");
+  });
+});
+
 describe("coordinates", () => {
   it("picks the Austrian GK strip and UTM zone by longitude", async () => {
     const { autoGkCode, autoUtmCode } = await import("./coordinates.js");

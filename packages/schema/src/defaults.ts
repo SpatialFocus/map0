@@ -65,6 +65,7 @@ export interface NormalizedConfig {
   controls: NormalizedControls;
   theme: { mode: "auto" | "light" | "dark"; primary: string; radius: "none" | "sm" | "md" | "lg"; font?: string };
   i18n: { locale: string; fallback: string; overrides?: Record<string, Record<string, string>> };
+  permalink: false | { param: string };
 }
 
 function uniqueId(base: string, used: Set<string>): string {
@@ -184,6 +185,10 @@ export function normalizeConfig(cfg: Map0Config): NormalizedConfig {
       fallback: cfg.i18n?.fallback ?? "en",
       overrides: cfg.i18n?.overrides,
     },
+    permalink:
+      !cfg.permalink
+        ? false
+        : { param: typeof cfg.permalink === "object" ? (cfg.permalink.param ?? "map0") : "map0" },
   };
 }
 

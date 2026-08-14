@@ -15,6 +15,13 @@ import { wireFeatureInfo } from "./featureinfo.js";
 import { HighlightManager } from "./highlight.js";
 import { makeT, maplibreLocale, resolveLocale, type Translate } from "./i18n.js";
 import { LayerManager } from "./layers.js";
+import {
+  decodeShareState,
+  encodeShareState,
+  readShareParam,
+  writeShareParam,
+  type ShareState,
+} from "./permalink.js";
 import { Emitter } from "./signals.js";
 
 export * from "./adapters/types.js";
@@ -30,6 +37,13 @@ export { HighlightManager };
 export type { CoreEvents } from "./events.js";
 export { makeT, resolveLocale, type Translate } from "./i18n.js";
 export { LayerManager, type LayerUIState } from "./layers.js";
+export {
+  decodeShareState,
+  encodeShareState,
+  readShareParam,
+  writeShareParam,
+  type ShareState,
+} from "./permalink.js";
 export { Emitter, Signal, type Unsubscribe } from "./signals.js";
 export {
   collectAttributions,
@@ -66,6 +80,8 @@ export interface Map0Core {
   removeLayer(id: string): boolean;
   zoomToLayer(id: string): Promise<boolean>;
   clearHighlight(): void;
+  /** current shareable URL (null when `permalink` is not enabled) */
+  getShareUrl(): string | null;
   destroy(): void;
 }
 
@@ -86,7 +102,19 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
   const events = new Emitter<CoreEvents>();
   const background = themeBackground(cfg.theme.mode);
 
-  const initialBasemap = cfg.basemaps.find((b) => b.id === cfg.defaultBasemapId)!;
+  /* shared state from the URL (F10.1) — wins over the configured initial view */
+  const shareParam = cfg.permalink === false ? null : cfg.permalink.param;
+  let initialShare: ShareState | null = null;
+  if (shareParam && typeof location !== "undefined") {
+    const raw = readShareParam(location.hash, shareParam);
+    if (raw) initialShare = decodeShareState(raw);
+  }
+
+  const sharedBasemapId =
+    initialShare?.b && cfg.basemaps.some((b) => b.id === initialShare!.b)
+      ? initialShare.b
+      : cfg.defaultBasemapId;
+  const initialBasemap = cfg.basemaps.find((b) => b.id === sharedBasemapId)!;
   const initialStyle = await resolveBasemapStyle(initialBasemap, background);
   const m = cfg.map;
 
@@ -98,10 +126,19 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
     ...(m.bounds ? { bounds: m.bounds, fitBoundsOptions: { padding: 24 } } : {}),
     ...(m.bearing !== undefined ? { bearing: m.bearing } : {}),
     ...(m.pitch !== undefined ? { pitch: m.pitch } : {}),
+    ...(initialShare
+      ? {
+          center: [initialShare.v[0]!, initialShare.v[1]!] as [number, number],
+          zoom: initialShare.v[2]!,
+          bearing: initialShare.v[3] ?? 0,
+          pitch: initialShare.v[4] ?? 0,
+          bounds: undefined,
+        }
+      : {}),
     ...(m.minZoom !== undefined ? { minZoom: m.minZoom } : {}),
     ...(m.maxZoom !== undefined ? { maxZoom: m.maxZoom } : {}),
     ...(m.maxBounds ? { maxBounds: m.maxBounds } : {}),
-    ...(m.hash ? { hash: "map0" } : {}),
+    ...(m.hash && !shareParam ? { hash: "view" } : {}), // permalink supersedes map.hash
     attributionControl: false,
     ...(maplibreLocale(locale) ? { locale: maplibreLocale(locale) } : {}),
   });
@@ -116,7 +153,7 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
   const basemaps = new BasemapManager(
     map,
     cfg.basemaps,
-    cfg.defaultBasemapId,
+    sharedBasemapId,
     () => {
       const overlay = layers.overlayIds;
       for (const s of highlight.ids.sources) overlay.sources.add(s);
@@ -129,6 +166,41 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
   const initialView: InitialView = { center: m.center, zoom: m.zoom, bounds: m.bounds };
   applyControls(map, cfg, t, opts.fullscreenTarget, initialView);
 
+  /* ---- share/permalink plumbing (F10.1) ---- */
+  const buildShareState = (): ShareState => {
+    const c = map.getCenter();
+    const v: number[] = [
+      Math.round(c.lng * 1e5) / 1e5,
+      Math.round(c.lat * 1e5) / 1e5,
+      Math.round(map.getZoom() * 100) / 100,
+    ];
+    if (map.getBearing() !== 0 || map.getPitch() !== 0) {
+      v.push(Math.round(map.getBearing()), Math.round(map.getPitch()));
+    }
+    const state: ShareState = { v };
+    if (basemaps.current.value !== cfg.defaultBasemapId) state.b = basemaps.current.value;
+    const l: Record<string, [number, number]> = {};
+    for (const s of layers.state.value) {
+      if (s.userAdded) continue;
+      const def = cfg.layers.find((d) => d.id === s.id);
+      if (
+        s.visible !== (def?.visible ?? true) ||
+        Math.abs(s.opacity - (def?.opacity ?? 1)) > 0.005
+      ) {
+        l[s.id] = [s.visible ? 1 : 0, Math.round(s.opacity * 100)];
+      }
+    }
+    if (Object.keys(l).length > 0) state.l = l;
+    if (layers.userLayerDefs.length > 0) state.u = layers.userLayerDefs as never;
+    return state;
+  };
+
+  const getShareUrl = (): string | null => {
+    if (!shareParam || typeof location === "undefined") return null;
+    const hash = writeShareParam(location.hash, shareParam, encodeShareState(buildShareState()));
+    return `${location.origin}${location.pathname}${location.search}${hash}`;
+  };
+
   map.once("style.load", () => {
     void (async () => {
       try {
@@ -136,10 +208,42 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
       } catch (e) {
         events.emit("error", { message: String(e) });
       }
+      /* restore shared layer state + user-added layers */
+      if (initialShare?.l) {
+        for (const [id, [vis, op]] of Object.entries(initialShare.l)) {
+          layers.setVisibility(id, vis === 1);
+          layers.setOpacity(id, op / 100);
+        }
+      }
+      if (initialShare?.u) {
+        for (const def of initialShare.u) {
+          if (def && typeof def === "object" && def.type !== "group") {
+            try {
+              await layers.addLayer(def as never);
+            } catch {
+              /* invalid shared layer — skip */
+            }
+          }
+        }
+      }
       wireFeatureInfo(map, layers, events, highlight);
       if (!initialView.center && !initialView.bounds) {
         initialView.center = [map.getCenter().lng, map.getCenter().lat];
         initialView.zoom = map.getZoom();
+      }
+      /* keep the URL in sync (debounced replaceState — no history spam) */
+      if (shareParam && typeof history !== "undefined") {
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const sync = (): void => {
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            const url = getShareUrl();
+            if (url) history.replaceState(history.state, "", url);
+          }, 400);
+        };
+        map.on("moveend", sync);
+        layers.state.subscribe(sync);
+        basemaps.current.subscribe(sync);
       }
       events.emit("ready", {});
     })();
@@ -207,6 +311,7 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
     removeLayer: (id) => layers.removeLayer(id),
     zoomToLayer: (id) => layers.zoomTo(id),
     clearHighlight: () => highlight.clear(),
+    getShareUrl,
     destroy: () => {
       map.remove();
       events.clear();

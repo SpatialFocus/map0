@@ -21,9 +21,17 @@ import { componentStyles } from "./styles.js";
 import "./add-layer-dialog.js";
 import "./print-dialog.js";
 
-class PrintButtonControl {
+const CONTROL_SVGS = {
+  print:
+    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:auto"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>',
+  share:
+    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:auto"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-3.9M8.6 13.5l6.8 3.9"/></svg>',
+} as const;
+
+class IconButtonControl {
   private container?: HTMLElement;
   constructor(
+    private readonly icon: keyof typeof CONTROL_SVGS,
     private readonly onClick: () => void,
     private readonly label: string,
   ) {}
@@ -34,8 +42,7 @@ class PrintButtonControl {
     btn.type = "button";
     btn.title = this.label;
     btn.setAttribute("aria-label", this.label);
-    btn.innerHTML =
-      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:auto"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>';
+    btn.innerHTML = CONTROL_SVGS[this.icon];
     btn.addEventListener("click", this.onClick);
     div.appendChild(btn);
     this.container = div;
@@ -228,7 +235,24 @@ export class Map0Viewer extends LitElement {
       );
       if (cfg.controls.print) {
         core.map.addControl(
-          new PrintButtonControl(() => (this._printOpen = true), core.t("print.title")),
+          new IconButtonControl("print", () => (this._printOpen = true), core.t("print.title")),
+          "top-left",
+        );
+      }
+      if (cfg.permalink !== false) {
+        core.map.addControl(
+          new IconButtonControl(
+            "share",
+            () => {
+              const url = core.getShareUrl();
+              if (!url) return;
+              void navigator.clipboard
+                .writeText(url)
+                .then(() => this.notify("info", core.t("share.copied")))
+                .catch(() => this.notify("error", core.t("coords.copyFailed")));
+            },
+            core.t("share.title"),
+          ),
           "top-left",
         );
       }

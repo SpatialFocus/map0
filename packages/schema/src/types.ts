@@ -17,6 +17,11 @@ export interface Map0Config {
   controls?: ControlsConfig;
   theme?: ThemeConfig;
   i18n?: I18nConfig;
+  /**
+   * shareable map state in the URL hash (F10.1); opt-in — the host page may use
+   * its own hash routing. `true` uses the param name "map0". Supersedes map.hash.
+   */
+  permalink?: boolean | { param?: string };
 }
 
 export interface MetaConfig {

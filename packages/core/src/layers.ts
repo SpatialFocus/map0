@@ -81,6 +81,11 @@ export class LayerManager {
     return [...this.adapters.values()];
   }
 
+  /** runtime-added layer definitions (for share/permalink state, F3.5) */
+  get userLayerDefs(): NormalizedLayer[] {
+    return [...this.extra];
+  }
+
   /** adapter owning a given MapLibre layer id (for hit → layer-config lookups) */
   adapterForMapLayer(mapLayerId: string): SourceAdapter | undefined {
     for (const a of this.adapters.values()) {

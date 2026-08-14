@@ -79,5 +79,6 @@
   "controls": {
     "home": true
   },
+  "permalink": true,
   "i18n": { "locale": "de" }
 }
