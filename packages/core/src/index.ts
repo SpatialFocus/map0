@@ -74,8 +74,8 @@ function themeBackground(mode: "auto" | "light" | "dark"): string {
 
 export async function createCore(opts: CoreOptions): Promise<Map0Core> {
   const cfg = opts.config;
-  const locale = resolveLocale(cfg.i18n.locale, cfg.i18n.fallback);
-  const t = makeT(locale, cfg.i18n.fallback);
+  const locale = resolveLocale(cfg.i18n.locale, cfg.i18n.fallback, cfg.i18n.overrides);
+  const t = makeT(locale, cfg.i18n.fallback, cfg.i18n.overrides);
   const events = new Emitter<CoreEvents>();
   const background = themeBackground(cfg.theme.mode);
 

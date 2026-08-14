@@ -88,20 +88,36 @@ const dictionaries: Record<string, Record<string, string>> = {
 };
 
 export type Translate = (key: string) => string;
+export type I18nOverrides = Record<string, Record<string, string>>;
 
-export function resolveLocale(configured: string, fallback: string): string {
+export function resolveLocale(
+  configured: string,
+  fallback: string,
+  overrides?: I18nOverrides,
+): string {
   const wanted =
     configured === "auto"
       ? (typeof navigator !== "undefined" ? navigator.language : fallback)
       : configured;
   const short = wanted.toLowerCase().split("-")[0] ?? fallback;
-  return dictionaries[short] ? short : fallback;
+  return dictionaries[short] || overrides?.[short] ? short : fallback;
 }
 
-export function makeT(locale: string, fallback = "en"): Translate {
-  const dict = dictionaries[locale] ?? dictionaries[fallback] ?? {};
-  const fb = dictionaries[fallback] ?? {};
-  return (key) => dict[key] ?? fb[key] ?? key;
+/** lookup chain: config override (locale) → built-in (locale) → override (fallback) → built-in (fallback) */
+export function makeT(locale: string, fallback = "en", overrides?: I18nOverrides): Translate {
+  const chain = [
+    overrides?.[locale],
+    dictionaries[locale],
+    overrides?.[fallback],
+    dictionaries[fallback],
+  ];
+  return (key) => {
+    for (const dict of chain) {
+      const hit = dict?.[key];
+      if (hit !== undefined) return hit;
+    }
+    return key;
+  };
 }
 
 /** Partial MapLibre `locale` map so built-in control tooltips match the UI language. */

@@ -223,4 +223,6 @@ export interface I18nConfig {
   /** BCP47 or "auto" */
   locale?: string;
   fallback?: string;
+  /** per-locale UI string overrides, e.g. { "de": { "layers.title": "Kartenthemen" } } (F11.2) */
+  overrides?: Record<string, Record<string, string>>;
 }

@@ -157,6 +157,25 @@ describe("legend", () => {
   });
 });
 
+describe("i18n overrides", () => {
+  it("config overrides win over built-ins, fallback chain holds", async () => {
+    const { makeT, resolveLocale } = await import("./i18n.js");
+    const overrides = {
+      de: { "layers.title": "Kartenthemen", "custom.key": "Eigener Text" },
+      it: { "layers.title": "Livelli" },
+    };
+    const t = makeT("de", "en", overrides);
+    expect(t("layers.title")).toBe("Kartenthemen"); // override wins
+    expect(t("basemaps.title")).toBe("Hintergrund"); // built-in untouched
+    expect(t("custom.key")).toBe("Eigener Text"); // new key via override
+    expect(t("does.not.exist")).toBe("does.not.exist");
+    /* overrides can introduce a whole new locale */
+    expect(resolveLocale("it", "en", overrides)).toBe("it");
+    expect(makeT("it", "en", overrides)("layers.title")).toBe("Livelli");
+    expect(makeT("it", "en", overrides)("basemaps.title")).toBe("Basemap"); // en fallback
+  });
+});
+
 describe("wmts", () => {
   it("recognizes Mercator CRS spellings", async () => {
     const { isMercatorCrs } = await import("./adapters/wmts.js");
