@@ -1,5 +1,11 @@
 import type { NormalizedLayer, StyleLayerSpec, VectorLayerDef } from "@map0/schema";
-import { SourceAdapter, type FeatureInfoQuery, type FeatureInfoResult } from "./types.js";
+import { deriveFromStyleLayers } from "./legend-derive.js";
+import {
+  SourceAdapter,
+  type FeatureInfoQuery,
+  type FeatureInfoResult,
+  type LegendSpec,
+} from "./types.js";
 
 type NormalizedVector = VectorLayerDef & NormalizedLayer & { type: "vector" };
 
@@ -69,6 +75,11 @@ export class VectorAdapter extends SourceAdapter<NormalizedVector> {
         this.opacityEntries.push([id, prop, base]);
       }
     });
+  }
+
+  protected override autoLegend(): LegendSpec | null {
+    const entries = deriveFromStyleLayers(this.def.style);
+    return entries.length > 0 ? { kind: "entries", entries } : null;
   }
 
   override async featureInfo(query: FeatureInfoQuery): Promise<FeatureInfoResult | null> {

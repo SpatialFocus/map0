@@ -1,5 +1,12 @@
 import type { GeoJsonLayerDef, NormalizedLayer, SimpleStyle, StyleLayerSpec } from "@map0/schema";
-import { SourceAdapter, type FeatureInfoQuery, type FeatureInfoResult } from "./types.js";
+import { deriveFromStyleLayers, entryFromPaint } from "./legend-derive.js";
+import {
+  SourceAdapter,
+  type FeatureInfoQuery,
+  type FeatureInfoResult,
+  type LegendEntry,
+  type LegendSpec,
+} from "./types.js";
 
 type NormalizedGeoJson = GeoJsonLayerDef & NormalizedLayer & { type: "geojson" };
 
@@ -52,6 +59,7 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
   private srcId = `m0s-${this.def.id}`;
   private ids: string[] = [];
   private interactive: string[] = [];
+  private derivedLegend: LegendEntry[] = [];
 
   get sourceIds(): string[] {
     return [this.srcId];
@@ -92,6 +100,7 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
 
     if (Array.isArray(this.def.style)) {
       /* full style-spec layers provided by the config author */
+      this.derivedLegend = deriveFromStyleLayers(this.def.style);
       this.def.style.forEach((spec: StyleLayerSpec, i) => {
         const id = `m0l-${this.def.id}-${i}`;
         map.addLayer({ ...(spec as object), id, source: this.srcId, ...zoomRange } as never);
@@ -102,6 +111,10 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
     } else {
       const expanded = expandSimpleStyle(this.def.style, accent);
       const notClustered = cluster.enabled ? ["!", ["has", "point_count"]] : null;
+      for (const [kind, paint] of Object.entries(expanded)) {
+        const entry = entryFromPaint(kind, paint);
+        if (entry) this.derivedLegend.push(entry);
+      }
 
       if (expanded.fill) {
         const id = `m0l-${this.def.id}-fill`;
@@ -178,6 +191,12 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
         this.registerOpacity(id, "circle", { "circle-opacity": 0.75 });
       }
     }
+  }
+
+  protected override autoLegend(): LegendSpec | null {
+    return this.derivedLegend.length > 0
+      ? { kind: "entries", entries: this.derivedLegend }
+      : null;
   }
 
   private registerOpacity(

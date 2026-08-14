@@ -28,6 +28,15 @@ function copyMaplibreWorker(): Plugin {
  */
 export default defineConfig({
   plugins: [copyMaplibreWorker()],
+  resolve: {
+    alias: {
+      /* ogc-client's optional OpenLayers/proj4 peers — stubbed, see src/stubs/ol-stub.ts */
+      "ol/tilegrid/WMTS": fileURLToPath(new URL("./src/stubs/ol-stub.ts", import.meta.url)),
+      "ol/proj/proj4": fileURLToPath(new URL("./src/stubs/ol-stub.ts", import.meta.url)),
+      "ol/proj": fileURLToPath(new URL("./src/stubs/ol-stub.ts", import.meta.url)),
+      proj4: fileURLToPath(new URL("./src/stubs/ol-stub.ts", import.meta.url)),
+    },
+  },
   build: {
     target: "es2022",
     outDir: "dist",

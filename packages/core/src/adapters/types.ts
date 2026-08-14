@@ -1,8 +1,19 @@
 import type { Map as MapLibreMap, LngLat, Point } from "maplibre-gl";
-import type { NormalizedLayer, PopupConfig } from "@map0/schema";
+import type { LegendEntryDef, NormalizedLayer, PopupConfig } from "@map0/schema";
 import { Signal } from "../signals.js";
 
 export type LayerStatus = "loading" | "ready" | "error";
+
+export interface LegendEntry {
+  label?: string;
+  color?: string;
+  shape: "square" | "line" | "circle";
+  image?: string;
+}
+
+export type LegendSpec =
+  | { kind: "image"; url: string }
+  | { kind: "entries"; entries: LegendEntry[] };
 
 export interface AdapterContext {
   map: MapLibreMap;
@@ -50,6 +61,17 @@ export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer>
     this.trackStatus();
   }
 
+  /** remove this layer's MapLibre layers and sources (runtime layer removal, F3.3) */
+  unmount(): void {
+    const { map } = this.ctx;
+    for (const id of this.layerIds) {
+      if (map.getLayer(id)) map.removeLayer(id);
+    }
+    for (const id of this.sourceIds) {
+      if (map.getSource(id)) map.removeSource(id);
+    }
+  }
+
   protected abstract addToMap(): void;
 
   applyVisibility(visible: boolean): void {
@@ -68,6 +90,32 @@ export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer>
         map.setPaintProperty(layerId, prop as never, (base * opacity) as never);
       }
     }
+  }
+
+  /**
+   * Legend for this layer (F4): config override wins, otherwise the adapter's
+   * auto-legend (WMS GetLegendGraphic, style-derived swatches, …).
+   */
+  legend(): LegendSpec | null {
+    const l = this.def.legend;
+    if (l === false) return null;
+    if (Array.isArray(l)) {
+      return {
+        kind: "entries",
+        entries: l.map((e: LegendEntryDef) => ({
+          label: e.label,
+          color: e.color,
+          image: e.image,
+          shape: e.shape ?? "square",
+        })),
+      };
+    }
+    if (typeof l === "string" && l !== "auto") return { kind: "image", url: l };
+    return this.autoLegend();
+  }
+
+  protected autoLegend(): LegendSpec | null {
+    return null;
   }
 
   /** default status tracking via source events; adapters may override */

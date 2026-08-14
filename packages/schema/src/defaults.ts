@@ -45,8 +45,10 @@ export interface NormalizedControls {
   globe: boolean;
   home: boolean;
   attribution: false | { compact: boolean | "auto" };
-  layerSwitcher: false | { position: string; open: boolean | "auto"; title?: string };
+  layerSwitcher: false | { position: string; open: boolean | "auto"; title?: string; allowAdd: boolean };
   basemapSwitcher: false | { position: string };
+  legend: false | { position: string; open: boolean };
+  print: boolean;
 }
 
 export interface NormalizedConfig {
@@ -134,6 +136,8 @@ export function normalizeConfig(cfg: Map0Config): NormalizedConfig {
             open:
               typeof c.layerSwitcher === "object" ? (c.layerSwitcher.open ?? "auto") : "auto",
             title: typeof c.layerSwitcher === "object" ? c.layerSwitcher.title : undefined,
+            allowAdd:
+              typeof c.layerSwitcher === "object" ? (c.layerSwitcher.allowAdd ?? true) : true,
           },
     basemapSwitcher:
       c.basemapSwitcher === false || basemaps.length < 2
@@ -144,6 +148,15 @@ export function normalizeConfig(cfg: Map0Config): NormalizedConfig {
                 ? (c.basemapSwitcher.position ?? "bottom-left")
                 : "bottom-left",
           },
+    legend:
+      c.legend === false
+        ? false
+        : {
+            position:
+              typeof c.legend === "object" ? (c.legend.position ?? "bottom-right") : "bottom-right",
+            open: typeof c.legend === "object" ? (c.legend.open ?? false) : false,
+          },
+    print: c.print ?? true,
   };
 
   return {
@@ -176,6 +189,25 @@ function defaultBasemapTitle(bm: BasemapDef, i: number): string {
     /* relative URL */
   }
   return `Basemap ${i + 1}`;
+}
+
+/** Normalize a single (non-group) layer added at runtime (F3 add-layer dialog). */
+export function normalizeSingleLayer(
+  def: Exclude<LayerDef, GroupLayerDef>,
+  existingIds: Iterable<string>,
+): NormalizedLayer {
+  const used = new Set(existingIds);
+  const title = def.title ?? def.id ?? "Layer";
+  const id =
+    def.id && !used.has(def.id) ? def.id : uniqueId(slugify(def.title ?? def.id ?? "layer"), used);
+  return {
+    ...def,
+    id,
+    title,
+    visible: def.visible ?? true,
+    opacity: def.opacity ?? 1,
+    groupPath: [],
+  } as NormalizedLayer;
 }
 
 function normalizeLayerList(

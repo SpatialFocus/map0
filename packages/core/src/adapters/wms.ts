@@ -1,6 +1,11 @@
 import type { NormalizedLayer, WmsLayerDef } from "@map0/schema";
 import { lngLatToMercator } from "../mercator.js";
-import { SourceAdapter, type FeatureInfoQuery, type FeatureInfoResult } from "./types.js";
+import {
+  SourceAdapter,
+  type FeatureInfoQuery,
+  type FeatureInfoResult,
+  type LegendSpec,
+} from "./types.js";
 
 type NormalizedWms = WmsLayerDef & NormalizedLayer & { type: "wms" };
 
@@ -81,13 +86,15 @@ export function buildGetFeatureInfoUrl(
   });
 }
 
-/** GetLegendGraphic URL (used by the TOC/legend from M1; built here so the schema key works). */
+/** GetLegendGraphic URL for the legend panel (F4.2). */
 export function buildLegendUrl(def: WmsParams): string {
   return baseAndParams(def, {
     REQUEST: "GetLegendGraphic",
     FORMAT: "image/png",
     LAYER: def.layers.split(",")[0] ?? def.layers,
     SLD_VERSION: "1.1.0",
+    /* GeoServer vendor option (ignored elsewhere): label every rule, nicer text */
+    LEGEND_OPTIONS: "forceLabels:on;fontAntiAliasing:true",
   });
 }
 
@@ -120,6 +127,10 @@ export class WmsAdapter extends SourceAdapter<NormalizedWms> {
       paint: { "raster-opacity": 1 },
     });
     this.opacityEntries = [[this.lyrId, "raster-opacity", 1]];
+  }
+
+  protected override autoLegend(): LegendSpec | null {
+    return { kind: "image", url: buildLegendUrl(this.def) };
   }
 
   override async featureInfo(query: FeatureInfoQuery): Promise<FeatureInfoResult | null> {

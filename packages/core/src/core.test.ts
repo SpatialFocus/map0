@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { buildGetFeatureInfoUrl, buildWmsTileUrl } from "./adapters/wms.js";
+import { buildGetFeatureInfoUrl, buildLegendUrl, buildWmsTileUrl, WmsAdapter } from "./adapters/wms.js";
 import { expandSimpleStyle } from "./adapters/geojson.js";
+import { deriveFromStyleLayers, entryFromPaint } from "./adapters/legend-derive.js";
 import { escapeHtml, renderFields, renderTemplate } from "./template.js";
 import { lngLatToMercator } from "./mercator.js";
 
@@ -97,6 +98,62 @@ describe("templates", () => {
 
   it("escapeHtml covers quotes and ampersands", () => {
     expect(escapeHtml(`a&"'<>`)).toBe("a&amp;&quot;&#39;&lt;&gt;");
+  });
+});
+
+describe("legend", () => {
+  const wmsDef = {
+    type: "wms",
+    id: "x",
+    title: "X",
+    visible: true,
+    opacity: 1,
+    groupPath: [],
+    url: "https://sdi.example.gv.at/ows",
+    layers: "laerm",
+  } as never;
+
+  it("WMS auto-legend builds a GetLegendGraphic URL", () => {
+    const spec = new WmsAdapter(wmsDef).legend();
+    expect(spec?.kind).toBe("image");
+    if (spec?.kind === "image") {
+      expect(spec.url).toContain("REQUEST=GetLegendGraphic");
+      expect(spec.url).toContain("LAYER=laerm");
+      expect(spec.url).toBe(buildLegendUrl({ url: "https://sdi.example.gv.at/ows", layers: "laerm" }));
+    }
+  });
+
+  it("legend: false suppresses, string overrides, entries pass through", () => {
+    const off = new WmsAdapter({ ...wmsDef, legend: false } as never).legend();
+    expect(off).toBeNull();
+    const img = new WmsAdapter({ ...wmsDef, legend: "https://e.org/l.png" } as never).legend();
+    expect(img).toEqual({ kind: "image", url: "https://e.org/l.png" });
+    const entries = new WmsAdapter({
+      ...wmsDef,
+      legend: [{ label: "A", color: "#f00" }],
+    } as never).legend();
+    expect(entries).toEqual({
+      kind: "entries",
+      entries: [{ label: "A", color: "#f00", image: undefined, shape: "square" }],
+    });
+  });
+
+  it("derives swatches only from literal colors", () => {
+    expect(entryFromPaint("fill", { "fill-color": "#0f0" })).toEqual({
+      color: "#0f0",
+      shape: "square",
+    });
+    expect(entryFromPaint("fill", { "fill-color": ["get", "farbe"] })).toBeNull();
+    expect(entryFromPaint("symbol", { "text-color": "#000" })).toBeNull();
+    const derived = deriveFromStyleLayers([
+      { type: "fill", paint: { "fill-color": "#aaa" } },
+      { type: "line", paint: { "line-color": "#bbb" } },
+      { type: "circle", paint: {} },
+    ] as never);
+    expect(derived).toEqual([
+      { color: "#aaa", shape: "square" },
+      { color: "#bbb", shape: "line" },
+    ]);
   });
 });
 

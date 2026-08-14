@@ -16,6 +16,7 @@ import { LayerManager } from "./layers.js";
 import { Emitter } from "./signals.js";
 
 export * from "./adapters/types.js";
+export { deriveFromStyleLayers, entryFromPaint } from "./adapters/legend-derive.js";
 export { registerAdapter } from "./adapters/registry.js";
 export { expandSimpleStyle } from "./adapters/geojson.js";
 export { buildGetFeatureInfoUrl, buildLegendUrl, buildWmsTileUrl } from "./adapters/wms.js";
@@ -24,6 +25,15 @@ export type { CoreEvents } from "./events.js";
 export { makeT, resolveLocale, type Translate } from "./i18n.js";
 export { LayerManager, type LayerUIState } from "./layers.js";
 export { Emitter, Signal, type Unsubscribe } from "./signals.js";
+export {
+  collectAttributions,
+  composePrint,
+  computeScaleBar,
+  renderMapImage,
+  type PrintComposeOptions,
+  type PrintLegendItem,
+  type PrintRenderOptions,
+} from "./print.js";
 export { escapeHtml, renderAllProps, renderFields, renderTemplate } from "./template.js";
 export { validateConfig, normalizeConfig };
 export type { Map0Config, NormalizedConfig, ValidationError };
@@ -46,6 +56,8 @@ export interface Map0Core {
   setBasemap(id: string): void;
   setLayerVisibility(id: string, visible: boolean): void;
   setLayerOpacity(id: string, opacity: number): void;
+  addLayer(def: Parameters<LayerManager["addLayer"]>[0]): Promise<string | null>;
+  removeLayer(id: string): boolean;
   destroy(): void;
 }
 
@@ -135,6 +147,8 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
     setBasemap: (id) => void basemaps.switchTo(id),
     setLayerVisibility: (id, v) => layers.setVisibility(id, v),
     setLayerOpacity: (id, o) => layers.setOpacity(id, o),
+    addLayer: (def) => layers.addLayer(def),
+    removeLayer: (id) => layers.removeLayer(id),
     destroy: () => {
       map.remove();
       events.clear();

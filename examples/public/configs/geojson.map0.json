@@ -61,7 +61,11 @@
       "popup": {
         "title": "{{name}}",
         "content": "<p>{{beschreibung}}</p><p><b>Kategorie:</b> {{kategorie}}</p>"
-      }
+      },
+      "legend": [
+        { "label": "Demo-Zone", "color": "#f59e0b", "shape": "square" },
+        { "label": "Demo-Route", "color": "#f59e0b", "shape": "line" }
+      ]
     }
   ],
   "theme": {

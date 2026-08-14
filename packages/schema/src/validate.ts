@@ -168,5 +168,16 @@ function validateLayers(
     ) {
       err(`${p}.opacity`, "opacity must be a number between 0 and 1");
     }
+    const legend = layer.legend;
+    if (legend !== undefined && legend !== false && legend !== "auto" && typeof legend !== "string") {
+      if (!Array.isArray(legend)) {
+        err(`${p}.legend`, 'legend must be "auto", false, an image URL, or an array of entries');
+      } else {
+        legend.forEach((entry, j) => {
+          if (!isObject(entry) || typeof entry.label !== "string")
+            err(`${p}.legend[${j}]`, 'a legend entry needs at least a "label"');
+        });
+      }
+    }
   });
 }

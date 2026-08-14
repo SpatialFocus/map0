@@ -19,6 +19,9 @@ export default defineConfig({
     // pre-bundling rewrites the worker URL into .vite/deps where it 404s and the
     // worker dies silently → no vector tiles / GeoJSON. Serve it un-bundled.
     exclude: ["maplibre-gl"],
+    // Dynamically imported by the add-layer dialog — pre-bundle at startup so the
+    // first open doesn't trigger a mid-session dep-optimize page reload.
+    include: ["@camptocamp/ogc-client"],
   },
   server: {
     port: 5173,

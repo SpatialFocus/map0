@@ -16,6 +16,33 @@ import {
 import type { TocNode } from "@map0/schema";
 import { buildPopupContent } from "./popup.js";
 import { componentStyles } from "./styles.js";
+import "./add-layer-dialog.js";
+import "./print-dialog.js";
+
+class PrintButtonControl {
+  private container?: HTMLElement;
+  constructor(
+    private readonly onClick: () => void,
+    private readonly label: string,
+  ) {}
+  onAdd(): HTMLElement {
+    const div = document.createElement("div");
+    div.className = "maplibregl-ctrl maplibregl-ctrl-group";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.title = this.label;
+    btn.setAttribute("aria-label", this.label);
+    btn.innerHTML =
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:auto"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>';
+    btn.addEventListener("click", this.onClick);
+    div.appendChild(btn);
+    this.container = div;
+    return div;
+  }
+  onRemove(): void {
+    this.container?.remove();
+  }
+}
 
 const RADII = { none: "0px", sm: "6px", md: "10px", lg: "16px" } as const;
 const RADII_SM = { none: "0px", sm: "4px", md: "7px", lg: "10px" } as const;
@@ -24,6 +51,8 @@ const icons = {
   layers: html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>`,
   chevron: html`<svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>`,
   info: html`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5"/><path d="M12 8h.01"/></svg>`,
+  legend: html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="6" height="6" rx="1"/><path d="M13 7h8"/><rect x="3" y="14" width="6" height="6" rx="1"/><path d="M13 17h8"/></svg>`,
+  plus: html`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`,
 };
 
 /**
@@ -45,6 +74,9 @@ export class Map0Viewer extends LitElement {
   @state() private _layers: LayerUIState[] = [];
   @state() private _basemapId = "";
   @state() private _tocOpen = true;
+  @state() private _legendOpen = false;
+  @state() private _addOpen = false;
+  @state() private _printOpen = false;
   @state() private _groupCollapsed: Record<string, boolean> = {};
   @state() private _ready = false;
 
@@ -141,6 +173,7 @@ export class Map0Viewer extends LitElement {
       const ls = cfg.controls.layerSwitcher;
       this._tocOpen =
         ls === false ? false : ls.open === "auto" ? this.getBoundingClientRect().width >= 560 : ls.open;
+      this._legendOpen = cfg.controls.legend === false ? false : cfg.controls.legend.open;
 
       await this.updateComplete;
       if (!this.mapEl) throw new Error("internal: map container missing");
@@ -157,6 +190,12 @@ export class Map0Viewer extends LitElement {
         core.events.on("featureclick", (e) => this.showPopup(e)),
         core.events.on("error", (e) => this.emit("map0:error", e)),
       );
+      if (cfg.controls.print) {
+        core.map.addControl(
+          new PrintButtonControl(() => (this._printOpen = true), core.t("print.title")),
+          "top-left",
+        );
+      }
       /* dismiss the loading veil on the first painted frame after the style is in —
          waiting for `load` (all initial tiles) can take long on slow WMS servers */
       core.map.once("style.load", () => core.map.once("render", () => (this._ready = true)));
@@ -208,7 +247,74 @@ export class Map0Viewer extends LitElement {
         <div class="loading" ?data-done=${this._ready} aria-hidden="true">
           <div class="spinner"></div>
         </div>
-        ${this.renderToc()} ${this.renderBasemaps()}
+        ${this.renderToc()} ${this.renderBasemaps()} ${this.renderLegend()}
+        ${this._addOpen && this.core
+          ? html`<map0-add-layer
+              .core=${this.core}
+              .t=${this.core.t}
+              @close=${() => (this._addOpen = false)}
+            ></map0-add-layer>`
+          : nothing}
+        ${this._printOpen && this.core
+          ? html`<map0-print
+              .core=${this.core}
+              .t=${this.core.t}
+              @close=${() => (this._printOpen = false)}
+            ></map0-print>`
+          : nothing}
+      </div>
+    `;
+  }
+
+  private renderLegend(): TemplateResult | typeof nothing {
+    const cfg = this.normalized;
+    if (!cfg || cfg.controls.legend === false) return nothing;
+    const items = this._layers.filter((l) => l.visible && l.inZoomRange && l.legend);
+    if (items.length === 0) return nothing;
+    const t = this.core?.t ?? ((k: string) => k);
+    return html`
+      <div class="legend panel" part="legend" data-pos=${cfg.controls.legend.position} ?data-open=${this._legendOpen}>
+        <button
+          class="panel-header"
+          @click=${() => (this._legendOpen = !this._legendOpen)}
+          aria-expanded=${this._legendOpen ? "true" : "false"}
+        >
+          ${icons.legend}<span>${t("legend.title")}</span>${icons.chevron}
+        </button>
+        ${this._legendOpen
+          ? html`<div class="panel-body">
+              ${items.map(
+                (l) => html`
+                  <div class="legend-layer">
+                    <div class="legend-layer-title">${l.title}</div>
+                    ${l.legend!.kind === "image"
+                      ? html`<img
+                          class="legend-image"
+                          src=${l.legend!.url}
+                          alt=${l.title}
+                          loading="lazy"
+                          @error=${(e: Event) =>
+                            ((e.target as HTMLElement).style.display = "none")}
+                        />`
+                      : l.legend!.entries.map(
+                          (en) => html`
+                            <div class="legend-entry">
+                              ${en.image
+                                ? html`<img class="legend-entry-img" src=${en.image} alt="" />`
+                                : html`<span
+                                    class="swatch"
+                                    data-shape=${en.shape}
+                                    style=${`--swatch:${en.color ?? "var(--map0-muted)"}`}
+                                  ></span>`}
+                              ${en.label ? html`<span>${en.label}</span>` : nothing}
+                            </div>
+                          `,
+                        )}
+                  </div>
+                `,
+              )}
+            </div>`
+          : nothing}
       </div>
     `;
   }
@@ -232,9 +338,13 @@ export class Map0Viewer extends LitElement {
 
   private renderToc(): TemplateResult | typeof nothing {
     const cfg = this.normalized;
-    if (!cfg || cfg.controls.layerSwitcher === false || cfg.layers.length === 0) return nothing;
+    if (!cfg || cfg.controls.layerSwitcher === false) return nothing;
+    const allowAdd = cfg.controls.layerSwitcher.allowAdd;
+    if (cfg.layers.length === 0 && this._layers.length === 0 && !allowAdd) return nothing;
+    const t = this.core?.t ?? ((k: string) => k);
     const byId = new Map(this._layers.map((l) => [l.id, l]));
-    const title = cfg.controls.layerSwitcher.title ?? this.core?.t("layers.title") ?? "Layers";
+    const extras = this._layers.filter((l) => l.userAdded);
+    const title = cfg.controls.layerSwitcher.title ?? t("layers.title");
     return html`
       <div class="toc panel" part="toc" ?data-open=${this._tocOpen}>
         <button
@@ -242,10 +352,43 @@ export class Map0Viewer extends LitElement {
           @click=${() => (this._tocOpen = !this._tocOpen)}
           aria-expanded=${this._tocOpen ? "true" : "false"}
         >
-          ${icons.layers}<span>${title}</span>${icons.chevron}
+          ${icons.layers}<span>${title}</span>
+          ${allowAdd
+            ? html`<span
+                class="icon-btn add-btn"
+                role="button"
+                tabindex="0"
+                title=${t("addLayer.title")}
+                aria-label=${t("addLayer.title")}
+                @click=${(e: Event) => {
+                  e.stopPropagation();
+                  this._addOpen = true;
+                }}
+                @keydown=${(e: KeyboardEvent) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this._addOpen = true;
+                  }
+                }}
+                >${icons.plus}</span
+              >`
+            : nothing}
+          ${icons.chevron}
         </button>
         ${this._tocOpen
-          ? html`<div class="panel-body">${this.renderNodes(cfg.toc, byId, "")}</div>`
+          ? html`<div class="panel-body">
+              ${this.renderNodes(cfg.toc, byId, "")}
+              ${extras.length > 0
+                ? html`<div class="toc-extras">
+                    <div class="group-label">${t("layers.added")}</div>
+                    ${extras.map((l) => this.renderLayerRow(l))}
+                  </div>`
+                : nothing}
+              ${cfg.layers.length === 0 && extras.length === 0
+                ? html`<div class="toc-empty">${t("layers.empty")}</div>`
+                : nothing}
+            </div>`
           : nothing}
       </div>
     `;
@@ -311,6 +454,16 @@ export class Map0Viewer extends LitElement {
                 aria-label=${l.metadataTitle ?? t("layers.metadata")}
                 >${icons.info}</a
               >`
+            : nothing}
+          ${l.userAdded
+            ? html`<button
+                class="icon-btn remove-btn"
+                title=${t("layers.remove")}
+                aria-label=${t("layers.remove")}
+                @click=${() => this.core?.removeLayer(l.id)}
+              >
+                ✕
+              </button>`
             : nothing}
         </div>
         ${outOfRange

@@ -122,7 +122,9 @@ app.setLayerVisibility("noise-2024", false);
           "opacity": 0.7,
           "visible": true,
           "minZoom": 9,
-          "legend": "auto",                 // auto = GetLegendGraphic | false | URL | [{label,color,…}]
+          "legend": "auto",                 // "auto" = GetLegendGraphic (WMS) / style-derived swatches
+                                            // (vector) | false | image URL |
+                                            // [{ "label", "color"?, "shape"?: square|line|circle, "image"? }]
           "info": {                         // enables GetFeatureInfo on click
             "format": "application/json",
             "title": "Lärm {{db_class}} dB",
@@ -191,12 +193,10 @@ app.setLayerVisibility("noise-2024", false);
     "layerSwitcher": {
       "position": "top-right",
       "open": "auto",                       // open on desktop, collapsed on mobile
-      "allowReorder": true,
-      "allowAdd": ["wms", "wmts", "geojson"] // [] disables the add-layer dialog
+      "allowAdd": true                      // false disables the add-layer dialog (F3.1)
     },
     "legend": { "position": "bottom-right", "open": false },
-    "print": true,
-    "measure": false,
+    "print": true,                          // print & export dialog (F7): PNG download + print view
     "attribution": { "compact": "auto" }
   },
 
@@ -262,6 +262,15 @@ Result: full-quality map with default controls (zoom, attribution, fullscreen), 
 **Simplified style:** flat paint-property object (`circle-*`, `line-*`, `fill-*`, auto-derived per
 geometry). **Full control:** pass a MapLibre `style: [ …layer objects… ]` array instead. Both are
 valid; the simple form covers 80 % of admin needs, the full form keeps experts unblocked.
+
+## Runtime layer management (F3)
+
+The add-layer dialog (TOC "+", `controls.layerSwitcher.allowAdd`) lets users paste a WMS URL;
+capabilities are parsed client-side (@camptocamp/ogc-client) and picked layers are added with
+GetFeatureInfo, legend, metadata link and a zoom range derived from the service's
+Max/MinScaleDenominator. User-added layers live in session state only — they never mutate the page
+config — and are removable (✕ in the TOC). The same operations are available programmatically:
+`api.addLayer(def)` / `api.removeLayer(id)`.
 
 ## Templating & sanitization
 

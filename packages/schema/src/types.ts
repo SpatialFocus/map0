@@ -69,6 +69,15 @@ export type LayerDef =
 
 export type LayerType = LayerDef["type"];
 
+export interface LegendEntryDef {
+  label: string;
+  /** CSS color for the swatch */
+  color?: string;
+  shape?: "square" | "line" | "circle";
+  /** image URL instead of a color swatch */
+  image?: string;
+}
+
 export interface LayerCommon {
   id?: string;
   title?: string;
@@ -79,8 +88,11 @@ export interface LayerCommon {
   maxZoom?: number;
   attribution?: string;
   metadata?: { url?: string; title?: string };
-  /** "auto" (service legend) | false | image URL — parsed in v0, rendered from M1 */
-  legend?: "auto" | false | string;
+  /**
+   * "auto" (default): WMS GetLegendGraphic / swatches derived from the style ·
+   * false: no legend · string: legend image URL · array: explicit entries
+   */
+  legend?: "auto" | false | string | LegendEntryDef[];
 }
 
 export interface GroupLayerDef {
@@ -167,8 +179,17 @@ export interface ControlsConfig {
   attribution?: boolean | { compact?: boolean | "auto" };
   layerSwitcher?:
     | boolean
-    | { position?: ControlPosition; open?: boolean | "auto"; title?: string };
+    | {
+        position?: ControlPosition;
+        open?: boolean | "auto";
+        title?: string;
+        /** show the "add layer by URL" dialog (F3.1); default true */
+        allowAdd?: boolean;
+      };
   basemapSwitcher?: boolean | { position?: ControlPosition };
+  legend?: boolean | { position?: ControlPosition; open?: boolean };
+  /** print & export dialog (F7); default true */
+  print?: boolean;
 }
 
 /* -------------------------------- theming ------------------------------- */

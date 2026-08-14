@@ -1,9 +1,15 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
-import type { NormalizedConfig, NormalizedLayer } from "@map0/schema";
+import {
+  normalizeSingleLayer,
+  type GroupLayerDef,
+  type LayerDef,
+  type NormalizedConfig,
+  type NormalizedLayer,
+} from "@map0/schema";
 import type { OverlayIds } from "./basemaps.js";
 import { createAdapter } from "./adapters/registry.js";
 import { ensurePmtilesProtocol } from "./adapters/vector.js";
-import type { AdapterContext, LayerStatus, SourceAdapter } from "./adapters/types.js";
+import type { AdapterContext, LayerStatus, LegendSpec, SourceAdapter } from "./adapters/types.js";
 import { Signal } from "./signals.js";
 
 export interface LayerUIState {
@@ -17,6 +23,9 @@ export interface LayerUIState {
   maxZoom?: number;
   /** false when the layer is configured with a zoom range the map is currently outside of (F2.5) */
   inZoomRange: boolean;
+  legend: LegendSpec | null;
+  /** true for layers added at runtime via the add-layer dialog (removable) */
+  userAdded: boolean;
   metadataUrl?: string;
   metadataTitle?: string;
   attribution?: string;
@@ -26,6 +35,9 @@ export class LayerManager {
   readonly state = new Signal<LayerUIState[]>([]);
   private readonly adapters = new Map<string, SourceAdapter>();
   private readonly runtime = new Map<string, { visible: boolean; opacity: number }>();
+  /** layers added at runtime (F3) — rendered after the configured tree, top-most on the map */
+  private readonly extra: NormalizedLayer[] = [];
+  private ctx?: AdapterContext;
 
   constructor(
     private readonly map: MapLibreMap,
@@ -34,12 +46,16 @@ export class LayerManager {
     /* re-evaluate zoom-range hints; only refresh when a layer enters/leaves its range */
     let rangeSignature = "";
     this.map.on("zoom", () => {
-      const sig = this.cfg.layers.map((d) => this.inZoomRange(d)).join(",");
+      const sig = this.allDefs.map((d) => this.inZoomRange(d)).join(",");
       if (sig !== rangeSignature) {
         rangeSignature = sig;
         this.refresh();
       }
     });
+  }
+
+  private get allDefs(): NormalizedLayer[] {
+    return [...this.cfg.layers, ...this.extra];
   }
 
   private inZoomRange(def: NormalizedLayer): boolean {
@@ -71,6 +87,7 @@ export class LayerManager {
   }
 
   async mountAll(ctx: AdapterContext): Promise<void> {
+    this.ctx = ctx;
     const defs: NormalizedLayer[] = this.cfg.layers;
     const needsPmtiles = defs.some(
       (d) => d.type === "vector" && typeof d.url === "string" && d.url.startsWith("pmtiles://"),
@@ -93,6 +110,43 @@ export class LayerManager {
     this.refresh();
   }
 
+  /** Add a (non-group) layer at runtime; returns its id or null on failure (F3.1). */
+  async addLayer(def: Exclude<LayerDef, GroupLayerDef>): Promise<string | null> {
+    if (!this.ctx) return null;
+    const norm = normalizeSingleLayer(def, this.adapters.keys());
+    if (norm.type === "vector" && norm.url.startsWith("pmtiles://")) {
+      const { ensurePmtilesProtocol: ensure } = await import("./adapters/vector.js");
+      await ensure();
+    }
+    const adapter = createAdapter(norm);
+    if (!adapter) return null;
+    try {
+      adapter.mount(this.ctx);
+    } catch (e) {
+      console.error(`[map0] failed to add layer "${norm.id}"`, e);
+      return null;
+    }
+    this.extra.push(norm);
+    this.adapters.set(norm.id, adapter);
+    this.runtime.set(norm.id, { visible: norm.visible, opacity: norm.opacity });
+    adapter.status.subscribe(() => this.refresh());
+    this.refresh();
+    return norm.id;
+  }
+
+  /** Remove a runtime-added layer (configured layers stay; F3.3). */
+  removeLayer(id: string): boolean {
+    const idx = this.extra.findIndex((l) => l.id === id);
+    const adapter = this.adapters.get(id);
+    if (idx === -1 || !adapter) return false;
+    adapter.unmount();
+    this.extra.splice(idx, 1);
+    this.adapters.delete(id);
+    this.runtime.delete(id);
+    this.refresh();
+    return true;
+  }
+
   setVisibility(id: string, visible: boolean): void {
     const adapter = this.adapters.get(id);
     const rt = this.runtime.get(id);
@@ -112,10 +166,12 @@ export class LayerManager {
   }
 
   private refresh(): void {
-    this.state.value = this.cfg.layers.map((def) => {
+    const extraIds = new Set(this.extra.map((l) => l.id));
+    this.state.value = this.allDefs.map((def) => {
       const rt = this.runtime.get(def.id);
       const adapter = this.adapters.get(def.id);
       return {
+        userAdded: extraIds.has(def.id),
         id: def.id,
         title: def.title,
         groupPath: def.groupPath,
@@ -125,6 +181,7 @@ export class LayerManager {
         minZoom: def.minZoom,
         maxZoom: def.maxZoom,
         inZoomRange: this.inZoomRange(def),
+        legend: adapter?.legend() ?? null,
         metadataUrl: def.metadata?.url,
         metadataTitle: def.metadata?.title,
         attribution: def.attribution,
