@@ -61,7 +61,8 @@ app.setLayerVisibility("noise-2024", false);
 | `search` | geocoder config | no |
 | `print` | print/export layout options | no |
 | `theme` | design tokens, light/dark | no |
-| `i18n` | locale, string overrides | no |
+| `i18n` | locale, string overrides (`overrides: { "<locale>": { "<key>": "<text>" } }`) | no |
+| `permalink` | shareable state in the URL hash (F10.1): view, basemap, layer states, user-added layers; `true` or `{ "param": "map0" }` — opt-in, coexists with host hash routing | no |
 
 ## Full annotated example
 
@@ -199,6 +200,9 @@ app.setLayerVisibility("noise-2024", false);
     },
     "legend": { "position": "bottom-right", "open": false },
     "print": true,                          // print & export dialog (F7): PNG download + print view
+    "coordinates": true,                    // right-click/long-press readout (F5.6); default:
+                                            // WGS 84 + Austrian GK strip + UTM zone (auto-selected);
+                                            // or { "crs": [{ "code", "label"?, "def"? (proj4) }] }
     "attribution": { "compact": "auto" }
   },
 
