@@ -244,6 +244,16 @@ export const componentStyles = css`
     color: var(--map0-muted);
   }
 
+  .layer-row[data-out-of-range] .layer-title {
+    color: var(--map0-muted);
+  }
+  .zoom-hint {
+    padding: 1px 2px 0 25px;
+    font-size: 11px;
+    color: var(--map0-muted);
+    font-style: italic;
+  }
+
   /* -------------------------- basemap switcher -------------------------- */
 
   .basemaps {

@@ -13,6 +13,10 @@ export interface LayerUIState {
   visible: boolean;
   opacity: number;
   status: LayerStatus;
+  minZoom?: number;
+  maxZoom?: number;
+  /** false when the layer is configured with a zoom range the map is currently outside of (F2.5) */
+  inZoomRange: boolean;
   metadataUrl?: string;
   metadataTitle?: string;
   attribution?: string;
@@ -26,7 +30,24 @@ export class LayerManager {
   constructor(
     private readonly map: MapLibreMap,
     private readonly cfg: NormalizedConfig,
-  ) {}
+  ) {
+    /* re-evaluate zoom-range hints; only refresh when a layer enters/leaves its range */
+    let rangeSignature = "";
+    this.map.on("zoom", () => {
+      const sig = this.cfg.layers.map((d) => this.inZoomRange(d)).join(",");
+      if (sig !== rangeSignature) {
+        rangeSignature = sig;
+        this.refresh();
+      }
+    });
+  }
+
+  private inZoomRange(def: NormalizedLayer): boolean {
+    const z = this.map.getZoom();
+    if (def.minZoom !== undefined && z < def.minZoom) return false;
+    if (def.maxZoom !== undefined && z >= def.maxZoom) return false;
+    return true;
+  }
 
   get overlayIds(): OverlayIds {
     const sources = new Set<string>();
@@ -101,6 +122,9 @@ export class LayerManager {
         visible: rt?.visible ?? def.visible,
         opacity: rt?.opacity ?? def.opacity,
         status: adapter?.status.value ?? "error",
+        minZoom: def.minZoom,
+        maxZoom: def.maxZoom,
+        inZoomRange: this.inZoomRange(def),
         metadataUrl: def.metadata?.url,
         metadataTitle: def.metadata?.title,
         attribution: def.attribution,

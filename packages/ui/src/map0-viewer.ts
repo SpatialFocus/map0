@@ -281,8 +281,9 @@ export class Map0Viewer extends LitElement {
 
   private renderLayerRow(l: LayerUIState): TemplateResult {
     const t = this.core?.t ?? ((k: string) => k);
+    const outOfRange = l.visible && !l.inZoomRange;
     return html`
-      <div class="layer-row">
+      <div class="layer-row" ?data-out-of-range=${outOfRange}>
         <div class="layer-main">
           <label>
             <input
@@ -293,11 +294,13 @@ export class Map0Viewer extends LitElement {
             />
             <span class="layer-title" title=${l.title}>${l.title}</span>
           </label>
-          <span
-            class="status-dot"
-            data-status=${l.status}
-            title=${l.status === "error" ? t("layers.error") : ""}
-          ></span>
+          ${outOfRange
+            ? nothing
+            : html`<span
+                class="status-dot"
+                data-status=${l.status}
+                title=${l.status === "error" ? t("layers.error") : ""}
+              ></span>`}
           ${l.metadataUrl
             ? html`<a
                 class="meta-link"
@@ -310,6 +313,15 @@ export class Map0Viewer extends LitElement {
               >`
             : nothing}
         </div>
+        ${outOfRange
+          ? html`
+              <div class="zoom-hint">
+                ${l.minZoom !== undefined && (this.core?.map.getZoom() ?? 0) < l.minZoom
+                  ? html`${t("layers.zoomHintMin")} ${l.minZoom}`
+                  : html`${t("layers.zoomHintMax")} ${l.maxZoom}`}
+              </div>
+            `
+          : nothing}
         ${l.visible
           ? html`
               <div class="opacity-row">
