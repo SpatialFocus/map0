@@ -88,6 +88,24 @@ Canvas maps have structural a11y limits; map0 must add its own layer:
   (`@maplibre/maplibre-gl-native` 6.4.1) or [mbgl-renderer](https://www.npmjs.com/package/mbgl-renderer)
   as a static-map service → scale-true PDF adapter without changing the client architecture.
 
+## Field notes from the M0 spike (2026-08-14, verified hands-on)
+
+1. **MapLibre v6 worker architecture**: v6 spawns its worker from *separate dist files*
+   (`maplibre-gl-worker.mjs` shim → imports `maplibre-gl-shared.mjs`), resolved **relative to the
+   main bundle URL**. Consequences: (a) our dist must ship both files next to `map0.js`
+   (handled by a build plugin); (b) in Vite dev, `optimizeDeps.exclude: ["maplibre-gl"]` is
+   required — pre-bundling breaks the worker URL, the worker 404s and dies **silently**: raster
+   still renders (main thread) while vector tiles/GeoJSON never appear. Diagnostic: check
+   `page.workers()` / DevTools worker list.
+2. **basemap.at styles need URL fixing**: the bmapv style declares a *relative* sprite path
+   (`../sprites/sprite`, rejected by MapLibre v6) and its ESRI-style TileJSON returns *relative*
+   `tiles` templates (`tile/{z}/{y}/{x}.pbf`) that MapLibre does not resolve → no tile requests at
+   all. map0 core therefore (a) absolutizes `sprite`/`glyphs`/`tiles` against the style URL
+   (brace-safe, no `URL()` encoding of `{z}`) and (b) fetches + inlines TileJSON sources.
+   Both fixes live in `packages/core/src/basemaps.ts`.
+3. **`map.isStyleLoaded()` is not a readiness signal** (stays false with any pending work);
+   the UI dismisses its loading veil on the first rendered frame after `style.load` instead.
+
 ## Watch list
 
 - **Custom-CRS roadmap item** — would change the national-grid story; keep `crs` extensible in schema (D-02).

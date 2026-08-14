@@ -1,0 +1,25 @@
+{
+  "name": "map0-monorepo",
+  "private": true,
+  "version": "0.0.0",
+  "description": "map0 — modern, embeddable, JSON-configurable web map client built on MapLibre GL JS (working title)",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@11.21.0",
+  "scripts": {
+    "dev": "vite --config examples/vite.config.ts",
+    "build": "pnpm --filter @map0/ui build",
+    "demo:standalone": "pnpm build && node -e \"const fs=require('node:fs');fs.mkdirSync('examples/public/standalone',{recursive:true});for(const f of ['map0.js','map0.js.map','maplibre-gl-worker.mjs','maplibre-gl-shared.mjs'])fs.copyFileSync('packages/ui/dist/'+f,'examples/public/standalone/'+f)\"",
+    "typecheck": "tsc --build",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
+  }
+}

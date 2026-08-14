@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>map0 — Standalone (built bundle)</title>
+    <style>
+      body { margin: 0; height: 100vh; display: flex; flex-direction: column; font-family: system-ui, sans-serif; }
+      header { padding: 10px 16px; font-size: 14px; display: flex; gap: 12px; align-items: baseline; }
+      header a { color: #0e7490; }
+      map0-viewer { flex: 1; margin: 0 10px 10px; }
+    </style>
+    <!-- The M0 exit criterion: ONE script tag + ONE JSON config, no bundler, no framework.
+         Run `pnpm demo:standalone` first — it builds dist/map0.js and copies it here. -->
+    <script type="module" src="/standalone/map0.js"></script>
+  </head>
+  <body>
+    <header><strong>map0</strong> · Standalone-Test (gebautes Bundle statt Dev-Aliase) <a href="/">← Gallery</a></header>
+    <map0-viewer config-src="/configs/vienna.map0.json"></map0-viewer>
+  </body>
+</html>

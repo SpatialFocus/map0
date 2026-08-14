@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "meta": {
+    "title": "GeoJSON & Cluster",
+    "description": "Remote-GeoJSON (WFS-Ausgabe, geclustert) + lokale Demo-Daten mit Popup-Templates."
+  },
+  "map": {
+    "center": [16.3725, 48.2083],
+    "zoom": 12
+  },
+  "basemaps": [
+    {
+      "id": "bmapv",
+      "title": "basemap.at",
+      "type": "style",
+      "url": "https://mapsneu.wien.gv.at/basemapv/bmapv/3857/resources/styles/root.json",
+      "default": true
+    },
+    {
+      "id": "grau",
+      "title": "Grau",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at"
+    }
+  ],
+  "layers": [
+    {
+      "id": "trinkbrunnen",
+      "type": "geojson",
+      "title": "Trinkbrunnen Wien",
+      "data": "https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:TRINKBRUNNENOGD&srsName=EPSG:4326&outputFormat=json",
+      "cluster": { "enabled": true, "radius": 45 },
+      "style": {
+        "circle-color": "#7c3aed",
+        "circle-radius": 6,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 1.5
+      },
+      "popup": {
+        "title": "{{BASIS_TYP_TXT}}",
+        "fields": [{ "key": "OBJECTID", "label": "Objekt-ID" }]
+      },
+      "metadata": {
+        "url": "https://www.data.gv.at/katalog/dataset?q=Trinkbrunnen+Wien",
+        "title": "Datensatz auf data.gv.at"
+      },
+      "attribution": "Stadt Wien — data.wien.gv.at"
+    },
+    {
+      "id": "demo-areas",
+      "type": "geojson",
+      "title": "Demo-Zonen (lokal)",
+      "data": "/data/demo-areas.geojson",
+      "style": {
+        "fill-color": "#f59e0b",
+        "fill-opacity": 0.25,
+        "line-color": "#f59e0b",
+        "line-width": 2
+      },
+      "popup": {
+        "title": "{{name}}",
+        "content": "<p>{{beschreibung}}</p><p><b>Kategorie:</b> {{kategorie}}</p>"
+      }
+    }
+  ],
+  "theme": {
+    "primary": "#7c3aed",
+    "radius": "lg"
+  },
+  "i18n": { "locale": "de" }
+}

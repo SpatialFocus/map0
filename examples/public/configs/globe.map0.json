@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "meta": { "title": "Globe", "description": "MapLibre-Globus mit Inline-GeoJSON." },
+  "map": {
+    "center": [16.37, 48.21],
+    "zoom": 1.8,
+    "projection": "globe"
+  },
+  "basemaps": [
+    {
+      "id": "demotiles",
+      "title": "MapLibre Demo Tiles",
+      "type": "style",
+      "url": "https://demotiles.maplibre.org/style.json",
+      "default": true
+    }
+  ],
+  "layers": [
+    {
+      "id": "capitals",
+      "type": "geojson",
+      "title": "Hauptstädte (inline)",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          { "type": "Feature", "properties": { "name": "Wien", "land": "Österreich" }, "geometry": { "type": "Point", "coordinates": [16.3725, 48.2083] } },
+          { "type": "Feature", "properties": { "name": "Berlin", "land": "Deutschland" }, "geometry": { "type": "Point", "coordinates": [13.405, 52.52] } },
+          { "type": "Feature", "properties": { "name": "Bern", "land": "Schweiz" }, "geometry": { "type": "Point", "coordinates": [7.4474, 46.9481] } },
+          { "type": "Feature", "properties": { "name": "Tokio", "land": "Japan" }, "geometry": { "type": "Point", "coordinates": [139.6917, 35.6895] } },
+          { "type": "Feature", "properties": { "name": "Canberra", "land": "Australien" }, "geometry": { "type": "Point", "coordinates": [149.1281, -35.2809] } },
+          { "type": "Feature", "properties": { "name": "Brasília", "land": "Brasilien" }, "geometry": { "type": "Point", "coordinates": [-47.8825, -15.7942] } },
+          { "type": "Feature", "properties": { "name": "Ottawa", "land": "Kanada" }, "geometry": { "type": "Point", "coordinates": [-75.6972, 45.4215] } }
+        ]
+      },
+      "style": {
+        "circle-color": "#0ea5e9",
+        "circle-radius": 6,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 2
+      },
+      "popup": {
+        "title": "{{name}}",
+        "fields": [{ "key": "land", "label": "Land" }]
+      }
+    }
+  ],
+  "controls": { "home": true },
+  "theme": { "mode": "dark", "primary": "#0ea5e9" },
+  "i18n": { "locale": "de" }
+}

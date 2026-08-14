@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      # E2E (e2e/verify-demos.mjs) stays local/manual in M0: it drives live SDI
+      # services and a real browser. Becomes a Playwright suite with recorded
+      # fixtures in M1 — see docs/07-roadmap.md.

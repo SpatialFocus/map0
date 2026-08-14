@@ -1,0 +1,65 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Demo-Zone Innere Stadt",
+        "beschreibung": "Handgezeichnete Demonstrationsfläche für Popup-Templates — keine echten Daten.",
+        "kategorie": "Demo A"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [16.3628, 48.2132],
+            [16.3775, 48.2158],
+            [16.3852, 48.2092],
+            [16.3785, 48.2028],
+            [16.3652, 48.2046],
+            [16.3628, 48.2132]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Demo-Zone Prater",
+        "beschreibung": "Zweite Demonstrationsfläche mit anderer Geometrie.",
+        "kategorie": "Demo B"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [16.3931, 48.2168],
+            [16.4118, 48.2189],
+            [16.4165, 48.2115],
+            [16.4002, 48.2078],
+            [16.3931, 48.2168]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Demo-Route Ringstraße",
+        "beschreibung": "Demonstrationslinie entlang des Rings.",
+        "kategorie": "Demo C"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [16.3584, 48.2029],
+          [16.3612, 48.2107],
+          [16.3667, 48.2146],
+          [16.3782, 48.2168],
+          [16.3844, 48.2124],
+          [16.3839, 48.2056]
+        ]
+      }
+    }
+  ]
+}

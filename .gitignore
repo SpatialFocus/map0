@@ -6,6 +6,12 @@ dist/
 build/
 *.tsbuildinfo
 
+# Generated demo bundle (created by `pnpm demo:standalone`)
+examples/public/standalone/
+
+# E2E screenshot artifacts
+e2e/shots/
+
 # Test & coverage
 coverage/
 playwright-report/

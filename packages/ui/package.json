@@ -1,0 +1,25 @@
+{
+  "name": "@map0/ui",
+  "version": "0.0.0",
+  "private": true,
+  "description": "map0 web component: <map0-viewer> built on Lit + @map0/core",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@map0/core": "workspace:*",
+    "@map0/schema": "workspace:*",
+    "dompurify": "^3.2.0",
+    "lit": "^3.2.0",
+    "maplibre-gl": "^6.3.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}
