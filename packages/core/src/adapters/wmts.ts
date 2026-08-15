@@ -1,4 +1,5 @@
 import type { NormalizedLayer, WmtsLayerDef } from "@map0/schema";
+import { loadOgcClient } from "../ogc.js";
 import { SourceAdapter, type LegendSpec } from "./types.js";
 
 interface ResourceLinkLike {
@@ -96,7 +97,7 @@ export class WmtsAdapter extends SourceAdapter<NormalizedWmts> {
 
   protected override async addToMap(): Promise<void> {
     const { map } = this.ctx;
-    const { WmtsEndpoint } = await import("@camptocamp/ogc-client");
+    const { WmtsEndpoint } = await loadOgcClient();
     const endpoint = new WmtsEndpoint(this.def.url);
     await endpoint.isReady();
 

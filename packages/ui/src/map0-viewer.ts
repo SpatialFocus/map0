@@ -18,8 +18,12 @@ import {
 import { resolveConfigExtends, type TocNode } from "@map0/schema";
 import { buildPopupContent } from "./popup.js";
 import { componentStyles } from "./styles.js";
-import "./add-layer-dialog.js";
-import "./print-dialog.js";
+/* The dialogs — and what they drag in, capabilities parsing and the print
+   composer — are loaded the first time a user opens them, not on page load. */
+const loadDialog = {
+  add: () => import("./add-layer-dialog.js"),
+  print: () => import("./print-dialog.js"),
+};
 
 const CONTROL_SVGS = {
   print:
@@ -86,6 +90,7 @@ export class Map0Viewer extends LitElement {
   @state() private _legendOpen = false;
   @state() private _addOpen = false;
   @state() private _printOpen = false;
+  @state() private _dialogLoading: "add" | "print" | null = null;
   @state() private _groupCollapsed: Record<string, boolean> = {};
   @state() private _ready = false;
   @state() private _notices: Array<{ id: number; kind: "error" | "info"; text: string }> = [];
@@ -151,6 +156,20 @@ export class Map0Viewer extends LitElement {
 
   private emit(name: string, detail: unknown): void {
     this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
+  }
+
+  /** load a dialog's chunk, then open it (a slow network shows a busy cursor, not a blank panel) */
+  private async openDialog(kind: "add" | "print"): Promise<void> {
+    this._dialogLoading = kind;
+    try {
+      await loadDialog[kind]();
+      if (kind === "add") this._addOpen = true;
+      else this._printOpen = true;
+    } catch (e) {
+      this.notify("error", String(e));
+    } finally {
+      this._dialogLoading = null;
+    }
   }
 
   /** transient notice toast (auto-dismisses; also used by copy/share actions) */
@@ -236,7 +255,7 @@ export class Map0Viewer extends LitElement {
       );
       if (cfg.controls.print) {
         core.map.addControl(
-          new IconButtonControl("print", () => (this._printOpen = true), core.t("print.title")),
+          new IconButtonControl("print", () => void this.openDialog("print"), core.t("print.title")),
           "top-left",
         );
       }
@@ -351,7 +370,7 @@ export class Map0Viewer extends LitElement {
     if (this._fatal) return this.renderErrors([{ path: "$", message: this._fatal }]);
     if (this._errors) return this.renderErrors(this._errors);
     return html`
-      <div class="stage">
+      <div class="stage" ?data-busy=${this._dialogLoading !== null}>
         <div class="map" aria-label=${this.normalized?.meta.title ?? "Karte"}></div>
         <div class="loading" ?data-done=${this._ready} aria-hidden="true">
           <div class="spinner"></div>
@@ -498,13 +517,13 @@ export class Map0Viewer extends LitElement {
                 aria-label=${t("addLayer.title")}
                 @click=${(e: Event) => {
                   e.stopPropagation();
-                  this._addOpen = true;
+                  void this.openDialog("add");
                 }}
                 @keydown=${(e: KeyboardEvent) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     e.stopPropagation();
-                    this._addOpen = true;
+                    void this.openDialog("add");
                   }
                 }}
                 >${icons.plus}</span

@@ -10,7 +10,7 @@ import {
 import { BasemapManager, basemapStyle, resolveBasemapStyle } from "./basemaps.js";
 import { applyControls, type InitialView } from "./controls.js";
 import type { CoreEvents } from "./events.js";
-import { formatCoordinates } from "./coordinates.js";
+import { formatCoordinatesAsync } from "./coordinates.js";
 import { wireFeatureInfo } from "./featureinfo.js";
 import { HighlightManager } from "./highlight.js";
 import { makeT, maplibreLocale, resolveLocale, type Translate } from "./i18n.js";
@@ -32,11 +32,19 @@ export { buildGetFeatureInfoUrl, buildLegendUrl, buildWmsTileUrl } from "./adapt
 export { buildWmtsTemplate, isMercatorCrs, type WmtsTemplateParts } from "./adapters/wmts.js";
 export { absolutizeUrl, basemapStyle, BasemapManager, fetchTileJson } from "./basemaps.js";
 export { geojsonBounds } from "./bbox.js";
-export { autoGkCode, autoUtmCode, formatCoordinates, type CoordinateEntry } from "./coordinates.js";
+export {
+  autoGkCode,
+  autoUtmCode,
+  formatCoordinates,
+  formatCoordinatesAsync,
+  loadProj4,
+  type CoordinateEntry,
+} from "./coordinates.js";
 export { HighlightManager };
 export type { CoreEvents } from "./events.js";
 export { makeT, resolveLocale, type Translate } from "./i18n.js";
 export { LayerManager, type LayerUIState } from "./layers.js";
+export { loadOgcClient, type OgcClient } from "./ogc.js";
 export {
   decodeShareState,
   encodeShareState,
@@ -258,9 +266,8 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
   if (cfg.controls.coordinates !== false) {
     const crsList = cfg.controls.coordinates.crs;
     const emitAt = (lngLat: { lng: number; lat: number }): void => {
-      events.emit("coordinates", {
-        lngLat: [lngLat.lng, lngLat.lat],
-        entries: formatCoordinates(lngLat.lng, lngLat.lat, crsList),
+      void formatCoordinatesAsync(lngLat.lng, lngLat.lat, crsList).then((entries) => {
+        events.emit("coordinates", { lngLat: [lngLat.lng, lngLat.lat], entries });
       });
     };
     map.on("contextmenu", (e) => {

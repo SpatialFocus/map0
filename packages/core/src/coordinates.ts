@@ -3,7 +3,16 @@
  * the box — common Austrian SDI systems ship as built-in definitions, anything
  * else can be registered via config (controls.coordinates.crs[].def).
  */
-import proj4 from "proj4";
+import type Proj4 from "proj4";
+
+/** proj4 is only needed once someone asks for coordinates — keep it out of the entry chunk */
+type Proj4Module = typeof Proj4;
+let proj4: Proj4Module | undefined;
+
+export async function loadProj4(): Promise<Proj4Module> {
+  proj4 ??= (await import("proj4")).default;
+  return proj4;
+}
 
 export interface CrsDisplayDef {
   code: string;
@@ -58,9 +67,9 @@ export function autoUtmCode(lng: number, lat: number): string {
   return `EPSG:${lat >= 0 ? 326 : 327}${String(zone).padStart(2, "0")}`;
 }
 
-function ensureRegistered(code: string, def?: string): boolean {
+function ensureRegistered(p: Proj4Module, code: string, def?: string): boolean {
   try {
-    proj4(code); // known already?
+    p(code); // known already?
     return true;
   } catch {
     const known = def ?? KNOWN[code]?.def ?? (/^EPSG:326\d\d$/.test(code)
@@ -69,14 +78,26 @@ function ensureRegistered(code: string, def?: string): boolean {
         ? `+proj=utm +zone=${Number(code.slice(-2))} +south +datum=WGS84 +units=m +no_defs`
         : undefined);
     if (!known) return false;
-    proj4.defs(code, known);
+    p.defs(code, known);
     return true;
   }
+}
+
+/** Load proj4 (once), then format — the entry point used by the map. */
+export async function formatCoordinatesAsync(
+  lng: number,
+  lat: number,
+  crsList?: CrsDisplayDef[],
+): Promise<CoordinateEntry[]> {
+  await loadProj4();
+  return formatCoordinates(lng, lat, crsList);
 }
 
 /**
  * Format a WGS84 position in the display CRS list. Default (no config):
  * WGS 84 + the matching Austrian GK strip + the matching UTM zone.
+ * Requires `loadProj4()` to have run — use `formatCoordinatesAsync` unless proj4
+ * is known to be loaded already.
  */
 export function formatCoordinates(
   lng: number,
@@ -88,6 +109,7 @@ export function formatCoordinates(
       ? crsList
       : [{ code: "EPSG:4326" }, { code: autoGkCode(lng) }, { code: autoUtmCode(lng, lat) }];
 
+  const p = proj4;
   const entries: CoordinateEntry[] = [];
   for (const item of list) {
     if (item.code === "EPSG:4326") {
@@ -98,12 +120,16 @@ export function formatCoordinates(
       });
       continue;
     }
-    if (!ensureRegistered(item.code, item.def)) {
+    if (!p) {
+      console.warn("[map0] proj4 is not loaded yet — use formatCoordinatesAsync()");
+      continue;
+    }
+    if (!ensureRegistered(p, item.code, item.def)) {
       console.warn(`[map0] unknown CRS "${item.code}" — provide a proj4 "def" in the config`);
       continue;
     }
     try {
-      const [x, y] = proj4("EPSG:4326", item.code, [lng, lat]) as [number, number];
+      const [x, y] = p("EPSG:4326", item.code, [lng, lat]) as [number, number];
       const precision = KNOWN[item.code]?.precision ?? 2;
       entries.push({
         code: item.code,

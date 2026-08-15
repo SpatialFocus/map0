@@ -9,6 +9,7 @@ import {
   type PrintLegendItem,
   type Translate,
 } from "@map0/core";
+import { trapFocus } from "./focus-trap.js";
 
 const SIZES: Record<string, { w: number; h: number } | null> = {
   current: null,
@@ -28,6 +29,8 @@ export class Map0PrintDialog extends LitElement {
   @state() private busy = false;
   @state() private error = "";
 
+  private releaseFocus?: () => void;
+
   protected override createRenderRoot(): HTMLElement {
     return this;
   }
@@ -35,6 +38,15 @@ export class Map0PrintDialog extends LitElement {
   override connectedCallback(): void {
     super.connectedCallback();
     this.title_ = this.core?.config.meta.title ?? "";
+  }
+
+  protected override firstUpdated(): void {
+    this.releaseFocus = trapFocus(this, () => this.close());
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.releaseFocus?.();
   }
 
   private close(): void {

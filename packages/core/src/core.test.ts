@@ -215,8 +215,8 @@ describe("coordinates", () => {
   });
 
   it("formats Vienna in WGS84, GK M34 and UTM 33N with plausible values", async () => {
-    const { formatCoordinates } = await import("./coordinates.js");
-    const entries = formatCoordinates(16.3725, 48.2083);
+    const { formatCoordinatesAsync } = await import("./coordinates.js");
+    const entries = await formatCoordinatesAsync(16.3725, 48.2083);
     expect(entries).toHaveLength(3);
     expect(entries[0]?.text).toBe("48.208300, 16.372500");
     const gk = entries[1]!;
@@ -235,10 +235,10 @@ describe("coordinates", () => {
   });
 
   it("skips unknown CRS without a def, accepts custom defs", async () => {
-    const { formatCoordinates } = await import("./coordinates.js");
-    const missing = formatCoordinates(16.37, 48.2, [{ code: "EPSG:99999" }]);
+    const { formatCoordinatesAsync } = await import("./coordinates.js");
+    const missing = await formatCoordinatesAsync(16.37, 48.2, [{ code: "EPSG:99999" }]);
     expect(missing).toHaveLength(0);
-    const custom = formatCoordinates(16.37, 48.2, [
+    const custom = await formatCoordinatesAsync(16.37, 48.2, [
       { code: "EPSG:31287", label: "Lambert" },
     ]);
     expect(custom[0]?.label).toBe("Lambert");

@@ -65,8 +65,11 @@ e2e/              headless smoke verification (grows into the Playwright suite i
 docs/             specification
 ```
 
-Distribution note: `packages/ui/dist/` ships `map0.js` **plus** MapLibre's worker files
-(`maplibre-gl-worker.mjs`, `maplibre-gl-shared.mjs`) — deploy them side by side.
+Distribution note: `packages/ui/dist/` is a flat folder — `map0.js`, its chunks, and MapLibre's
+three files shipped verbatim. Deploy the folder as a unit; the embed stays one script tag.
+Roughly **58 KB gzip** of map0 plus **275 KB** of MapLibre load up front; capabilities parsing
+(ogc-client), proj4, PMTiles and the dialogs load on first use. `pnpm size` prints the breakdown
+and fails when the eager part outgrows its budget.
 
 ## Documents
 

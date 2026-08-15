@@ -97,6 +97,10 @@ Canvas maps have structural a11y limits; map0 must add its own layer:
    required — pre-bundling breaks the worker URL, the worker 404s and dies **silently**: raster
    still renders (main thread) while vector tiles/GeoJSON never appear. Diagnostic: check
    `page.workers()` / DevTools worker list.
+   **Follow-up (code splitting):** because the worker needs `maplibre-gl-shared.mjs` on disk
+   anyway, *bundling* MapLibre ships that half twice — once inside our bundle, once as the file.
+   map0 therefore keeps `maplibre-gl` external and copies all three files verbatim into dist
+   (~130 KB gz saved, and MapLibre stays cacheable across map0 releases).
 2. **basemap.at styles need URL fixing**: the bmapv style declares a *relative* sprite path
    (`../sprites/sprite`, rejected by MapLibre v6) and its ESRI-style TileJSON returns *relative*
    `tiles` templates (`tile/{z}/{y}/{x}.pbf`) that MapLibre does not resolve → no tile requests at

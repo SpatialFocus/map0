@@ -43,6 +43,10 @@ export const componentStyles = css`
     container-type: inline-size;
     container-name: map0;
   }
+  /* a dialog chunk is loading — visible only on a slow connection */
+  .stage[data-busy] {
+    cursor: progress;
+  }
 
   .map {
     position: absolute;

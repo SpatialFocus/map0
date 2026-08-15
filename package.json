@@ -11,7 +11,8 @@
   "scripts": {
     "dev": "vite --config examples/vite.config.ts",
     "build": "pnpm --filter @map0/ui build",
-    "demo:standalone": "pnpm build && node -e \"const fs=require('node:fs');fs.mkdirSync('examples/public/standalone',{recursive:true});for(const f of ['map0.js','map0.js.map','maplibre-gl-worker.mjs','maplibre-gl-shared.mjs'])fs.copyFileSync('packages/ui/dist/'+f,'examples/public/standalone/'+f)\"",
+    "demo:standalone": "pnpm build && node -e \"const fs=require('node:fs');fs.rmSync('examples/public/standalone',{recursive:true,force:true});fs.cpSync('packages/ui/dist','examples/public/standalone',{recursive:true})\"",
+    "size": "node scripts/check-size.mjs",
     "typecheck": "tsc --build",
     "test": "vitest run",
     "test:watch": "vitest"

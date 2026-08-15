@@ -122,10 +122,32 @@ bottom sheet below). All results also exposed via `map0:featureclick` event for 
 
 ## Performance & loading (N1/N2)
 
-- Eager core: element + store + TOC + adapters ≈ target ≤ 100 KB gz (maplibre-gl ~253 KB gz loads in
-  parallel; consider `import('maplibre-gl')` deferral until the element is in viewport —
-  IntersectionObserver, good for long CMS pages).
-- Lazy modules via dynamic import: print dialog, add-layer dialog, measure, geocoder, RTL plugin.
+Measured with `pnpm size` (gzip, current):
+
+| | Size | Loaded |
+|---|---|---|
+| map0 eager (element, store, TOC, legend, popups, adapters, Lit, DOMPurify) | ~58 KB | up front — budget 100 KB, enforced in CI |
+| maplibre-gl (three files, verbatim) | ~275 KB | up front |
+| ogc-client (capabilities parsing) | ~62 KB | first add-layer dialog or WMTS layer |
+| proj4 (+ wkt-parser, mgrs) | ~47 KB | first coordinate readout |
+| PMTiles | ~8 KB | first `pmtiles://` layer |
+| print / add-layer dialogs | ~6 KB | first open |
+
+Two decisions carry most of this:
+
+- **MapLibre is external, not bundled.** It ships as ESM split across `maplibre-gl.mjs`,
+  `maplibre-gl-shared.mjs` and `maplibre-gl-worker.mjs`; the worker needs the shared half on disk
+  regardless, so bundling would ship those ~130 KB gz twice. Keeping it external also means those
+  files are byte-identical across map0 releases and survive in the HTTP cache.
+- **One import site per heavy dependency.** Every `import()` statement becomes its own chunk, so a
+  library imported dynamically from two modules is emitted twice. `core/src/ogc.ts` is the single
+  place that loads ogc-client (the WMTS adapter and the add-layer dialog both go through it).
+
+Chunks are emitted flat next to the entry: Rollup writes the external MapLibre specifier verbatim
+into every chunk, so a `chunks/` subdirectory would resolve `./maplibre-gl.mjs` one level too deep.
+
+Still open: deferring MapLibre itself until the element scrolls into view (IntersectionObserver),
+worth it on long CMS pages with a map far below the fold.
 - One shared maplibre instance per element; multiple elements per page supported (N8); workers are
   per-map (document memory implications for >3 maps/page).
 

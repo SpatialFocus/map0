@@ -5,9 +5,10 @@
  */
 import { DEMOS, GROUPS, type Demo } from "./demos.js";
 
-/* The standalone demo ships the built bundle, which registers the element itself —
-   importing the sources on top of it would load a second copy of Lit. */
-if (!customElements.get("map0-viewer")) await import("@map0/ui");
+/* The standalone demo ships the built bundle and registers the element itself.
+   It must NOT fall back to the sources: a silent fallback would make a broken
+   bundle look like a working page. Every other demo runs from source. */
+if (document.body.dataset.client !== "bundle") await import("@map0/ui");
 
 /* --------------------------------- chrome -------------------------------- */
 

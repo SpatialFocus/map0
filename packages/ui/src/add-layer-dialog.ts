@@ -1,7 +1,8 @@
 import { LitElement, html, nothing, type TemplateResult } from "lit";
 import { property, state } from "lit/decorators.js";
-import { isMercatorCrs, type Map0Core, type Translate } from "@map0/core";
+import { isMercatorCrs, loadOgcClient, type Map0Core, type OgcClient, type Translate } from "@map0/core";
 import type { LayerDef, WmsLayerDef, WmtsLayerDef } from "@map0/schema";
+import { trapFocus } from "./focus-trap.js";
 
 interface Candidate {
   name: string;
@@ -40,8 +41,19 @@ export class Map0AddLayerDialog extends LitElement {
   @state() private filter = "";
   private infoFormat: string | undefined;
 
+  private releaseFocus?: () => void;
+
   protected override createRenderRoot(): HTMLElement {
     return this;
+  }
+
+  protected override firstUpdated(): void {
+    this.releaseFocus = trapFocus(this, () => this.close());
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.releaseFocus?.();
   }
 
   private close(): void {
@@ -55,10 +67,7 @@ export class Map0AddLayerDialog extends LitElement {
     this.error = "";
     this.candidates = [];
     try {
-      /* ogc-client parses XML in a base64-inlined blob worker — bundler-safe.
-         (Do NOT call enableFallbackWithoutWorker: its handler module can be
-         dropped by dep optimizers, leaving requests queued forever.) */
-      const ogc = await import("@camptocamp/ogc-client");
+      const ogc = await loadOgcClient();
       const found: Candidate[] =
         this.service === "wms"
           ? await this.loadWms(ogc, url)
@@ -73,7 +82,7 @@ export class Map0AddLayerDialog extends LitElement {
   }
 
   private async loadWms(
-    ogc: typeof import("@camptocamp/ogc-client"),
+    ogc: OgcClient,
     url: string,
   ): Promise<Candidate[]> {
     const endpoint = new ogc.WmsEndpoint(url);
@@ -114,7 +123,7 @@ export class Map0AddLayerDialog extends LitElement {
   }
 
   private async loadWmts(
-    ogc: typeof import("@camptocamp/ogc-client"),
+    ogc: OgcClient,
     url: string,
   ): Promise<Candidate[]> {
     const endpoint = new ogc.WmtsEndpoint(url);
