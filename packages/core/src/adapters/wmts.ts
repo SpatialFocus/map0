@@ -7,6 +7,9 @@ interface ResourceLinkLike {
   format: string;
 }
 
+/** capabilities URL → origin that answered a probe tile (per session) */
+const liveOrigins = new Map<string, string>();
+
 /** slippy-tile coordinates for a lon/lat at zoom z */
 export function tileAt(lng: number, lat: number, z: number): { x: number; y: number } {
   const n = 2 ** z;
@@ -128,30 +131,39 @@ export class WmtsAdapter extends SourceAdapter<NormalizedWmts> {
 
     /* Capabilities may list stale mirror hosts (seen in the wild: basemap.at's
        maps1-4.wien.gv.at are DNS-dead). Probe candidates with one real tile and
-       take the first host that answers; 404 still means "host alive". */
+       take the first host that answers; 404 still means "host alive". The winning
+       origin is cached per service so further layers skip the probe entirely. */
     const candidates = (layer.resourceLinks as ResourceLinkLike[]).filter(
       (r) => !this.def.format || r.format === this.def.format,
     );
     const links = candidates.length > 0 ? candidates : (layer.resourceLinks as ResourceLinkLike[]);
-    let template = makeTemplate(links[0]!);
-    if (links.length > 1) {
+    const originOf = (link: ResourceLinkLike): string => {
+      try {
+        return new URL(link.url).origin;
+      } catch {
+        return "";
+      }
+    };
+    const cached = liveOrigins.get(this.def.url);
+    let chosen = (cached && links.find((l) => originOf(l) === cached)) || links[0]!;
+
+    if (!cached && links.length > 1) {
       const z = Math.min(Math.max(Math.round(map.getZoom()), 0), matrices.length - 1);
       const c = map.getCenter();
       const { x, y } = tileAt(c.lng, c.lat, z);
-      for (const candidate of links) {
-        const probeUrl = makeTemplate(candidate)
+      const probe = async (link: ResourceLinkLike): Promise<ResourceLinkLike> => {
+        const url = makeTemplate(link)
           .replace("{z}", String(z))
           .replace("{x}", String(x))
           .replace("{y}", String(y));
-        try {
-          await fetch(probeUrl, { signal: AbortSignal.timeout(5000) });
-          template = makeTemplate(candidate); // any HTTP response = host reachable
-          break;
-        } catch {
-          /* dead host — try the next mirror */
-        }
-      }
+        await fetch(url, { signal: AbortSignal.timeout(5000) });
+        return link; // any HTTP response means the host is reachable
+      };
+      chosen = await Promise.any(links.map(probe)).catch(() => links[0]!);
+      const origin = originOf(chosen);
+      if (origin) liveOrigins.set(this.def.url, origin);
     }
+    const template = makeTemplate(chosen);
 
     const styleInfo = layer.styles.find((s) => s.name === style);
     this.legendUrl = (styleInfo as { legendUrl?: string } | undefined)?.legendUrl ?? null;

@@ -30,7 +30,7 @@ export { registerAdapter } from "./adapters/registry.js";
 export { expandSimpleStyle } from "./adapters/geojson.js";
 export { buildGetFeatureInfoUrl, buildLegendUrl, buildWmsTileUrl } from "./adapters/wms.js";
 export { buildWmtsTemplate, isMercatorCrs, type WmtsTemplateParts } from "./adapters/wmts.js";
-export { basemapStyle, BasemapManager } from "./basemaps.js";
+export { absolutizeUrl, basemapStyle, BasemapManager, fetchTileJson } from "./basemaps.js";
 export { geojsonBounds } from "./bbox.js";
 export { autoGkCode, autoUtmCode, formatCoordinates, type CoordinateEntry } from "./coordinates.js";
 export { HighlightManager };

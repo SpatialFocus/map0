@@ -8,7 +8,7 @@ import { Signal } from "./signals.js";
  * Real-world need: basemap.at styles ship relative sprite/glyph paths, which
  * MapLibre v6 rejects ("Invalid sprite URL … must be absolute").
  */
-function absolutizeUrl(value: string, styleUrl: string): string {
+export function absolutizeUrl(value: string, styleUrl: string): string {
   if (/^(https?:|data:|pmtiles:|mapbox:)/i.test(value)) return value;
   const base = new URL(styleUrl);
   if (value.startsWith("//")) return base.protocol + value;
@@ -45,6 +45,33 @@ function absolutizeStyle(style: StyleSpecification, styleUrl: string): void {
  *     silently loads no tiles; (b) inlining lets us keep one style object.
  * Style-level source keys win over TileJSON keys (per TileJSON merge semantics).
  */
+export interface ResolvedTileJson {
+  tiles: string[];
+  minzoom?: number;
+  maxzoom?: number;
+  bounds?: [number, number, number, number];
+  attribution?: string;
+}
+
+/**
+ * Fetch a TileJSON document and return absolute tile templates plus the zoom
+ * range. Shared by the basemap pipeline and the vector overlay adapter.
+ */
+export async function fetchTileJson(url: string): Promise<ResolvedTileJson | null> {
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const tj = (await res.json()) as Record<string, unknown>;
+  if (!Array.isArray(tj.tiles)) return null;
+  const base = res.url || url;
+  return {
+    tiles: (tj.tiles as string[]).map((t) => absolutizeUrl(t, base)),
+    minzoom: typeof tj.minzoom === "number" ? tj.minzoom : undefined,
+    maxzoom: typeof tj.maxzoom === "number" ? tj.maxzoom : undefined,
+    bounds: Array.isArray(tj.bounds) ? (tj.bounds as [number, number, number, number]) : undefined,
+    attribution: typeof tj.attribution === "string" ? tj.attribution : undefined,
+  };
+}
+
 async function inlineTileJsonSources(style: StyleSpecification, styleUrl: string): Promise<void> {
   const jobs = Object.values(style.sources ?? {}).map(async (source) => {
     const s = source as {

@@ -45,16 +45,33 @@ export class VectorAdapter extends SourceAdapter<NormalizedVector> {
     return this.interactive;
   }
 
-  protected addToMap(): void {
+  protected override async addToMap(): Promise<void> {
     const { map } = this.ctx;
     const url = this.def.url;
-    const source = url.includes("{z}")
-      ? { type: "vector" as const, tiles: [url] }
-      : { type: "vector" as const, url };
+    let source: Record<string, unknown> = { type: "vector", url };
+    if (url.includes("{z}")) {
+      source = { type: "vector", tiles: [url] };
+    } else if (!url.startsWith("pmtiles://")) {
+      /* Inline the TileJSON: some services (basemap.at / ArcGIS VectorTileServer)
+         declare RELATIVE tile templates that MapLibre does not resolve, and the
+         inlined zoom range prevents 404-storms from overzoom requests. */
+      const { fetchTileJson } = await import("../basemaps.js");
+      const tj = await fetchTileJson(url).catch(() => null);
+      if (tj) {
+        source = {
+          type: "vector",
+          tiles: tj.tiles,
+          ...(tj.minzoom !== undefined ? { minzoom: tj.minzoom } : {}),
+          ...(tj.maxzoom !== undefined ? { maxzoom: tj.maxzoom } : {}),
+          ...(tj.attribution ? { attribution: tj.attribution } : {}),
+        };
+        if (!this.def.bounds && tj.bounds) this.def.bounds = tj.bounds;
+      }
+    }
     map.addSource(this.srcId, {
       ...source,
       ...(this.def.attribution ? { attribution: this.def.attribution } : {}),
-    });
+    } as never);
 
     this.def.style.forEach((spec: StyleLayerSpec, i) => {
       const id = `m0l-${this.def.id}-${i}`;
