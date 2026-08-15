@@ -138,6 +138,22 @@ describe("legend", () => {
     });
   });
 
+  it("does not invent swatches for a defaulted style", async () => {
+    const { GeoJsonAdapter } = await import("./adapters/geojson.js");
+    /* no `style` key → fill/line/circle are rendered speculatively (the geometry is
+       unknown until the data arrives), so there is nothing honest to summarise */
+    const adapter = new GeoJsonAdapter({
+      type: "geojson",
+      id: "g",
+      title: "G",
+      visible: true,
+      opacity: 1,
+      groupPath: [],
+      data: "https://e.org/x.geojson",
+    } as never);
+    expect(adapter.legend()).toBeNull();
+  });
+
   it("derives swatches only from literal colors", () => {
     expect(entryFromPaint("fill", { "fill-color": "#0f0" })).toEqual({
       color: "#0f0",

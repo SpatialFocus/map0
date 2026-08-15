@@ -111,9 +111,15 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
     } else {
       const expanded = expandSimpleStyle(this.def.style, accent);
       const notClustered = cluster.enabled ? ["!", ["has", "point_count"]] : null;
-      for (const [kind, paint] of Object.entries(expanded)) {
-        const entry = entryFromPaint(kind, paint);
-        if (entry) this.derivedLegend.push(entry);
+      /* Only summarise a style the author actually wrote. Without a `style` key we
+         render fill + line + circle speculatively (the geometry is unknown until the
+         data arrives), and turning that guess into legend swatches invents symbols
+         the layer may never draw. */
+      if (this.def.style) {
+        for (const [kind, paint] of Object.entries(expanded)) {
+          const entry = entryFromPaint(kind, paint);
+          if (entry) this.derivedLegend.push(entry);
+        }
       }
 
       if (expanded.fill) {
