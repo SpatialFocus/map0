@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "meta": { "title": "Place and address search" },
+  "map": { "center": [13.35, 47.6], "zoom": 6.5 },
+  "search": {
+    "provider": "photon",
+    "country": "AT",
+    "bias": true,
+    "limit": 8,
+    "coordinates": true
+  },
+  "basemaps": [
+    {
+      "id": "bmapv",
+      "title": "basemap.at",
+      "type": "style",
+      "url": "https://mapsneu.wien.gv.at/basemapv/bmapv/3857/resources/styles/root.json",
+      "default": true
+    },
+    {
+      "id": "ortho",
+      "title": "Aerial",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmaporthofoto30cm/normal/google3857/{z}/{y}/{x}.jpeg",
+      "maxZoom": 19,
+      "attribution": "© basemap.at"
+    }
+  ],
+  "controls": { "layerSwitcher": false, "legend": false }
+}

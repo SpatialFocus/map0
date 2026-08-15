@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { buildGetFeatureInfoUrl, buildLegendUrl, buildWmsTileUrl, WmsAdapter } from "./adapters/wms.js";
 import { expandSimpleStyle } from "./adapters/geojson.js";
 import { deriveFromStyleLayers, entryFromPaint } from "./adapters/legend-derive.js";
@@ -200,6 +200,123 @@ describe("permalink", () => {
     expect(readShareParam("#route=/x", "map0")).toBeNull();
     expect(writeShareParam("", "map0", "xyz")).toBe("#map0=xyz");
     expect(writeShareParam("#route=/x&map0=old", "map0", "new")).toBe("#route=/x&map0=new");
+  });
+});
+
+describe("search", () => {
+  const base = {
+    provider: "photon",
+    bias: true,
+    limit: 5,
+    minLength: 3,
+    coordinates: true,
+  } as never;
+
+  it("parses coordinate input as latitude, longitude", async () => {
+    const { parseCoordinates } = await import("./search.js");
+    expect(parseCoordinates("48.2083, 16.3725")?.center).toEqual([16.3725, 48.2083]);
+    expect(parseCoordinates("48,2083 16,3725")?.center).toEqual([16.3725, 48.2083]); // comma decimals
+    expect(parseCoordinates("  47.2692;11.4041 ")?.center).toEqual([11.4041, 47.2692]);
+    expect(parseCoordinates("stephansplatz")).toBeNull();
+    expect(parseCoordinates("120.5, 16.4")).toBeNull(); // latitude out of range
+  });
+
+  it("builds Photon requests with view bias and locale", async () => {
+    const { buildSearchUrl } = await import("./search.js");
+    const url = new URL(
+      buildSearchUrl(base, "stephansplatz", { center: [16.3725, 48.2083], lang: "de" }),
+    );
+    expect(url.origin + url.pathname).toBe("https://photon.komoot.io/api");
+    expect(url.searchParams.get("q")).toBe("stephansplatz");
+    expect(url.searchParams.get("lang")).toBe("de");
+    expect(url.searchParams.get("lat")).toBe("48.2083");
+    expect(url.searchParams.get("limit")).toBe("5");
+  });
+
+  it("builds Nominatim requests with a country filter", async () => {
+    const { buildSearchUrl } = await import("./search.js");
+    const url = new URL(
+      buildSearchUrl({ ...base, provider: "nominatim", country: "AT" } as never, "wien"),
+    );
+    expect(url.pathname).toContain("/search");
+    expect(url.searchParams.get("format")).toBe("jsonv2");
+    expect(url.searchParams.get("countrycodes")).toBe("at");
+  });
+
+  it("fills custom templates and encodes the query", async () => {
+    const { buildSearchUrl } = await import("./search.js");
+    const url = buildSearchUrl(
+      {
+        ...base,
+        provider: { url: "https://gz.example.gv.at/s?q={query}&rows={limit}&l={lang}" },
+      } as never,
+      "bad ischl",
+      { lang: "de" },
+    );
+    expect(url).toBe("https://gz.example.gv.at/s?q=bad%20ischl&rows=5&l=de");
+  });
+
+  it("normalises Photon features and honours the country filter", async () => {
+    const { search } = await import("./search.js");
+    const body = {
+      features: [
+        {
+          properties: {
+            name: "Stephansplatz",
+            street: "Stephansplatz",
+            postcode: "1010",
+            city: "Wien",
+            country: "Österreich",
+            countrycode: "AT",
+            extent: [16.37, 48.21, 16.38, 48.2], // west, north, east, south
+          },
+          geometry: { coordinates: [16.372, 48.208] },
+        },
+        {
+          properties: { name: "Stephansplatz", city: "München", countrycode: "DE" },
+          geometry: { coordinates: [11.57, 48.13] },
+        },
+      ],
+    };
+    const fetchImpl = async () => ({ ok: true, json: async () => body });
+    vi.stubGlobal("fetch", fetchImpl);
+    const results = await search({ ...base, country: "AT" } as never, "stephansplatz");
+    vi.unstubAllGlobals();
+
+    expect(results).toHaveLength(1); // the Munich hit is filtered out
+    expect(results[0]?.label).toBe("Stephansplatz");
+    expect(results[0]?.detail).toContain("1010");
+    expect(results[0]?.center).toEqual([16.372, 48.208]);
+    expect(results[0]?.bbox).toEqual([16.37, 48.2, 16.38, 48.21]); // reordered to w,s,e,n
+  });
+
+  it("normalises Nominatim results", async () => {
+    const { search } = await import("./search.js");
+    const body = [
+      {
+        display_name: "Stephansplatz, Innere Stadt, Wien, Österreich",
+        lat: "48.2084",
+        lon: "16.3720",
+        boundingbox: ["48.20", "48.21", "16.37", "16.38"], // s, n, w, e
+      },
+    ];
+    vi.stubGlobal("fetch", async () => ({ ok: true, json: async () => body }));
+    const results = await search({ ...base, provider: "nominatim" } as never, "stephansplatz");
+    vi.unstubAllGlobals();
+
+    expect(results[0]?.label).toBe("Stephansplatz");
+    expect(results[0]?.detail).toBe("Innere Stadt, Wien, Österreich");
+    expect(results[0]?.bbox).toEqual([16.37, 48.2, 16.38, 48.21]);
+  });
+
+  it("short-circuits coordinates and respects minLength", async () => {
+    const { search } = await import("./search.js");
+    vi.stubGlobal("fetch", async () => {
+      throw new Error("should not be called");
+    });
+    expect((await search(base, "48.2083, 16.3725"))[0]?.isCoordinate).toBe(true);
+    expect(await search(base, "st")).toEqual([]);
+    vi.unstubAllGlobals();
   });
 });
 

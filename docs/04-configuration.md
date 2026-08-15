@@ -216,10 +216,13 @@ inside the config it would gate. It mirrors `<img loading>`:
   },
 
   "search": {
-    "enabled": true,
-    "provider": "photon",                   // "nominatim" | "photon" | { "url": "…{query}…", … }
-    "url": "https://photon.example.org/api",
-    "countryBias": "AT",
+    "provider": "photon",                   // "photon" | "nominatim" | { url, format, labelField }
+    "url": "https://photon.example.org/api",// self-hosted instance (optional)
+    "country": "AT",                        // restrict results
+    "bias": true,                           // prefer hits near the current view
+    "limit": 8,
+    "minLength": 3,
+    "coordinates": true,                    // accept "48.2083, 16.3725" (latitude first)
     "placeholder": "Adresse oder Ort suchen…"
   },
 

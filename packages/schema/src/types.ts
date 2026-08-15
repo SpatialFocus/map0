@@ -15,6 +15,7 @@ export interface Map0Config {
   basemaps: BasemapDef[];
   layers?: LayerDef[];
   controls?: ControlsConfig;
+  search?: SearchConfig;
   theme?: ThemeConfig;
   i18n?: I18nConfig;
   /**
@@ -232,6 +233,33 @@ export interface ThemeConfig {
   primary?: string;
   radius?: "none" | "sm" | "md" | "lg";
   font?: string;
+}
+
+/** custom geocoder: a URL template plus the shape of its answer */
+export interface CustomGeocoderDef {
+  /** placeholders: {query} {limit} {lang} {bbox} {lng} {lat} */
+  url: string;
+  /** "geojson" = FeatureCollection of points (Photon-like) · "nominatim" = array of results */
+  format?: "geojson" | "nominatim";
+  /** property to use as the result label (geojson only; default: name/label/title) */
+  labelField?: string;
+}
+
+export interface SearchConfig {
+  /** false disables the search box; default is enabled when a `search` key exists */
+  enabled?: boolean;
+  provider?: "photon" | "nominatim" | CustomGeocoderDef;
+  /** override the service instance (self-hosted Photon/Nominatim) */
+  url?: string;
+  /** ISO country code to restrict results to, e.g. "AT" */
+  country?: string;
+  /** bias results toward the current view; false disables */
+  bias?: boolean;
+  limit?: number;
+  minLength?: number;
+  placeholder?: string;
+  /** accept "48.2083, 16.3725" as input (F8.2) */
+  coordinates?: boolean;
 }
 
 export interface I18nConfig {

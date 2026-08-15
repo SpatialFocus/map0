@@ -5,6 +5,7 @@
 import type {
   BasemapDef,
   ControlsConfig,
+  CustomGeocoderDef,
   GroupLayerDef,
   LayerDef,
   Map0Config,
@@ -66,6 +67,18 @@ export interface NormalizedConfig {
   theme: { mode: "auto" | "light" | "dark"; primary: string; radius: "none" | "sm" | "md" | "lg"; font?: string };
   i18n: { locale: string; fallback: string; overrides?: Record<string, Record<string, string>> };
   permalink: false | { param: string };
+  search:
+    | false
+    | {
+        provider: "photon" | "nominatim" | CustomGeocoderDef;
+        url?: string;
+        country?: string;
+        bias: boolean;
+        limit: number;
+        minLength: number;
+        placeholder?: string;
+        coordinates: boolean;
+      };
 }
 
 function uniqueId(base: string, used: Set<string>): string {
@@ -189,6 +202,19 @@ export function normalizeConfig(cfg: Map0Config): NormalizedConfig {
       !cfg.permalink
         ? false
         : { param: typeof cfg.permalink === "object" ? (cfg.permalink.param ?? "map0") : "map0" },
+    search:
+      !cfg.search || cfg.search.enabled === false
+        ? false
+        : {
+            provider: cfg.search.provider ?? "photon",
+            url: cfg.search.url,
+            country: cfg.search.country,
+            bias: cfg.search.bias ?? true,
+            limit: cfg.search.limit ?? 8,
+            minLength: cfg.search.minLength ?? 3,
+            placeholder: cfg.search.placeholder,
+            coordinates: cfg.search.coordinates ?? true,
+          },
   };
 }
 

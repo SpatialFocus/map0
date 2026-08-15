@@ -20,6 +20,7 @@ const DEMOS = [
   "geojson",
   "popups",
   "legend",
+  "search",
   "coordinates",
   "print",
   "add-layer",
@@ -203,6 +204,44 @@ if (targets.includes("coordinates")) {
     .count()
     .catch(() => 0);
   record("coordinates · four CRS rows", rows === 4, `rows: ${rows}`);
+  await page.close();
+}
+
+if (targets.includes("search")) {
+  const page = await openDemo("search");
+  const input = page.locator(".search input");
+  await input.click();
+  await input.type("stephansplatz", { delay: 30 });
+  const hits = await page
+    .locator(".search-results li")
+    .first()
+    .waitFor({ timeout: 25_000 })
+    .then(() => page.locator(".search-results li").count())
+    .catch(() => 0);
+  record("search · type-ahead returns hits", hits > 0, `hits: ${hits}`);
+  if (hits > 0) {
+    await page.locator(".search-results li").first().click();
+    await page
+      .evaluate(
+        () =>
+          new Promise((resolve) => {
+            const m = document.querySelector("map0-viewer").api.map;
+            m.once("moveend", resolve);
+            setTimeout(resolve, 20_000);
+          }),
+      )
+      .catch(() => {});
+    const at = await page.evaluate(() => {
+      const api = document.querySelector("map0-viewer").api;
+      const c = api.map.getCenter();
+      return { lng: c.lng, lat: c.lat };
+    });
+    record(
+      "search · flies to the hit and marks it",
+      Math.abs(at.lng - 16.372) < 0.05 && Math.abs(at.lat - 48.208) < 0.05,
+      `${at.lng.toFixed(3)}, ${at.lat.toFixed(3)}`,
+    );
+  }
   await page.close();
 }
 

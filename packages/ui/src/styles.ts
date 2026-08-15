@@ -258,6 +258,105 @@ export const componentStyles = css`
     font-style: italic;
   }
 
+  /* ------------------------------- search ------------------------------- */
+
+  .search {
+    position: absolute;
+    z-index: 6;
+    top: 10px;
+    left: 56px;
+    width: min(320px, calc(100% - 66px));
+  }
+  .search-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    background: var(--map0-bg);
+    border: 1px solid var(--map0-border);
+    border-radius: var(--map0-radius);
+    box-shadow: var(--map0-shadow);
+  }
+  .search-field:focus-within {
+    outline: 2px solid var(--map0-primary);
+    outline-offset: -1px;
+  }
+  .search-field .search-icon {
+    flex: none;
+    color: var(--map0-muted);
+  }
+  .search input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--map0-fg);
+    font: inherit;
+    font-size: 13.5px;
+    padding: 9px 0;
+  }
+  .search input::-webkit-search-cancel-button {
+    cursor: pointer;
+  }
+  .search-spinner {
+    flex: none;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--map0-primary) 25%, transparent);
+    border-top-color: var(--map0-primary);
+    animation: m0spin 0.8s linear infinite;
+  }
+
+  .search-results {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 4px;
+    max-height: 320px;
+    overflow-y: auto;
+    background: var(--map0-bg);
+    border: 1px solid var(--map0-border);
+    border-radius: var(--map0-radius);
+    box-shadow: var(--map0-shadow);
+    font-size: 13px;
+  }
+  .search-results li {
+    padding: 7px 9px;
+    border-radius: var(--map0-radius-sm);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .search-results li[data-active] {
+    background: color-mix(in srgb, var(--map0-primary) 12%, transparent);
+  }
+  .search-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .search-label svg {
+    flex: none;
+    color: var(--map0-primary);
+  }
+  .search-detail {
+    color: var(--map0-muted);
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .search-empty {
+    color: var(--map0-muted);
+    cursor: default;
+  }
+
   /* ------------------------------- legend ------------------------------- */
 
   .legend {
@@ -841,6 +940,29 @@ export const componentStyles = css`
   }
 
   /* ------------------------- responsive (container) --------------------- */
+
+  /* narrow: the search collapses to its icon and expands over the map on focus,
+     so it never has to share the top row with the layer panel */
+  @container map0 (max-width: 560px) {
+    .search {
+      width: 38px;
+      transition: width 0.16s ease;
+    }
+    .search[data-expanded] {
+      width: calc(100% - 66px);
+    }
+    .search input {
+      opacity: 0;
+    }
+    .search[data-expanded] input {
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .search {
+      transition: none;
+    }
+  }
 
   @container map0 (max-width: 480px) {
     .toc {

@@ -8,6 +8,7 @@ import type {
   Map0Config,
   Map0Core,
   NormalizedConfig,
+  SearchResult,
   ValidationError,
 } from "@map0/core";
 import { normalizeConfig, resolveConfigExtends, validateConfig, type TocNode } from "@map0/schema";
@@ -75,6 +76,8 @@ const icons = {
   info: html`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5"/><path d="M12 8h.01"/></svg>`,
   legend: html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="6" height="6" rx="1"/><path d="M13 7h8"/><rect x="3" y="14" width="6" height="6" rx="1"/><path d="M13 17h8"/></svg>`,
   plus: html`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`,
+  search: html`<svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>`,
+  pin: html`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>`,
 };
 
 /**
@@ -113,9 +116,17 @@ export class Map0Viewer extends LitElement {
   @state() private _loading = false;
   @state() private _notices: Array<{ id: number; kind: "error" | "info"; text: string }> = [];
   @state() private _hover: { x: number; y: number; html: string } | null = null;
+  @state() private _searchResults: SearchResult[] = [];
+  @state() private _searchBusy = false;
+  @state() private _searchActive = -1;
+  @state() private _searchExpanded = false;
+  @state() private _searchEmpty = false;
 
   private noticeSeq = 0;
   private statusSeen = new Map<string, string>();
+  private searchSeq = 0;
+  private searchTimer?: ReturnType<typeof setTimeout>;
+  private searchAbort?: AbortController;
 
   @query(".map") private mapEl?: HTMLDivElement;
 
@@ -227,6 +238,77 @@ export class Map0Viewer extends LitElement {
       this.notify("error", String(e));
     } finally {
       this._dialogLoading = null;
+    }
+  }
+
+  /* --------------------------------- search -------------------------------- */
+
+  /** debounced query; the sequence guard keeps a slow answer from overwriting a newer one */
+  private queueSearch(query: string): void {
+    clearTimeout(this.searchTimer);
+    this.searchAbort?.abort();
+    const config = this.normalized?.search;
+    if (!config || !this.core) return;
+    if (!query.trim()) {
+      this._searchResults = [];
+      this._searchEmpty = false;
+      this._searchBusy = false;
+      return;
+    }
+    this.searchTimer = setTimeout(() => {
+      void (async () => {
+        const seq = ++this.searchSeq;
+        const abort = new AbortController();
+        this.searchAbort = abort;
+        this._searchBusy = true;
+        try {
+          const { search } = await loadEngine();
+          const center = this.core!.map.getCenter();
+          const results = await search(config, query, {
+            center: [center.lng, center.lat],
+            lang: this.core!.locale,
+            signal: abort.signal,
+          });
+          if (seq !== this.searchSeq) return;
+          this._searchResults = results;
+          this._searchActive = results.length > 0 ? 0 : -1;
+          this._searchEmpty = results.length === 0 && query.trim().length >= config.minLength;
+        } catch (e) {
+          if (seq === this.searchSeq && (e as Error)?.name !== "AbortError") {
+            this._searchResults = [];
+            this.notify("error", `${this.core!.t("search.failed")}: ${(e as Error).message}`);
+          }
+        } finally {
+          if (seq === this.searchSeq) this._searchBusy = false;
+        }
+      })();
+    }, 250);
+  }
+
+  private pickSearchResult(result: SearchResult): void {
+    this.core?.showLocation({ center: result.center, bbox: result.bbox });
+    this._searchResults = [];
+    this._searchActive = -1;
+    this._searchEmpty = false;
+    this.emit("map0:search", { result });
+  }
+
+  private onSearchKey(event: KeyboardEvent): void {
+    const count = this._searchResults.length;
+    if (event.key === "ArrowDown" && count > 0) {
+      event.preventDefault();
+      this._searchActive = (this._searchActive + 1) % count;
+    } else if (event.key === "ArrowUp" && count > 0) {
+      event.preventDefault();
+      this._searchActive = (this._searchActive - 1 + count) % count;
+    } else if (event.key === "Enter") {
+      const hit = this._searchResults[Math.max(this._searchActive, 0)];
+      if (hit) this.pickSearchResult(hit);
+    } else if (event.key === "Escape") {
+      event.stopPropagation();
+      this._searchResults = [];
+      this._searchEmpty = false;
+      (event.target as HTMLInputElement).blur();
     }
   }
 
@@ -454,7 +536,7 @@ export class Map0Viewer extends LitElement {
               ${unsafeHTML(this._hover.html)}
             </div>`
           : nothing}
-        ${this.renderToc()} ${this.renderBasemaps()} ${this.renderLegend()}
+        ${this.renderSearch()} ${this.renderToc()} ${this.renderBasemaps()} ${this.renderLegend()}
         ${this._addOpen && this.core
           ? html`<map0-add-layer
               .core=${this.core}
@@ -487,6 +569,59 @@ export class Map0Viewer extends LitElement {
                 `,
               )}
             </div>`
+          : nothing}
+      </div>
+    `;
+  }
+
+  private renderSearch(): TemplateResult | typeof nothing {
+    const cfg = this.normalized;
+    if (!cfg || cfg.search === false) return nothing;
+    const t = this.core?.t ?? ((k: string) => k);
+    const open = this._searchResults.length > 0 || this._searchEmpty;
+    return html`
+      <div class="search" part="search" ?data-expanded=${this._searchExpanded}>
+        <div class="search-field">
+          ${icons.search}
+          <input
+            type="search"
+            role="combobox"
+            aria-expanded=${open ? "true" : "false"}
+            aria-controls="m0-search-list"
+            aria-label=${t("search.label")}
+            placeholder=${cfg.search.placeholder ?? t("search.placeholder")}
+            autocomplete="off"
+            @focus=${() => (this._searchExpanded = true)}
+            @blur=${() => setTimeout(() => (this._searchExpanded = false), 150)}
+            @input=${(e: Event) => this.queueSearch((e.target as HTMLInputElement).value)}
+            @keydown=${(e: KeyboardEvent) => this.onSearchKey(e)}
+          />
+          ${this._searchBusy ? html`<span class="search-spinner" aria-hidden="true"></span>` : nothing}
+        </div>
+        ${open
+          ? html`<ul class="search-results" id="m0-search-list" role="listbox">
+              ${this._searchEmpty
+                ? html`<li class="search-empty">${t("search.noResults")}</li>`
+                : this._searchResults.map(
+                    (r, i) => html`
+                      <li
+                        role="option"
+                        aria-selected=${i === this._searchActive ? "true" : "false"}
+                        ?data-active=${i === this._searchActive}
+                        @mousedown=${(e: Event) => {
+                          e.preventDefault(); // keep focus, blur would close the list first
+                          this.pickSearchResult(r);
+                        }}
+                        @mouseenter=${() => (this._searchActive = i)}
+                      >
+                        <span class="search-label">
+                          ${r.isCoordinate ? icons.pin : nothing}${r.label}
+                        </span>
+                        ${r.detail ? html`<span class="search-detail">${r.detail}</span>` : nothing}
+                      </li>
+                    `,
+                  )}
+            </ul>`
           : nothing}
       </div>
     `;

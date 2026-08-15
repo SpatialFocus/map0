@@ -52,6 +52,13 @@ export const DEMOS: Demo[] = [
     icon: "📊",
   },
   {
+    id: "search",
+    title: "Search",
+    blurb: "Type-ahead place and address search, with any gazetteer behind it.",
+    group: "Map features",
+    icon: "🔍",
+  },
+  {
     id: "coordinates",
     title: "Coordinates",
     blurb: "Right-click readout in WGS 84, Gauss-Krueger and UTM — with copy buttons.",

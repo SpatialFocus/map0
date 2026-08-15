@@ -103,6 +103,28 @@ export function validateConfig(input: unknown): ValidationResult {
     }
   }
 
+  /* search */
+  if (input.search !== undefined) {
+    if (!isObject(input.search)) {
+      err("$.search", "search must be an object");
+    } else {
+      const provider = input.search.provider;
+      if (provider !== undefined) {
+        if (isObject(provider)) {
+          if (typeof provider.url !== "string")
+            err("$.search.provider.url", "a custom geocoder needs a url template with {query}");
+          else if (!provider.url.includes("{query}"))
+            err("$.search.provider.url", 'the url template must contain the "{query}" placeholder');
+        } else if (provider !== "photon" && provider !== "nominatim") {
+          err(
+            "$.search.provider",
+            'provider must be "photon", "nominatim", or a { url, format } object',
+          );
+        }
+      }
+    }
+  }
+
   /* theme */
   if (input.theme !== undefined && isObject(input.theme)) {
     const mode = input.theme.mode;

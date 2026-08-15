@@ -76,7 +76,7 @@ therefore targets GeoNetwork first: CSW 2.0.2 and, where available, OGC API Reco
 | O-03 | Which CMS(s) must be proven first? | **resolved 2026-08-14:** none for now — the reference embed is a **plain static HTML page** ("if it runs there, it runs in any CMS"). Org context: headless CMS (Squidex, Strapi) → map0 embeds into custom frontends built on top; raises the value of the M2 React wrapper. |
 | O-04 | Hosting of demo/docs site | GitHub Pages / Netlify — decide at M0 |
 | O-05 | Browser floor | evergreen + WebGL2 (MapLibre v6 requirement) — confirm against portal analytics |
-| O-06 | Geocoder default for Austrian demos | BEV/basemap.at geocoder vs Photon instance |
+| O-06 | Geocoder default | **resolved 2026-08-15:** Photon (OSM, built for type-ahead, CORS-open) as the default, plus a provider interface — `"nominatim"` built in, and any gazetteer via a URL template. Public Photon instances carry fair-use expectations, so production installs self-host it or point at their own service. |
 | O-07 | Repository home (GitHub org?) & governance | decide before M0 ends |
 | O-08 | Catalog software + dataset-detail URL pattern | **resolved 2026-08-14:** GeoNetwork (see D-05) |
 | O-09 | Target service list for the D-02 checklist | **closed 2026-08-14:** moot — 3857 capability is an inclusion criterion, not a precondition (see D-02) |

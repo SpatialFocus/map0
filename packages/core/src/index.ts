@@ -50,6 +50,13 @@ export { makeT, resolveLocale, type Translate } from "./i18n.js";
 export { LayerManager, type LayerUIState } from "./layers.js";
 export { loadOgcClient, type OgcClient } from "./ogc.js";
 export {
+  buildSearchUrl,
+  parseCoordinates,
+  search,
+  type SearchContext,
+  type SearchResult,
+} from "./search.js";
+export {
   decodeShareState,
   encodeShareState,
   readShareParam,
@@ -92,6 +99,8 @@ export interface Map0Core {
   removeLayer(id: string): boolean;
   zoomToLayer(id: string): Promise<boolean>;
   clearHighlight(): void;
+  /** fly to a search hit and mark it (bbox when known, otherwise a close zoom) */
+  showLocation(location: { center: [number, number]; bbox?: [number, number, number, number] }): void;
   /** current shareable URL (null when `permalink` is not enabled) */
   getShareUrl(): string | null;
   destroy(): void;
@@ -322,6 +331,16 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
     removeLayer: (id) => layers.removeLayer(id),
     zoomToLayer: (id) => layers.zoomTo(id),
     clearHighlight: () => highlight.clear(),
+    showLocation: ({ center, bbox }) => {
+      if (bbox && (bbox[2] - bbox[0] > 1e-4 || bbox[3] - bbox[1] > 1e-4)) {
+        map.fitBounds(bbox, { padding: 60, maxZoom: 17 });
+      } else {
+        map.flyTo({ center, zoom: Math.max(map.getZoom(), 16) });
+      }
+      highlight.set([
+        { type: "Feature", geometry: { type: "Point", coordinates: center }, properties: {} },
+      ]);
+    },
     getShareUrl,
     destroy: () => {
       map.remove();
