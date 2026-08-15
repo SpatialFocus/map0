@@ -1,56 +1,98 @@
-# 07 — Roadmap
+# 07 — Roadmap & Status
 
-> Status: draft · 2026-08-14 · Phases, not dates. Adjust after decisions D-01…D-05 are settled.
+> Phases, not dates. Status as of 2026-08-15.
+> Legend: ✅ done · 🟡 partial · ⬜ open. Requirement IDs refer to
+> [03-requirements.md](03-requirements.md).
 
-## M0 — Spike / walking skeleton (~2–3 weeks of focused work)
+## Where we are
 
-Goal: validate the architecture and the config idea end-to-end, produce something demoable.
+**M0 (walking skeleton) is complete. M1 (MVP) is roughly two thirds done** — the map, the layer tree,
+feature info, legends, print and the whole configuration mechanism work against live Austrian SDI
+services. What M1 still needs is mostly polish and packaging: a published JSON Schema, an
+accessibility pass, and an actual npm/CDN release.
 
-- Repo scaffold (monorepo, TypeScript strict, Vite, Vitest/Playwright, CI)
-- Config schema **v0** (draft) + validation + friendly error panel
-- Map core: style-URL basemap, raster basemap, basemap switcher (minimal)
-- TOC v0: flat list + groups, visibility, opacity
-- WMS overlay incl. GetFeatureInfo popup; GeoJSON overlay with template popup
-- Controls: zoom, scale, fullscreen, geolocate, globe toggle
-- Theming v0: primary color, light/dark
-- **3 real demo configs** against live services (basemap.at vector, one WMS with legend+GFI, one GeoJSON/PMTiles)
-- Exit criteria: "one script tag + one JSON" works on a plain HTML page and in one real CMS page.
+| Area | Status |
+|---|---|
+| Data sources | ✅ WMS, WMTS, vector tiles/PMTiles, GeoJSON, style & raster basemaps · ⬜ WFS, OGC API Features (deferred to v1.x per D-03) |
+| Layer tree | ✅ groups, visibility, opacity, status, zoom hints, zoom-to-layer, metadata links, runtime add/remove · ⬜ drag reorder, filter box, radio groups |
+| Feature info | ✅ GetFeatureInfo + vector query, templates, field tables, multi-hit, hover, highlight, coordinates · ⬜ mobile bottom sheet |
+| Legend | ✅ service, style-derived, hand-written; in print |
+| Print | ✅ PNG + print view, DPI, layout · ⬜ client PDF, server adapter |
+| Sharing | ✅ permalink incl. user-added layers · ⬜ embed-snippet helper |
+| Configuration | ✅ one document, validation with JSON-path errors, `extends`, theming, i18n + overrides · 🟡 published JSON Schema |
+| Performance | ✅ 20 KB page tier, lazy engine/features, CI budget |
+| Accessibility | 🟡 keyboard operation, focus trap, reduced motion · ⬜ audit, DOM-mirrored results |
+| Packaging | 🟡 built bundle + demo site · ⬜ npm/CDN release, license, name |
+
+## M0 — Walking skeleton ✅
+
+- ✅ Monorepo, TypeScript strict, Vite, Vitest, CI
+- ✅ Config schema v0 + validation + friendly error panel
+- ✅ Basemaps (style, raster, empty) + switcher that survives style changes
+- ✅ WMS with GetFeatureInfo, GeoJSON with template popups
+- ✅ Controls: zoom, scale, fullscreen, geolocate, globe
+- ✅ Theming v0, light/dark
+- ✅ Demo configs against live services
+- ✅ **Exit criterion met:** one script tag + one JSON on a plain HTML page
 
 ## M1 — MVP (v1.0)
 
-Everything **Must** in [03-requirements.md](03-requirements.md):
+### Done
 
-- Config schema **v1 frozen** + published JSON Schema + docs generated from it
-- TOC complete (status badges, info dialogs, metadata links, radio groups)
-- Legend panel (GetLegendGraphic + config overrides)
-- Popups complete (multi-hit, templates, sanitization, mobile bottom sheet)
-- Add-layer via service URL (WMS/WMTS capabilities parsing)
-- Print view + PNG export (client-side)
-- i18n de/en; a11y pass (WCAG 2.1 AA); container-query responsive layout
-- npm + CDN release, doc site with live playground, embed guide for CMS
-- Demo gallery ("show, don't tell" — this is the marketing)
+- ✅ **WMTS** resolved from capabilities, incl. dead-mirror probing (F1.2, D-03)
+- ✅ **Vector tiles / PMTiles** overlays with style-spec layers (F1.1, D-03)
+- ✅ **Legend panel** — service legends, style-derived swatches, config entries (F4.1–F4.4)
+- ✅ **Add-layer dialog** — WMS/WMTS URL → capabilities → picker; runtime add/remove (F3.1, F3.3, F3.5)
+- ✅ **Print & export** — composed sheet, PNG, print view (F7.1, F7.2)
+- ✅ **Popups** — templates, field tables, multi-hit, sanitisation (F5.1–F5.3)
+- ✅ **Hover tooltips, selection highlight, zoom-to-layer** (F5.4, F5.7, F2.2)
+- ✅ **Coordinate readout** in WGS 84 / GK / UTM with proj4 (F5.6)
+- ✅ **Share & permalink** incl. user-added layers (F10.1, F2.8)
+- ✅ **i18n** de/en + per-locale overrides (F11.1–F11.3)
+- ✅ **Config inheritance** via `extends` (C6)
+- ✅ **Error toasts** and TOC zoom-range hints (F2.5)
+- ✅ **Code splitting** — 20 KB page tier, lazy engine/MapLibre/features, size budget in CI (N1)
+- ✅ **Dialog focus trap + Escape** (N4, partial)
+- ✅ **Demo site** — 17 single-topic demos with docs and live configs
 
-## M2 — Power features (v1.x)
+### Remaining for v1.0
 
-- Share/permalink state; user layer persistence
-- Search/geocoding (pluggable adapters), coordinate search
-- Measure module (Terra Draw), vector-style legends
-- WFS / OGC API Features sources; PMTiles/COG polish
-- Client-side PDF export; server print adapter (if D-04 says so)
-- Catalog integration module (CSW / OGC API Records, if D-05 says so)
-- React wrapper (if D-01 demands it); terrain
-- `extends` shared configs; auth hooks for protected services
+- ⬜ **Published JSON Schema** + config reference generated from it (C3, N12)
+- ⬜ **Unknown-key warnings** on config load (C5)
+- ⬜ **Accessibility pass** — audit, keyboard TOC review, DOM-mirrored feature results (N4)
+- ⬜ **Mobile popup as bottom sheet** below 640 px (F5.5)
+- ⬜ **TOC filter box** for configs with many layers (F2.7)
+- ⬜ **npm package + CDN build**, install docs (N11)
+- ⬜ **Decide license and name**, set up the repo home (O-01, O-02, O-07)
+- ⬜ **Visual regression** on the demo pages (N9)
 
-## M3 — Ecosystem (post v1.x, evaluate by adoption)
+## M1.x — Power features
 
-- **Visual config editor** (generates/edits the JSON; the CMS killer feature)
-- Drawing/annotations, attribute search
-- Time-enabled layers (WMS TIME) / simple animation
-- Additional locales, community plugin API
-- Optional companion services (print server recipe, capabilities proxy recipe)
+- ⬜ **Search / geocoding** with pluggable adapters, coordinate search (F8.1, F8.2)
+- ⬜ **Measure module** on Terra Draw (F9.1)
+- ⬜ **WFS and OGC API Features** layer types (deferred from D-03)
+- ⬜ **Client-side PDF** in the print dialog (F7.3) — jsPDF, lazily loaded
+- ⬜ **Drag-and-drop reorder** in the TOC (F2.6)
+- ⬜ **GeoJSON/GPX by URL and file drop** (F3.2)
+- ⬜ **Terrain** (F1.8)
+- ⬜ **Auth hooks** for protected services (C8)
+- ⬜ **React wrapper** (`@map0/react`)
+- ⬜ **COG** layers, once the protocol library reaches 1.0
 
-## Standing tracks (every milestone)
+## M2 — Ecosystem
 
-- Visual regression suite green on all demo configs
-- Bundle-size budget enforced in CI
-- Docs updated in the same PR as the feature ("config key without docs = not done")
+- ⬜ **Catalog module** — GeoNetwork CSW / OGC API Records search (D-05, F3.4)
+- ⬜ **Server-side print adapter** for scale-true PDF (D-04, F7.4)
+- ⬜ **Visual config editor** — the CMS killer feature
+- ⬜ **Drawing / annotations** (F9.2)
+- ⬜ **Time-enabled layers** (WMS TIME)
+- ⬜ **Optional deck.gl overlay adapter** for very large datasets
+- ⬜ **Plugin API** for third-party adapters and panels
+
+## Standing rules
+
+- A config key without documentation is not done — schema changes update
+  [04-configuration.md](04-configuration.md) in the same commit.
+- New features get a demo page under `/demos` (that is also how they get verified).
+- `node e2e/verify-demos.mjs` green and the console clean before committing.
+- Anything learned the hard way goes into [09-engineering-notes.md](09-engineering-notes.md).

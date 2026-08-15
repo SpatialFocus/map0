@@ -81,10 +81,12 @@ those features are used. `pnpm size` prints the breakdown and fails when the pag
 | [04-configuration.md](docs/04-configuration.md) | **The heart:** config philosophy + full annotated JSON example |
 | [05-maplibre-capabilities.md](docs/05-maplibre-capabilities.md) | MapLibre v6 capability map, build-vs-reuse matrix, field notes from M0 |
 | [06-architecture.md](docs/06-architecture.md) | Technical architecture (packaging, layering, adapters, security) |
-| [07-roadmap.md](docs/07-roadmap.md) | Milestones M0 (spike) → M3 (ecosystem) |
+| [07-roadmap.md](docs/07-roadmap.md) | **Status: what is done, what is left**, milestones M0 → M2 |
 | [08-decisions.md](docs/08-decisions.md) | Decision log D-01…D-05 + open items |
+| [09-engineering-notes.md](docs/09-engineering-notes.md) | **For contributors:** invariants, field notes on MapLibre and real SDI services, debugging playbook |
 
-Reading order for newcomers: 01 → 04 → 03.
+Reading order for newcomers: 01 → 04 → 03. Before your first change to the code: 09, then 07 for
+what is worth picking up.
 
 ## Conventions
 
