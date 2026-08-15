@@ -154,6 +154,21 @@ export class Map0Viewer extends LitElement {
     return this.core;
   }
 
+  /**
+   * The search and the layer panel both live in the top row, so the layout has
+   * to know which of them is actually there — see the responsive block in
+   * `styles.ts`. Both are mirrored onto `.stage` as `data-search`/`data-toc`.
+   */
+  private get hasSearch(): boolean {
+    return !!this.normalized && this.normalized.search !== false;
+  }
+
+  private get hasToc(): boolean {
+    const cfg = this.normalized;
+    if (!cfg || cfg.controls.layerSwitcher === false) return false;
+    return cfg.layers.length > 0 || this._layers.length > 0 || cfg.controls.layerSwitcher.allowAdd;
+  }
+
   protected override firstUpdated(): void {
     this.initialized = true;
     /* start early enough that the map is ready by the time it scrolls in */
@@ -584,7 +599,12 @@ export class Map0Viewer extends LitElement {
     if (this._fatal) return this.renderErrors([{ path: "$", message: this._fatal }]);
     if (this._errors) return this.renderErrors(this._errors);
     return html`
-      <div class="stage" ?data-busy=${this._dialogLoading !== null}>
+      <div
+        class="stage"
+        ?data-busy=${this._dialogLoading !== null}
+        ?data-search=${this.hasSearch}
+        ?data-toc=${this.hasToc}
+      >
         <div class="map" aria-label=${this.normalized?.meta.title ?? "Karte"}></div>
         <div class="loading" ?data-done=${this._ready} aria-hidden="true">
           ${this._loading ? html`<div class="spinner"></div>` : nothing}
@@ -808,9 +828,8 @@ export class Map0Viewer extends LitElement {
 
   private renderToc(): TemplateResult | typeof nothing {
     const cfg = this.normalized;
-    if (!cfg || cfg.controls.layerSwitcher === false) return nothing;
+    if (!cfg || cfg.controls.layerSwitcher === false || !this.hasToc) return nothing;
     const allowAdd = cfg.controls.layerSwitcher.allowAdd;
-    if (cfg.layers.length === 0 && this._layers.length === 0 && !allowAdd) return nothing;
     const t = this.core?.t ?? ((k: string) => k);
     const byId = new Map(this._layers.map((l) => [l.id, l]));
     const extras = this._layers.filter((l) => l.userAdded);

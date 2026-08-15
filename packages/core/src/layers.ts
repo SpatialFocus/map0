@@ -201,7 +201,9 @@ export class LayerManager {
         groupPath: def.groupPath,
         visible: rt?.visible ?? def.visible,
         opacity: rt?.opacity ?? def.opacity,
-        status: adapter?.status.value ?? "error",
+        /* no adapter yet = still mounting (async adapters register after their
+           await); a real failure sets the adapter's own status to "error" */
+        status: adapter?.status.value ?? "loading",
         minZoom: def.minZoom,
         maxZoom: def.maxZoom,
         inZoomRange: this.inZoomRange(def),

@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "meta": { "title": "Vienna — three sources, one document" },
+  "map": { "center": [16.3725, 48.2083], "zoom": 12.2 },
+  "basemaps": [
+    {
+      "id": "grau",
+      "title": "Grey",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at",
+      "default": true
+    },
+    {
+      "id": "bmapv",
+      "title": "basemap.at",
+      "type": "style",
+      "url": "https://mapsneu.wien.gv.at/basemapv/bmapv/3857/resources/styles/root.json"
+    },
+    {
+      "id": "ortho",
+      "title": "Aerial",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmaporthofoto30cm/normal/google3857/{z}/{y}/{x}.jpeg",
+      "maxZoom": 19,
+      "attribution": "© basemap.at"
+    }
+  ],
+  "layers": [
+    {
+      "id": "widmung",
+      "type": "wms",
+      "title": "Zoning plan (WMS)",
+      "url": "https://data.wien.gv.at/daten/geo",
+      "layers": "GENFLWIDMUNGOGD",
+      "visible": false,
+      "opacity": 0.55,
+      "info": { "format": "application/json" },
+      "legend": "auto",
+      "metadata": {
+        "url": "https://www.data.gv.at/katalog/dataset?q=Fl%C3%A4chenwidmung+Wien",
+        "title": "Dataset on data.gv.at"
+      },
+      "attribution": "Stadt Wien — data.wien.gv.at"
+    },
+    {
+      "id": "gewaesser",
+      "type": "vector",
+      "title": "Water bodies (vector tiles)",
+      "url": "https://mapsneu.wien.gv.at/basemapv/bmapv/3857/",
+      "sourceLayer": "GEWAESSER_F_GEWF",
+      "style": [{ "type": "fill", "paint": { "fill-color": "#0ea5e9", "fill-opacity": 0.6 } }],
+      "legend": [{ "label": "Water body", "color": "#0ea5e9" }],
+      "attribution": "© basemap.at"
+    },
+    {
+      "id": "brunnen",
+      "type": "geojson",
+      "title": "Drinking fountains (GeoJSON)",
+      "data": "https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:TRINKBRUNNENOGD&srsName=EPSG:4326&outputFormat=json",
+      "style": {
+        "circle-color": "#0e7490",
+        "circle-radius": 4,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 1.2
+      },
+      "popup": { "title": "{{BASIS_TYP_TXT}}", "fields": [{ "key": "BEZIRK", "label": "District" }] },
+      "legend": [{ "label": "Drinking fountain", "color": "#0e7490", "shape": "circle" }],
+      "attribution": "Stadt Wien — data.wien.gv.at"
+    }
+  ],
+  "search": { "provider": "photon", "country": "AT", "coordinates": true },
+  "theme": { "primary": "#0e7490", "radius": "md" }
+}

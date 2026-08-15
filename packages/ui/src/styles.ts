@@ -345,6 +345,7 @@ export const componentStyles = css`
     top: 10px;
     left: 56px;
     width: min(320px, calc(100% - 66px));
+    transition: width 0.16s ease;
   }
   .search-field {
     display: flex;
@@ -1020,20 +1021,22 @@ export const componentStyles = css`
 
   /* ------------------------- responsive (container) --------------------- */
 
-  /* narrow: the search collapses to its icon and expands over the map on focus,
-     so it never has to share the top row with the layer panel */
-  @container map0 (max-width: 560px) {
-    .search {
+  /* The top row is shared: map controls (10–48px), the search, and the layer
+     panel on the right — all three fit from 668px up (56 + 320 + 10 + 272 + 10).
+     Below that the search collapses to its icon and expands over the map on
+     focus, so the panel keeps the row and the search keeps the corner. With no
+     panel to share with, the search stays a field at every width. */
+  @container map0 (max-width: 667px) {
+    .stage[data-toc] .search {
       width: 38px;
-      transition: width 0.16s ease;
     }
-    .search[data-expanded] {
+    .stage[data-toc] .search[data-expanded] {
       width: calc(100% - 66px);
     }
-    .search input {
+    .stage[data-toc] .search input {
       opacity: 0;
     }
-    .search[data-expanded] input {
+    .stage[data-toc] .search[data-expanded] input {
       opacity: 1;
     }
   }
@@ -1050,6 +1053,11 @@ export const componentStyles = css`
       width: auto;
       max-height: 55%;
     }
+    /* ...but the collapsed search still holds the corner, so a panel on that
+       row starts after it (56px + 38px icon + gap) instead of underneath it */
+    .stage[data-search] .toc {
+      left: 104px;
+    }
     .basemaps {
       bottom: 28px;
     }
@@ -1064,5 +1072,13 @@ export const componentStyles = css`
   /* light touch on MapLibre ctrl corners so panels don't collide */
   .maplibregl-ctrl-top-left {
     z-index: 4;
+  }
+
+  /* Our own control buttons (print, measure, share) draw their SVG with
+     currentColor, while MapLibre's built-ins are background images on chrome
+     that stays light in both themes. Without this the dark theme's text colour
+     paints our icons white on a white button. */
+  .maplibregl-ctrl-group button svg {
+    color: #333;
   }
 `;

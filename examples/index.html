@@ -3,91 +3,589 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>map0 — embeddable web map client</title>
+    <title>map0 — a web map client you configure, not code</title>
+    <meta
+      name="description"
+      content="map0 is an embeddable web map client built on MapLibre GL JS. One script tag and one JSON document give any page a layer tree, legends, feature info, search, measuring and print — no iframe, no backend, no build step."
+    />
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
-    <style>
-      .hero {
-        max-width: 1120px;
-        margin: 0 auto;
-        padding: 72px 24px 40px;
-        text-align: center;
-      }
-      .hero h1 {
-        font-size: clamp(38px, 7vw, 64px);
-      }
-      .hero h1 span {
-        color: var(--accent);
-      }
-      .hero .lede {
-        margin: 0 auto 26px;
-        font-size: 18px;
-        max-width: 60ch;
-      }
-      .cta {
-        display: inline-block;
-        background: var(--accent);
-        color: #fff;
-        text-decoration: none;
-        font-weight: 600;
-        padding: 11px 24px;
-        border-radius: 10px;
-      }
-      .cta:hover {
-        filter: brightness(1.08);
-      }
-      .hero-map {
-        max-width: 1120px;
-        margin: 0 auto;
-        padding: 0 24px 40px;
-      }
-      .hero-map map0-viewer {
-        height: min(52vh, 460px);
-      }
-      .wip {
-        max-width: 1120px;
-        margin: 0 auto;
-        padding: 0 24px 60px;
-        color: var(--muted);
-        font-size: 13.5px;
-        text-align: center;
-      }
-    </style>
+    <link rel="stylesheet" href="/landing.css" />
     <script type="module" src="/main.ts"></script>
   </head>
-  <body>
+  <body class="landing">
     <div class="topbar">
       <a class="brand" href="/">map<span>0</span></a>
-      <nav><a href="/demos/">All demos</a></nav>
+      <nav>
+        <a href="#features">Features</a>
+        <a href="#start">Quick start</a>
+        <a href="/demos/">All demos</a>
+      </nav>
     </div>
 
-    <section class="hero">
-      <h1>map<span>0</span></h1>
-      <p class="lede">
-        A modern, embeddable web map client built on MapLibre GL JS. One script tag plus one JSON
-        config gives you a full-featured map on any web page — no iframe, no backend.
+    <!-- ---------------------------------- hero --------------------------------- -->
+
+    <header class="hero">
+      <div class="wrap">
+        <p class="eyebrow"><b>Open source</b>&nbsp;· built on MapLibre GL JS · web component</p>
+        <h1 class="wordmark">map<span>0</span></h1>
+        <p class="subtitle">The web map client you configure, not code.</p>
+        <p class="lede">
+          The name is the promise: a complete map client, and zero lines of code to get one.
+          Basemaps, layer tree, legends, popups, search, print — every one of them declared in a
+          single JSON document that fits in a CMS field.
+        </p>
+        <div class="actions">
+          <a class="btn primary" href="#start">Get started in one file</a>
+          <a class="btn ghost" href="/demos/">Browse the demos →</a>
+        </div>
+        <ul class="zeros">
+          <li>
+            <b>0</b>
+            <strong>code</strong>
+            <span>A map is a JSON document, not a frontend project.</span>
+          </li>
+          <li>
+            <b>0</b>
+            <strong>backend</strong>
+            <span>Static hosting is enough. No server, no database, no iframe.</span>
+          </li>
+          <li>
+            <b>0</b>
+            <strong>build steps</strong>
+            <span>One script tag and one element, on any page you already have.</span>
+          </li>
+        </ul>
+      </div>
+    </header>
+
+    <!-- --------------------------------- the map -------------------------------- -->
+
+    <div class="stage">
+      <div class="stage-frame">
+        <map0-viewer config-src="/configs/landing.map0.json" loading="eager"></map0-viewer>
+      </div>
+      <p class="stage-caption">
+        <strong>This is the real thing, not a screenshot.</strong> Three sources at once — a WMS, a
+        vector tile layer and GeoJSON points from a WFS. Open the layer tree, switch the zoning plan
+        on, click a fountain, try the aerial basemap, search for a street, measure a distance. All of
+        it came out of the single config printed further down this page.
       </p>
-      <a class="cta" href="/demos/">Browse the demos →</a>
-    </section>
+    </div>
 
-    <section class="hero-map">
-      <map0-viewer>
-        <script type="application/json">
-          {
-            "version": 1,
-            "map": { "center": [13.35, 47.6], "zoom": 6.4 },
-            "basemaps": [
-              {
-                "type": "style",
-                "url": "https://mapsneu.wien.gv.at/basemapv/bmapv/3857/resources/styles/root.json"
-              }
-            ],
-            "controls": { "coordinates": false }
-          }
-        </script>
-      </map0-viewer>
-    </section>
+    <main>
+      <!-- --------------------------------- numbers -------------------------------- -->
 
-    <p class="wip">This landing page is a placeholder — the demo gallery is where the project lives right now.</p>
+      <div class="wrap">
+        <div class="stats reveal">
+          <div>
+            <b>~23 <small>KB</small></b>
+            <span>gzip on page load, before the map is even in view</span>
+          </div>
+          <div>
+            <b>1</b>
+            <span>JSON document per map — validated, no second config file</span>
+          </div>
+          <div>
+            <b>19</b>
+            <span>demos running against live public services</span>
+          </div>
+          <div>
+            <b>2</b>
+            <span>UI languages built in, every string overridable per locale</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- --------------------------------- pillars -------------------------------- -->
+
+      <section class="section">
+        <div class="wrap">
+          <div class="sec-head center reveal">
+            <p class="kicker">Why map0</p>
+            <h2>A map client, not another map library.</h2>
+            <p>
+              MapLibre, OpenLayers and Leaflet render beautifully — but every layer tree, legend,
+              popup and print button is a custom project, rebuilt per website. Geoportals give you
+              all of that and an application you have to host. map0 is the missing middle.
+            </p>
+          </div>
+
+          <div class="pillars">
+            <article class="pillar reveal">
+              <div class="mark">🧩</div>
+              <h3>It is a web component</h3>
+              <p>
+                <code>&lt;map0-viewer&gt;</code> is a standard custom element with its own shadow
+                DOM. Drop it into a CMS field, a Rails view, Next.js, Vue, or a plain HTML file — no
+                wrapper, no version lock-in.
+              </p>
+              <p>
+                Styles never leak in or out, so it looks the same on every host page, and three maps
+                on one page cost you MapLibre exactly once.
+              </p>
+            </article>
+
+            <article class="pillar reveal">
+              <div class="mark">⌨️</div>
+              <h3>Everything is configuration</h3>
+              <p>
+                Every feature is reachable from the JSON config. If it cannot be configured, it does
+                not ship. Basemaps, overlays, popups, legends, print layout, theme, languages: all
+                keys in one document.
+              </p>
+              <p>
+                That document lives happily in a CMS text field, so the person who maintains the map
+                never needs a developer, a build step or a deployment.
+              </p>
+            </article>
+
+            <article class="pillar reveal">
+              <div class="mark">🪶</div>
+              <h3>Light on the page</h3>
+              <p>
+                A page carrying a map0 embed downloads about 23 KB gzip. The engine and MapLibre
+                only arrive when the map approaches the viewport — a map nobody scrolls to costs
+                nothing.
+              </p>
+              <p>
+                Measuring, printing, coordinate projections and capabilities parsing are separate
+                chunks, fetched the first time somebody actually uses them.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ------------------------------- quick start ------------------------------ -->
+
+      <section class="section" id="start">
+        <div class="wrap">
+          <div class="sec-head reveal">
+            <p class="kicker">Quick start</p>
+            <h2>A styled basemap and a live WMS overlay, in one file.</h2>
+            <p>
+              Two elements: the script tag that registers the custom element, and the element itself
+              with its configuration. The snippet below is generated from the map beside it, so the
+              two can never drift apart.
+            </p>
+          </div>
+
+          <div class="split">
+            <div data-quickstart>
+              <!-- replaced at runtime with the running configuration -->
+            </div>
+
+            <div class="aside">
+              <map0-viewer id="quickstart">
+                <script type="application/json">
+                  {
+                    "version": 1,
+                    "map": { "center": [16.3689, 48.2015], "zoom": 15.2 },
+                    "basemaps": [
+                      {
+                        "type": "style",
+                        "url": "https://mapsneu.wien.gv.at/basemapv/bmapv/3857/resources/styles/root.json"
+                      }
+                    ],
+                    "layers": [
+                      {
+                        "type": "wms",
+                        "title": "Tree register",
+                        "url": "https://data.wien.gv.at/daten/geo",
+                        "layers": "BAUMKATOGD",
+                        "minZoom": 15,
+                        "info": { "format": "application/json" }
+                      }
+                    ]
+                  }
+                </script>
+              </map0-viewer>
+              <p class="demo-note">
+                <strong>What those 20 lines bought:</strong> zoom, compass, scale bar, fullscreen,
+                geolocation, globe, attribution, a layer tree with an opacity slider, a legend
+                fetched from the service, clickable features, coordinate readout, measuring, print
+                and export, and a light/dark theme that follows the operating system.
+              </p>
+
+              <h3>Three ways to hand over the config</h3>
+              <p>
+                In this order of precedence: a <code>config</code> property set from JavaScript (for
+                SPAs and wrappers), a <code>config-src</code> attribute pointing at a JSON file, or
+                an inline <code>&lt;script type="application/json"&gt;</code> child as above — the
+                CMS-friendly one.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- --------------------------------- features ------------------------------- -->
+
+      <section class="section tinted" id="features">
+        <div class="wrap">
+          <div class="sec-head center reveal">
+            <p class="kicker">Batteries included</p>
+            <h2>What other clients call plugins, map0 calls keys.</h2>
+            <p>
+              Elsewhere half of this list is something you install, wire up and keep compatible.
+              Here every one of them is a key in the config — and the code behind it only downloads
+              the first time somebody uses it. Each card links to a demo running on live services.
+            </p>
+          </div>
+
+          <div class="feature-grid">
+            <a class="feature reveal" href="/demos/wms.html">
+              <h3>🗺️ Every service you already publish</h3>
+              <p>
+                WMS with GetFeatureInfo, WMTS resolved straight from GetCapabilities (dead mirrors
+                included), vector tiles and PMTiles styled with the MapLibre style spec, GeoJSON
+                with clustering.
+              </p>
+              <span class="go">See the data source demos →</span>
+            </a>
+
+            <a class="feature reveal" href="/demos/add-layer.html">
+              <h3>🌳 A layer tree that behaves like one</h3>
+              <p>
+                Groups, visibility, opacity, per-layer status and zoom hints, zoom-to-layer,
+                metadata links back to the catalog — and users adding their own WMS or WMTS by URL,
+                parsed in the browser.
+              </p>
+              <span class="go">See add layers →</span>
+            </a>
+
+            <a class="feature reveal" href="/demos/popups.html">
+              <h3>💬 Feature info that reads well</h3>
+              <p>
+                Templates with <code>{{placeholders}}</code>, field tables, hover tooltips,
+                multi-layer hits in one popup, selection highlight — sanitised before it ever hits
+                the DOM.
+              </p>
+              <span class="go">See popups &amp; hover →</span>
+            </a>
+
+            <a class="feature reveal" href="/demos/legend.html">
+              <h3>📊 Legends, on screen and on paper</h3>
+              <p>
+                Service legends via GetLegendGraphic, swatches derived from the style itself, or
+                hand-written entries when a service has no legend worth showing.
+              </p>
+              <span class="go">See legends →</span>
+            </a>
+
+            <a class="feature reveal" href="/demos/print.html">
+              <h3>🖨️ Print &amp; export</h3>
+              <p>
+                High-resolution PNG, PDF on real A4/A3 pages, and a composed sheet with title,
+                legend, scale bar, attribution and date — configurable, in the browser, no print
+                server.
+              </p>
+              <span class="go">See print &amp; export →</span>
+            </a>
+
+            <a class="feature reveal" href="/demos/search.html">
+              <h3>🔍 Search that fits your gazetteer</h3>
+              <p>
+                Type-ahead place and address search on Photon or Nominatim, self-hosted or public —
+                or any geocoder of your own via a URL template. Coordinates work as input too.
+              </p>
+              <span class="go">See search →</span>
+            </a>
+
+            <a class="feature reveal" href="/demos/measure.html">
+              <h3>📏 Measuring and coordinates</h3>
+              <p>
+                Distance and area on the sphere with draggable vertices, and a right-click readout
+                in WGS 84, Gauss-Krüger and UTM with copy buttons.
+              </p>
+              <span class="go">See measuring →</span>
+            </a>
+
+            <a class="feature reveal" href="/demos/permalink.html">
+              <h3>🔗 Shareable state, and a globe</h3>
+              <p>
+                The whole map state travels in the URL — view, basemap, visible layers, even
+                services a user added themselves. Globe projection is one config key away.
+              </p>
+              <span class="go">See share &amp; permalink →</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ------------------------------- performance ------------------------------ -->
+
+      <section class="section">
+        <div class="wrap">
+          <div class="split">
+            <div>
+              <div class="sec-head reveal">
+                <p class="kicker">Performance</p>
+                <h2>Nothing loads until the map is on screen.</h2>
+                <p>
+                  An embed in a long article should not slow the article down. map0 splits itself
+                  into three tiers that arrive at three different moments — and the first tier is
+                  checked against a budget in CI, so it stays small.
+                </p>
+              </div>
+              <dl class="budget reveal">
+                <div>
+                  <dt>Page load</dt>
+                  <span class="bar"><i style="width: 7%"></i></span>
+                  <dd data-size="page">~23 KB gz</dd>
+                </div>
+                <div>
+                  <dt>Map enters the viewport</dt>
+                  <span class="bar later"><i style="width: 100%"></i></span>
+                  <dd data-size="map">+ ~304 KB gz</dd>
+                </div>
+                <div>
+                  <dt>First use of a feature</dt>
+                  <span class="bar later"><i style="width: 22%"></i></span>
+                  <dd data-size="deferred">0.2–138 KB gz each</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="aside">
+              <h3>What that means in practice</h3>
+              <p>
+                The custom element and Lit are all a page carries until a map is nearly in view. The
+                observer starts loading 300 px early, so in normal scrolling the map is ready by the
+                time you see it. Several embeds on one page share the engine, and a map inside a
+                collapsed accordion never loads at all.
+              </p>
+              <h3>Features are chunks</h3>
+              <p>
+                Capabilities parsing, proj4, PMTiles, the print composer and the add-layer dialog
+                are separate files. A map without measuring never downloads the measuring code.
+              </p>
+              <p><a class="go" href="/demos/lazy.html">See it in the network panel →</a></p>
+            </div>
+          </div>
+
+          <div class="sec-head center reveal gpu-head">
+            <h2>And once it is there, the GPU draws it.</h2>
+            <p>
+              The second kind of fast. MapLibre renders through WebGL 2 — the map is geometry on the
+              graphics card, not a grid of pre-rendered images and not hundreds of DOM nodes.
+            </p>
+          </div>
+
+          <div class="pillars">
+            <article class="pillar reveal">
+              <div class="mark">🎞️</div>
+              <h3>Smooth, not stepped</h3>
+              <p>
+                Zoom is continuous instead of 20 fixed levels, panning stays fluid on a phone, and
+                rotation and tilt cost nothing extra — the same scene, a different camera.
+              </p>
+            </article>
+
+            <article class="pillar reveal">
+              <div class="mark">🏷️</div>
+              <h3>Cartography at runtime</h3>
+              <p>
+                Labels are placed, collision-tested and kept upright while the map moves. Colors,
+                widths and filters are style-spec expressions evaluated per feature, so a layer
+                restyles without re-fetching a single tile.
+              </p>
+            </article>
+
+            <article class="pillar reveal">
+              <div class="mark">🌍</div>
+              <h3>The globe is free</h3>
+              <p>
+                Switching to a globe is one config key: same data, same style, same renderer — a
+                projection the GPU applies while drawing.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ------------------------------ configuration ----------------------------- -->
+
+      <section class="section">
+        <div class="wrap">
+          <div class="sec-head center reveal">
+            <p class="kicker">Config-first</p>
+            <h2>One document. Schema-validated. Inheritable.</h2>
+            <p>
+              This is the whole configuration behind the map at the top of this page — fetched from
+              the same file that map loads, so what you read is what runs.
+            </p>
+          </div>
+
+          <div class="split">
+            <pre
+              data-src="/configs/landing.map0.json"
+              data-lang="json"
+              data-label="vienna.map0.json"
+            ></pre>
+
+            <div class="aside">
+              <h3>No config-file constellation</h3>
+              <p>
+                One JSON document per map. No service registry, no
+                <code>rest-services.json</code>, no <code>config.js</code> next to it. Reuse across
+                many maps is a shared base config referenced with <code>extends</code>, and each map
+                only writes its deltas.
+              </p>
+
+              <h3>Broken configs say why</h3>
+              <p>
+                A config is validated before anything renders, and the errors appear in place with
+                the JSON path that caused them — an editor can fix it without opening a developer
+                console.
+              </p>
+              <pre data-lang="text" data-label="error panel">
+                $.basemaps          at least one basemap is required, e.g. { "type": "style", "url": "…" }
+                $.layers[2].url     a "wms" layer needs a "url"
+                $.layers[2].layers  a "wms" layer needs "layers" (WMS LAYERS parameter)
+              </pre>
+
+              <h3>Themed and translated</h3>
+              <p>
+                A primary color, a radius, a font and light/dark come from the config or from your
+                page's CSS custom properties. The UI ships in German and English, and every single
+                string can be overridden per locale.
+              </p>
+              <p>
+                <a class="go" href="/demos/theming.html">Theming →</a>
+                &nbsp;<a class="go" href="/demos/i18n.html">Languages →</a>
+                &nbsp;<a class="go" href="/demos/extends.html">Inheritance →</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ------------------------------- positioning ------------------------------ -->
+
+      <section class="section tinted">
+        <div class="wrap">
+          <div class="sec-head center reveal">
+            <p class="kicker">Where it sits</p>
+            <h2>The missing middle.</h2>
+            <p>
+              Three ways to put a map on a page exist already, and each asks for something you may
+              not want to give: an application to operate, a setup to maintain, or a frontend project
+              to write. map0 is the fourth.
+            </p>
+          </div>
+
+          <div class="compare-scroll reveal">
+            <table class="compare">
+              <thead>
+                <tr>
+                  <th><span class="vh">Aspect</span></th>
+                  <th>Geoportal platform</th>
+                  <th>Portal framework</th>
+                  <th>Map library</th>
+                  <th aria-current="true">map0</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">What it is</th>
+                  <td>An application you host</td>
+                  <td>A configurable app to set up</td>
+                  <td>A rendering engine</td>
+                  <td>A component on your page</td>
+                </tr>
+                <tr>
+                  <th scope="row">Embedding</th>
+                  <td>An iframe</td>
+                  <td>Its own page or an iframe</td>
+                  <td>Whatever you build</td>
+                  <td>Script tag + one element</td>
+                </tr>
+                <tr>
+                  <th scope="row">Configuration</th>
+                  <td>Backend or database</td>
+                  <td>Several files and a registry</td>
+                  <td>Source code</td>
+                  <td>One JSON document</td>
+                </tr>
+                <tr>
+                  <th scope="row">Server needed</th>
+                  <td>Yes</td>
+                  <td>No, but a build setup</td>
+                  <td>No</td>
+                  <td>No — static hosting</td>
+                </tr>
+                <tr>
+                  <th scope="row">TOC, legends, print</th>
+                  <td>Included</td>
+                  <td>Included</td>
+                  <td>Build it yourself</td>
+                  <td>Included</td>
+                </tr>
+                <tr>
+                  <th scope="row">Who changes the map</th>
+                  <td>Someone with server access</td>
+                  <td>A developer</td>
+                  <td>A developer</td>
+                  <td>Anyone with the text field</td>
+                </tr>
+                <tr>
+                  <th scope="row">Look and feel</th>
+                  <td>The portal's</td>
+                  <td>The framework's</td>
+                  <td>Yours to build</td>
+                  <td>Themed to your page</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------------------------------- demos --------------------------------- -->
+
+      <section class="section" id="demos">
+        <div class="wrap">
+          <div class="sec-head center reveal">
+            <p class="kicker">Demos</p>
+            <h2>Nineteen demos. Live services. The exact config each one runs.</h2>
+            <p>
+              One topic per page, each against real endpoints. Every demo shows the map, explains
+              what it demonstrates, and prints the configuration that produced it — so the fastest
+              way to judge map0 is to open one.
+            </p>
+          </div>
+
+          <div class="cta-row">
+            <a class="btn primary" href="/demos/">Open the demo gallery →</a>
+          </div>
+
+          <div class="status reveal">
+            <div class="mark">🚧</div>
+            <div>
+              <h3>Honest status: pre-release</h3>
+              <p>
+                Everything on this page works today against live services, but map0 has not shipped
+                yet. The config schema is v0 and may still change, there is no npm or CDN package,
+                and <em>map0</em> is a working title.
+              </p>
+              <p>
+                Until the release: clone the repository, run <code>pnpm build</code>, and copy
+                <code>packages/ui/dist/</code> next to your page — it is a flat folder, deployed as
+                a unit, and the embed stays one script tag.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site">
+      <div class="wrap">
+        <span class="footmark">map<span>0</span></span>
+        <span>The web map client you configure, not code.</span>
+      </div>
+    </footer>
   </body>
 </html>

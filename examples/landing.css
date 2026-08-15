@@ -1,0 +1,664 @@
+/* Landing page only. Loaded after demo.css and reusing its tokens and chrome. */
+
+:root {
+  --wrap: 1180px;
+  --tint: color-mix(in srgb, var(--accent) 10%, transparent);
+  --tint-strong: color-mix(in srgb, var(--accent) 18%, transparent);
+  --accent-line: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* the landing page bleeds full width; every section brings its own .wrap */
+body.landing main {
+  max-width: none;
+  margin: 0;
+  padding: 0 0 clamp(56px, 7vw, 88px);
+}
+body.landing footer.site {
+  max-width: none;
+  padding: 24px 0;
+}
+
+.wrap {
+  max-width: var(--wrap);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ---------------------------------- hero --------------------------------- */
+
+.hero {
+  position: relative;
+  /* tight on purpose: the live map below has to stay in reach of the fold */
+  padding: clamp(36px, 5.5vw, 64px) 0 24px;
+  text-align: center;
+  isolation: isolate;
+}
+
+/* two soft light sources behind the headline; fades out towards the map */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: -220px 0 0;
+  z-index: -1;
+  background:
+    radial-gradient(60% 60% at 22% 18%, var(--tint-strong), transparent 70%),
+    radial-gradient(55% 55% at 82% 6%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%);
+  mask-image: linear-gradient(to bottom, #000 55%, transparent);
+}
+
+.hero .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0 20px;
+  padding: 5px 13px 5px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+.hero .eyebrow b {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* the product name is the headline — the 0 in it is the whole pitch */
+.hero .wordmark {
+  font-size: clamp(76px, 13vw, 146px);
+  /* < 1 would let the "p" descender run into the subtitle */
+  line-height: 1.06;
+  letter-spacing: -0.055em;
+  font-weight: 800;
+  margin: 0 0 10px;
+}
+.hero .wordmark span {
+  color: var(--accent);
+}
+
+.hero .subtitle {
+  margin: 0 auto 18px;
+  max-width: 22ch;
+  font-size: clamp(23px, 3.4vw, 38px);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+.hero .lede {
+  margin: 0 auto 24px;
+  max-width: 58ch;
+  font-size: clamp(16px, 1.7vw, 18.5px);
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+/* the three zeros: the name, unpacked */
+.zeros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 18px 28px;
+  max-width: 940px;
+  margin: 34px auto 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+.zeros li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 14px;
+  align-items: baseline;
+}
+.zeros b {
+  grid-row: span 2;
+  align-self: start;
+  font-size: 46px;
+  line-height: 0.92;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--accent);
+}
+.zeros strong {
+  font-size: 17px;
+  letter-spacing: -0.015em;
+}
+.zeros span {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 11px;
+  padding: 12px 22px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease,
+    background 0.14s ease;
+}
+.btn.primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 32%, transparent);
+}
+.btn.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.btn.ghost {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--fg);
+}
+.btn.ghost:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  transform: translateY(-1px);
+}
+
+/* ------------------------------- hero stage ------------------------------ */
+
+.stage {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.stage-frame {
+  position: relative;
+  border-radius: 20px;
+  padding: 8px;
+  background: color-mix(in srgb, var(--surface) 75%, transparent);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 30px 70px -30px rgba(15, 23, 42, 0.35);
+}
+@media (prefers-color-scheme: dark) {
+  .stage-frame {
+    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9);
+  }
+}
+.stage-frame map0-viewer {
+  height: min(66vh, 620px);
+  min-height: 420px;
+  border-radius: 14px;
+  box-shadow: none;
+  border: 1px solid var(--border);
+}
+.stage-caption {
+  margin: 14px auto 0;
+  max-width: 74ch;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.stage-caption strong {
+  color: var(--fg);
+}
+
+/* -------------------------------- sections ------------------------------- */
+
+.section {
+  padding: clamp(64px, 9vw, 108px) 0 0;
+  /* the sticky top bar must not cover a heading jumped to from the nav */
+  scroll-margin-top: 60px;
+}
+.section.tinted {
+  margin-top: clamp(64px, 9vw, 108px);
+  padding-top: clamp(56px, 7vw, 88px);
+  padding-bottom: clamp(56px, 7vw, 88px);
+  background: linear-gradient(to bottom, transparent, var(--tint) 30%, var(--tint) 70%, transparent);
+}
+
+.sec-head {
+  max-width: 62ch;
+  margin: 0 0 34px;
+}
+.sec-head.center {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+.sec-head .kicker {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.sec-head h2 {
+  font-size: clamp(27px, 3.6vw, 40px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin: 0 0 12px;
+  text-wrap: balance;
+}
+.sec-head p {
+  margin: 0;
+  font-size: 16.5px;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+/* --------------------------------- stats --------------------------------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  margin-top: clamp(48px, 6vw, 76px);
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.stats div {
+  background: var(--surface);
+  padding: 22px 24px;
+}
+.stats b {
+  display: block;
+  font-size: clamp(26px, 3vw, 34px);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.stats b small {
+  font-size: 0.5em;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+.stats span {
+  display: block;
+  margin-top: 4px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+/* -------------------------------- pillars -------------------------------- */
+
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+.pillar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 26px 24px 24px;
+}
+.pillar .mark {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: var(--tint-strong);
+  font-size: 19px;
+  margin-bottom: 14px;
+}
+.pillar h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.pillar p {
+  margin: 0 0 10px;
+  font-size: 14.5px;
+  color: var(--muted);
+}
+.pillar p:last-child {
+  margin-bottom: 0;
+}
+
+/* --------------------------------- split --------------------------------- */
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+/* a grid item's automatic minimum size is its content — without this a long
+   line inside a code block widens the whole page instead of scrolling itself */
+.split > * {
+  min-width: 0;
+}
+.split > figure.code {
+  margin: 0;
+}
+figure.code.full pre {
+  max-height: none;
+}
+.split .aside > :first-child {
+  margin-top: 0;
+}
+.split .aside h3 {
+  margin: 22px 0 8px;
+  font-size: 16px;
+}
+.split .aside p {
+  margin: 0 0 14px;
+  font-size: 14.5px;
+  color: var(--muted);
+}
+.split map0-viewer {
+  height: 340px;
+  min-height: 0;
+}
+
+/* ------------------------------- feature grid ---------------------------- */
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+}
+a.feature {
+  display: block;
+  padding: 20px 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    transform 0.14s ease,
+    border-color 0.14s ease,
+    box-shadow 0.14s ease;
+}
+a.feature:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  box-shadow: var(--shadow);
+}
+a.feature h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 7px;
+  font-size: 16px;
+  letter-spacing: -0.015em;
+}
+a.feature p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+a.feature .go {
+  display: inline-block;
+  margin-top: 10px;
+}
+
+.go {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+a.go:hover {
+  text-decoration: underline;
+}
+
+/* -------------------------------- budget --------------------------------- */
+
+.budget {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+.budget div {
+  display: grid;
+  grid-template-columns: 190px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+}
+.budget dt {
+  font-weight: 600;
+}
+.budget .bar {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--tint);
+  overflow: hidden;
+}
+.budget .bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+.budget .bar.later i {
+  background: color-mix(in srgb, var(--accent) 45%, var(--muted));
+}
+.budget dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ------------------------------- comparison ------------------------------ */
+
+.compare-scroll {
+  overflow-x: auto;
+}
+table.compare {
+  /* fixed: every column the same width, whatever the longest cell says */
+  table-layout: fixed;
+  width: 100%;
+  min-width: 780px;
+  /* separate (with zero spacing) so the corner cells can carry a radius —
+     collapsed borders make browsers drop border-radius on cells, which cut the
+     highlighted column square across the table's rounded corners */
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+table.compare th,
+table.compare td {
+  width: 20%;
+  padding: 13px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  hyphens: auto;
+}
+table.compare thead th {
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+table.compare tbody th {
+  font-weight: 600;
+  color: var(--muted);
+}
+table.compare tbody tr:last-child th,
+table.compare tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* the map0 column: tint and one hairline all the way round, no heavy caps */
+table.compare tr > :last-child {
+  background: color-mix(in srgb, var(--accent) 13%, var(--surface));
+  box-shadow:
+    inset 1px 0 0 var(--accent-line),
+    inset -1px 0 0 var(--accent-line);
+  color: var(--fg);
+  font-weight: 600;
+}
+table.compare thead th:last-child {
+  color: var(--accent);
+  font-weight: 800;
+  font-size: 14px;
+  text-transform: none;
+  letter-spacing: -0.01em;
+  /* 1px in from the table's own border, so tint and line follow the same curve */
+  border-top-right-radius: calc(var(--radius) - 1px);
+  box-shadow:
+    inset 0 1px 0 var(--accent-line),
+    inset 1px 0 0 var(--accent-line),
+    inset -1px 0 0 var(--accent-line);
+}
+table.compare tbody tr:last-child td:last-child {
+  border-bottom-right-radius: calc(var(--radius) - 1px);
+  box-shadow:
+    inset 1px 0 0 var(--accent-line),
+    inset -1px 0 0 var(--accent-line),
+    inset 0 -1px 0 var(--accent-line);
+}
+
+/* header cell that only screen readers need */
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --------------------------------- status -------------------------------- */
+
+.status {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: start;
+  margin-top: clamp(56px, 7vw, 88px);
+  padding: 22px 24px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--surface);
+}
+.status .mark {
+  font-size: 20px;
+  line-height: 1.4;
+}
+.status h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+.status p {
+  margin: 0 0 8px;
+  font-size: 14.5px;
+  color: var(--muted);
+}
+.status p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------------------------------- misc --------------------------------- */
+
+.cta-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.gpu-head {
+  margin-top: clamp(56px, 7vw, 88px);
+}
+
+body.landing footer.site .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+}
+.footmark {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+.footmark span {
+  color: var(--accent);
+}
+
+/* the .js gate keeps the page readable if the module never runs */
+body.js .reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+body.js .reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.js .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .btn:hover,
+  a.feature:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* 2×2 rather than 3 + a lonely one */
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .budget div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+  .budget dd {
+    font-size: 12.5px;
+  }
+}
+
+@media (max-width: 640px) {
+  .wrap,
+  .stage {
+    padding: 0 16px;
+  }
+  .stage-frame {
+    padding: 6px;
+    border-radius: 16px;
+  }
+  .stage-frame map0-viewer {
+    height: 62vh;
+  }
+}
