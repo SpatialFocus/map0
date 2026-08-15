@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Measure — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="measure">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow">Map features</p>
+        <h1>Measure</h1>
+        <p class="lede">
+          Distance and area, computed on the sphere rather than in map pixels — the difference is
+          about 50&nbsp;% at Austrian latitudes, which is the sort of error nobody notices until it
+          matters.
+        </p>
+      </div>
+
+      <map0-viewer config-src="/configs/measure.map0.json"></map0-viewer>
+      <p class="demo-note">
+        <strong>Try it:</strong> the ruler button in the control stack. Click to set points, drag a
+        point to adjust it, double-click to finish. <kbd>Backspace</kbd> removes the last point,
+        <kbd>Esc</kbd> clears. Switch to <em>Area</em> for a polygon with its perimeter.
+      </p>
+
+      <section class="doc">
+        <h2>Why spherical maths</h2>
+        <p>
+          MapLibre renders Web Mercator, where a pixel covers less ground the further north you go.
+          Measuring in projected coordinates would overstate distances in Austria by roughly the
+          secant of the latitude — a 1&nbsp;km walk near Vienna would read as about 1.5&nbsp;km.
+        </p>
+        <p>
+          map0 measures with the haversine formula for lengths and the spherical excess of the
+          polygon for areas. Both are within about half a percent of full ellipsoidal values, which
+          is well below the precision of clicking on a map.
+        </p>
+        <ul class="checks">
+          <li>Segment labels while drawing, plus a running total at the last point</li>
+          <li>Area mode reports the enclosed area and the perimeter</li>
+          <li>Units follow the magnitude: m → km, m² → ha → km²; decimals follow the UI locale</li>
+          <li>Vertices stay draggable after finishing, and the numbers update live</li>
+        </ul>
+      </section>
+
+      <section class="doc">
+        <h2>How it is drawn</h2>
+        <p>
+          The measurement is ordinary MapLibre style layers — a white casing beneath a coloured line
+          so it stays readable on aerial imagery, dashed while a segment is still following the
+          cursor, and vertices as circles in the theme's accent colour. Switch the basemap to
+          <em>Aerial</em> mid-measurement: the geometry survives the style change like any other
+          overlay.
+        </p>
+        <div class="callout">
+          <strong>Labels are DOM markers, not text layers</strong>
+          A symbol layer would need a glyph source from the basemap style, which raster basemaps do
+          not have — a measurement over an orthophoto would simply show no numbers. Markers are
+          styled with the same CSS tokens as the rest of the interface instead.
+        </div>
+      </section>
+
+      <section class="doc">
+        <h2>Configuration</h2>
+        <p>One key. It is on by default; <code>false</code> removes the control entirely.</p>
+        <pre data-src="/configs/measure.map0.json" data-label="measure.map0.json" data-emphasise="measure"></pre>
+      </section>
+
+      <section class="doc">
+        <h2>Scope</h2>
+        <p>
+          This is measuring, not drawing: no shapes to keep, no annotation model, nothing that ends
+          up in the share link. If map0 ever grows real annotations,
+          <a href="https://github.com/JamesLMilner/terra-draw">Terra Draw</a> is the right
+          dependency for that job — and this module can stay exactly as it is, because measuring a
+          distance and authoring a drawing are different tasks that happen to look similar.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

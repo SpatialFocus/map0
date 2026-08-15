@@ -203,6 +203,65 @@ describe("permalink", () => {
   });
 });
 
+describe("geodesy", () => {
+  it("measures known distances within 0.5 %", async () => {
+    const { haversine, lineLength } = await import("./geodesy.js");
+    /* Vienna Stephansdom → Salzburg Dom, ~252 km */
+    const vienna: [number, number] = [16.3731, 48.2085];
+    const salzburg: [number, number] = [13.0466, 47.7979];
+    const d = haversine(vienna, salzburg);
+    expect(d).toBeGreaterThan(250_000);
+    expect(d).toBeLessThan(255_000);
+    /* one degree of latitude is ~111.2 km anywhere */
+    expect(haversine([16, 48], [16, 49])).toBeCloseTo(111_195, -2);
+    /* a line is the sum of its segments */
+    expect(lineLength([vienna, salzburg, vienna])).toBeCloseTo(2 * d, 5);
+    expect(lineLength([vienna])).toBe(0);
+  });
+
+  it("is not fooled by Web Mercator distortion", async () => {
+    const { haversine } = await import("./geodesy.js");
+    /* the same one-degree span in longitude shrinks with latitude — planar
+       pixel maths would report both as equal */
+    const equator = haversine([0, 0], [1, 0]);
+    const vienna = haversine([16, 48.2], [17, 48.2]);
+    expect(vienna / equator).toBeCloseTo(Math.cos(48.2 * (Math.PI / 180)), 2);
+  });
+
+  it("measures areas with the spherical excess formula", async () => {
+    const { ringArea } = await import("./geodesy.js");
+    /* 0.1° × 0.1° box at 48°N ≈ 11.1 km × 7.4 km ≈ 82.5 km² */
+    const box = ringArea([
+      [16.0, 48.0],
+      [16.1, 48.0],
+      [16.1, 48.1],
+      [16.0, 48.1],
+    ]);
+    expect(box / 1e6).toBeGreaterThan(80);
+    expect(box / 1e6).toBeLessThan(85);
+    /* winding order must not matter, degenerate rings are zero */
+    const reversed = ringArea([
+      [16.0, 48.1],
+      [16.1, 48.1],
+      [16.1, 48.0],
+      [16.0, 48.0],
+    ]);
+    expect(reversed).toBeCloseTo(box, 0);
+    expect(ringArea([[16, 48], [16.1, 48]])).toBe(0);
+  });
+
+  it("formats with the unit the magnitude deserves", async () => {
+    const { formatLength, formatArea } = await import("./geodesy.js");
+    expect(formatLength(845)).toBe("845 m");
+    expect(formatLength(4.2)).toBe("4.2 m");
+    expect(formatLength(12_400)).toBe("12.4 km");
+    expect(formatArea(640)).toBe("640 m²");
+    expect(formatArea(32_000)).toBe("3.20 ha");
+    expect(formatArea(18_500_000)).toBe("18.50 km²");
+    expect(formatLength(12_400, "de")).toBe("12,4 km"); // locale decimals
+  });
+});
+
 describe("search", () => {
   const base = {
     provider: "photon",

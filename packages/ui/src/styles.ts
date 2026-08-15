@@ -258,6 +258,85 @@ export const componentStyles = css`
     font-style: italic;
   }
 
+  /* ------------------------------- measure ------------------------------ */
+
+  .measure-bar {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 34px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 8px 7px 10px;
+    max-width: calc(100% - 20px);
+  }
+  .measure-modes {
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--map0-border);
+    border-radius: var(--map0-radius-sm);
+    flex: none;
+  }
+  .measure-modes button {
+    all: unset;
+    padding: 4px 10px;
+    border-radius: calc(var(--map0-radius-sm) - 2px);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--map0-muted);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .measure-modes button[data-active] {
+    background: var(--map0-primary);
+    color: #fff;
+  }
+  .measure-modes button:focus-visible {
+    outline: 2px solid var(--map0-primary);
+  }
+  .measure-readout {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+    min-width: 90px;
+  }
+  .measure-readout strong {
+    font-variant-numeric: tabular-nums;
+    font-size: 14px;
+  }
+  .measure-sub,
+  .measure-hint {
+    color: var(--map0-muted);
+    font-size: 11.5px;
+  }
+  .measure-clear {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  /* labels are MapLibre markers, so they live outside the panel styles */
+  .m0-measure-label {
+    background: var(--map0-bg);
+    color: var(--map0-fg);
+    border: 1px solid var(--map0-border);
+    border-radius: 5px;
+    padding: 1px 6px;
+    font-family: var(--map0-font);
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+    pointer-events: none;
+  }
+  .m0-measure-label.m0-measure-total {
+    background: var(--map0-primary);
+    border-color: var(--map0-primary);
+    color: #fff;
+    font-weight: 600;
+    font-size: 12.5px;
+  }
+
   /* ------------------------------- search ------------------------------- */
 
   .search {

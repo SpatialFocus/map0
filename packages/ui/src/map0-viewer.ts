@@ -7,6 +7,9 @@ import type {
   LayerUIState,
   Map0Config,
   Map0Core,
+  MeasureController,
+  MeasureMode,
+  MeasureState,
   NormalizedConfig,
   SearchResult,
   ValidationError,
@@ -40,6 +43,8 @@ const CONTROL_SVGS = {
     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:auto"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>',
   share:
     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:auto"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-3.9M8.6 13.5l6.8 3.9"/></svg>',
+  measure:
+    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:auto"><path d="M3 15 15 3l6 6L9 21z"/><path d="m7 11 2 2"/><path d="m10 8 2 2"/><path d="m13 5 2 2"/></svg>',
 } as const;
 
 class IconButtonControl {
@@ -121,6 +126,10 @@ export class Map0Viewer extends LitElement {
   @state() private _searchActive = -1;
   @state() private _searchExpanded = false;
   @state() private _searchEmpty = false;
+  @state() private _measure: MeasureState | null = null;
+  @state() private _measureLoading = false;
+
+  private measureController?: MeasureController;
 
   private noticeSeq = 0;
   private statusSeen = new Map<string, string>();
@@ -134,7 +143,7 @@ export class Map0Viewer extends LitElement {
   private normalized?: NormalizedConfig;
   private popup?: Popup;
   private popups?: PopupRenderer;
-  private Popup?: typeof Popup;
+  private createPopup?: (options?: object) => Popup;
   private unsubs: Array<() => void> = [];
   private initialized = false;
   private initStarted = false;
@@ -239,6 +248,45 @@ export class Map0Viewer extends LitElement {
     } finally {
       this._dialogLoading = null;
     }
+  }
+
+  /* -------------------------------- measuring ------------------------------- */
+
+  /** activate a measure mode, loading the module on first use */
+  private async startMeasure(mode: MeasureMode): Promise<void> {
+    if (!this.core) return;
+    this._measureLoading = true;
+    try {
+      if (!this.measureController) {
+        const engine = await loadEngine();
+        const { MeasureController } = await engine.loadMeasure();
+        const controller = new MeasureController(
+          this.core.map,
+          this.normalized!.theme.primary,
+          this.core.locale,
+        );
+        this.measureController = controller;
+        this.unsubs.push(
+          controller.state.subscribe((v) => (this._measure = v)),
+          () => controller.destroy(),
+        );
+        /* the measurement must survive a basemap change like any other overlay */
+        this.core.registerOverlay(() => controller.ids);
+      }
+      this.popup?.remove();
+      this.core.setInteractionLocked(true);
+      this.measureController.start(mode);
+    } catch (e) {
+      this.notify("error", String(e));
+    } finally {
+      this._measureLoading = false;
+    }
+  }
+
+  private stopMeasure(): void {
+    this.measureController?.stop();
+    this.core?.setInteractionLocked(false);
+    this._measure = null;
   }
 
   /* --------------------------------- search -------------------------------- */
@@ -363,12 +411,12 @@ export class Map0Viewer extends LitElement {
       this._legendOpen = cfg.controls.legend === false ? false : cfg.controls.legend.open;
 
       /* the engine, MapLibre and its stylesheet, and the popup renderer */
-      const [{ createCore, Popup }, popups, maplibreCss] = await Promise.all([
+      const [{ createCore, createPopup }, popups, maplibreCss] = await Promise.all([
         loadEngine(),
         loadPopupRenderer(),
         loadMaplibreCss().then((m) => m.default),
       ]);
-      this.Popup = Popup;
+      this.createPopup = createPopup;
       this.popups = popups;
       this.adoptMaplibreCss(maplibreCss);
 
@@ -408,6 +456,19 @@ export class Map0Viewer extends LitElement {
       if (cfg.controls.print) {
         core.map.addControl(
           new IconButtonControl("print", () => void this.openDialog("print"), core.t("print.title")),
+          "top-left",
+        );
+      }
+      if (cfg.controls.measure) {
+        core.map.addControl(
+          new IconButtonControl(
+            "measure",
+            () => {
+              if (this._measure) this.stopMeasure();
+              else void this.startMeasure("distance");
+            },
+            core.t("measure.title"),
+          ),
           "top-left",
         );
       }
@@ -460,9 +521,9 @@ export class Map0Viewer extends LitElement {
   private showPopup(e: { lngLat: [number, number]; results: FeatureInfoResult[] }): void {
     if (!this.core) return;
     this.popup?.remove();
-    if (!this.popups || !this.Popup) return;
+    if (!this.popups || !this.createPopup) return;
     const content = this.popups.buildPopupContent(e.results, this.core.t);
-    this.popup = new this.Popup({ closeButton: true, maxWidth: "340px" })
+    this.popup = this.createPopup({ closeButton: true, maxWidth: "340px" })
       .setLngLat(e.lngLat)
       .setDOMContent(content)
       .addTo(this.core.map);
@@ -474,7 +535,7 @@ export class Map0Viewer extends LitElement {
     lngLat: [number, number];
     entries: Array<{ code: string; label: string; text: string }>;
   }): void {
-    if (!this.core || !this.Popup) return;
+    if (!this.core || !this.createPopup) return;
     const t = this.core.t;
     this.popup?.remove();
     /* built entirely with textContent — nothing here comes from remote services */
@@ -511,7 +572,7 @@ export class Map0Viewer extends LitElement {
       td.appendChild(copy);
     }
     container.appendChild(table);
-    this.popup = new this.Popup({ closeButton: true, maxWidth: "340px" })
+    this.popup = this.createPopup({ closeButton: true, maxWidth: "340px" })
       .setLngLat(e.lngLat)
       .setDOMContent(container)
       .addTo(this.core.map);
@@ -537,6 +598,7 @@ export class Map0Viewer extends LitElement {
             </div>`
           : nothing}
         ${this.renderSearch()} ${this.renderToc()} ${this.renderBasemaps()} ${this.renderLegend()}
+        ${this.renderMeasure()}
         ${this._addOpen && this.core
           ? html`<map0-add-layer
               .core=${this.core}
@@ -570,6 +632,53 @@ export class Map0Viewer extends LitElement {
               )}
             </div>`
           : nothing}
+      </div>
+    `;
+  }
+
+  private renderMeasure(): TemplateResult | typeof nothing {
+    const m = this._measure;
+    if (!m) return nothing;
+    const t = this.core?.t ?? ((k: string) => k);
+    const started = m.points.length > 0;
+    return html`
+      <div class="measure-bar panel" part="measure" role="group" aria-label=${t("measure.title")}>
+        <div class="measure-modes" role="radiogroup">
+          ${(["distance", "area"] as const).map(
+            (mode) => html`
+              <button
+                type="button"
+                role="radio"
+                aria-checked=${m.mode === mode ? "true" : "false"}
+                ?data-active=${m.mode === mode}
+                @click=${() => void this.startMeasure(mode)}
+              >
+                ${t(`measure.${mode}`)}
+              </button>
+            `,
+          )}
+        </div>
+        <div class="measure-readout">
+          ${started
+            ? html`<strong>${m.text}</strong>
+                ${m.perimeter
+                  ? html`<span class="measure-sub">${t("measure.perimeter")} ${m.perimeter}</span>`
+                  : nothing}`
+            : html`<span class="measure-hint">${t("measure.hint")}</span>`}
+        </div>
+        ${started
+          ? html`<button class="btn measure-clear" @click=${() => void this.startMeasure(m.mode)}>
+              ${t("measure.clear")}
+            </button>`
+          : nothing}
+        <button
+          class="icon-btn"
+          aria-label=${t("measure.close")}
+          title=${t("measure.close")}
+          @click=${() => this.stopMeasure()}
+        >
+          ✕
+        </button>
       </div>
     `;
   }

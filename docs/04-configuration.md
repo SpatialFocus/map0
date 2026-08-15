@@ -209,6 +209,7 @@ inside the config it would gate. It mirrors `<img loading>`:
     },
     "legend": { "position": "bottom-right", "open": false },
     "print": true,                          // print & export dialog (F7): PNG download + print view
+    "measure": true,                        // distance & area, measured on the sphere (F9.1)
     "coordinates": true,                    // right-click/long-press readout (F5.6); default:
                                             // WGS 84 + Austrian GK strip + UTM zone (auto-selected);
                                             // or { "crs": [{ "code", "label"?, "def"? (proj4) }] }

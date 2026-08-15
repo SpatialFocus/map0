@@ -4,8 +4,9 @@
 > [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/).
 > One script tag + one JSON config = a full-featured map on any web page.
 
-**Status:** M0 spike — the walking skeleton works (TOC, WMS + GetFeatureInfo, GeoJSON/clustering,
-basemap switching, globe, theming, i18n). No release yet; APIs and the config schema are still v0.
+**Status:** approaching the M1 milestone — layer tree, WMS/WMTS/vector tiles/GeoJSON, feature info,
+legends, search, measuring, print, permalink, theming and i18n all work against live services. No
+release yet; APIs and the config schema are still v0. See [07-roadmap.md](docs/07-roadmap.md).
 
 ## The idea in one paragraph
 
@@ -31,13 +32,13 @@ pnpm install
 pnpm dev
 ```
 
-Then open **http://localhost:5173/demos — the demo gallery**. Sixteen single-topic demos, each
+Then open **http://localhost:5173/demos — the demo gallery**. Nineteen single-topic demos, each
 with a live map against real services, a written explanation, and the exact config that produced it:
 
 | Group | Demos |
 |---|---|
 | Data sources | WMS · WMTS · Vector tiles · GeoJSON & clustering |
-| Map features | Popups & hover · Legend · Coordinates · Print & export · Add layers · Share & permalink · Globe |
+| Map features | Popups & hover · Legend · Search · Measure · Coordinates · Print & export · Add layers · Share & permalink · Globe |
 | Configuration | Minimal config · Theming · Languages · Config inheritance |
 | Integration | Script tag embed (built bundle — run `pnpm demo:standalone` first) · Lazy loading |
 
@@ -67,9 +68,10 @@ docs/             specification
 
 Distribution note: `packages/ui/dist/` is a flat folder — `map0.js`, its chunks, and MapLibre's
 three files shipped verbatim. Deploy the folder as a unit; the embed stays one script tag.
-A page pays **~20 KB gzip** for the element itself; the engine and MapLibre (~314 KB) load when the
-map approaches the viewport, and capabilities parsing, proj4, PMTiles and the dialogs only when
-those features are used. `pnpm size` prints the breakdown and fails when the page tier grows.
+A page pays **~23 KB gzip** for the element itself; the engine and MapLibre (~316 KB) load when the
+map approaches the viewport, and capabilities parsing, proj4, PMTiles, measuring and the dialogs
+only when those features are used. `pnpm size` prints the breakdown and fails when the page tier
+grows.
 
 ## Documents
 

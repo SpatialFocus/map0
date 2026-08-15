@@ -6,10 +6,10 @@
 
 ## Where we are
 
-**M0 (walking skeleton) is complete. M1 (MVP) is roughly two thirds done** — the map, the layer tree,
-feature info, legends, print and the whole configuration mechanism work against live Austrian SDI
-services. What M1 still needs is mostly polish and packaging: a published JSON Schema, an
-accessibility pass, and an actual npm/CDN release.
+**M0 (walking skeleton) is complete. M1 (MVP) is close** — the map, the layer tree, feature info,
+legends, print, search, measuring and the whole configuration mechanism work against live Austrian
+SDI services. What is left is mostly polish and packaging: a published JSON Schema, an accessibility
+pass, and an actual npm/CDN release.
 
 | Area | Status |
 |---|---|
@@ -19,8 +19,10 @@ accessibility pass, and an actual npm/CDN release.
 | Legend | ✅ service, style-derived, hand-written; in print |
 | Print | ✅ PNG + print view, DPI, layout · ⬜ client PDF, server adapter |
 | Sharing | ✅ permalink incl. user-added layers · ⬜ embed-snippet helper |
+| Search | ✅ type-ahead geocoding, pluggable providers, coordinate input |
+| Measuring | ✅ distance & area, geodesic, draggable vertices |
 | Configuration | ✅ one document, validation with JSON-path errors, `extends`, theming, i18n + overrides · 🟡 published JSON Schema |
-| Performance | ✅ 20 KB page tier, lazy engine/features, CI budget |
+| Performance | ✅ 23 KB page tier, engine and features load on demand, CI budget |
 | Accessibility | 🟡 keyboard operation, focus trap, reduced motion · ⬜ audit, DOM-mirrored results |
 | Packaging | 🟡 built bundle + demo site · ⬜ npm/CDN release, license, name |
 
@@ -51,9 +53,11 @@ accessibility pass, and an actual npm/CDN release.
 - ✅ **i18n** de/en + per-locale overrides (F11.1–F11.3)
 - ✅ **Config inheritance** via `extends` (C6)
 - ✅ **Error toasts** and TOC zoom-range hints (F2.5)
-- ✅ **Code splitting** — 20 KB page tier, lazy engine/MapLibre/features, size budget in CI (N1)
+- ✅ **Code splitting + lazy loading** — 23 KB page tier, MapLibre deferred until the map is in view, size budget in CI (N1)
 - ✅ **Dialog focus trap + Escape** (N4, partial)
-- ✅ **Demo site** — 17 single-topic demos with docs and live configs
+- ✅ **Search** — type-ahead geocoding with Photon/Nominatim/custom providers, coordinate input (F8.1, F8.2)
+- ✅ **Measure** — distance and area on the sphere, draggable vertices (F9.1)
+- ✅ **Demo site** — 19 single-topic demos with docs and live configs
 
 ### Remaining for v1.0
 
@@ -68,8 +72,6 @@ accessibility pass, and an actual npm/CDN release.
 
 ## M1.x — Power features
 
-- ⬜ **Search / geocoding** with pluggable adapters, coordinate search (F8.1, F8.2)
-- ⬜ **Measure module** on Terra Draw (F9.1)
 - ⬜ **WFS and OGC API Features** layer types (deferred from D-03)
 - ⬜ **Client-side PDF** in the print dialog (F7.3) — jsPDF, lazily loaded
 - ⬜ **Drag-and-drop reorder** in the TOC (F2.6)

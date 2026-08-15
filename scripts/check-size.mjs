@@ -69,14 +69,16 @@ const describe = (file) => {
 };
 
 /* The map tier is MapLibre plus everything that statically needs it — except the
-   dialogs, which only reference it for their own map work and are opened by hand. */
-const isDialogChunk = (file) => {
+   modules a user opens by hand. Those reference MapLibre for their own map work
+   but are not part of showing a map, so they are listed as on-demand. */
+const ON_DEMAND = /(-dialog|^measure)$/;
+const isOnDemandChunk = (file) => {
   const parts = describe(file).split(", ").filter(Boolean);
-  return parts.length > 0 && parts.every((name) => name.endsWith("-dialog"));
+  return parts.length > 0 && parts.every((name) => ON_DEMAND.test(name));
 };
 const mapTier = new Set(jsFiles.filter(isVendorMaplibre));
 for (const file of jsFiles) {
-  if (page.has(file) || isVendorMaplibre(file) || isDialogChunk(file)) continue;
+  if (page.has(file) || isVendorMaplibre(file) || isOnDemandChunk(file)) continue;
   if ([...closure([file])].some((f) => isVendorMaplibre(f) || f.startsWith("maplibre-css"))) {
     mapTier.add(file);
   }

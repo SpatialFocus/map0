@@ -21,6 +21,7 @@ const DEMOS = [
   "popups",
   "legend",
   "search",
+  "measure",
   "coordinates",
   "print",
   "add-layer",
@@ -242,6 +243,63 @@ if (targets.includes("search")) {
       `${at.lng.toFixed(3)}, ${at.lat.toFixed(3)}`,
     );
   }
+  await page.close();
+}
+
+if (targets.includes("measure")) {
+  const page = await openDemo("measure");
+  const box = await page.locator("map0-viewer").boundingBox();
+  await page.locator('.maplibregl-ctrl button[title*="eas"]').first().click();
+  await page.locator(".measure-bar").waitFor({ timeout: 20_000 }).catch(() => {});
+  for (const [dx, dy] of [
+    [260, 200],
+    [460, 240],
+    [420, 380],
+  ]) {
+    await page.mouse.click(box.x + dx, box.y + dy);
+    await page.waitForTimeout(200);
+  }
+  const state = await page.evaluate(() => {
+    const el = document.querySelector("map0-viewer");
+    return {
+      points: el._measure?.points?.length ?? 0,
+      text: el._measure?.text ?? "",
+      labels: el.shadowRoot.querySelectorAll(".m0-measure-label").length,
+      popup: !!el.shadowRoot.querySelector(".maplibregl-popup"),
+    };
+  });
+  record(
+    "measure · three clicks give two labelled segments",
+    state.points === 3 && state.labels === 3 && /\d/.test(state.text),
+    `${state.points} points, ${state.labels} labels, ${state.text}`,
+  );
+  record("measure · feature info stays out of the way", !state.popup);
+  await page.screenshot({ path: shot("measure-distance") });
+
+  await page.locator('.measure-modes button[role="radio"]').nth(1).click();
+  await page.waitForTimeout(300);
+  for (const [dx, dy] of [
+    [300, 200],
+    [520, 230],
+    [480, 380],
+  ]) {
+    await page.mouse.click(box.x + dx, box.y + dy);
+    await page.waitForTimeout(200);
+  }
+  await page.mouse.dblclick(box.x + 300, box.y + 370);
+  await page.waitForTimeout(500);
+  const area = await page.evaluate(() => {
+    const sr = document.querySelector("map0-viewer").shadowRoot;
+    return {
+      text: sr.querySelector(".measure-readout strong")?.textContent ?? "",
+      sub: sr.querySelector(".measure-sub")?.textContent ?? "",
+    };
+  });
+  record(
+    "measure · area reports surface and perimeter",
+    /ha|km²|m²/.test(area.text) && /\d/.test(area.sub),
+    `${area.text} · ${area.sub.trim()}`,
+  );
   await page.close();
 }
 

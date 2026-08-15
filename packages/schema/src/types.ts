@@ -217,6 +217,8 @@ export interface ControlsConfig {
   legend?: boolean | { position?: ControlPosition; open?: boolean };
   /** print & export dialog (F7); default true */
   print?: boolean;
+  /** measure distance and area (F9.1); default true */
+  measure?: boolean;
   /**
    * coordinate readout on right-click/long-press (F5.6); default true.
    * Default CRS list: WGS 84 + matching Austrian GK strip + matching UTM zone;

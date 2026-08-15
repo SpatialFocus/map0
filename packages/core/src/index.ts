@@ -1,4 +1,4 @@
-import { Map as MaplibreMap } from "maplibre-gl";
+import { Map as MaplibreMap, Popup } from "maplibre-gl";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import {
   normalizeConfig,
@@ -7,7 +7,7 @@ import {
   type NormalizedConfig,
   type ValidationError,
 } from "@map0/schema";
-import { BasemapManager, basemapStyle, resolveBasemapStyle } from "./basemaps.js";
+import { BasemapManager, basemapStyle, resolveBasemapStyle, type OverlayIds } from "./basemaps.js";
 import { applyControls, type InitialView } from "./controls.js";
 import type { CoreEvents } from "./events.js";
 import { formatCoordinatesAsync } from "./coordinates.js";
@@ -24,9 +24,15 @@ import {
 } from "./permalink.js";
 import { Emitter } from "./signals.js";
 
-/* re-exported so the UI can reach MapLibre through the lazily loaded engine
-   instead of importing it statically (see map0-viewer's loadEngine) */
-export { Popup } from "maplibre-gl";
+/**
+ * The UI reaches MapLibre through the lazily loaded engine rather than importing
+ * it statically. A factory, not `export { Popup } from "maplibre-gl"`: Rollup
+ * drops the import when an external binding is merely re-exported from a
+ * non-entry chunk, leaving a reference to an undefined name at runtime.
+ */
+export function createPopup(options?: ConstructorParameters<typeof Popup>[0]): Popup {
+  return new Popup(options);
+}
 
 export * from "./adapters/types.js";
 export { deriveFromStyleLayers, entryFromPaint } from "./adapters/legend-derive.js";
@@ -49,6 +55,18 @@ export type { CoreEvents } from "./events.js";
 export { makeT, resolveLocale, type Translate } from "./i18n.js";
 export { LayerManager, type LayerUIState } from "./layers.js";
 export { loadOgcClient, type OgcClient } from "./ogc.js";
+export {
+  centroid,
+  formatArea,
+  formatLength,
+  haversine,
+  lineLength,
+  ringArea,
+  type Position,
+} from "./geodesy.js";
+export type { MeasureController, MeasureMode, MeasureState } from "./measure.js";
+/** measuring is loaded when someone activates it, not with the map */
+export const loadMeasure = (): Promise<typeof import("./measure.js")> => import("./measure.js");
 export {
   buildSearchUrl,
   parseCoordinates,
@@ -101,6 +119,10 @@ export interface Map0Core {
   clearHighlight(): void;
   /** fly to a search hit and mark it (bbox when known, otherwise a close zoom) */
   showLocation(location: { center: [number, number]; bbox?: [number, number, number, number] }): void;
+  /** register sources/layers added outside an adapter so they survive basemap changes */
+  registerOverlay(ids: () => OverlayIds): void;
+  /** suspend feature info while a modal map interaction (measuring) owns the pointer */
+  setInteractionLocked(locked: boolean): void;
   /** current shareable URL (null when `permalink` is not enabled) */
   getShareUrl(): string | null;
   destroy(): void;
@@ -171,14 +193,22 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
 
   const layers = new LayerManager(map, cfg);
   const highlight = new HighlightManager(map, cfg.theme.primary);
+  /** set while measuring: clicks set vertices instead of querying features */
+  let interactionLocked = false;
+  /* anything drawn outside an adapter registers here so it is re-injected on a
+     style change (invariant 6 in docs/09-engineering-notes.md) */
+  const extraOverlays: Array<() => OverlayIds> = [() => highlight.ids];
   const basemaps = new BasemapManager(
     map,
     cfg.basemaps,
     sharedBasemapId,
     () => {
       const overlay = layers.overlayIds;
-      for (const s of highlight.ids.sources) overlay.sources.add(s);
-      for (const l of highlight.ids.layers) overlay.layers.add(l);
+      for (const get of extraOverlays) {
+        const ids = get();
+        for (const s of ids.sources) overlay.sources.add(s);
+        for (const l of ids.layers) overlay.layers.add(l);
+      }
       return overlay;
     },
     background,
@@ -247,7 +277,7 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
           }
         }
       }
-      wireFeatureInfo(map, layers, events, highlight);
+      wireFeatureInfo(map, layers, events, highlight, () => interactionLocked);
       if (!initialView.center && !initialView.bounds) {
         initialView.center = [map.getCenter().lng, map.getCenter().lat];
         initialView.zoom = map.getZoom();
@@ -331,6 +361,11 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
     removeLayer: (id) => layers.removeLayer(id),
     zoomToLayer: (id) => layers.zoomTo(id),
     clearHighlight: () => highlight.clear(),
+    registerOverlay: (ids) => extraOverlays.push(ids),
+    setInteractionLocked: (locked) => {
+      interactionLocked = locked;
+      if (locked) highlight.clear();
+    },
     showLocation: ({ center, bbox }) => {
       if (bbox && (bbox[2] - bbox[0] > 1e-4 || bbox[3] - bbox[1] > 1e-4)) {
         map.fitBounds(bbox, { padding: 60, maxZoom: 17 });

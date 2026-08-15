@@ -6,16 +6,22 @@ import type { CoreEvents } from "./events.js";
 import type { HighlightManager } from "./highlight.js";
 import { renderTemplate } from "./template.js";
 
-/** Wire click → feature info (+ selection highlight) and hover → tooltip. */
+/**
+ * Wire click → feature info (+ selection highlight) and hover → tooltip.
+ * `isLocked` lets a modal map interaction (measuring) take over the pointer:
+ * clicking to set a vertex must not also open a popup underneath it.
+ */
 export function wireFeatureInfo(
   map: MapLibreMap,
   layers: LayerManager,
   emitter: Emitter<CoreEvents>,
   highlight: HighlightManager,
+  isLocked: () => boolean = () => false,
 ): () => void {
   let requestSeq = 0;
 
   const onClick = async (e: MapMouseEvent) => {
+    if (isLocked()) return;
     const adapters = layers.queryable;
     if (adapters.length === 0) return;
     const seq = ++requestSeq;
@@ -36,6 +42,13 @@ export function wireFeatureInfo(
 
   let hoverActive = false;
   const onMove = (e: MapMouseEvent) => {
+    if (isLocked()) {
+      if (hoverActive) {
+        emitter.emit("featurehover", null);
+        hoverActive = false;
+      }
+      return;
+    }
     const ids: string[] = [];
     for (const a of layers.queryable) {
       for (const id of a.interactiveLayerIds) if (map.getLayer(id)) ids.push(id);

@@ -149,6 +149,11 @@ it, or drop it when a real dependency arrives.
   readable. `scripts/check-size.mjs` uses that plus the sourcemaps to classify tiers.
 - **Two copies of Lit** produce a console warning and subtle breakage. It happens when a page loads
   both the built bundle and the sources — see `data-client="bundle"` in the standalone demo.
+- **Never re-export an external binding from a non-entry chunk.**
+  `export { Popup } from "maplibre-gl"` in `core/index.ts` looked harmless and worked in dev; in the
+  build Rollup emitted the re-export but dropped the corresponding import, so the chunk referenced an
+  undefined name (`Popup is not defined`, only in the bundle). Wrap it in a function that *uses* the
+  binding instead — `createPopup()` — and the import survives.
 
 ## 6. Field notes: component and browser
 
@@ -163,6 +168,15 @@ it, or drop it when a real dependency arrives.
 - **Legends must not invent symbols.** A GeoJSON layer without a style gets fill + line + circle
   renderers speculatively (the geometry is unknown until the data arrives), so swatches are derived
   only from a style the author actually wrote.
+- **Map text needs glyphs, DOM markers do not.** A symbol layer can only draw text if the basemap
+  style provides a glyph source — over a raster basemap it silently renders nothing. Measurement
+  labels are therefore `Marker` elements styled with the component's CSS tokens.
+- **A modal map interaction must claim the pointer.** While measuring, a click sets a vertex and
+  must not also open a feature-info popup underneath it: `core.setInteractionLocked(true)` suspends
+  feature info and hover for as long as the interaction owns the map.
+- **Window-level keyboard handlers need `composedPath()`.** Inside a shadow root `event.target` is
+  retargeted to the host, so a handler cannot tell whether the user is typing in the search box.
+  Without that check, Backspace while searching deletes a measurement vertex.
 
 ## 7. Testing and verification
 

@@ -66,6 +66,13 @@ export const DEMOS: Demo[] = [
     icon: "📐",
   },
   {
+    id: "measure",
+    title: "Measure",
+    blurb: "Distance and area on the sphere — click, drag a vertex, double-click.",
+    group: "Map features",
+    icon: "📏",
+  },
+  {
     id: "print",
     title: "Print & export",
     blurb: "High-resolution PNG export and a print view with title, legend and scale bar.",
