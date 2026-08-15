@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Share &amp; permalink — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="permalink">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow">Map features</p>
+        <h1>Share &amp; permalink</h1>
+        <p class="lede">
+          "Send me the link" — the everyday request in any authority. The whole map state rides
+          along in the URL.
+        </p>
+      </div>
+
+      <map0-viewer config-src="/configs/permalink.map0.json"></map0-viewer>
+      <p class="demo-note">
+        <strong>Try it:</strong> move the map, switch a layer, change opacity — the address bar
+        updates as you go. The share button (top-left) copies the current link; open it in a new
+        tab and everything is back.
+      </p>
+
+      <section class="doc">
+        <h2>What travels in the link</h2>
+        <ul class="checks">
+          <li>View: centre, zoom, and bearing/pitch when they differ from north-up</li>
+          <li>The active basemap</li>
+          <li>Layer visibility and opacity — but only where they differ from the config</li>
+          <li>Layers the user added at runtime, with their full definition</li>
+        </ul>
+        <p>
+          Only deltas are stored, so a shared link stays short and — more importantly — keeps
+          inheriting later config changes. Give a layer a new title tomorrow and yesterday's links
+          show the new one.
+        </p>
+      </section>
+
+      <section class="doc">
+        <h2>Living with the host page</h2>
+        <p>
+          The state is base64url-encoded into a single hash parameter, by default
+          <code>#map0=…</code>. Other hash content is left untouched, so a single-page app that
+          routes on the hash keeps working; rename the parameter if it collides:
+        </p>
+        <pre data-lang="json" data-label="excerpt">
+          "permalink": true,
+          "permalink": { "param": "karte" }
+        </pre>
+        <p>
+          Updates use <code>history.replaceState</code> and are debounced, so panning the map does
+          not fill the browser's back button with entries.
+        </p>
+      </section>
+
+      <section class="doc">
+        <h2>Configuration</h2>
+        <pre data-src="/configs/permalink.map0.json" data-label="permalink.map0.json" data-emphasise="permalink"></pre>
+      </section>
+
+      <section class="doc">
+        <h2>From code</h2>
+        <pre data-lang="js" data-label="host-page.js">
+          const api = document.querySelector('map0-viewer').api;
+          const url = api.getShareUrl();  // null when permalink is disabled
+        </pre>
+      </section>
+    </main>
+  </body>
+</html>

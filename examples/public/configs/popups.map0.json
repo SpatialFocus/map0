@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "meta": { "title": "Popups, tooltips and highlighting" },
+  "map": { "center": [16.3775, 48.2105], "zoom": 14 },
+  "basemaps": [
+    {
+      "id": "grau",
+      "title": "Grey",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at",
+      "default": true
+    }
+  ],
+  "layers": [
+    {
+      "id": "widmung",
+      "type": "wms",
+      "title": "Zoning (WMS GetFeatureInfo)",
+      "url": "https://data.wien.gv.at/daten/geo",
+      "layers": "GENFLWIDMUNGOGD",
+      "opacity": 0.4,
+      "info": {
+        "format": "application/json",
+        "title": "{{WIDMUNGSKLASSE_TXT}}",
+        "fields": [
+          { "key": "WIDMUNG_TXT", "label": "Zoning" },
+          { "key": "BEZIRK", "label": "District" },
+          { "key": "FLAECHE", "label": "Area (m²)" }
+        ]
+      },
+      "attribution": "Stadt Wien — data.wien.gv.at"
+    },
+    {
+      "id": "areas",
+      "type": "geojson",
+      "title": "Demo zones (field table)",
+      "data": "/data/demo-areas.geojson",
+      "style": {
+        "fill-color": "#f59e0b",
+        "fill-opacity": 0.3,
+        "line-color": "#f59e0b",
+        "line-width": 2
+      },
+      "popup": {
+        "fields": [
+          { "key": "name", "label": "Name" },
+          { "key": "kategorie", "label": "Category" }
+        ]
+      },
+      "hover": { "content": "{{name}}" }
+    },
+    {
+      "id": "brunnen",
+      "type": "geojson",
+      "title": "Fountains (HTML template + hover)",
+      "data": "https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:TRINKBRUNNENOGD&srsName=EPSG:4326&outputFormat=json",
+      "style": {
+        "circle-color": "#0e7490",
+        "circle-radius": 7,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 2
+      },
+      "popup": {
+        "title": "{{BASIS_TYP_TXT}}",
+        "content": "<p>Object <b>{{OBJECTID}}</b> in district {{BEZIRK}}.</p><p><a href=\"https://www.wien.gv.at/\">City of Vienna</a></p>"
+      },
+      "hover": { "content": "{{BASIS_TYP_TXT}}" },
+      "attribution": "Stadt Wien — data.wien.gv.at"
+    }
+  ]
+}

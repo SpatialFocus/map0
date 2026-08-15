@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "meta": { "title": "UI languages and string overrides" },
+  "map": { "center": [16.3725, 48.2083], "zoom": 13 },
+  "i18n": {
+    "locale": "de",
+    "fallback": "en",
+    "overrides": {
+      "de": {
+        "layers.title": "Kartenthemen",
+        "basemaps.title": "Grundkarte",
+        "legend.title": "Zeichenerklärung"
+      }
+    }
+  },
+  "basemaps": [
+    {
+      "id": "grau",
+      "title": "Grau",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at",
+      "default": true
+    },
+    {
+      "id": "bmapv",
+      "title": "basemap.at",
+      "type": "style",
+      "url": "https://mapsneu.wien.gv.at/basemapv/bmapv/3857/resources/styles/root.json"
+    }
+  ],
+  "layers": [
+    {
+      "id": "widmung",
+      "type": "wms",
+      "title": "Flächenwidmung",
+      "url": "https://data.wien.gv.at/daten/geo",
+      "layers": "GENFLWIDMUNGOGD",
+      "opacity": 0.5,
+      "legend": "auto",
+      "info": { "format": "application/json" },
+      "attribution": "Stadt Wien — data.wien.gv.at"
+    }
+  ],
+  "controls": { "layerSwitcher": { "open": true }, "legend": { "open": true } }
+}

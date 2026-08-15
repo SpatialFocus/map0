@@ -1,7 +1,7 @@
 /**
- * M0 smoke verification: loads every demo page headlessly, waits for the map,
- * exercises key interactions, and writes screenshots to e2e/shots/.
- * Run with the dev server up:  node e2e/verify-demos.mjs
+ * M0/M1 smoke verification: loads every demo page headlessly, waits for the map,
+ * exercises a few key interactions, and writes screenshots to e2e/shots/.
+ * Run with the dev server up:  node e2e/verify-demos.mjs [demo-id …]
  * (Will grow into the Playwright test suite in M1.)
  */
 import { chromium } from "playwright";
@@ -9,7 +9,31 @@ import { mkdirSync } from "node:fs";
 
 const BASE = process.env.MAP0_BASE_URL ?? "http://localhost:5173";
 mkdirSync(new URL("./shots", import.meta.url), { recursive: true });
-const shot = (name) => new URL(`./shots/${name}.png`, import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
+const shot = (name) =>
+  new URL(`./shots/${name}.png`, import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
+
+/** every demo page; `standalone` needs `pnpm demo:standalone` first */
+const DEMOS = [
+  "wms",
+  "wmts",
+  "vector-tiles",
+  "geojson",
+  "popups",
+  "legend",
+  "coordinates",
+  "print",
+  "add-layer",
+  "permalink",
+  "globe",
+  "minimal",
+  "theming",
+  "i18n",
+  "extends",
+  "standalone",
+];
+
+const only = process.argv.slice(2);
+const targets = only.length > 0 ? DEMOS.filter((d) => only.includes(d)) : DEMOS;
 
 /* prefer a system browser (hardware GL) — the bundled headless shell software-renders WebGL,
    which is too slow for a 780-layer vector style */
@@ -26,43 +50,56 @@ async function launchBrowser() {
 
 const browser = await launchBrowser();
 const context = await browser.newContext({
-  viewport: { width: 1280, height: 800 },
+  viewport: { width: 1280, height: 900 },
   deviceScaleFactor: 1.5,
 });
 
 const summary = [];
+const record = (name, ok, detail) => summary.push({ name, ok, ...(detail ? { detail } : {}) });
 
-async function openDemo(path, name) {
+/** noise we knowingly accept: the demo services themselves are broken here */
+const IGNORED_CONSOLE = {
+  /* basemap.at advertises four DNS-dead mirror hosts; probing them is the point */
+  wmts: [/ERR_NAME_NOT_RESOLVED/],
+};
+
+async function openDemo(id) {
   const page = await context.newPage();
   const messages = [];
+  const ignore = IGNORED_CONSOLE[id] ?? [];
   page.on("console", (m) => {
-    if (m.type() === "warning" || m.type() === "error") {
-      messages.push(`${m.type()}: ${m.text().slice(0, 220)}`);
+    const text = m.text();
+    if (
+      (m.type() === "warning" || m.type() === "error") &&
+      !text.includes("Lit is in dev mode") &&
+      !ignore.some((re) => re.test(text))
+    ) {
+      messages.push(`${m.type()}: ${text.slice(0, 200)}`);
     }
   });
-  page.on("pageerror", (e) => messages.push(`pageerror: ${String(e).slice(0, 220)}`));
-  await page.goto(`${BASE}${path}`, { waitUntil: "domcontentloaded" });
+  page.on("pageerror", (e) => messages.push(`pageerror: ${String(e).slice(0, 200)}`));
+  await page.goto(`${BASE}/demos/${id}.html`, { waitUntil: "domcontentloaded" });
 
+  /* the loading veil lifts once the style is in and layers are mounted */
   const ready = await page
     .waitForFunction(
       () => {
         const v = document.querySelector("map0-viewer");
         if (!v?.api?.map) return false;
         const veilGone = !v.shadowRoot?.querySelector(".loading:not([data-done])");
-        const layersMounted = v.api.config.layers.length === 0 || v.api.layers.state.value.length > 0;
-        return veilGone && layersMounted;
+        const mounted =
+          v.api.config.layers.length === 0 || v.api.layers.state.value.length > 0;
+        return veilGone && mounted;
       },
       { timeout: 45_000 },
     )
     .then(() => true)
     .catch(() => false);
 
-  /* let the style and overlay sources actually finish */
   await page
-    .waitForFunction(
-      () => document.querySelector("map0-viewer")?.api?.map.isStyleLoaded() === true,
-      { timeout: 60_000 },
-    )
+    .waitForFunction(() => document.querySelector("map0-viewer")?.api?.map.isStyleLoaded() === true, {
+      timeout: 60_000,
+    })
     .catch(() => {});
   await page
     .evaluate(
@@ -78,76 +115,103 @@ async function openDemo(path, name) {
     .catch(() => {});
   await page.waitForTimeout(400);
 
-  summary.push({ name, ready, messages: messages.slice(0, 6) });
+  /* the page chrome is rendered by demo.ts — a broken shell must fail loudly too */
+  const chrome = await page.evaluate(() => ({
+    code: document.querySelectorAll("figure.code pre").length,
+    pager: !!document.querySelector(".pager"),
+  }));
+  record(id, ready && chrome.code > 0 && chrome.pager, `code blocks: ${chrome.code}`);
+  if (messages.length > 0) record(`${id} · console`, false, messages.slice(0, 3).join(" | "));
   return page;
 }
 
-/* ---- vienna: base render, GFI popup, basemap switch ---- */
-{
-  const page = await openDemo("/vienna.html", "vienna");
-  await page.screenshot({ path: shot("01-vienna") });
+/* ---- every demo renders ---- */
+for (const id of targets) {
+  const page = await openDemo(id);
+  await page.screenshot({ path: shot(`demo-${id}`), fullPage: false });
+  await page.close();
+}
 
-  /* GetFeatureInfo: ensure the WMS overlay is mounted, then click the map center */
-  await page
-    .waitForFunction(
-      () => !!document.querySelector("map0-viewer")?.api?.map.getLayer("m0l-widmung"),
-      { timeout: 20_000 },
-    )
-    .catch(() => {});
-  await page.mouse.click(560, 400);
-  const popup = page.locator(".maplibregl-popup");
-  const gotPopup = await popup
+/* ---- deeper checks on representative demos ---- */
+if (targets.includes("wms")) {
+  const page = await openDemo("wms");
+  await page.mouse.click(640, 420);
+  const popup = await page
+    .locator(".maplibregl-popup")
     .waitFor({ state: "visible", timeout: 20_000 })
     .then(() => true)
     .catch(() => false);
-  if (gotPopup) await page.screenshot({ path: shot("02-vienna-featureinfo") });
-  summary.push({ name: "vienna GFI popup", ready: gotPopup });
+  record("wms · GetFeatureInfo popup", popup);
+  if (popup) await page.screenshot({ path: shot("wms-featureinfo") });
 
-  /* basemap switch: overlays must survive (transformStyle) */
-  await page.getByRole("radio", { name: "Orthofoto" }).click();
+  await page.getByRole("radio", { name: "basemap.at" }).click();
   await page
     .evaluate(
       () =>
         new Promise((resolve) => {
           const m = document.querySelector("map0-viewer").api.map;
           m.once("idle", () => resolve("idle"));
-          setTimeout(resolve, 9_000);
+          setTimeout(resolve, 12_000);
         }),
     )
     .catch(() => {});
-  const overlayAlive = await page.evaluate(() => {
-    const m = document.querySelector("map0-viewer").api.map;
-    return !!m.getLayer("m0l-widmung");
-  });
-  await page.screenshot({ path: shot("03-vienna-ortho-switch") });
-  summary.push({ name: "vienna overlay survives basemap switch", ready: overlayAlive });
-  await page.close();
-}
-
-/* ---- geojson: clusters + local polygons + popup ---- */
-{
-  const page = await openDemo("/geojson.html", "geojson");
-  await page.screenshot({ path: shot("04-geojson") });
-  await page.close();
-}
-
-/* ---- globe ---- */
-{
-  const page = await openDemo("/globe.html", "globe");
-  await page.screenshot({ path: shot("05-globe") });
-  const projection = await page.evaluate(
-    () => document.querySelector("map0-viewer").api.map.getProjection()?.type ?? "unknown",
+  record(
+    "wms · overlay survives basemap switch",
+    await page.evaluate(() => !!document.querySelector("map0-viewer").api.map.getLayer("m0l-widmung")),
   );
-  summary.push({ name: "globe projection active", ready: projection === "globe" });
   await page.close();
 }
 
-/* ---- minimal (inline config) ---- */
-{
-  const page = await openDemo("/minimal.html", "minimal");
-  await page.screenshot({ path: shot("06-minimal") });
+if (targets.includes("wmts")) {
+  const page = await openDemo("wmts");
+  record(
+    "wmts · resolved to a live tile host",
+    await page.evaluate(() => {
+      const src = document.querySelector("map0-viewer").api.map.getStyle().sources["m0s-beschriftung"];
+      return typeof src?.tiles?.[0] === "string" && !src.tiles[0].includes("maps1.wien.gv.at");
+    }),
+  );
+  await page.close();
+}
+
+if (targets.includes("vector-tiles")) {
+  const page = await openDemo("vector-tiles");
+  record(
+    "vector-tiles · TileJSON inlined to absolute templates",
+    await page.evaluate(() => {
+      const src = document.querySelector("map0-viewer").api.map.getStyle().sources["m0s-buildings"];
+      return src?.tiles?.[0]?.startsWith("https://") === true;
+    }),
+  );
+  await page.close();
+}
+
+if (targets.includes("coordinates")) {
+  const page = await openDemo("coordinates");
+  await page.mouse.click(640, 420, { button: "right" });
+  const rows = await page
+    .locator(".m0-coords tr")
+    .count()
+    .catch(() => 0);
+  record("coordinates · four CRS rows", rows === 4, `rows: ${rows}`);
+  await page.close();
+}
+
+if (targets.includes("extends")) {
+  const page = await openDemo("extends");
+  record(
+    "extends · inherits basemaps, overrides theme",
+    await page.evaluate(() => {
+      const cfg = document.querySelector("map0-viewer").api.config;
+      return cfg.basemaps.length === 3 && cfg.theme.primary === "#b45309" && cfg.theme.radius === "md";
+    }),
+  );
   await page.close();
 }
 
 await browser.close();
-console.log(JSON.stringify(summary, null, 2));
+
+const failed = summary.filter((s) => !s.ok);
+console.log(JSON.stringify(summary, null, 1));
+console.log(`\n${summary.length - failed.length}/${summary.length} checks passed`);
+if (failed.length > 0) process.exitCode = 1;

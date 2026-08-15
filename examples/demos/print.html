@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Print &amp; export — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="print">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow">Map features</p>
+        <h1>Print &amp; export</h1>
+        <p class="lede">
+          A composed map sheet — title, legend, scale bar, attribution, date — rendered entirely in
+          the browser at up to 300&nbsp;dpi.
+        </p>
+      </div>
+
+      <map0-viewer config-src="/configs/print.map0.json"></map0-viewer>
+      <p class="demo-note">
+        <strong>Try it:</strong> the printer button in the top-left control stack. Pick A4 landscape
+        and 300&nbsp;dpi, then download the PNG or send it to the print dialog.
+      </p>
+
+      <section class="doc">
+        <h2>How it works</h2>
+        <p>
+          A hidden clone of the map is created at the target paper size and pixel ratio, sharing the
+          live style — including every overlay you have switched on. Once it reports idle, its
+          canvas is composed onto a layout canvas together with the legend, a rounded scale bar and
+          the attribution collected from all active sources.
+        </p>
+        <ul class="checks">
+          <li>Paper: current view, A4 landscape, A4 portrait</li>
+          <li>Resolution: 96, 150 or 300&nbsp;dpi — everything in the layout scales with it</li>
+          <li>Legend images and swatches are drawn into the sheet, not screenshotted</li>
+          <li>No server, no upload — the map never leaves the browser</li>
+        </ul>
+        <div class="callout">
+          <strong>Export what you see, not survey-grade</strong>
+          The scale bar is computed for the exported extent, but this is not a true-to-scale plot:
+          label sizes and symbols scale with the pixel ratio. A server-side renderer for scale-true
+          PDF can be added behind the same dialog later — the interface is reserved for it.
+        </div>
+      </section>
+
+      <section class="doc">
+        <h2>Configuration</h2>
+        <p>
+          Print is on by default. The <code>meta.title</code> becomes the pre-filled sheet title,
+          and layer legends flow into the sheet automatically:
+        </p>
+        <pre data-src="/configs/print.map0.json" data-label="print.map0.json" data-emphasise="meta,legend,print"></pre>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "meta": { "title": "Three ways to get a legend" },
+  "map": { "center": [16.3725, 48.2083], "zoom": 13 },
+  "basemaps": [
+    {
+      "id": "grau",
+      "title": "Grey",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at",
+      "default": true
+    }
+  ],
+  "layers": [
+    {
+      "id": "widmung",
+      "type": "wms",
+      "title": "From the service (GetLegendGraphic)",
+      "url": "https://data.wien.gv.at/daten/geo",
+      "layers": "GENFLWIDMUNGOGD",
+      "opacity": 0.5,
+      "legend": "auto",
+      "attribution": "Stadt Wien — data.wien.gv.at"
+    },
+    {
+      "id": "areas",
+      "type": "geojson",
+      "title": "Written by hand",
+      "data": "/data/demo-areas.geojson",
+      "style": {
+        "fill-color": "#f59e0b",
+        "fill-opacity": 0.3,
+        "line-color": "#f59e0b",
+        "line-width": 2
+      },
+      "legend": [
+        { "label": "Demo zone", "color": "#f59e0b", "shape": "square" },
+        { "label": "Demo route", "color": "#f59e0b", "shape": "line" }
+      ]
+    },
+    {
+      "id": "brunnen",
+      "type": "geojson",
+      "title": "Derived from the style",
+      "data": "https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:TRINKBRUNNENOGD&srsName=EPSG:4326&outputFormat=json",
+      "style": {
+        "circle-color": "#7c3aed",
+        "circle-radius": 5,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 1.5
+      },
+      "attribution": "Stadt Wien — data.wien.gv.at"
+    }
+  ],
+  "controls": { "legend": { "open": true, "position": "bottom-right" } }
+}

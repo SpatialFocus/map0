@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "meta": { "title": "Design tokens from config" },
+  "map": { "center": [16.3725, 48.2083], "zoom": 13 },
+  "theme": {
+    "mode": "auto",
+    "primary": "#d946ef",
+    "radius": "lg",
+    "font": "Georgia, 'Times New Roman', serif"
+  },
+  "basemaps": [
+    {
+      "id": "grau",
+      "title": "Grey",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at",
+      "default": true
+    },
+    {
+      "id": "bmapv",
+      "title": "basemap.at",
+      "type": "style",
+      "url": "https://mapsneu.wien.gv.at/basemapv/bmapv/3857/resources/styles/root.json"
+    }
+  ],
+  "layers": [
+    {
+      "id": "areas",
+      "type": "geojson",
+      "title": "Demo zones",
+      "data": "/data/demo-areas.geojson",
+      "popup": { "title": "{{name}}" }
+    }
+  ],
+  "controls": { "layerSwitcher": { "open": true }, "legend": { "open": true } }
+}

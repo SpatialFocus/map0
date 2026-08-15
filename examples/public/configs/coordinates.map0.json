@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "meta": { "title": "Coordinates in several reference systems" },
+  "map": { "center": [13.35, 47.35], "zoom": 7 },
+  "basemaps": [
+    {
+      "id": "grau",
+      "title": "Grey",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at",
+      "default": true
+    }
+  ],
+  "controls": {
+    "coordinates": {
+      "crs": [
+        { "code": "EPSG:4326", "label": "WGS 84" },
+        { "code": "EPSG:31287", "label": "MGI / Austria Lambert" },
+        { "code": "EPSG:32633", "label": "UTM 33N" },
+        {
+          "code": "EPSG:3416",
+          "label": "ETRS89 / Austria Lambert",
+          "def": "+proj=lcc +lat_0=47.5 +lon_0=13.3333333333333 +lat_1=49 +lat_2=46 +x_0=400000 +y_0=400000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
+        }
+      ]
+    },
+    "legend": false
+  }
+}

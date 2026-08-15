@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "meta": { "title": "Shareable map state" },
+  "map": { "center": [16.3725, 48.2083], "zoom": 12 },
+  "permalink": { "param": "map0" },
+  "basemaps": [
+    {
+      "id": "grau",
+      "title": "Grey",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at",
+      "default": true
+    },
+    {
+      "id": "ortho",
+      "title": "Aerial",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmaporthofoto30cm/normal/google3857/{z}/{y}/{x}.jpeg",
+      "maxZoom": 19,
+      "attribution": "© basemap.at"
+    }
+  ],
+  "layers": [
+    {
+      "id": "widmung",
+      "type": "wms",
+      "title": "Zoning plan",
+      "url": "https://data.wien.gv.at/daten/geo",
+      "layers": "GENFLWIDMUNGOGD",
+      "opacity": 0.55,
+      "info": { "format": "application/json" },
+      "attribution": "Stadt Wien — data.wien.gv.at"
+    },
+    {
+      "id": "areas",
+      "type": "geojson",
+      "title": "Demo zones",
+      "data": "/data/demo-areas.geojson",
+      "visible": false,
+      "style": { "fill-color": "#f59e0b", "fill-opacity": 0.3, "line-color": "#f59e0b", "line-width": 2 }
+    }
+  ],
+  "controls": { "layerSwitcher": { "open": true, "allowAdd": true } }
+}

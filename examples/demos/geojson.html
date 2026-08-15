@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GeoJSON &amp; clustering — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="geojson">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow">Data sources</p>
+        <h1>GeoJSON &amp; clustering</h1>
+        <p class="lede">
+          Three ways to get features onto the map — a remote service, a file next to the page, and
+          a feature collection written straight into the config.
+        </p>
+      </div>
+
+      <map0-viewer config-src="/configs/geojson.map0.json"></map0-viewer>
+      <p class="demo-note">
+        <strong>Try it:</strong> ~2400 drinking fountains arrive as one GeoJSON document and are
+        clustered on the GPU. Zoom in until the clusters break apart, and use the zoom-to-layer
+        button in the layer panel to jump to the local demo file.
+      </p>
+
+      <section class="doc">
+        <h2>What this demo shows</h2>
+        <ul class="checks">
+          <li><code>data</code> accepts a URL or an inline GeoJSON object — here a WFS response, a static file and a literal</li>
+          <li>Clustering is one config key; MapLibre does the grouping</li>
+          <li>The simplified style (<code>circle-*</code>, <code>line-*</code>, <code>fill-*</code>) expands into proper style layers per geometry type</li>
+          <li>Zoom-to-layer computes the bounding box from the data itself</li>
+        </ul>
+        <p>
+          For a WFS, the trick is simply asking for GeoJSON: append
+          <code>outputFormat=json</code> and <code>srsName=EPSG:4326</code> to a GetFeature request
+          and the response is a source map0 can use directly. A dedicated <code>wfs</code> layer
+          type that handles paging follows in v1.x.
+        </p>
+      </section>
+
+      <section class="doc">
+        <h2>Configuration</h2>
+        <pre data-src="/configs/geojson.map0.json" data-label="geojson.map0.json" data-emphasise="&quot;geojson&quot;,&quot;data&quot;,cluster,&quot;style&quot;"></pre>
+      </section>
+
+      <section class="doc">
+        <h2>Full control over the style</h2>
+        <p>
+          When the flat style object is not enough, pass an array of MapLibre style-spec layers
+          instead — expressions, filters, everything. map0 injects the source and keeps the layer
+          order:
+        </p>
+        <pre data-lang="json" data-label="excerpt">
+          {
+            "type": "geojson",
+            "data": "/data/trees.geojson",
+            "style": [
+              {
+                "type": "circle",
+                "paint": {
+                  "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 2, 18, 9],
+                  "circle-color": ["match", ["get", "species"], "oak", "#166534", "#65a30d"]
+                }
+              }
+            ]
+          }
+        </pre>
+      </section>
+    </main>
+  </body>
+</html>

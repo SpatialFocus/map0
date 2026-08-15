@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Popups &amp; hover — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="popups">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow">Map features</p>
+        <h1>Popups &amp; hover</h1>
+        <p class="lede">
+          What happens when someone clicks the map: three layers answer at once, each formatting
+          its attributes differently.
+        </p>
+      </div>
+
+      <map0-viewer config-src="/configs/popups.map0.json"></map0-viewer>
+      <p class="demo-note">
+        <strong>Try it:</strong> hover a fountain or a demo zone for a tooltip. Click one and the
+        geometry is highlighted while the popup is open. Click where the zoning layer, a demo zone
+        and a fountain overlap — the popup groups the answers per layer.
+      </p>
+
+      <section class="doc">
+        <h2>What this demo shows</h2>
+        <ul class="checks">
+          <li>Vector layers are queried in the browser, WMS layers via GetFeatureInfo — in parallel, one popup</li>
+          <li><code>popup.content</code> renders an HTML template with <code>{{property}}</code> placeholders</li>
+          <li><code>popup.fields</code> renders a labelled attribute table instead — no HTML needed</li>
+          <li><code>hover.content</code> adds a short tooltip that follows the cursor</li>
+          <li>The clicked geometry is mirrored into a highlight layer and cleared when the popup closes</li>
+          <li>More than ten hits on one layer collapse into an expandable section</li>
+        </ul>
+      </section>
+
+      <section class="doc">
+        <h2>Everything is sanitised</h2>
+        <p>
+          Templates come from a CMS field and GetFeatureInfo responses come from a third-party
+          service — so both are treated as untrusted. Property values are HTML-escaped when the
+          template is rendered, and the finished markup passes through DOMPurify before it reaches
+          the DOM. Links are rewritten to <code>rel="noopener noreferrer"</code>.
+        </p>
+        <p>
+          The template language is deliberately closed: placeholders and nothing else. No
+          expressions, no <code>eval</code>, nothing a config author could turn into script.
+        </p>
+      </section>
+
+      <section class="doc">
+        <h2>Configuration</h2>
+        <pre data-src="/configs/popups.map0.json" data-label="popups.map0.json" data-emphasise="popup,hover,info,fields,content"></pre>
+      </section>
+
+      <section class="doc">
+        <h2>Reacting from the host page</h2>
+        <p>Every click is also a DOM event, so the surrounding page can react to it:</p>
+        <pre data-lang="js" data-label="host-page.js">
+          const viewer = document.querySelector('map0-viewer');
+
+          viewer.addEventListener('map0:featureclick', (event) =&gt; {
+            const { lngLat, results } = event.detail;
+            // results[0].layerId, results[0].features[0] ...
+            console.log('clicked', results.length, 'layers at', lngLat);
+          });
+        </pre>
+      </section>
+    </main>
+  </body>
+</html>

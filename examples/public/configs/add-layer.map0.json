@@ -1,4 +1,7 @@
 {
+  "version": 1,
+  "meta": { "title": "Add services at runtime" },
+  "map": { "center": [16.3725, 48.2083], "zoom": 12 },
   "basemaps": [
     {
       "id": "grau",
@@ -13,17 +16,12 @@
       "title": "basemap.at",
       "type": "style",
       "url": "https://mapsneu.wien.gv.at/basemapv/bmapv/3857/resources/styles/root.json"
-    },
-    {
-      "id": "ortho",
-      "title": "Aerial",
-      "type": "raster",
-      "url": "https://mapsneu.wien.gv.at/basemap/bmaporthofoto30cm/normal/google3857/{z}/{y}/{x}.jpeg",
-      "maxZoom": 19,
-      "attribution": "© basemap.at"
     }
   ],
-  "theme": { "primary": "#0e7490", "radius": "md" },
-  "controls": { "legend": { "position": "bottom-right" }, "home": true },
+  "layers": [],
+  "controls": {
+    "layerSwitcher": { "open": true, "allowAdd": true },
+    "legend": { "open": true }
+  },
   "permalink": true
 }

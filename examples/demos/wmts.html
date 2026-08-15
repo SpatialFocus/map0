@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WMTS — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="wmts">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow">Data sources</p>
+        <h1>WMTS</h1>
+        <p class="lede">
+          Pre-rendered tiles, configured the way an SDI thinks about them: a capabilities URL and a
+          layer identifier. Everything else is read from the service.
+        </p>
+      </div>
+
+      <map0-viewer config-src="/configs/wmts.map0.json"></map0-viewer>
+      <p class="demo-note">
+        <strong>Try it:</strong> two WMTS layers from basemap.at over a grey basemap — terrain
+        shading at 70&nbsp;% opacity and a label overlay on top.
+      </p>
+
+      <section class="doc">
+        <h2>What this demo shows</h2>
+        <ul class="checks">
+          <li>No hand-written tile template — <code>url</code> points at <code>WMTSCapabilities.xml</code></li>
+          <li>map0 picks the first WebMercator-compatible tile matrix set and warns when a layer offers none</li>
+          <li>REST and KVP services both work; matrix identifiers like <code>EPSG:900913:7</code> are mapped onto <code>{z}</code></li>
+          <li>Zoom range, default style, bounds and legend come from the capabilities document</li>
+        </ul>
+        <p>
+          Capabilities are parsed in the browser with
+          <a href="https://github.com/camptocamp/ogc-client">@camptocamp/ogc-client</a>, in a worker,
+          so a 30&nbsp;000-line XML document does not block the map.
+        </p>
+        <div class="callout">
+          <strong>Field note: dead mirrors</strong>
+          basemap.at advertises five tile hosts in its capabilities, four of which no longer resolve
+          in DNS. map0 probes one real tile per candidate host and uses the first that answers — a
+          map that silently stays empty is the worst possible failure mode.
+        </div>
+      </section>
+
+      <section class="doc">
+        <h2>Configuration</h2>
+        <pre data-src="/configs/wmts.map0.json" data-label="wmts.map0.json" data-emphasise="&quot;wmts&quot;,WMTSCapabilities,&quot;layer&quot;"></pre>
+        <h3>Optional keys</h3>
+        <p>
+          Add <code>matrixSet</code>, <code>style</code> or <code>format</code> when a service offers
+          several and you do not want map0's defaults:
+        </p>
+        <pre data-lang="json" data-label="excerpt">
+          {
+            "type": "wmts",
+            "url": "https://example.gv.at/wmts/1.0.0/WMTSCapabilities.xml",
+            "layer": "orthophoto",
+            "matrixSet": "EPSG:3857",
+            "style": "default",
+            "format": "image/jpeg"
+          }
+        </pre>
+      </section>
+    </main>
+  </body>
+</html>

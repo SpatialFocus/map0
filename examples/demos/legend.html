@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Legend — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="legend">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow">Map features</p>
+        <h1>Legend</h1>
+        <p class="lede">
+          Three layers, three ways to end up with a legend entry — and one panel that only lists
+          what is actually visible right now.
+        </p>
+      </div>
+
+      <map0-viewer config-src="/configs/legend.map0.json"></map0-viewer>
+      <p class="demo-note">
+        <strong>Try it:</strong> switch layers off and on — entries appear and disappear with them.
+        A layer outside its zoom range drops out of the legend too, because it is not on the map.
+      </p>
+
+      <section class="doc">
+        <h2>Three sources, one panel</h2>
+        <ul class="checks">
+          <li><strong>From the service:</strong> <code>legend: "auto"</code> on a WMS layer builds a GetLegendGraphic request</li>
+          <li><strong>From the style:</strong> vector layers with literal colours produce swatches automatically</li>
+          <li><strong>By hand:</strong> an array of entries with label, colour and shape (square, line, circle)</li>
+        </ul>
+        <p>
+          <code>legend: false</code> keeps a layer out of the panel entirely, and a plain string is
+          read as the URL of a legend image — useful when a service draws a bad legend and you host
+          a better one.
+        </p>
+        <div class="callout">
+          <strong>Why not always derive it?</strong>
+          A data-driven style — colour by attribute, width by zoom — has no single swatch that
+          honestly represents it. map0 only derives a swatch from literal colours and stays quiet
+          otherwise, rather than showing something misleading.
+        </div>
+      </section>
+
+      <section class="doc">
+        <h2>Configuration</h2>
+        <pre data-src="/configs/legend.map0.json" data-label="legend.map0.json" data-emphasise="legend"></pre>
+      </section>
+    </main>
+  </body>
+</html>

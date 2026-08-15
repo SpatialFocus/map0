@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "extends": "/configs/_base.map0.json",
+  "meta": { "title": "Noise map — inherits the organisation defaults" },
+  "map": { "center": [16.3725, 48.2083], "zoom": 13 },
+  "theme": { "primary": "#b45309" },
+  "layers": [
+    {
+      "id": "areas",
+      "type": "geojson",
+      "title": "Study areas",
+      "data": "/data/demo-areas.geojson",
+      "style": {
+        "fill-color": "#b45309",
+        "fill-opacity": 0.28,
+        "line-color": "#b45309",
+        "line-width": 2
+      },
+      "popup": { "title": "{{name}}" }
+    }
+  ]
+}

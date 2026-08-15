@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Minimal config — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="minimal">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow">Configuration</p>
+        <h1>Minimal config</h1>
+        <p class="lede">
+          The promise from the specification: a version and one basemap must already produce a
+          usable map. Everything else is a default you can override, never boilerplate you must
+          write.
+        </p>
+      </div>
+
+      <map0-viewer>
+        <script type="application/json">
+          {
+            "version": 1,
+            "basemaps": [
+              {
+                "type": "style",
+                "url": "https://mapsneu.wien.gv.at/basemapv/bmapv/3857/resources/styles/root.json"
+              }
+            ]
+          }
+        </script>
+      </map0-viewer>
+      <p class="demo-note">
+        <strong>Note:</strong> no view, no controls, no theme configured — yet you get zoom,
+        compass, fullscreen, geolocation, globe, scale bar, attribution, coordinate readout, print
+        and a light/dark theme that follows the operating system.
+      </p>
+
+      <section class="doc">
+        <h2>The whole thing</h2>
+        <p>The config above is embedded in the page itself — no separate file, no build step:</p>
+        <pre data-lang="html" data-label="minimal.html">
+          &lt;script type="module" src="/map0.js"&gt;&lt;/script&gt;
+
+          &lt;map0-viewer style="height:520px"&gt;
+            &lt;script type="application/json"&gt;
+              {
+                "version": 1,
+                "basemaps": [
+                  {
+                    "type": "style",
+                    "url": "https://mapsneu.wien.gv.at/basemapv/bmapv/3857/resources/styles/root.json"
+                  }
+                ]
+              }
+            &lt;/script&gt;
+          &lt;/map0-viewer&gt;
+        </pre>
+        <p>Three ways to hand over a config, in this order of precedence:</p>
+        <ul class="checks">
+          <li>A <code>config</code> property set from JavaScript (for SPAs and wrappers)</li>
+          <li>A <code>config-src</code> attribute pointing at a JSON file</li>
+          <li>An inline <code>&lt;script type="application/json"&gt;</code> child, as above — the CMS-friendly one</li>
+        </ul>
+      </section>
+
+      <section class="doc">
+        <h2>When the config is wrong</h2>
+        <p>
+          A broken config never leaves a blank map. It is validated before anything renders, and
+          the errors are shown in place with the JSON path that caused them — so an editor can fix
+          it without opening a developer console:
+        </p>
+        <pre data-lang="text" data-label="error panel">
+          $.basemaps          at least one basemap is required, e.g. { "type": "style", "url": "…" }
+          $.layers[2].url     a "wms" layer needs a "url"
+          $.layers[2].layers  a "wms" layer needs "layers" (WMS LAYERS parameter)
+        </pre>
+      </section>
+    </main>
+  </body>
+</html>

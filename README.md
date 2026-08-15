@@ -31,25 +31,25 @@ pnpm install
 pnpm dev
 ```
 
-Then open **http://localhost:5173 — the example gallery**. It contains:
+Then open **http://localhost:5173/demos — the demo gallery**. Sixteen single-topic demos, each
+with a live map against real services, a written explanation, and the exact config that produced it:
 
-- **Wien — WMS + GetFeatureInfo**: basemap.at vector + Orthofoto, Stadt Wien OGD WMS overlays,
-  click-info popups, TOC with groups/opacity/metadata links
-- **GeoJSON & Cluster**: ~2,400 drinking fountains (WFS→GeoJSON, clustered), local demo zones with
-  popup templates, custom theming
-- **Globe**: MapLibre globe projection, inline GeoJSON, dark theme
-- **Minimal config**: the contract — `version` + one basemap inline in the HTML must yield a full map
-- **Standalone**: the same Vienna map running from the **built bundle** instead of dev aliases
-  (run `pnpm demo:standalone` first)
+| Group | Demos |
+|---|---|
+| Data sources | WMS · WMTS · Vector tiles · GeoJSON & clustering |
+| Map features | Popups & hover · Legend · Coordinates · Print & export · Add layers · Share & permalink · Globe |
+| Configuration | Minimal config · Theming · Languages · Config inheritance |
+| Integration | Script tag embed (built bundle — run `pnpm demo:standalone` first) |
 
 More commands:
 
 ```bash
-pnpm test                  # unit tests (Vitest)
-pnpm typecheck             # strict TypeScript project build
-pnpm build                 # library bundle → packages/ui/dist/
-pnpm demo:standalone       # build + copy the bundle for the standalone demo page
-node e2e/verify-demos.mjs  # headless smoke run with screenshots (dev server must be running)
+pnpm test                       # unit tests (Vitest)
+pnpm typecheck                  # strict TypeScript project build
+pnpm build                      # library bundle → packages/ui/dist/
+pnpm demo:standalone            # build + copy the bundle for the standalone demo page
+node e2e/verify-demos.mjs       # headless smoke run over every demo, with screenshots
+node e2e/verify-demos.mjs wms   # …or just one (dev server must be running)
 ```
 
 ## Repository layout
@@ -59,7 +59,8 @@ packages/schema   config types v0, validation (JSON-path errors), defaults
 packages/core     headless engine: basemap manager, source adapters (wms/raster/geojson/vector),
                   feature info, i18n — no DOM UI
 packages/ui       the <map0-viewer> web component (Lit) + panels, popups, theming
-examples/         demo gallery + demo configs against live Austrian SDI services
+examples/         landing page, /demos gallery and demo pages
+examples/public/  demo configs and data served as-is
 e2e/              headless smoke verification (grows into the Playwright suite in M1)
 docs/             specification
 ```

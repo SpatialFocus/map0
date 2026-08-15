@@ -1,42 +1,37 @@
 {
   "version": 1,
-  "extends": "/configs/_base.map0.json",
-  "meta": {
-    "title": "GeoJSON & Cluster",
-    "description": "Erbt Basemaps/Locale aus _base.map0.json (extends, C6); überschreibt das Theme."
-  },
-  "map": {
-    "center": [16.3725, 48.2083],
-    "zoom": 12
-  },
+  "meta": { "title": "GeoJSON sources and clustering" },
+  "map": { "center": [16.3725, 48.2083], "zoom": 12 },
+  "basemaps": [
+    {
+      "id": "grau",
+      "title": "Grey",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at",
+      "default": true
+    }
+  ],
   "layers": [
     {
       "id": "trinkbrunnen",
       "type": "geojson",
-      "title": "Trinkbrunnen Wien",
+      "title": "Drinking fountains (clustered)",
       "data": "https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:TRINKBRUNNENOGD&srsName=EPSG:4326&outputFormat=json",
       "cluster": { "enabled": true, "radius": 45 },
       "style": {
-        "circle-color": "#7c3aed",
+        "circle-color": "#0e7490",
         "circle-radius": 6,
         "circle-stroke-color": "#ffffff",
         "circle-stroke-width": 1.5
       },
-      "popup": {
-        "title": "{{BASIS_TYP_TXT}}",
-        "fields": [{ "key": "OBJECTID", "label": "Objekt-ID" }]
-      },
-      "hover": { "content": "{{BASIS_TYP_TXT}}" },
-      "metadata": {
-        "url": "https://www.data.gv.at/katalog/dataset?q=Trinkbrunnen+Wien",
-        "title": "Datensatz auf data.gv.at"
-      },
+      "popup": { "title": "{{BASIS_TYP_TXT}}" },
       "attribution": "Stadt Wien — data.wien.gv.at"
     },
     {
       "id": "demo-areas",
       "type": "geojson",
-      "title": "Demo-Zonen (lokal)",
+      "title": "Local demo file",
       "data": "/data/demo-areas.geojson",
       "style": {
         "fill-color": "#f59e0b",
@@ -44,19 +39,24 @@
         "line-color": "#f59e0b",
         "line-width": 2
       },
-      "popup": {
-        "title": "{{name}}",
-        "content": "<p>{{beschreibung}}</p><p><b>Kategorie:</b> {{kategorie}}</p>"
+      "popup": { "title": "{{name}}", "content": "<p>{{beschreibung}}</p>" }
+    },
+    {
+      "id": "inline",
+      "type": "geojson",
+      "title": "Inline GeoJSON",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": { "name": "Stephansdom" },
+            "geometry": { "type": "Point", "coordinates": [16.3733, 48.2085] }
+          }
+        ]
       },
-      "legend": [
-        { "label": "Demo-Zone", "color": "#f59e0b", "shape": "square" },
-        { "label": "Demo-Route", "color": "#f59e0b", "shape": "line" }
-      ]
+      "style": { "circle-color": "#dc2626", "circle-radius": 9, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2 },
+      "popup": { "title": "{{name}}" }
     }
-  ],
-  "theme": {
-    "primary": "#7c3aed",
-    "radius": "lg"
-  },
-  "i18n": { "locale": "de" }
+  ]
 }

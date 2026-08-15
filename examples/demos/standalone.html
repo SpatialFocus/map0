@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Script tag embed — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <!-- The built bundle, not the dev sources: run `pnpm demo:standalone` first. -->
+    <script type="module" src="/standalone/map0.js"></script>
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="standalone">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow">Integration</p>
+        <h1>Script tag embed</h1>
+        <p class="lede">
+          This page loads the built bundle instead of the development sources — the same file you
+          would drop next to a CMS page. No bundler, no framework, no build step on your side.
+        </p>
+      </div>
+
+      <map0-viewer config-src="/configs/wms.map0.json"></map0-viewer>
+      <p class="demo-note">
+        <strong>Note:</strong> if the map above is missing, run
+        <code>pnpm demo:standalone</code> once — it builds the bundle and copies it next to this
+        page. Every other demo runs from source via the dev server.
+      </p>
+
+      <section class="doc">
+        <h2>The whole integration</h2>
+        <pre data-lang="html" data-label="any-page.html">
+          &lt;script type="module" src="/map0/map0.js"&gt;&lt;/script&gt;
+
+          &lt;map0-viewer
+            config-src="/configs/environment-map.json"
+            style="height: 520px"&gt;
+          &lt;/map0-viewer&gt;
+        </pre>
+        <p>What ends up on your web server:</p>
+        <ul class="checks">
+          <li><code>map0.js</code> — the client, MapLibre and all UI included</li>
+          <li><code>maplibre-gl-worker.mjs</code> and <code>maplibre-gl-shared.mjs</code> — MapLibre loads its worker from separate files next to the bundle</li>
+          <li>Your config files, wherever you like — a static folder or a CMS field</li>
+        </ul>
+        <div class="callout">
+          <strong>ESM only</strong>
+          MapLibre v6 dropped its UMD build, so the script tag needs
+          <code>type="module"</code>. That is fine in every browser map0 targets, but a copied
+          snippet without it silently does nothing.
+        </div>
+      </section>
+
+      <section class="doc">
+        <h2>Talking to it from the page</h2>
+        <p>
+          The element exposes an imperative handle once it is ready, and emits DOM events the host
+          page can listen to without importing anything:
+        </p>
+        <pre data-lang="js" data-label="any-page.js">
+          const viewer = document.querySelector('map0-viewer');
+
+          viewer.addEventListener('map0:ready', () =&gt; {
+            const api = viewer.api;
+            api.setLayerVisibility('zoning', false);
+            api.zoomToLayer('districts');
+          });
+
+          viewer.addEventListener('map0:error', (event) =&gt; console.warn(event.detail));
+        </pre>
+      </section>
+    </main>
+  </body>
+</html>

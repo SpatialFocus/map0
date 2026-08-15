@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Theming — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <style>
+      .swatches {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin: 0 0 12px;
+      }
+      .swatches button {
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--fg);
+        font: inherit;
+        font-size: 13px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .swatches button:hover {
+        border-color: var(--accent);
+      }
+      .swatches i {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        display: inline-block;
+      }
+    </style>
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="theming">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow">Configuration</p>
+        <h1>Theming</h1>
+        <p class="lede">
+          The client should look like the site it sits on — not like a GIS product. Colours, radii
+          and fonts are design tokens, settable from the config or from the host page's CSS.
+        </p>
+      </div>
+
+      <div class="swatches">
+        <button data-color="#d946ef"><i style="background:#d946ef"></i>Config default</button>
+        <button data-color="#0e7490"><i style="background:#0e7490"></i>Teal</button>
+        <button data-color="#b45309"><i style="background:#b45309"></i>Amber</button>
+        <button data-color="#166534"><i style="background:#166534"></i>Forest</button>
+        <button data-mode="toggle">Toggle light / dark</button>
+      </div>
+
+      <map0-viewer config-src="/configs/theming.map0.json"></map0-viewer>
+      <p class="demo-note">
+        <strong>Try it:</strong> the buttons above set CSS custom properties on the element from
+        outside — no rebuild, no config reload. This map also uses a serif font, set in its config.
+      </p>
+
+      <section class="doc">
+        <h2>Two ways in</h2>
+        <p>
+          From the config, for the CMS editor who never touches CSS:
+        </p>
+        <pre data-src="/configs/theming.map0.json" data-label="theming.map0.json" data-emphasise="theme,mode,primary,radius,font"></pre>
+        <p>
+          Or from the host page's stylesheet, for the integrator who wants the map to inherit the
+          site's design system:
+        </p>
+        <pre data-lang="css" data-label="site.css">
+          map0-viewer {
+            --map0-primary: #b91c1c;
+            --map0-radius: 4px;
+            --map0-font: "Inter", system-ui, sans-serif;
+            height: 520px;
+          }
+        </pre>
+      </section>
+
+      <section class="doc">
+        <h2>Light, dark, or whatever the visitor prefers</h2>
+        <p>
+          <code>theme.mode</code> takes <code>"light"</code>, <code>"dark"</code> or
+          <code>"auto"</code> (the default), which follows the operating system and reacts when the
+          visitor changes it mid-session. Panels, popups, dialogs and the synthetic background of
+          raster basemaps all switch together.
+        </p>
+        <div class="callout">
+          <strong>Shadow DOM, on purpose</strong>
+          map0 renders into a shadow root, so the host page's stylesheet cannot accidentally break
+          the map, and the map cannot leak styles into the page. Custom properties and documented
+          <code>::part()</code> names are the deliberate way through that boundary.
+        </div>
+      </section>
+    </main>
+
+    <script type="module">
+      const viewer = document.querySelector("map0-viewer");
+      for (const button of document.querySelectorAll(".swatches button")) {
+        button.addEventListener("click", () => {
+          if (button.dataset.color) {
+            viewer.style.setProperty("--map0-primary", button.dataset.color);
+          } else {
+            const dark = viewer.getAttribute("data-theme") === "dark";
+            viewer.setAttribute("data-theme", dark ? "light" : "dark");
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

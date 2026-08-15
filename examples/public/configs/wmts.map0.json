@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "meta": { "title": "basemap.at WMTS overlays" },
+  "map": { "center": [13.35, 47.35], "zoom": 9 },
+  "basemaps": [
+    {
+      "id": "grau",
+      "title": "Grey",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at",
+      "default": true
+    }
+  ],
+  "layers": [
+    {
+      "id": "gelaende",
+      "type": "wmts",
+      "title": "Terrain (WMTS)",
+      "url": "https://mapsneu.wien.gv.at/basemap/1.0.0/WMTSCapabilities.xml",
+      "layer": "bmapgelaende",
+      "opacity": 0.7,
+      "attribution": "© basemap.at"
+    },
+    {
+      "id": "beschriftung",
+      "type": "wmts",
+      "title": "Labels (WMTS)",
+      "url": "https://mapsneu.wien.gv.at/basemap/1.0.0/WMTSCapabilities.xml",
+      "layer": "bmapoverlay",
+      "attribution": "© basemap.at"
+    }
+  ]
+}

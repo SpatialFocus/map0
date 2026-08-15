@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Add layers — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="add-layer">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow">Map features</p>
+        <h1>Add layers</h1>
+        <p class="lede">
+          This map starts empty on purpose. Users bring their own services — paste a URL, pick from
+          the capabilities, done.
+        </p>
+      </div>
+
+      <map0-viewer config-src="/configs/add-layer.map0.json"></map0-viewer>
+      <p class="demo-note">
+        <strong>Try it:</strong> the <strong>+</strong> button in the layer panel. Paste
+        <code>https://data.wien.gv.at/daten/geo</code> as WMS (375 layers, use the filter box), or
+        switch to WMTS and paste
+        <code>https://mapsneu.wien.gv.at/basemap/1.0.0/WMTSCapabilities.xml</code>.
+      </p>
+
+      <section class="doc">
+        <h2>What this demo shows</h2>
+        <ul class="checks">
+          <li>WMS and WMTS capabilities parsed in the browser — no server component involved</li>
+          <li>Filterable layer list with multi-select for services with hundreds of layers</li>
+          <li>Layers arrive fully wired: GetFeatureInfo, legend, metadata link, and a zoom range derived from the service's scale hints</li>
+          <li>Layers without a WebMercator offering are flagged before you add them (D-02)</li>
+          <li>Added layers appear in their own section of the panel and can be removed again</li>
+        </ul>
+        <p>
+          User-added layers never touch the page config. They live in session state — and, because
+          this demo also enables <code>permalink</code>, they travel in the share link, so a
+          colleague opens the map with your services already loaded.
+        </p>
+        <div class="callout">
+          <strong>CORS decides what works</strong>
+          The browser talks to the service directly. Services without CORS headers fail here — that
+          is a property of the service, not of the client, and the dialog says so instead of hanging.
+        </div>
+      </section>
+
+      <section class="doc">
+        <h2>Configuration</h2>
+        <pre data-src="/configs/add-layer.map0.json" data-label="add-layer.map0.json" data-emphasise="allowAdd,permalink,layers"></pre>
+        <p>Set <code>allowAdd: false</code> for a locked-down map where only configured layers exist.</p>
+      </section>
+
+      <section class="doc">
+        <h2>The same thing from code</h2>
+        <pre data-lang="js" data-label="host-page.js">
+          const api = document.querySelector('map0-viewer').api;
+
+          const id = await api.addLayer({
+            type: 'wms',
+            title: 'Noise 2024',
+            url: 'https://sdi.example.gv.at/ows',
+            layers: 'laerm_2024',
+            info: { format: 'application/json' }
+          });
+
+          api.removeLayer(id);
+        </pre>
+      </section>
+    </main>
+  </body>
+</html>

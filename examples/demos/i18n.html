@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Languages — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="i18n">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow">Configuration</p>
+        <h1>Languages</h1>
+        <p class="lede">
+          German and English ship with the client. Every single string can be overridden per
+          locale from the config — including terms your organisation insists on.
+        </p>
+      </div>
+
+      <map0-viewer config-src="/configs/i18n.map0.json"></map0-viewer>
+      <p class="demo-note">
+        <strong>Look closely:</strong> the panel is titled <em>Kartenthemen</em>, not the built-in
+        <em>Kartenebenen</em>, and the legend reads <em>Zeichenerklärung</em>. Both come from
+        <code>i18n.overrides</code>. Tooltips of the MapLibre controls follow the same locale.
+      </p>
+
+      <section class="doc">
+        <h2>How the locale is chosen</h2>
+        <ul class="checks">
+          <li><code>locale: "auto"</code> (the default) follows the visitor's browser language</li>
+          <li>A fixed <code>locale</code> pins the UI — useful when the surrounding page is single-language</li>
+          <li><code>fallback</code> catches keys the chosen locale does not define</li>
+          <li>Overrides can even introduce a locale map0 does not ship, without a rebuild</li>
+        </ul>
+        <p>
+          Lookup order per key: your override for the locale, the built-in dictionary for the
+          locale, your override for the fallback, the built-in fallback. Nothing crashes on a
+          missing key — the key itself is shown, which makes gaps obvious in testing.
+        </p>
+      </section>
+
+      <section class="doc">
+        <h2>Configuration</h2>
+        <pre data-src="/configs/i18n.map0.json" data-label="i18n.map0.json" data-emphasise="i18n,locale,overrides"></pre>
+      </section>
+
+      <section class="doc">
+        <h2>A new language from config alone</h2>
+        <pre data-lang="json" data-label="excerpt">
+          "i18n": {
+            "locale": "it",
+            "fallback": "en",
+            "overrides": {
+              "it": {
+                "layers.title": "Livelli",
+                "basemaps.title": "Mappa di base",
+                "legend.title": "Legenda"
+              }
+            }
+          }
+        </pre>
+        <p>Anything not translated falls back to English rather than disappearing.</p>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Globe — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="globe">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow">Map features</p>
+        <h1>Globe</h1>
+        <p class="lede">
+          A real globe projection, not a plugin and not a second rendering engine — this is the one
+          thing MapLibre gives us that no OpenLayers-based client has for free.
+        </p>
+      </div>
+
+      <map0-viewer config-src="/configs/globe.map0.json"></map0-viewer>
+      <p class="demo-note">
+        <strong>Try it:</strong> drag the globe, then use the globe button in the control stack to
+        switch between globe and flat Mercator. Zoom in far enough and the projection blends into
+        Mercator by itself.
+      </p>
+
+      <section class="doc">
+        <h2>What this demo shows</h2>
+        <ul class="checks">
+          <li><code>map.projection: "globe"</code> starts the map as a globe</li>
+          <li>The globe control toggles projections at runtime — overlays keep rendering</li>
+          <li>Overlays, popups and clustering behave exactly as in the flat map</li>
+          <li>Dark theme via <code>theme.mode</code>, so the globe sits on a dark backdrop</li>
+        </ul>
+        <p>
+          The projection survives a basemap change, because map0 carries it through the style
+          transformation that re-injects overlays.
+        </p>
+      </section>
+
+      <section class="doc">
+        <h2>Configuration</h2>
+        <pre data-src="/configs/globe.map0.json" data-label="globe.map0.json" data-emphasise="projection,mode"></pre>
+      </section>
+    </main>
+  </body>
+</html>
