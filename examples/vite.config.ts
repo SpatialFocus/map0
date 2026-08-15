@@ -19,9 +19,11 @@ export default defineConfig({
     // pre-bundling rewrites the worker URL into .vite/deps where it 404s and the
     // worker dies silently → no vector tiles / GeoJSON. Serve it un-bundled.
     exclude: ["maplibre-gl"],
-    // Dynamically imported on first use — pre-bundle at startup so opening a
-    // dialog doesn't trigger a mid-session dep-optimize page reload.
-    include: ["@camptocamp/ogc-client", "jspdf", "proj4", "pmtiles"],
+    // No `include` here: the dialog deps (@camptocamp/ogc-client, jspdf, proj4,
+    // pmtiles) are dynamically imported from @map0/core, and Vite's scanner
+    // follows bare `import()` calls, so they are already pre-bundled at startup.
+    // Naming them here would only warn — this root is outside the workspace, so
+    // pnpm leaves them unreachable under packages/core/node_modules.
   },
   server: {
     port: 5173,
