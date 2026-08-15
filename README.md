@@ -39,7 +39,7 @@ with a live map against real services, a written explanation, and the exact conf
 | Data sources | WMS · WMTS · Vector tiles · GeoJSON & clustering |
 | Map features | Popups & hover · Legend · Coordinates · Print & export · Add layers · Share & permalink · Globe |
 | Configuration | Minimal config · Theming · Languages · Config inheritance |
-| Integration | Script tag embed (built bundle — run `pnpm demo:standalone` first) |
+| Integration | Script tag embed (built bundle — run `pnpm demo:standalone` first) · Lazy loading |
 
 More commands:
 
@@ -67,9 +67,9 @@ docs/             specification
 
 Distribution note: `packages/ui/dist/` is a flat folder — `map0.js`, its chunks, and MapLibre's
 three files shipped verbatim. Deploy the folder as a unit; the embed stays one script tag.
-Roughly **58 KB gzip** of map0 plus **275 KB** of MapLibre load up front; capabilities parsing
-(ogc-client), proj4, PMTiles and the dialogs load on first use. `pnpm size` prints the breakdown
-and fails when the eager part outgrows its budget.
+A page pays **~20 KB gzip** for the element itself; the engine and MapLibre (~314 KB) load when the
+map approaches the viewport, and capabilities parsing, proj4, PMTiles and the dialogs only when
+those features are used. `pnpm size` prints the breakdown and fails when the page tier grows.
 
 ## Documents
 

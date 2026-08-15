@@ -40,6 +40,11 @@ function renderResult(result: FeatureInfoResult, t: Translate): string {
   return `<section>${layerTitle}${features}</section>`;
 }
 
+/** Sanitize author- or service-provided HTML before it reaches the DOM (N6). */
+export function sanitizeHtml(html: string): string {
+  return DOMPurify.sanitize(html);
+}
+
 /**
  * Render feature-info results into a sanitized DOM node for the MapLibre popup.
  * Everything passes DOMPurify — templates come from CMS configs, HTML may come

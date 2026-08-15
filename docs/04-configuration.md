@@ -44,6 +44,15 @@ app.on("featureclick", (e) => ...);
 app.setLayerVisibility("noise-2024", false);
 ```
 
+**`loading` is an attribute, not a config key.** The element waits until it is near the viewport
+before fetching anything — including the config — so the switch that controls that cannot live
+inside the config it would gate. It mirrors `<img loading>`:
+
+```html
+<map0-viewer config-src="…"></map0-viewer>                  <!-- lazy (default) -->
+<map0-viewer config-src="…" loading="eager"></map0-viewer>  <!-- above the fold -->
+```
+
 *(Element/API names indicative; final naming in [06-architecture.md](06-architecture.md), pending D-01.)*
 
 ## Top-level shape

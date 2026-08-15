@@ -24,6 +24,10 @@ import {
 } from "./permalink.js";
 import { Emitter } from "./signals.js";
 
+/* re-exported so the UI can reach MapLibre through the lazily loaded engine
+   instead of importing it statically (see map0-viewer's loadEngine) */
+export { Popup } from "maplibre-gl";
+
 export * from "./adapters/types.js";
 export { deriveFromStyleLayers, entryFromPaint } from "./adapters/legend-derive.js";
 export { registerAdapter } from "./adapters/registry.js";

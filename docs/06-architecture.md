@@ -122,18 +122,25 @@ bottom sheet below). All results also exposed via `map0:featureclick` event for 
 
 ## Performance & loading (N1/N2)
 
-Measured with `pnpm size` (gzip, current):
+Measured with `pnpm size` (gzip, current). Three tiers, paid at different moments:
 
-| | Size | Loaded |
+| Tier | Size | Paid when |
 |---|---|---|
-| map0 eager (element, store, TOC, legend, popups, adapters, Lit, DOMPurify) | ~58 KB | up front — budget 100 KB, enforced in CI |
-| maplibre-gl (three files, verbatim) | ~275 KB | up front |
+| **page** — custom element + Lit | ~20 KB | the page loads — budget 40 KB, enforced in CI |
+| **map** — engine, MapLibre (3 files), its stylesheet, popup renderer | ~314 KB | the element approaches the viewport |
 | ogc-client (capabilities parsing) | ~62 KB | first add-layer dialog or WMTS layer |
 | proj4 (+ wkt-parser, mgrs) | ~47 KB | first coordinate readout |
 | PMTiles | ~8 KB | first `pmtiles://` layer |
-| print / add-layer dialogs | ~6 KB | first open |
+| print / add-layer dialogs | ~5 KB | first open |
 
-Two decisions carry most of this:
+**Nothing but the element loads until the map is needed.** `<map0-viewer>` observes itself with an
+IntersectionObserver (300 px root margin) and only then fetches the config, the engine and MapLibre
+— so an article with a map at the bottom pays 20 KB unless a reader scrolls there. `loading="eager"`
+opts out, `load()` forces it, and elements inside a hidden tab stay unloaded until shown, which also
+avoids MapLibre initialising into a zero-size container. This is an attribute rather than a config
+key because it decides whether the config is fetched at all.
+
+Two more decisions carry the rest:
 
 - **MapLibre is external, not bundled.** It ships as ESM split across `maplibre-gl.mjs`,
   `maplibre-gl-shared.mjs` and `maplibre-gl-worker.mjs`; the worker needs the shared half on disk
@@ -146,8 +153,9 @@ Two decisions carry most of this:
 Chunks are emitted flat next to the entry: Rollup writes the external MapLibre specifier verbatim
 into every chunk, so a `chunks/` subdirectory would resolve `./maplibre-gl.mjs` one level too deep.
 
-Still open: deferring MapLibre itself until the element scrolls into view (IntersectionObserver),
-worth it on long CMS pages with a map far below the fold.
+Keeping the page tier this small requires discipline in the element: it may only import types from
+`@map0/core` (erased at build time) plus `@map0/schema`. A single value import from core would pull
+MapLibre back into the entry chunk.
 - One shared maplibre instance per element; multiple elements per page supported (N8); workers are
   per-map (document memory implications for >3 maps/page).
 

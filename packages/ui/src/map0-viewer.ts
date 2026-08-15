@@ -1,29 +1,38 @@
-import { LitElement, html, nothing, unsafeCSS, type PropertyValues, type TemplateResult } from "lit";
+import { LitElement, html, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { property, query, state } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
-import DOMPurify from "dompurify";
-import { Popup } from "maplibre-gl";
-import maplibreCss from "maplibre-gl/dist/maplibre-gl.css?inline";
-import {
-  createCore,
-  normalizeConfig,
-  validateConfig,
-  type FeatureInfoResult,
-  type LayerUIState,
-  type Map0Config,
-  type Map0Core,
-  type NormalizedConfig,
-  type ValidationError,
+import type { Popup } from "maplibre-gl"; // type only — erased at build time
+import type {
+  FeatureInfoResult,
+  LayerUIState,
+  Map0Config,
+  Map0Core,
+  NormalizedConfig,
+  ValidationError,
 } from "@map0/core";
-import { resolveConfigExtends, type TocNode } from "@map0/schema";
-import { buildPopupContent } from "./popup.js";
+import { normalizeConfig, resolveConfigExtends, validateConfig, type TocNode } from "@map0/schema";
 import { componentStyles } from "./styles.js";
+
+/**
+ * Everything the map itself needs — the engine, MapLibre and its stylesheet, the
+ * popup renderer with its sanitiser — is behind these imports, so a page that
+ * embeds a map far below the fold downloads none of it until the map is needed.
+ * Type-only imports above are erased at build time and cost nothing.
+ */
+const loadEngine = () => import("@map0/core");
+const loadPopupRenderer = () => import("./popup.js");
+const loadMaplibreCss = () => import("./maplibre-css.js");
 /* The dialogs — and what they drag in, capabilities parsing and the print
    composer — are loaded the first time a user opens them, not on page load. */
 const loadDialog = {
   add: () => import("./add-layer-dialog.js"),
   print: () => import("./print-dialog.js"),
 };
+
+type PopupRenderer = Awaited<ReturnType<typeof loadPopupRenderer>>;
+
+/** one constructable sheet for MapLibre's CSS, shared by every viewer on the page */
+let maplibreSheet: CSSStyleSheet | undefined;
 
 const CONTROL_SVGS = {
   print:
@@ -77,10 +86,17 @@ const icons = {
  *  3. inline `<script type="application/json">` child
  */
 export class Map0Viewer extends LitElement {
-  static override styles = [unsafeCSS(maplibreCss), componentStyles];
+  static override styles = [componentStyles];
 
   @property({ attribute: false }) config?: Map0Config;
   @property({ attribute: "config-src" }) configSrc?: string;
+  /**
+   * When to start loading — mirrors `<img loading>`. `"lazy"` (default) waits
+   * until the element is near the viewport; `"eager"` starts immediately.
+   * This is an attribute rather than a config key on purpose: it decides
+   * whether the config is fetched at all.
+   */
+  @property({ attribute: "loading" }) loading: "lazy" | "eager" = "lazy";
 
   @state() private _errors: ValidationError[] | null = null;
   @state() private _fatal: string | null = null;
@@ -93,6 +109,8 @@ export class Map0Viewer extends LitElement {
   @state() private _dialogLoading: "add" | "print" | null = null;
   @state() private _groupCollapsed: Record<string, boolean> = {};
   @state() private _ready = false;
+  /** true once initialisation actually starts — before that the element only reserves space */
+  @state() private _loading = false;
   @state() private _notices: Array<{ id: number; kind: "error" | "info"; text: string }> = [];
   @state() private _hover: { x: number; y: number; html: string } | null = null;
 
@@ -104,8 +122,12 @@ export class Map0Viewer extends LitElement {
   private core?: Map0Core;
   private normalized?: NormalizedConfig;
   private popup?: Popup;
+  private popups?: PopupRenderer;
+  private Popup?: typeof Popup;
   private unsubs: Array<() => void> = [];
   private initialized = false;
+  private initStarted = false;
+  private observer?: IntersectionObserver;
 
   /** imperative access to the running map (available after `map0:ready`) */
   get api(): Map0Core | undefined {
@@ -114,7 +136,25 @@ export class Map0Viewer extends LitElement {
 
   protected override firstUpdated(): void {
     this.initialized = true;
-    void this.init();
+    /* start early enough that the map is ready by the time it scrolls in */
+    if (this.loading === "eager" || typeof IntersectionObserver === "undefined") {
+      void this.init();
+      return;
+    }
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) this.load();
+      },
+      { rootMargin: "300px" },
+    );
+    this.observer.observe(this);
+  }
+
+  /** Start loading now, whatever `loading` says (for tabs, accordions, tests). */
+  load(): void {
+    this.observer?.disconnect();
+    this.observer = undefined;
+    if (!this.initStarted) void this.init();
   }
 
   protected override updated(changed: PropertyValues): void {
@@ -130,6 +170,8 @@ export class Map0Viewer extends LitElement {
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
+    this.observer?.disconnect();
+    this.observer = undefined;
     this.teardown();
   }
 
@@ -140,6 +182,7 @@ export class Map0Viewer extends LitElement {
     this._fatal = null;
     this._layers = [];
     this._ready = false;
+    this._loading = false;
     void this.updateComplete.then(() => void this.init());
   }
 
@@ -152,10 +195,25 @@ export class Map0Viewer extends LitElement {
     this.popup = undefined;
     this.core?.destroy();
     this.core = undefined;
+    this.initStarted = false;
   }
 
   private emit(name: string, detail: unknown): void {
     this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
+  }
+
+  /** MapLibre's stylesheet arrives with the engine — prepend it so ours still wins */
+  private adoptMaplibreCss(css: string): void {
+    const root = this.shadowRoot;
+    if (!root) return;
+    maplibreSheet ??= (() => {
+      const sheet = new CSSStyleSheet();
+      sheet.replaceSync(css);
+      return sheet;
+    })();
+    if (!root.adoptedStyleSheets.includes(maplibreSheet)) {
+      root.adoptedStyleSheets = [maplibreSheet, ...root.adoptedStyleSheets];
+    }
   }
 
   /** load a dialog's chunk, then open it (a slow network shows a busy cursor, not a blank panel) */
@@ -203,6 +261,8 @@ export class Map0Viewer extends LitElement {
   }
 
   private async init(): Promise<void> {
+    this.initStarted = true;
+    this._loading = true;
     try {
       const raw = await this.loadRawConfig();
       const result = validateConfig(raw);
@@ -219,6 +279,16 @@ export class Map0Viewer extends LitElement {
       this._tocOpen =
         ls === false ? false : ls.open === "auto" ? this.getBoundingClientRect().width >= 560 : ls.open;
       this._legendOpen = cfg.controls.legend === false ? false : cfg.controls.legend.open;
+
+      /* the engine, MapLibre and its stylesheet, and the popup renderer */
+      const [{ createCore, Popup }, popups, maplibreCss] = await Promise.all([
+        loadEngine(),
+        loadPopupRenderer(),
+        loadMaplibreCss().then((m) => m.default),
+      ]);
+      this.Popup = Popup;
+      this.popups = popups;
+      this.adoptMaplibreCss(maplibreCss);
 
       await this.updateComplete;
       if (!this.mapEl) throw new Error("internal: map container missing");
@@ -247,7 +317,7 @@ export class Map0Viewer extends LitElement {
         core.events.on("featureclick", (e) => this.showPopup(e)),
         core.events.on("featurehover", (e) => {
           this._hover = e
-            ? { x: e.point[0], y: e.point[1], html: DOMPurify.sanitize(e.html) }
+            ? { x: e.point[0], y: e.point[1], html: popups.sanitizeHtml(e.html) }
             : null;
         }),
         core.events.on("coordinates", (e) => this.showCoordinates(e)),
@@ -308,8 +378,9 @@ export class Map0Viewer extends LitElement {
   private showPopup(e: { lngLat: [number, number]; results: FeatureInfoResult[] }): void {
     if (!this.core) return;
     this.popup?.remove();
-    const content = buildPopupContent(e.results, this.core.t);
-    this.popup = new Popup({ closeButton: true, maxWidth: "340px" })
+    if (!this.popups || !this.Popup) return;
+    const content = this.popups.buildPopupContent(e.results, this.core.t);
+    this.popup = new this.Popup({ closeButton: true, maxWidth: "340px" })
       .setLngLat(e.lngLat)
       .setDOMContent(content)
       .addTo(this.core.map);
@@ -321,7 +392,7 @@ export class Map0Viewer extends LitElement {
     lngLat: [number, number];
     entries: Array<{ code: string; label: string; text: string }>;
   }): void {
-    if (!this.core) return;
+    if (!this.core || !this.Popup) return;
     const t = this.core.t;
     this.popup?.remove();
     /* built entirely with textContent — nothing here comes from remote services */
@@ -358,7 +429,7 @@ export class Map0Viewer extends LitElement {
       td.appendChild(copy);
     }
     container.appendChild(table);
-    this.popup = new Popup({ closeButton: true, maxWidth: "340px" })
+    this.popup = new this.Popup({ closeButton: true, maxWidth: "340px" })
       .setLngLat(e.lngLat)
       .setDOMContent(container)
       .addTo(this.core.map);
@@ -373,7 +444,7 @@ export class Map0Viewer extends LitElement {
       <div class="stage" ?data-busy=${this._dialogLoading !== null}>
         <div class="map" aria-label=${this.normalized?.meta.title ?? "Karte"}></div>
         <div class="loading" ?data-done=${this._ready} aria-hidden="true">
-          <div class="spinner"></div>
+          ${this._loading ? html`<div class="spinner"></div>` : nothing}
         </div>
         ${this._hover
           ? html`<div

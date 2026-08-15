@@ -30,6 +30,7 @@ const DEMOS = [
   "i18n",
   "extends",
   "standalone",
+  "lazy",
 ];
 
 const only = process.argv.slice(2);
@@ -79,6 +80,12 @@ async function openDemo(id) {
   });
   page.on("pageerror", (e) => messages.push(`pageerror: ${String(e).slice(0, 200)}`));
   await page.goto(`${BASE}/demos/${id}.html`, { waitUntil: "domcontentloaded" });
+  /* maps load when they approach the viewport — bring it in before waiting */
+  await page
+    .locator("map0-viewer")
+    .first()
+    .scrollIntoViewIfNeeded({ timeout: 10_000 })
+    .catch(() => {});
 
   /* the loading veil lifts once the style is in and layers are mounted */
   const ready = await page
@@ -189,6 +196,8 @@ if (targets.includes("vector-tiles")) {
 if (targets.includes("coordinates")) {
   const page = await openDemo("coordinates");
   await page.mouse.click(640, 420, { button: "right" });
+  /* proj4 is fetched on the first readout, so the popup arrives a tick later */
+  await page.locator(".m0-coords tr").first().waitFor({ timeout: 20_000 }).catch(() => {});
   const rows = await page
     .locator(".m0-coords tr")
     .count()

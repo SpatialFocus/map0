@@ -121,6 +121,13 @@ export const DEMOS: Demo[] = [
     group: "Integration",
     icon: "📦",
   },
+  {
+    id: "lazy",
+    title: "Lazy loading",
+    blurb: "A map below the fold costs 20 KB until someone scrolls to it.",
+    group: "Integration",
+    icon: "🪶",
+  },
 ];
 
 export const GROUPS: Array<Demo["group"]> = [
