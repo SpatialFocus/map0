@@ -203,6 +203,36 @@ describe("permalink", () => {
   });
 });
 
+describe("print layout", () => {
+  it("converts paper millimetres to pixels at a resolution", async () => {
+    const { mmToPx, PAPER } = await import("./print.js");
+    expect(mmToPx(210)).toBe(794); // A4 width at 96 dpi
+    expect(mmToPx(297)).toBe(1123);
+    expect(mmToPx(210, 300)).toBe(2480); // and at print resolution
+    expect(PAPER["A4-landscape"]).toEqual([297, 210]);
+  });
+
+  it("fits a sheet inside the page margins, centred, keeping its aspect", async () => {
+    const { fitOnPage } = await import("./print.js");
+    /* a sheet taller than A4 landscape must be limited by height, not width */
+    const tall = fitOnPage({ width: 1123, height: 950 }, { width: 297, height: 210 }, 10);
+    expect(tall.height).toBeCloseTo(190, 5);
+    expect(tall.width / tall.height).toBeCloseTo(1123 / 950, 5);
+    expect(tall.y).toBeCloseTo(10, 5);
+    expect(tall.x).toBeGreaterThan(10); // centred horizontally in the leftover space
+
+    /* a wide sheet is limited by width instead */
+    const wide = fitOnPage({ width: 2000, height: 500 }, { width: 297, height: 210 }, 10);
+    expect(wide.width).toBeCloseTo(277, 5);
+    expect(wide.x).toBeCloseTo(10, 5);
+    expect(wide.y).toBeGreaterThan(10);
+
+    /* no margin means the image fills the page exactly */
+    const full = fitOnPage({ width: 100, height: 50 }, { width: 200, height: 100 }, 0);
+    expect(full).toEqual({ x: 0, y: 0, width: 200, height: 100 });
+  });
+});
+
 describe("geodesy", () => {
   it("measures known distances within 0.5 %", async () => {
     const { haversine, lineLength } = await import("./geodesy.js");

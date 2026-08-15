@@ -16,6 +16,7 @@ export interface Map0Config {
   layers?: LayerDef[];
   controls?: ControlsConfig;
   search?: SearchConfig;
+  print?: PrintConfig;
   theme?: ThemeConfig;
   i18n?: I18nConfig;
   /**
@@ -262,6 +263,23 @@ export interface SearchConfig {
   placeholder?: string;
   /** accept "48.2083, 16.3725" as input (F8.2) */
   coordinates?: boolean;
+}
+
+export type PaperSizeName =
+  | "current"
+  | "A4-landscape"
+  | "A4-portrait"
+  | "A3-landscape"
+  | "A3-portrait";
+
+/** what the print dialog offers (F7); `controls.print` switches the dialog on and off */
+export interface PrintConfig {
+  /** download buttons to show; the browser print view is always available */
+  formats?: Array<"png" | "pdf">;
+  sizes?: PaperSizeName[];
+  dpi?: number[];
+  /** which parts the composed sheet contains */
+  elements?: Array<"title" | "legend" | "scalebar" | "attribution" | "date">;
 }
 
 export interface I18nConfig {

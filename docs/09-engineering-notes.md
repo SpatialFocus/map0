@@ -147,6 +147,14 @@ it, or drop it when a real dependency arrives.
   costs one extra request, which a `modulepreload` hint can remove if it ever matters.
 - **Chunk names come from module names**, which is why `popup-*.js` and `add-layer-dialog-*.js` are
   readable. `scripts/check-size.mjs` uses that plus the sourcemaps to classify tiers.
+- **Fat optional dependencies are worth stubbing.** jsPDF dynamically imports html2canvas and canvg
+  for `doc.html()` and SVG rasterisation, which map0 never calls — ~110 KB gzip that shipped in the
+  folder and would only ever be dead weight. Aliased to `src/stubs/pdf-stub.ts`, same trick as
+  ogc-client's OpenLayers peers. Note what is *not* stubbed: jsPDF also pulls dompurify, and our
+  popup renderer uses that one for real.
+- **A detached `<a download>` is unreliable for large blobs.** The PNG export had worked that way for
+  months; the multi-megabyte PDF silently did nothing until the anchor was appended to the document
+  before clicking. Append, click, remove.
 - **Two copies of Lit** produce a console warning and subtle breakage. It happens when a page loads
   both the built bundle and the sources — see `data-client="bundle"` in the standalone demo.
 - **Never re-export an external binding from a non-entry chunk.**

@@ -21,6 +21,9 @@ export interface PrintRenderOptions {
   dpi: number;
 }
 
+/** which parts of the sheet get drawn (config: `print.elements`) */
+export type PrintElement = "title" | "legend" | "scalebar" | "attribution" | "date";
+
 export interface PrintComposeOptions {
   title?: string;
   attribution: string;
@@ -28,6 +31,44 @@ export interface PrintComposeOptions {
   dpi: number;
   dateLabel: string;
   legendItems: PrintLegendItem[];
+  /** defaults to all of them */
+  elements?: PrintElement[];
+}
+
+/** Paper sizes in millimetres, the source of truth for both the render and the PDF page. */
+export const PAPER = {
+  "A4-landscape": [297, 210],
+  "A4-portrait": [210, 297],
+  "A3-landscape": [420, 297],
+  "A3-portrait": [297, 420],
+} as const satisfies Record<string, readonly [number, number]>;
+
+export type PaperSize = keyof typeof PAPER | "current";
+
+/** Millimetres → pixels at a given resolution. */
+export const mmToPx = (mm: number, dpi = 96): number => Math.round((mm / 25.4) * dpi);
+
+/**
+ * Place an image on a page, preserving its aspect ratio and centring it inside
+ * the margins. The composed sheet is taller than the map alone (title, legend,
+ * footer), so it rarely matches the paper aspect exactly — fitting is what keeps
+ * an "A4" export an actual A4 page rather than something A4-shaped.
+ */
+export function fitOnPage(
+  image: { width: number; height: number },
+  page: { width: number; height: number },
+  margin = 10,
+): { x: number; y: number; width: number; height: number } {
+  const available = { width: page.width - 2 * margin, height: page.height - 2 * margin };
+  const scale = Math.min(available.width / image.width, available.height / image.height);
+  const width = image.width * scale;
+  const height = image.height * scale;
+  return {
+    x: margin + (available.width - width) / 2,
+    y: margin + (available.height - height) / 2,
+    width,
+    height,
+  };
 }
 
 /** plain-text attribution collected from all style sources (HTML stripped) */
@@ -109,6 +150,37 @@ function loadImage(url: string): Promise<HTMLImageElement | null> {
   });
 }
 
+/**
+ * Wrap a composed sheet in a PDF. jsPDF is loaded here, on the click that asks
+ * for a PDF — it is the heaviest thing in the client and most maps never need it.
+ *
+ * The image goes in as PNG: it is a map, so it is full of fine lines and text
+ * where JPEG artefacts show immediately, and the file is meant to be printed.
+ */
+export async function exportPdf(
+  sheet: HTMLCanvasElement,
+  opts: { paper: PaperSize; dpi: number; title?: string },
+): Promise<Blob> {
+  const { jsPDF } = await import("jspdf");
+  const paperMm =
+    opts.paper === "current"
+      ? ([(sheet.width / opts.dpi) * 25.4, (sheet.height / opts.dpi) * 25.4] as [number, number])
+      : ([...PAPER[opts.paper]] as [number, number]);
+
+  const doc = new jsPDF({
+    unit: "mm",
+    format: paperMm,
+    orientation: paperMm[0] >= paperMm[1] ? "landscape" : "portrait",
+    compress: true,
+  });
+  /* the current view exports at its own size, so it needs no margin */
+  const margin = opts.paper === "current" ? 0 : 10;
+  const box = fitOnPage(sheet, { width: paperMm[0], height: paperMm[1] }, margin);
+  doc.addImage(sheet.toDataURL("image/png"), "PNG", box.x, box.y, box.width, box.height);
+  if (opts.title) doc.setProperties({ title: opts.title });
+  return doc.output("blob");
+}
+
 /** Compose the final layout. All measurements scale with dpi so print sizes hold. */
 export async function composePrint(
   mapCanvas: HTMLCanvasElement,
@@ -118,6 +190,8 @@ export async function composePrint(
   const pad = 16 * s;
   const font = (px: number, weight = 400): string =>
     `${weight} ${px * s}px system-ui, 'Segoe UI', Roboto, sans-serif`;
+  const wants = (element: PrintElement): boolean =>
+    opts.elements === undefined || opts.elements.includes(element);
 
   /* pre-load legend images */
   const legendBlocks: Array<
@@ -126,7 +200,7 @@ export async function composePrint(
       | { entries: Array<{ label?: string; color?: string; shape: string }> }
     )
   > = [];
-  for (const item of opts.legendItems) {
+  for (const item of wants("legend") ? opts.legendItems : []) {
     if (item.legend.kind === "image") {
       const img = await loadImage(item.legend.url);
       if (img) legendBlocks.push({ title: item.title, image: img });
@@ -136,8 +210,11 @@ export async function composePrint(
   }
 
   /* measure heights */
-  const titleH = opts.title ? 34 * s : 0;
-  const footerH = 30 * s;
+  const title = wants("title") ? opts.title : undefined;
+  const titleH = title ? 34 * s : 0;
+  const showScale = wants("scalebar");
+  const showFooterText = wants("attribution") || wants("date");
+  const footerH = showScale || showFooterText ? 30 * s : 0;
   let legendH = 0;
   if (legendBlocks.length > 0) {
     legendH = pad / 2;
@@ -157,11 +234,11 @@ export async function composePrint(
   ctx.fillRect(0, 0, width, height);
 
   /* title */
-  if (opts.title) {
+  if (title) {
     ctx.fillStyle = "#111827";
     ctx.font = font(16, 700);
     ctx.textBaseline = "middle";
-    ctx.fillText(opts.title, pad, titleH / 2);
+    ctx.fillText(title, pad, titleH / 2);
   }
 
   /* map */
@@ -214,25 +291,33 @@ export async function composePrint(
 
   /* footer: scale bar left, attribution + date right */
   const fy = height - footerH / 2;
-  const scaleW = opts.scale.widthPx * s;
-  ctx.strokeStyle = "#111827";
-  ctx.lineWidth = 2 * s;
-  ctx.beginPath();
-  ctx.moveTo(pad, fy + 4 * s);
-  ctx.lineTo(pad, fy + 8 * s);
-  ctx.lineTo(pad + scaleW, fy + 8 * s);
-  ctx.lineTo(pad + scaleW, fy + 4 * s);
-  ctx.stroke();
-  ctx.fillStyle = "#111827";
-  ctx.font = font(10);
-  ctx.textBaseline = "bottom";
-  ctx.fillText(opts.scale.label, pad + 4 * s, fy + 2 * s);
+  if (showScale) {
+    const scaleW = opts.scale.widthPx * s;
+    ctx.strokeStyle = "#111827";
+    ctx.lineWidth = 2 * s;
+    ctx.beginPath();
+    ctx.moveTo(pad, fy + 4 * s);
+    ctx.lineTo(pad, fy + 8 * s);
+    ctx.lineTo(pad + scaleW, fy + 8 * s);
+    ctx.lineTo(pad + scaleW, fy + 4 * s);
+    ctx.stroke();
+    ctx.fillStyle = "#111827";
+    ctx.font = font(10);
+    ctx.textBaseline = "bottom";
+    ctx.fillText(opts.scale.label, pad + 4 * s, fy + 2 * s);
+  }
 
-  ctx.fillStyle = "#6b7280";
-  ctx.textAlign = "right";
-  const footerText = [opts.attribution, opts.dateLabel].filter(Boolean).join("  ·  ");
-  ctx.fillText(footerText, width - pad, fy + 6 * s);
-  ctx.textAlign = "left";
+  if (showFooterText) {
+    ctx.fillStyle = "#6b7280";
+    ctx.font = font(10);
+    ctx.textBaseline = "bottom";
+    ctx.textAlign = "right";
+    const footerText = [wants("attribution") ? opts.attribution : "", wants("date") ? opts.dateLabel : ""]
+      .filter(Boolean)
+      .join("  ·  ");
+    ctx.fillText(footerText, width - pad, fy + 6 * s);
+    ctx.textAlign = "left";
+  }
 
   return out;
 }

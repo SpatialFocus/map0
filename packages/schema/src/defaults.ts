@@ -7,6 +7,7 @@ import type {
   ControlsConfig,
   CustomGeocoderDef,
   GroupLayerDef,
+  PrintConfig,
   LayerDef,
   Map0Config,
   MapConfig,
@@ -68,6 +69,7 @@ export interface NormalizedConfig {
   theme: { mode: "auto" | "light" | "dark"; primary: string; radius: "none" | "sm" | "md" | "lg"; font?: string };
   i18n: { locale: string; fallback: string; overrides?: Record<string, Record<string, string>> };
   permalink: false | { param: string };
+  print: Required<PrintConfig>;
   search:
     | false
     | {
@@ -204,6 +206,12 @@ export function normalizeConfig(cfg: Map0Config): NormalizedConfig {
       !cfg.permalink
         ? false
         : { param: typeof cfg.permalink === "object" ? (cfg.permalink.param ?? "map0") : "map0" },
+    print: {
+      formats: cfg.print?.formats ?? ["png", "pdf"],
+      sizes: cfg.print?.sizes ?? ["current", "A4-landscape", "A4-portrait"],
+      dpi: cfg.print?.dpi ?? [96, 150, 300],
+      elements: cfg.print?.elements ?? ["title", "legend", "scalebar", "attribution", "date"],
+    },
     search:
       !cfg.search || cfg.search.enabled === false
         ? false

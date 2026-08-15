@@ -44,6 +44,10 @@ export default defineConfig({
       "ol/tilegrid/WMTS": fileURLToPath(new URL("./src/stubs/ol-stub.ts", import.meta.url)),
       "ol/proj/proj4": fileURLToPath(new URL("./src/stubs/ol-stub.ts", import.meta.url)),
       "ol/proj": fileURLToPath(new URL("./src/stubs/ol-stub.ts", import.meta.url)),
+      /* jsPDF's optional HTML/SVG renderers — see src/stubs/pdf-stub.ts.
+         NOT dompurify: jsPDF and our popup renderer share that one for real. */
+      html2canvas: fileURLToPath(new URL("./src/stubs/pdf-stub.ts", import.meta.url)),
+      canvg: fileURLToPath(new URL("./src/stubs/pdf-stub.ts", import.meta.url)),
     },
   },
   build: {

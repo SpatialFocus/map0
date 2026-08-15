@@ -246,6 +246,30 @@ if (targets.includes("search")) {
   await page.close();
 }
 
+if (targets.includes("print")) {
+  const page = await openDemo("print");
+  await page.locator('.maplibregl-ctrl button[title*="rint"], .maplibregl-ctrl button[title*="ruck"]').first().click();
+  await page.locator(".dialog").waitFor({ timeout: 15_000 }).catch(() => {});
+  await page.locator(".form-row select").first().selectOption("A4-landscape").catch(() => {});
+  const download = page.waitForEvent("download", { timeout: 120_000 }).catch(() => null);
+  await page.locator(".btn-primary").click();
+  const file = await download;
+  if (file) {
+    const path = shot("export").replace(/\.png$/, ".pdf");
+    await file.saveAs(path);
+    const { readFileSync, statSync } = await import("node:fs");
+    const header = readFileSync(path).subarray(0, 5).toString("latin1");
+    record(
+      "print · PDF export writes a real file",
+      header === "%PDF-" && statSync(path).size > 50_000,
+      `${file.suggestedFilename()}, ${Math.round(statSync(path).size / 1024)} KB`,
+    );
+  } else {
+    record("print · PDF export writes a real file", false, "no download event");
+  }
+  await page.close();
+}
+
 if (targets.includes("measure")) {
   const page = await openDemo("measure");
   const box = await page.locator("map0-viewer").boundingBox();

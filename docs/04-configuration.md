@@ -67,6 +67,7 @@ inside the config it would gate. It mirrors `<img loading>`:
 | `basemaps[]` | exclusive background layers | **yes** (≥1) |
 | `layers[]` | overlay tree (groups + layers, order = drawing order) | no |
 | `controls` | which UI elements exist, where | no |
+| `print` | what the print dialog offers: formats, paper sizes, resolutions, sheet elements | no |
 | `search` | geocoder config | no |
 | `print` | print/export layout options | no |
 | `theme` | design tokens, light/dark | no |
@@ -227,11 +228,11 @@ inside the config it would gate. It mirrors `<img loading>`:
     "placeholder": "Adresse oder Ort suchen…"
   },
 
-  "print": {
-    "formats": ["png", "pdf"],
-    "sizes": ["A4-landscape", "A4-portrait"],
+  "print": {                                // what the dialog offers; all keys optional
+    "formats": ["png", "pdf"],              // download buttons (browser print is always there)
+    "sizes": ["current", "A4-landscape", "A4-portrait", "A3-landscape", "A3-portrait"],
     "dpi": [96, 150, 300],
-    "elements": ["title", "legend", "scalebar", "attribution", "date"]
+    "elements": ["title", "legend", "scalebar", "attribution", "date"]  // parts of the sheet
   },
 
   "theme": {

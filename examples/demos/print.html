@@ -22,7 +22,7 @@
       <map0-viewer config-src="/configs/print.map0.json"></map0-viewer>
       <p class="demo-note">
         <strong>Try it:</strong> the printer button in the top-left control stack. Pick A4 landscape
-        and 300&nbsp;dpi, then download the PNG or send it to the print dialog.
+        and 300&nbsp;dpi, then take the PDF, the PNG, or send it to the browser's print dialog.
       </p>
 
       <section class="doc">
@@ -34,11 +34,18 @@
           the attribution collected from all active sources.
         </p>
         <ul class="checks">
-          <li>Paper: current view, A4 landscape, A4 portrait</li>
+          <li>Paper: current view, A4 or A3, landscape or portrait</li>
           <li>Resolution: 96, 150 or 300&nbsp;dpi — everything in the layout scales with it</li>
           <li>Legend images and swatches are drawn into the sheet, not screenshotted</li>
+          <li>PDF pages are real paper sizes: an A4 export measures 297 × 210 mm and prints without "fit to page"</li>
           <li>No server, no upload — the map never leaves the browser</li>
         </ul>
+        <p>
+          The PDF is the composed sheet placed on the page, centred inside 10&nbsp;mm margins. It is
+          embedded as PNG rather than JPEG: a map is fine lines and small text, exactly what JPEG
+          artefacts ruin. <a href="https://github.com/parallax/jsPDF">jsPDF</a> only loads when
+          someone actually asks for a PDF — it is the heaviest module in the client.
+        </p>
         <div class="callout">
           <strong>Export what you see, not survey-grade</strong>
           The scale bar is computed for the exported extent, but this is not a true-to-scale plot:
@@ -54,6 +61,25 @@
           and layer legends flow into the sheet automatically:
         </p>
         <pre data-src="/configs/print.map0.json" data-label="print.map0.json" data-emphasise="meta,legend,print"></pre>
+        <h3>Narrowing the choices</h3>
+        <p>
+          A top-level <code>print</code> block decides what the dialog offers — useful when an
+          organisation wants one format on one paper size and no discussion:
+        </p>
+        <pre data-lang="json" data-label="excerpt">
+          "print": {
+            "formats": ["pdf"],
+            "sizes": ["A4-landscape"],
+            "dpi": [300],
+            "elements": ["title", "legend", "scalebar", "attribution", "date"]
+          }
+        </pre>
+        <p>
+          Everything is optional; the defaults are PNG and PDF, current view plus A4 in both
+          orientations, 96/150/300&nbsp;dpi, and all sheet elements. Dropping an entry from
+          <code>elements</code> removes it from the composed sheet — a map without a title block, or
+          without the date, is one key away.
+        </p>
       </section>
     </main>
   </body>

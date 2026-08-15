@@ -17,7 +17,7 @@ pass, and an actual npm/CDN release.
 | Layer tree | ✅ groups, visibility, opacity, status, zoom hints, zoom-to-layer, metadata links, runtime add/remove · ⬜ drag reorder, filter box, radio groups |
 | Feature info | ✅ GetFeatureInfo + vector query, templates, field tables, multi-hit, hover, highlight, coordinates · ⬜ mobile bottom sheet |
 | Legend | ✅ service, style-derived, hand-written; in print |
-| Print | ✅ PNG + print view, DPI, layout · ⬜ client PDF, server adapter |
+| Print | ✅ PNG, PDF (real paper sizes), print view, DPI, configurable sheet · ⬜ server adapter for scale-true output |
 | Sharing | ✅ permalink incl. user-added layers · ⬜ embed-snippet helper |
 | Search | ✅ type-ahead geocoding, pluggable providers, coordinate input |
 | Measuring | ✅ distance & area, geodesic, draggable vertices |
@@ -45,7 +45,7 @@ pass, and an actual npm/CDN release.
 - ✅ **Vector tiles / PMTiles** overlays with style-spec layers (F1.1, D-03)
 - ✅ **Legend panel** — service legends, style-derived swatches, config entries (F4.1–F4.4)
 - ✅ **Add-layer dialog** — WMS/WMTS URL → capabilities → picker; runtime add/remove (F3.1, F3.3, F3.5)
-- ✅ **Print & export** — composed sheet, PNG, print view (F7.1, F7.2)
+- ✅ **Print & export** — composed sheet, PNG, PDF on real A4/A3 pages, print view (F7.1–F7.3)
 - ✅ **Popups** — templates, field tables, multi-hit, sanitisation (F5.1–F5.3)
 - ✅ **Hover tooltips, selection highlight, zoom-to-layer** (F5.4, F5.7, F2.2)
 - ✅ **Coordinate readout** in WGS 84 / GK / UTM with proj4 (F5.6)
@@ -73,7 +73,6 @@ pass, and an actual npm/CDN release.
 ## M1.x — Power features
 
 - ⬜ **WFS and OGC API Features** layer types (deferred from D-03)
-- ⬜ **Client-side PDF** in the print dialog (F7.3) — jsPDF, lazily loaded
 - ⬜ **Drag-and-drop reorder** in the TOC (F2.6)
 - ⬜ **GeoJSON/GPX by URL and file drop** (F3.2)
 - ⬜ **Terrain** (F1.8)
