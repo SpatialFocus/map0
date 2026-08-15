@@ -36,6 +36,12 @@
         border-radius: 3px;
         display: inline-block;
       }
+      .swatches .sep {
+        width: 1px;
+        height: 20px;
+        background: var(--border);
+        margin: 0 4px;
+      }
     </style>
     <script type="module" src="/demos/demo.ts"></script>
   </head>
@@ -55,13 +61,23 @@
         <button data-color="#0e7490"><i style="background:#0e7490"></i>Teal</button>
         <button data-color="#b45309"><i style="background:#b45309"></i>Amber</button>
         <button data-color="#166534"><i style="background:#166534"></i>Forest</button>
+        <span class="sep"></span>
+        <button data-font="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">Aa System</button>
+        <button data-font="Georgia, 'Times New Roman', serif" style="font-family: Georgia, serif">
+          Aa Serif
+        </button>
+        <button data-font="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" style="font-family: ui-monospace, Consolas, monospace">
+          Aa Mono
+        </button>
+        <span class="sep"></span>
         <button data-mode="toggle">Toggle light / dark</button>
       </div>
 
       <map0-viewer config-src="/configs/theming.map0.json"></map0-viewer>
       <p class="demo-note">
         <strong>Try it:</strong> the buttons above set CSS custom properties on the element from
-        outside — no rebuild, no config reload. This map also uses a serif font, set in its config.
+        outside — no rebuild, no config reload. Note what the font buttons do <em>not</em> touch:
+        the labels drawn inside the map.
       </p>
 
       <section class="doc">
@@ -99,6 +115,21 @@
           <code>::part()</code> names are the deliberate way through that boundary.
         </div>
       </section>
+
+      <section class="doc">
+        <h2>Where the font token stops</h2>
+        <p>
+          <code>theme.font</code> styles the interface — panels, popups, dialogs, buttons. It does
+          not reach the labels drawn inside the map: those are rendered from the glyph set the
+          basemap style points at, and changing them means changing the style, not the client.
+        </p>
+        <p>
+          That split is worth knowing before you pick a display font. A serif interface next to
+          sans-serif map labels reads as a mistake even when both are deliberate, so the safe
+          choice is a UI font close to the one the basemap uses — which is why this demo ships with
+          the system stack and leaves the dramatic options to the buttons.
+        </p>
+      </section>
     </main>
 
     <script type="module">
@@ -107,6 +138,8 @@
         button.addEventListener("click", () => {
           if (button.dataset.color) {
             viewer.style.setProperty("--map0-primary", button.dataset.color);
+          } else if (button.dataset.font) {
+            viewer.style.setProperty("--map0-font", button.dataset.font);
           } else {
             const dark = viewer.getAttribute("data-theme") === "dark";
             viewer.setAttribute("data-theme", dark ? "light" : "dark");
