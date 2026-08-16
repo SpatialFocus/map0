@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import { fileURLToPath } from "node:url";
 import { readdirSync } from "node:fs";
 import { optionalPeerStubs } from "../scripts/stub-aliases.mjs";
@@ -16,6 +16,35 @@ const pagesIn = (dir: string): Record<string, string> =>
   );
 
 /**
+ * Umami (self-hosted, cookieless) on every page of the deployed site.
+ *
+ * Injected here rather than written into 20-odd HTML files: a page added later
+ * is counted without anyone remembering to paste a script tag. `apply: "build"`
+ * keeps it out of `pnpm dev`, so day-to-day work never shows up in the
+ * statistics — `pnpm serve` does serve it, since it serves the build.
+ */
+function analytics(): Plugin {
+  return {
+    name: "map0:analytics",
+    apply: "build",
+    transformIndexHtml: {
+      order: "post",
+      handler: () => [
+        {
+          tag: "script",
+          attrs: {
+            defer: true,
+            src: "https://analytics.spatial-focus.net/script.js",
+            "data-website-id": "4e0f4c01-a1f2-44cf-b4b9-f4d8bd6c4328",
+          },
+          injectTo: "head",
+        },
+      ],
+    },
+  };
+}
+
+/**
  * The demo site: dev server (workspace packages resolved to their sources) and
  * the static build deployed as the project website (`pnpm build:site`).
  */
@@ -27,7 +56,7 @@ export default defineConfig({
      MapLibre's worker with status 200 and it died without a word. */
   appType: "mpa",
   /* MapLibre's three files land next to the hashed chunks in assets/ */
-  plugins: [copyMaplibreDist(r("../dist-site/assets"))],
+  plugins: [copyMaplibreDist(r("../dist-site/assets")), analytics()],
   build: {
     /* same target as the library bundle: the demo shell loads @map0/ui with a
        top-level await, which the default (es2020) target rejects */
