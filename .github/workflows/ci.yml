@@ -20,6 +20,7 @@ jobs:
       - run: pnpm test
       - run: pnpm build
       - run: pnpm size # fails when the eager bundle outgrows its budget (N1)
+      - run: pnpm build:site # the deployed site — a broken site build must fail here, not on deploy
       # E2E (e2e/verify-demos.mjs) stays local/manual in M0: it drives live SDI
       # services and a real browser. Becomes a Playwright suite with recorded
       # fixtures in M1 — see docs/07-roadmap.md.

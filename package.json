@@ -2,7 +2,7 @@
   "name": "map0-monorepo",
   "private": true,
   "version": "0.0.0",
-  "description": "map0 — modern, embeddable, JSON-configurable web map client built on MapLibre GL JS (working title)",
+  "description": "map0 — modern, embeddable, JSON-configurable web map client built on MapLibre GL JS",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -11,6 +11,8 @@
   "scripts": {
     "dev": "vite --config examples/vite.config.ts",
     "build": "pnpm --filter @map0/ui build",
+    "build:site": "pnpm demo:standalone && vite build --config examples/vite.config.ts",
+    "serve": "vite preview --config examples/vite.config.ts",
     "demo:standalone": "pnpm build && node -e \"const fs=require('node:fs');fs.rmSync('examples/public/standalone',{recursive:true,force:true});fs.cpSync('packages/ui/dist','examples/public/standalone',{recursive:true})\"",
     "size": "node scripts/check-size.mjs",
     "typecheck": "tsc --build",

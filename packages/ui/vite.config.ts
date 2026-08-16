@@ -1,54 +1,21 @@
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig } from "vite";
 import { fileURLToPath } from "node:url";
-import { copyFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { createRequire } from "node:module";
-
-/**
- * MapLibre ships as ESM split across three files: maplibre-gl.mjs (main thread),
- * maplibre-gl-worker.mjs (worker entry) and maplibre-gl-shared.mjs, which BOTH
- * import. Bundling the library would put that shared half into our bundle while
- * the worker still needs its own copy on disk — ~130 KB gzip shipped twice.
- * So we keep maplibre-gl external, copy its files verbatim into dist and let the
- * browser resolve them relative to our entry. Side effect worth having: those
- * files are byte-identical across map0 releases and stay in the HTTP cache.
- */
-function copyMaplibreDist(): Plugin {
-  return {
-    name: "map0:copy-maplibre-dist",
-    closeBundle() {
-      const require = createRequire(import.meta.url);
-      const from = dirname(require.resolve("maplibre-gl/dist/maplibre-gl.mjs"));
-      const to = fileURLToPath(new URL("./dist", import.meta.url));
-      for (const file of [
-        "maplibre-gl.mjs",
-        "maplibre-gl-shared.mjs",
-        "maplibre-gl-worker.mjs",
-      ]) {
-        copyFileSync(join(from, file), join(to, file));
-      }
-    },
-  };
-}
+import { optionalPeerStubs } from "../../scripts/stub-aliases.mjs";
+import { copyMaplibreDist, maplibreExternal } from "../../scripts/maplibre-dist.mjs";
 
 /**
  * Distribution: `map0.js` is the entry, everything a first view does not need
  * (capabilities parsing, the dialogs, proj4, PMTiles) lands in lazy chunks that
  * load on first use. Deployment stays "copy the folder"; the embed is unchanged.
+ *
+ * MapLibre stays external and is copied in verbatim — see scripts/maplibre-dist.mjs
+ * for why, and for the silent failure that follows from getting it wrong.
  */
 export default defineConfig({
-  plugins: [copyMaplibreDist()],
+  plugins: [copyMaplibreDist(new URL("./dist", import.meta.url))],
   resolve: {
-    alias: {
-      /* ogc-client's optional OpenLayers/proj4 peers — stubbed, see src/stubs/ol-stub.ts */
-      "ol/tilegrid/WMTS": fileURLToPath(new URL("./src/stubs/ol-stub.ts", import.meta.url)),
-      "ol/proj/proj4": fileURLToPath(new URL("./src/stubs/ol-stub.ts", import.meta.url)),
-      "ol/proj": fileURLToPath(new URL("./src/stubs/ol-stub.ts", import.meta.url)),
-      /* jsPDF's optional HTML/SVG renderers — see src/stubs/pdf-stub.ts.
-         NOT dompurify: jsPDF and our popup renderer share that one for real. */
-      html2canvas: fileURLToPath(new URL("./src/stubs/pdf-stub.ts", import.meta.url)),
-      canvg: fileURLToPath(new URL("./src/stubs/pdf-stub.ts", import.meta.url)),
-    },
+    /* shared with the site build — see scripts/stub-aliases.mjs */
+    alias: { ...optionalPeerStubs },
   },
   build: {
     target: "es2022",
@@ -60,13 +27,12 @@ export default defineConfig({
       fileName: () => "map0.js",
     },
     rollupOptions: {
-      /* the bare specifier only — "maplibre-gl/dist/maplibre-gl.css?inline" stays inlined */
-      external: (id) => id === "maplibre-gl",
+      external: maplibreExternal.external,
       output: {
-        /* Rollup writes this specifier verbatim into every chunk that imports
-           MapLibre, so chunks must sit in the same directory as the entry —
-           a chunks/ subfolder would resolve "./maplibre-gl.mjs" one level down. */
-        paths: { "maplibre-gl": "./maplibre-gl.mjs" },
+        /* the copied files sit next to the entry, so every chunk that imports
+           MapLibre must live there too — a chunks/ subfolder would resolve
+           "./maplibre-gl.mjs" one level down */
+        paths: maplibreExternal.paths,
         entryFileNames: "map0.js",
         chunkFileNames: "[name]-[hash].js",
       },

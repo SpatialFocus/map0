@@ -61,11 +61,18 @@ MapLibre v6 ships ESM split into `maplibre-gl.mjs` (main thread), `maplibre-gl-s
 shared half itself. Consequences:
 
 - Bundling MapLibre ships the shared half twice (once inside our bundle, once as the file the worker
-  needs). We keep `maplibre-gl` external and copy all three files into `dist` verbatim.
+  needs). We keep `maplibre-gl` external and copy all three files in verbatim — next to the entry in
+  the library `dist`, next to the hashed chunks in the site's `assets/` (`scripts/maplibre-dist.mjs`).
 - In Vite dev, `optimizeDeps.exclude: ["maplibre-gl"]` is required. Pre-bundling rewrites the worker
   URL into `.vite/deps` where it 404s, and the worker then **dies silently**: raster layers still
   render on the main thread while vector tiles and GeoJSON never appear.
-- Diagnostic: `page.workers()` in Playwright, or the Sources → Threads panel in DevTools.
+- The same failure in a **static build**, and better hidden: the worker URL is assembled at runtime,
+  so nothing emits the file for you. If it is missing *and* the host answers unknown paths with
+  `index.html` — Vite's default `appType: "spa"`, or an SPA rewrite on the CDN — the worker is handed
+  HTML with **status 200**, so there is not even a 404 in the network panel. Hence `appType: "mpa"`
+  for the demo site and no `navigationFallback` in `staticwebapp.config.json`.
+- Diagnostic: `page.workers()` in Playwright, or the Sources → Threads panel in DevTools. Cheapest
+  check after a deploy: request a path that cannot exist and confirm it answers 404, not 200.
 
 ### 3.2 `isStyleLoaded()` is not a readiness signal
 
@@ -228,7 +235,7 @@ that registry is the intended extension point.
 
 | Symptom | Look here first |
 |---|---|
-| Raster renders, vector tiles and GeoJSON do not | MapLibre worker died — dev-server dep pre-bundling (§3.1) |
+| Raster renders, vector tiles and GeoJSON do not | MapLibre worker died — dep pre-bundling in dev, missing worker file or an SPA fallback in a build (§3.1) |
 | Layer added, no tile requests at all | relative tile templates in TileJSON (§3.3) |
 | Works in `pnpm dev`, broken in the bundle | package-level build config: aliases, externals (§4.4) |
 | Works in the bundle, broken in dev | `optimizeDeps` include/exclude (§3.1, §4.3) |

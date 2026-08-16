@@ -1,6 +1,6 @@
 # 01 — Vision & Goals
 
-> Status: draft · 2026-08-14 · working title **map0**
+> Status: draft · 2026-08-14 · **map0**
 
 ## Problem
 

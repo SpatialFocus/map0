@@ -66,7 +66,7 @@ if (current) {
 
 document.body.insertAdjacentHTML(
   "beforeend",
-  `<footer class="site">map0 — working title · demo services: basemap.at, Stadt Wien OGD, MapLibre demo tiles</footer>`,
+  `<footer class="site">map0 · demo services: basemap.at, Stadt Wien OGD, MapLibre demo tiles</footer>`,
 );
 
 void enhanceCode();

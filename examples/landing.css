@@ -19,6 +19,9 @@ body.landing main {
 }
 body.landing footer.site {
   max-width: none;
+  /* not `0 auto`: as a flex item on the 404 page auto margins would shrink the
+     footer to its content instead of spanning the page */
+  margin: 0;
   padding: 24px 0;
 }
 
@@ -589,6 +592,17 @@ table.compare tbody tr:last-child td:last-child {
 
 .gpu-head {
   margin-top: clamp(56px, 7vw, 88px);
+}
+
+/* short pages (404): keep the footer on the bottom edge, not mid-screen */
+body.error-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+body.error-page .hero {
+  flex: 1 0 auto;
+  padding-top: clamp(56px, 12vh, 140px);
 }
 
 body.landing footer.site .wrap {

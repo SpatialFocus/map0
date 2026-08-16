@@ -4,6 +4,8 @@ node_modules/
 # Build output
 dist/
 dist-types/
+# Built demo site (`pnpm build:site`) — deployed, never committed
+dist-site/
 build/
 *.tsbuildinfo
 

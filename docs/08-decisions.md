@@ -72,9 +72,9 @@ therefore targets GeoNetwork first: CSW 2.0.2 and, where available, OGC API Reco
 | ID | Item | Proposal / status |
 |---|---|---|
 | O-01 | License | Apache-2.0 (patent grant, gov-friendly) — check org policy |
-| O-02 | Real name (map0 is a working title) + npm/domain availability | decide before first public release |
+| O-02 | Product name + npm/domain availability | **resolved 2026-08-16:** the name is **map0** — "map" plus the zero code it takes to get one. npm scope and domain still to be secured. |
 | O-03 | Which CMS(s) must be proven first? | **resolved 2026-08-14:** none for now — the reference embed is a **plain static HTML page** ("if it runs there, it runs in any CMS"). Org context: headless CMS (Squidex, Strapi) → map0 embeds into custom frontends built on top; raises the value of the M2 React wrapper. |
-| O-04 | Hosting of demo/docs site | GitHub Pages / Netlify — decide at M0 |
+| O-04 | Hosting of demo/docs site | **resolved 2026-08-16:** Azure Static Web Apps — `pnpm build:site` → `dist-site/`, uploaded by `.github/workflows/deploy-site.yml`. Legal pages (imprint, privacy — the demos call third-party services) still to follow. |
 | O-05 | Browser floor | evergreen + WebGL2 (MapLibre v6 requirement) — confirm against portal analytics |
 | O-06 | Geocoder default | **resolved 2026-08-15:** Photon (OSM, built for type-ahead, CORS-open) as the default, plus a provider interface — `"nominatim"` built in, and any gazetteer via a URL template. Public Photon instances carry fair-use expectations, so production installs self-host it or point at their own service. |
 | O-07 | Repository home (GitHub org?) & governance | decide before M0 ends |

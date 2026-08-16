@@ -1,6 +1,6 @@
 # map0
 
-> **Working title.** A modern, embeddable, JSON-configurable web map client built on
+> A modern, embeddable, JSON-configurable web map client built on
 > [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/).
 > One script tag + one JSON config = a full-featured map on any web page.
 

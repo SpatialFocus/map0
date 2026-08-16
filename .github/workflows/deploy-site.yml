@@ -1,0 +1,51 @@
+# Demo site → Azure Static Web Apps.
+#
+# The site is a plain static build (`pnpm build:site` → dist-site/), so the SWA
+# action only uploads it: no Oryx build, no app framework detection.
+#
+# Needs the deployment token of the Static Web App resource ("Manage deployment
+# token") as a repository secret — the name below is the one Azure generates.
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-site-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:site
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_BRAVE_MUD_0C9FBF503 }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
+          action: upload
+          app_location: dist-site
+          skip_app_build: true
+          skip_api_build: true
+
+  # a merged/closed PR takes its preview environment with it
+  close-preview:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_BRAVE_MUD_0C9FBF503 }}
+          action: close
