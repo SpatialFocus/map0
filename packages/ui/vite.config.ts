@@ -22,9 +22,14 @@ export default defineConfig({
     outDir: "dist",
     sourcemap: true,
     lib: {
-      entry: fileURLToPath(new URL("./src/index.ts", import.meta.url)),
+      /* two entries: the browser one (a custom element, needs a DOM to be
+         evaluated at all) and the SSR-safe one that only reaches for it via
+         import() — see src/ssr.ts */
+      entry: {
+        map0: fileURLToPath(new URL("./src/index.ts", import.meta.url)),
+        "map0-ssr": fileURLToPath(new URL("./src/ssr.ts", import.meta.url)),
+      },
       formats: ["es"],
-      fileName: () => "map0.js",
     },
     rollupOptions: {
       external: maplibreExternal.external,
@@ -33,7 +38,7 @@ export default defineConfig({
            MapLibre must live there too — a chunks/ subfolder would resolve
            "./maplibre-gl.mjs" one level down */
         paths: maplibreExternal.paths,
-        entryFileNames: "map0.js",
+        entryFileNames: "[name].js",
         chunkFileNames: "[name]-[hash].js",
       },
     },

@@ -44,6 +44,9 @@ const die = (message) => {
 };
 
 if (!existsSync(join(SRC, "map0.js"))) die(`no bundle in ${SRC} — run \`pnpm build\` first`);
+/* the "node" export condition points here: without it, importing the package in
+   any SSR/prerender step resolves to the browser entry and dies on HTMLElement */
+if (!existsSync(join(SRC, "map0-ssr.js"))) die(`no SSR entry in ${SRC} — run \`pnpm build\` first`);
 
 /* ---------------------------------------------------------------- dist copy */
 

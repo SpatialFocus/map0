@@ -83,6 +83,23 @@ import { createMap } from "map0-viewer";
 const viewer = createMap(document.querySelector("#map"), config);
 ```
 
+### Server-side rendering
+
+Defining a custom element needs `HTMLElement`, so the browser entry cannot be evaluated in Node.
+The package therefore resolves to an **SSR-safe entry** under the `node` condition, also reachable
+as `map0-viewer/ssr`: it pulls in no DOM code, carries the config schema (`validateConfig`,
+`normalizeConfig` — useful while rendering), and loads the viewer only when asked to, in a browser.
+
+```js
+import { defineMap0Viewer, validateConfig } from "map0-viewer/ssr";
+
+// runs anywhere: false on the server, true once the element is registered
+await defineMap0Viewer();
+```
+
+Frameworks that render on the server (Next.js, Nuxt, Astro, SvelteKit) can import this at the top
+level of a component; the map itself still comes up on the client, from the same `<map0-viewer>` tag.
+
 ### Deploying it
 
 `dist/` is a folder, not a single file, and it has to stay one:

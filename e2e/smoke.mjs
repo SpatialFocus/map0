@@ -47,6 +47,16 @@ const CONFIG = {
   map: { center: [0, 0], zoom: 3 },
   basemaps: [{ type: "empty", title: "None" }],
   layers: [square("#ff0000", "top", "Top"), square("#0000ff", "bottom", "Bottom")],
+  /* C5: a key from a hypothetical newer map0 — must warn, must not refuse */
+  futureKey: { something: true },
+};
+
+/** served at /config.json for the `config-src` path */
+const SRC_CONFIG = {
+  version: 1,
+  map: { center: [0, 0], zoom: 3 },
+  basemaps: [{ type: "empty", title: "None" }],
+  layers: [square("#00ff00", "from-src", "From src")],
 };
 
 const INVALID_CONFIG = { version: 1, basemaps: [{ type: "wms", url: "https://e.org/x" }] };
@@ -67,12 +77,14 @@ const HTML = `<!doctype html>
   /* the property is assigned BEFORE the module finishes loading on purpose:
      an upgraded element has to pick up pre-upgrade properties */
   window.__events = [];
+  window.__config = ${JSON.stringify(CONFIG)};
   const params = new URLSearchParams(location.search);
   const el = document.querySelector("map0-viewer");
   for (const type of ["map0:ready", "map0:error"]) {
     el.addEventListener(type, (e) => window.__events.push({ type, detail: e.detail?.message ?? null }));
   }
-  el.config = params.get("invalid") ? ${JSON.stringify(INVALID_CONFIG)} : ${JSON.stringify(CONFIG)};
+  if (params.get("src")) el.setAttribute("config-src", "/config.json");
+  else el.config = params.get("invalid") ? ${JSON.stringify(INVALID_CONFIG)} : window.__config;
 </script>
 </body></html>`;
 
@@ -90,6 +102,10 @@ const server = createServer((req, res) => {
   if (path === "/" || path === "/smoke.html") {
     res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
     return res.end(HTML);
+  }
+  if (path === "/config.json") {
+    res.writeHead(200, { "content-type": "application/json" });
+    return res.end(JSON.stringify(SRC_CONFIG));
   }
   readFile(new URL(`.${path}`, DIST))
     .then((body) => {
@@ -123,14 +139,43 @@ const check = (name, ok, detail = "") => {
   console.log(`${ok ? "  ok  " : " FAIL "} ${name}${detail ? ` — ${detail}` : ""}`);
 };
 
+/* ------------------------------------------------------------ SSR (no browser) */
+
+/* The package must be importable where there is no DOM: bundlers and frameworks
+   evaluate it during prerendering long before anything renders. The browser
+   entry cannot be — it declares a custom element — which is why there are two. */
+const ssr = await import(new URL("./map0-ssr.js", DIST).href).catch((e) => e);
+check(
+  "the SSR entry imports in Node",
+  !(ssr instanceof Error),
+  ssr instanceof Error ? ssr.message : "",
+);
+if (!(ssr instanceof Error)) {
+  check("it knows there is no DOM instead of throwing", ssr.canDefineElements() === false);
+  check("defineMap0Viewer() is a no-op on the server", (await ssr.defineMap0Viewer()) === false);
+  check(
+    "and the config schema works there",
+    ssr.validateConfig(CONFIG).valid === true && ssr.validateConfig({}).valid === false,
+  );
+}
+const pkg = JSON.parse(
+  await readFile(new URL("../packages/map0/package.json", import.meta.url), "utf8"),
+);
+check(
+  'the npm package resolves "node" to the SSR entry',
+  pkg.exports?.["."]?.node === "./dist/map0-ssr.js" && pkg.exports?.["./ssr"] === "./dist/map0-ssr.js",
+  JSON.stringify(pkg.exports?.["."]),
+);
+
 const browser = await launchBrowser();
 const context = await browser.newContext({ viewport: { width: 800, height: 600 } });
 
 /** console noise is a failure here: this page talks to nothing */
-function watchConsole(page, sink) {
+function watchConsole(page, sink, warnings) {
   page.on("console", (m) => {
     const text = m.text();
     if (m.type() === "error" && !text.includes("Lit is in dev mode")) sink.push(text.slice(0, 200));
+    if (m.type() === "warning" && warnings) warnings.push(text.slice(0, 200));
   });
   page.on("pageerror", (e) => sink.push(`pageerror: ${String(e).slice(0, 200)}`));
 }
@@ -151,8 +196,9 @@ const ready = (page) =>
 try {
   /* ---------------------------------------------------------------- happy path */
   const noise = [];
+  const warnings = [];
   const page = await context.newPage();
-  watchConsole(page, noise);
+  watchConsole(page, noise, warnings);
   await page.goto(`${BASE}/smoke.html`, { waitUntil: "domcontentloaded" });
 
   check(
@@ -263,7 +309,42 @@ try {
     );
   }
 
+  /* C5 — the config carries a key this version does not know */
+  check(
+    "an unknown config key warns and the map opens anyway",
+    isReady && warnings.some((w) => w.includes("unknown key") && w.includes("futureKey")),
+    warnings.filter((w) => w.includes("unknown key")).join(" | ") || "no warning logged",
+  );
+
   check("no console errors on the happy path", noise.length === 0, noise.join(" | "));
+
+  /* ------------------------------------------- a higher-priority config source */
+  const srcNoise = [];
+  const srcPage = await context.newPage();
+  watchConsole(srcPage, srcNoise);
+  await srcPage.goto(`${BASE}/smoke.html?src=1`, { waitUntil: "domcontentloaded" });
+  const srcReady = await ready(srcPage)
+    .then(() => true)
+    .catch(() => false);
+  check("a viewer starts from config-src", srcReady);
+  if (srcReady) {
+    const swapped = await srcPage.evaluate(async () => {
+      const el = document.querySelector("map0-viewer");
+      const before = el.api.config.layers.map((l) => l.id);
+      const ready = new Promise((resolve) => {
+        const timer = setTimeout(() => resolve(false), 30_000);
+        el.addEventListener("map0:ready", () => (clearTimeout(timer), resolve(true)), { once: true });
+      });
+      el.config = window.__config; // first time this property is set: still a change
+      return { before, reloaded: await ready, after: el.api?.config.layers.map((l) => l.id) ?? [] };
+    });
+    check(
+      "assigning `config` over it reloads the map",
+      swapped.reloaded && JSON.stringify(swapped.after) === JSON.stringify(["top", "bottom"]),
+      `${swapped.before.join(",")} → ${swapped.after.join(",")}`,
+    );
+  }
+  check("no console errors when the config source changes", srcNoise.length === 0, srcNoise.join(" | "));
 
   /* ------------------------------------------------------------ invalid config */
   const errNoise = [];

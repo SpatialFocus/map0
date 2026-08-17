@@ -32,7 +32,11 @@
   "main": "./dist/map0.js",
   "module": "./dist/map0.js",
   "exports": {
-    ".": "./dist/map0.js",
+    ".": {
+      "node": "./dist/map0-ssr.js",
+      "default": "./dist/map0.js"
+    },
+    "./ssr": "./dist/map0-ssr.js",
     "./dist/*": "./dist/*",
     "./package.json": "./package.json"
   },

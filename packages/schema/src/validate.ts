@@ -17,11 +17,18 @@ export interface ValidationError {
 export interface ValidationResult {
   valid: boolean;
   errors: ValidationError[];
+  /**
+   * Non-fatal notes — today: unknown keys. C5 requires forward-compatible
+   * parsing: a config written for a newer map0 must still open, so an
+   * unrecognised key is reported and ignored, never a reason to refuse the map.
+   */
+  warnings: ValidationError[];
   /** typed view of the input; only safe to use when valid === true */
   config?: Map0Config;
 }
 
-type Err = (path: string, message: string) => void;
+/** report a problem; `severity: "warning"` keeps it out of the fatal set (C5) */
+type Err = (path: string, message: string, severity?: "warning") => void;
 
 const BASEMAP_TYPES = ["style", "raster", "empty"];
 const LAYER_TYPES = ["group", "wms", "wmts", "raster", "geojson", "vector"];
@@ -155,13 +162,19 @@ function isBounds(v: unknown): boolean {
 }
 
 /**
- * A typo in a key used to be silently ignored — the single most common config
- * bug, and invisible until someone wonders why a setting does nothing.
+ * A typo in a key is the most common config bug and used to be invisible until
+ * someone wondered why a setting did nothing. It is a *warning*, not an error:
+ * C5 promises that a config carrying keys this version does not know still
+ * opens the map.
  */
 function checkKeys(obj: Record<string, unknown>, allowed: string[], path: string, err: Err): void {
   for (const key of Object.keys(obj)) {
     if (!allowed.includes(key)) {
-      err(`${path}.${key}`, `unknown key "${key}" — allowed here: ${allowed.join(", ")}`);
+      err(
+        `${path}.${key}`,
+        `unknown key "${key}" — ignored; allowed here: ${allowed.join(", ")}`,
+        "warning",
+      );
     }
   }
 }
@@ -246,11 +259,13 @@ function checkUrl(value: unknown, path: string, err: Err): void {
 
 export function validateConfig(input: unknown): ValidationResult {
   const errors: ValidationError[] = [];
-  const err: Err = (path, message) => errors.push({ path, message });
+  const warnings: ValidationError[] = [];
+  const err: Err = (path, message, severity) =>
+    (severity === "warning" ? warnings : errors).push({ path, message });
 
   if (!isObject(input)) {
     err("$", "config must be a JSON object");
-    return { valid: false, errors };
+    return { valid: false, errors, warnings };
   }
 
   checkKeys(input, CONFIG_KEYS, "$", err);
@@ -398,8 +413,8 @@ export function validateConfig(input: unknown): ValidationResult {
 
   const valid = errors.length === 0;
   return valid
-    ? { valid, errors, config: input as unknown as Map0Config }
-    : { valid, errors };
+    ? { valid, errors, warnings, config: input as unknown as Map0Config }
+    : { valid, errors, warnings };
 }
 
 /* --------------------------------- layers --------------------------------- */

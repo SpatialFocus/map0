@@ -63,7 +63,8 @@ pass, and an actual npm/CDN release.
 
 - ⬜ **Published JSON Schema** + config reference generated from it (C3, N12) — generated from the
   key tables in `packages/schema/src/validate.ts`, so schema and validator cannot drift
-- ✅ **Unknown-key errors**, id uniqueness, nested shapes and the https policy in the validator (C5, N6)
+- ✅ **Unknown-key warnings** (C5 — reported, never fatal), id uniqueness, nested shapes and the
+  https policy in the validator (N6)
 - ⬜ **Accessibility pass** — audit, keyboard TOC review, DOM-mirrored feature results (N4)
 - ⬜ **Mobile popup as bottom sheet** below 640 px (F5.5)
 - ⬜ **TOC filter box** for configs with many layers (F2.7)

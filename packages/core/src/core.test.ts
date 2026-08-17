@@ -4,7 +4,7 @@ import { expandSimpleStyle } from "./adapters/geojson.js";
 import { deriveFromStyleLayers, entryFromPaint } from "./adapters/legend-derive.js";
 import { escapeHtml, renderFields, renderTemplate } from "./template.js";
 import { lngLatToMercator } from "./mercator.js";
-import type { NormalizedLayer } from "@map0/schema";
+import { normalizeConfig, type NormalizedLayer } from "@map0/schema";
 import { drawOrder, stackOrder } from "./layers.js";
 import { claimShareParam } from "./permalink.js";
 
@@ -580,6 +580,26 @@ describe("claimShareParam (R5)", () => {
     expect(third.param).toBe("map0-2"); // the freed name is reusable
     first.release();
     third.release();
-    expect(claimShareParam("map0").param).toBe("map0");
+    const reclaimed = claimShareParam("map0");
+    expect(reclaimed.param).toBe("map0");
+    reclaimed.release();
+  });
+});
+
+describe("createCore — permalink claim rollback (R8)", () => {
+  it("frees the hash parameter when the core never comes up", async () => {
+    const { createCore } = await import("./index.js");
+    const cfg = normalizeConfig({
+      version: 1,
+      /* refused connection: the style fetch fails before a map can exist */
+      basemaps: [{ type: "style", url: "http://127.0.0.1:1/style.json" }],
+      permalink: true,
+    });
+    await expect(
+      createCore({ container: { nodeType: 1 } as unknown as HTMLElement, config: cfg }),
+    ).rejects.toBeTruthy();
+    const claim = claimShareParam("map0");
+    expect(claim.param).toBe("map0"); // not "map0-2": the failed attempt let go
+    claim.release();
   });
 });

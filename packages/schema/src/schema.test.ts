@@ -200,13 +200,15 @@ describe("validateConfig — invariants (R3)", () => {
     expect(paths).toContain("$.layers[2].id");
   });
 
-  it("flags unknown keys instead of silently ignoring a typo", () => {
+  it("warns about unknown keys but still opens the map (C5)", () => {
     const r = validateConfig({
       ...minimal,
       contorls: { navigation: false },
       layers: [{ type: "raster", url: "https://e.org/{z}/{x}/{y}.png", opactiy: 0.5 }],
     });
-    expect(r.errors.map((e) => e.path)).toEqual(
+    expect(r.valid).toBe(true); // forward-compatible parsing: reported, not fatal
+    expect(r.errors).toEqual([]);
+    expect(r.warnings.map((w) => w.path)).toEqual(
       expect.arrayContaining(["$.contorls", "$.layers[0].opactiy"]),
     );
   });
@@ -286,6 +288,7 @@ describe("validateConfig — invariants (R3)", () => {
       permalink: { param: "karte" },
     });
     expect(r.errors).toEqual([]);
+    expect(r.warnings).toEqual([]);
   });
 });
 

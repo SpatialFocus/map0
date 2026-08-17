@@ -146,7 +146,28 @@ function themeBackground(mode: "auto" | "light" | "dark"): string {
   return dark ? "#1c1f24" : "#f4f5f7";
 }
 
+/**
+ * The permalink parameter is claimed before anything can fail (its name decides
+ * which shared state is read), but only a live core ever releases it in
+ * `destroy()`. So the claim is rolled back here when the core never comes into
+ * existence — otherwise a retry after a failed style fetch would find its own
+ * parameter taken and quietly move to `map0-2`.
+ */
 export async function createCore(opts: CoreOptions): Promise<Map0Core> {
+  const cfg = opts.config;
+  const shareClaim = cfg.permalink === false ? null : claimShareParam(cfg.permalink.param);
+  try {
+    return await buildCore(opts, shareClaim);
+  } catch (e) {
+    shareClaim?.release();
+    throw e;
+  }
+}
+
+async function buildCore(
+  opts: CoreOptions,
+  shareClaim: { param: string; release: () => void } | null,
+): Promise<Map0Core> {
   const cfg = opts.config;
   const locale = resolveLocale(cfg.i18n.locale, cfg.i18n.fallback, cfg.i18n.overrides);
   const t = makeT(locale, cfg.i18n.fallback, cfg.i18n.overrides);
@@ -156,7 +177,6 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
   /* shared state from the URL (F10.1) — wins over the configured initial view.
      The parameter is claimed per instance so two viewers on one page cannot
      overwrite each other's state (docs/10-review-fixes.md R5). */
-  const shareClaim = cfg.permalink === false ? null : claimShareParam(cfg.permalink.param);
   const shareParam = shareClaim?.param ?? null;
   let initialShare: ShareState | null = null;
   if (shareParam && typeof location !== "undefined") {

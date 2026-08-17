@@ -150,6 +150,8 @@ export class Map0Viewer extends LitElement {
   private observer?: IntersectionObserver;
   /** bumped by every teardown; an init() whose token is stale must not attach */
   private generation = 0;
+  /** the config source the running init() consumed (see `currentSource`) */
+  private activeSource?: { kind: "config" | "configSrc" | "inline"; value?: unknown };
 
   /** imperative access to the running map (available after `map0:ready`) */
   get api(): Map0Core | undefined {
@@ -211,14 +213,26 @@ export class Map0Viewer extends LitElement {
     if (!this.initStarted) void this.init();
   }
 
+  /**
+   * Which of the three config sources would be used right now (first match
+   * wins, as documented on the class). Comparing this to the source the running
+   * viewer actually consumed is the only reliable reload trigger: looking at
+   * the *previous* property value misses the case where a higher-priority
+   * source appears for the first time — a viewer started from `config-src` that
+   * is later handed a `config` object, for instance.
+   */
+  private currentSource(): { kind: "config" | "configSrc" | "inline"; value?: unknown } {
+    if (this.config) return { kind: "config", value: this.config };
+    if (this.configSrc) return { kind: "configSrc", value: this.configSrc };
+    return { kind: "inline" };
+  }
+
   protected override updated(changed: PropertyValues): void {
-    if (
-      this.initialized &&
-      /* also while init() is still running — the token retires that attempt */
-      (this.core || this.initStarted) &&
-      (changed.has("config") || changed.has("configSrc")) &&
-      (changed.get("config") !== undefined || changed.get("configSrc") !== undefined)
-    ) {
+    /* while init() is still running too — the generation token retires it */
+    if (!this.initialized || !this.initStarted || !this.activeSource) return;
+    if (!changed.has("config") && !changed.has("configSrc")) return;
+    const next = this.currentSource();
+    if (next.kind !== this.activeSource.kind || next.value !== this.activeSource.value) {
       this.reload();
     }
   }
@@ -415,6 +429,9 @@ export class Map0Viewer extends LitElement {
   }
 
   private async loadRawConfig(): Promise<unknown> {
+    /* recorded synchronously, before the first await: updated() compares it
+       against the source that would be picked now to decide about a reload */
+    this.activeSource = this.currentSource();
     if (this.config) return resolveConfigExtends(this.config);
     if (this.configSrc) {
       const res = await fetch(this.configSrc);
@@ -445,6 +462,9 @@ export class Map0Viewer extends LitElement {
       const raw = await this.loadRawConfig();
       if (!current()) return;
       const result = validateConfig(raw);
+      /* forward compatibility (C5): keys this version does not know are logged
+         and skipped — a config written for a newer map0 still opens */
+      for (const w of result.warnings) console.warn(`[map0] ${w.path}: ${w.message}`);
       if (!result.valid) {
         this._errors = result.errors;
         this.emit("map0:error", { errors: result.errors });
