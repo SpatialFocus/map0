@@ -272,7 +272,7 @@ Result: full-quality map with default controls (zoom, attribution, fullscreen), 
 | `style` | MapLibre style URL | basemaps only |
 | `raster` | XYZ/WMTS-REST template | basemap or overlay |
 | `wms` | WMS 1.1.1/1.3.0 GetMap | tiled raster source; `info` enables GetFeatureInfo; `legend:"auto"` → GetLegendGraphic |
-| `wmts` | capabilities URL + `layer` (+ optional `matrixSet`/`style`/`format`) | REST & KVP; picks the first WebMercator matrix set (D-02), bounds/legend from capabilities |
+| `wmts` | capabilities URL + `layer` (+ optional `matrixSet`/`style`/`format`) | REST & KVP; image tiles only — picks the first WebMercator matrix set (D-02) and the first advertised image format, bounds/legend from capabilities. For a WMTS that also serves `application/vnd.mapbox-vector-tile`, use `vector` with the service's TileJSON to style it client-side. |
 | `geojson` | URL or inline | clustering, simplified style or full style layers |
 | `vector` | TileJSON / `{z}/{x}/{y}` / `pmtiles://` | needs `sourceLayer` + style layers |
 | `wfs` | WFS 2.0 GetFeature → GeoJSON | **v1.x** (deferred per D-03); paging/limits; styled like `geojson` |

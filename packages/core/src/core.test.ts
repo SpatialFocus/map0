@@ -519,6 +519,37 @@ describe("wmts", () => {
     expect(tpl).toContain("/EPSG:900913/EPSG:900913:{z}/{y}/{x}");
   });
 
+  it("tells image tile formats from vector/metadata ones", async () => {
+    const { isRasterTileFormat } = await import("./adapters/wmts.js");
+    expect(isRasterTileFormat("image/png")).toBe(true);
+    expect(isRasterTileFormat("image/png8")).toBe(true);
+    expect(isRasterTileFormat("image/jpeg")).toBe(true);
+    expect(isRasterTileFormat("image/vnd.jpeg-png")).toBe(true);
+    expect(isRasterTileFormat("image/webp")).toBe(true);
+    expect(isRasterTileFormat("application/vnd.mapbox-vector-tile")).toBe(false);
+    expect(isRasterTileFormat("application/json;type=utfgrid")).toBe(false);
+    expect(isRasterTileFormat(undefined)).toBe(false);
+  });
+
+  /* GeoServer/GWC lists the vector tile first for every vector-backed layer;
+     taking resourceLinks[0] fed protobuf to a raster source. */
+  it("skips the vector tile GWC advertises first", async () => {
+    const { pickRasterLinks } = await import("./adapters/wmts.js");
+    const gwc = [
+      { format: "application/vnd.mapbox-vector-tile", url: "https://g.at/rest/mvt" },
+      { format: "image/png", url: "https://g.at/rest/png" },
+      { format: "image/jpeg", url: "https://g.at/rest/jpeg" },
+    ];
+    expect(pickRasterLinks(gwc).map((l) => l.format)).toEqual(["image/png", "image/jpeg"]);
+    expect(pickRasterLinks(gwc, "image/jpeg")).toEqual([gwc[2]]);
+    /* format not advertised → fall back rather than break the layer */
+    expect(pickRasterLinks(gwc, "image/webp").map((l) => l.format)).toEqual([
+      "image/png",
+      "image/jpeg",
+    ]);
+    expect(pickRasterLinks([gwc[0]!])).toEqual([]);
+  });
+
   it("builds KVP GetTile templates", async () => {
     const { buildWmtsTemplate } = await import("./adapters/wmts.js");
     const tpl = buildWmtsTemplate({

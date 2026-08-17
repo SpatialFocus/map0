@@ -152,6 +152,22 @@ winning origin is cached per capabilities URL so further layers skip the probe.
 
 A silent empty map is the worst possible failure mode; prefer a wasted request over that.
 
+The same probe taught a second lesson: it decides *which host is alive*, so it must race one
+candidate **per origin**. Racing every resource link of one host lets the network settle which
+*format* the layer uses — a coin flip between runs.
+
+### 4.1b Capabilities order is not preference order
+
+GeoServer/GWC lists `application/vnd.mapbox-vector-tile` **first** for every vector-backed layer,
+before `image/png`. Taking `resourceLinks[0]` therefore fed protobuf into a MapLibre `raster`
+source: tiles arrive with HTTP 200, image decoding fails, the layer reports an error and shows
+nothing. A raster source needs an explicit image-format filter (`isRasterTileFormat`) —
+`InfoFormat`/UTFGrid/TileJSON links are equally tempting and equally undecodable.
+
+Vector tiles from such a service are a `vector` layer, not a `wmts` one. GWC even publishes a ready
+TileJSON per style (`…/wmts/rest/<layer>/<style>/tilejson/pbf`) whose `tiles` template is already in
+XYZ order, so it drops straight into a `vector` layer with `sourceLayer` from `vector_layers[].id`.
+
 ### 4.2 What Vienna's OGD services actually support
 
 Verified while building the demos, useful as a reference for what "typical" looks like:

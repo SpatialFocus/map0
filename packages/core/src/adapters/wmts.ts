@@ -27,6 +27,32 @@ export function isMercatorCrs(code: string): boolean {
   return /(^|\D)(3857|900913|102100|102113)($|\D)/.test(code);
 }
 
+/**
+ * Can the browser decode this tile format into an image?
+ *
+ * A WMTS layer commonly advertises more than pictures — GeoServer/GWC lists
+ * `application/vnd.mapbox-vector-tile` **first** for every vector-backed layer.
+ * Feeding that to a MapLibre `raster` source yields a silent decode failure, so
+ * the adapter must pick an image format explicitly instead of trusting the
+ * capabilities order. Loose prefix match on purpose: GeoServer ships variants
+ * like `image/png8` and `image/vnd.jpeg-png`.
+ */
+export function isRasterTileFormat(format: string | undefined): boolean {
+  return /^image\/(png|jpe?g|webp|avif|gif|vnd\.jpeg-png)/i.test(format ?? "");
+}
+
+/**
+ * Narrow capabilities resource links to the usable image-tile candidates.
+ * A requested format wins if advertised; capabilities that omit it may still
+ * serve it, so an unmatched request falls back to the other image formats
+ * instead of failing. Returns `[]` when the layer is vector-only.
+ */
+export function pickRasterLinks<T extends { format: string }>(links: T[], wanted?: string): T[] {
+  const raster = links.filter((r) => isRasterTileFormat(r.format));
+  const exact = wanted ? raster.filter((r) => r.format === wanted) : [];
+  return exact.length > 0 ? exact : raster;
+}
+
 export interface WmtsTemplateParts {
   encoding: "REST" | "KVP";
   resourceUrl: string;
@@ -130,14 +156,27 @@ export class WmtsAdapter extends SourceAdapter<NormalizedWmts> {
         matrixIds,
       });
 
+    /* A raster source can only show pictures, so drop MVT/UTFGrid/JSON links —
+       GWC advertises the vector tile first, which used to win by position. */
+    const all = layer.resourceLinks as ResourceLinkLike[];
+    if (this.def.format && !isRasterTileFormat(this.def.format)) {
+      throw new Error(
+        `WMTS format "${this.def.format}" is not a raster image format — ` +
+          `a "wmts" layer renders image tiles (use type "vector" for vector tiles)`,
+      );
+    }
+    const links = pickRasterLinks(all, this.def.format);
+    if (links.length === 0) {
+      const advertised = [...new Set(all.map((r) => r.format))].join(", ") || "none";
+      throw new Error(
+        `WMTS layer "${this.def.layer}" offers no image tile format (advertised: ${advertised})`,
+      );
+    }
+
     /* Capabilities may list stale mirror hosts (seen in the wild: basemap.at's
        maps1-4.wien.gv.at are DNS-dead). Probe candidates with one real tile and
        take the first host that answers; 404 still means "host alive". The winning
        origin is cached per service so further layers skip the probe entirely. */
-    const candidates = (layer.resourceLinks as ResourceLinkLike[]).filter(
-      (r) => !this.def.format || r.format === this.def.format,
-    );
-    const links = candidates.length > 0 ? candidates : (layer.resourceLinks as ResourceLinkLike[]);
     const originOf = (link: ResourceLinkLike): string => {
       try {
         return new URL(link.url).origin;
@@ -145,10 +184,18 @@ export class WmtsAdapter extends SourceAdapter<NormalizedWmts> {
         return "";
       }
     };
+    /* One candidate per host: the probe decides *which host is alive*, and racing
+       several formats of the same host would settle the format by network luck. */
+    const byOrigin = new Map<string, ResourceLinkLike>();
+    for (const link of links) {
+      const origin = originOf(link);
+      if (!byOrigin.has(origin)) byOrigin.set(origin, link);
+    }
+    const hosts = [...byOrigin.values()];
     const cached = liveOrigins.get(this.def.url);
-    let chosen = (cached && links.find((l) => originOf(l) === cached)) || links[0]!;
+    let chosen = (cached ? byOrigin.get(cached) : undefined) ?? hosts[0]!;
 
-    if (!cached && links.length > 1) {
+    if (!cached && hosts.length > 1) {
       const z = Math.min(Math.max(Math.round(map.getZoom()), 0), matrices.length - 1);
       const c = map.getCenter();
       const { x, y } = tileAt(c.lng, c.lat, z);
@@ -160,7 +207,7 @@ export class WmtsAdapter extends SourceAdapter<NormalizedWmts> {
         await fetch(url, { signal: AbortSignal.timeout(5000) });
         return link; // any HTTP response means the host is reachable
       };
-      chosen = await Promise.any(links.map(probe)).catch(() => links[0]!);
+      chosen = await Promise.any(hosts.map(probe)).catch(() => hosts[0]!);
       const origin = originOf(chosen);
       if (origin) liveOrigins.set(this.def.url, origin);
     }
