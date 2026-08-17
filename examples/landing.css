@@ -355,6 +355,27 @@ body.landing footer.site {
 figure.code.full pre {
   max-height: none;
 }
+/* Quick start: install first, then the config. The left column is the two things
+   a reader actually types, so it holds both blocks — .split is a two-column grid,
+   and a third child would push the aside onto its own row. */
+.split .steps {
+  display: grid;
+  gap: 12px;
+}
+.split .steps figure.code {
+  margin: 0;
+}
+.split .step {
+  margin: 10px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.split .steps > .step:first-child {
+  margin-top: 0;
+}
 .split .aside > :first-child {
   margin-top: 0;
 }

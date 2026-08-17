@@ -165,15 +165,24 @@
             <p class="kicker">Quick start</p>
             <h2>A styled basemap and a live WMS overlay, in one file.</h2>
             <p>
-              Two elements: the script tag that registers the custom element, and the element itself
-              with its configuration. The snippet below is generated from the map beside it, so the
-              two can never drift apart.
+              One install, then two elements: the script tag that registers the custom element, and
+              the element itself with its configuration. The snippet below is generated from the map
+              beside it, so the two can never drift apart.
             </p>
           </div>
 
           <div class="split">
-            <div data-quickstart>
-              <!-- replaced at runtime with the running configuration -->
+            <div class="steps">
+              <p class="step">1 — put the client on your server</p>
+              <pre data-lang="bash" data-label="terminal">
+                npm install map0-viewer
+                cp -r node_modules/map0-viewer/dist ./public/map0
+              </pre>
+
+              <p class="step">2 — write the map</p>
+              <div data-quickstart>
+                <!-- replaced at runtime with the running configuration -->
+              </div>
             </div>
 
             <div class="aside">
@@ -216,19 +225,12 @@
                 CMS-friendly one.
               </p>
 
-              <h3>Where that script tag comes from</h3>
+              <h3>Keep the folder together</h3>
               <p>
-                One install — the package is <code>map0-viewer</code> on npm — then copy the folder
-                onto your web server. No bundler and no build step on your side:
-              </p>
-              <pre data-lang="bash" data-label="terminal">
-                npm install map0-viewer
-                cp -r node_modules/map0-viewer/dist ./public/map0
-              </pre>
-              <p>
-                Keep the folder together: <code>map0.js</code> loads its own chunks and MapLibre's
-                worker from beside it. Where you put it is your choice — the <code>/map0/</code> in
-                the snippet is just a path.
+                <code>map0.js</code> loads its own chunks and MapLibre's worker from beside it, so
+                the folder travels as a unit — no bundler, no build step on your side. Where you put
+                it is your choice: the <code>/map0/</code> in the snippet is a path you pick, not the
+                package name.
               </p>
             </div>
           </div>
