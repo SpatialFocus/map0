@@ -14,8 +14,7 @@ MapLibre made cartography declarative (the style spec is JSON). map0 extends the
 *map client*: basemaps, overlay tree/TOC, legends, feature popups, print, globe, GPS, theming — all
 declared in a single, schema-validated JSON document that lives in a CMS field. It renders straight
 into the page (web component / script tag — no iframe, no backend) and looks like 2026: pretty,
-responsive, themable, accessible. Think "Masterportal's configure-everything philosophy" ×
-"MapLibre's rendering & DX" ÷ "the complexity".
+responsive, themable, accessible.
 
 ```html
 <script type="module" src="map0.js"></script>
@@ -85,10 +84,7 @@ grows.
 | [06-architecture.md](docs/06-architecture.md) | Technical architecture (packaging, layering, adapters, security) |
 | [07-roadmap.md](docs/07-roadmap.md) | **Status: what is done, what is left**, milestones M0 → M2 |
 | [08-decisions.md](docs/08-decisions.md) | Decision log D-01…D-05 + open items |
-| [09-engineering-notes.md](docs/09-engineering-notes.md) | **For contributors:** invariants, field notes on MapLibre and real SDI services, debugging playbook |
-
-Reading order for newcomers: 01 → 04 → 03. Before your first change to the code: 09, then 07 for
-what is worth picking up.
+| [09-engineering-notes.md](docs/09-engineering-notes.md) | Invariants, field notes on MapLibre and real SDI services, debugging playbook |
 
 ## Conventions
 
