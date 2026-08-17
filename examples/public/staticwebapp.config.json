@@ -23,7 +23,10 @@
     },
     {
       "route": "/standalone/*",
-      "headers": { "cache-control": "public, max-age=3600" }
+      "headers": {
+        "cache-control": "public, max-age=3600",
+        "access-control-allow-origin": "*"
+      }
     }
   ]
 }

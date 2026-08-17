@@ -27,12 +27,19 @@ responsive, themable, accessible.
 
 ## Using it in a page
 
+Self-hosted — `node_modules/map0-viewer/dist/` is a folder you copy next to your page:
+
 ```bash
 npm install map0-viewer   # prebuilt bundle, MapLibre included, no dependencies
 ```
 
-`node_modules/map0-viewer/dist/` is a folder you copy next to your page and load with one script tag —
-see [packages/map0/README.md](packages/map0/README.md) for the whole integration, and
+…or straight from a CDN, nothing to install:
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/npm/map0-viewer@0.0.2/dist/map0.js"></script>
+```
+
+See [packages/map0/README.md](packages/map0/README.md) for the whole integration, and
 [docs/09-engineering-notes.md](docs/09-engineering-notes.md) for how the package is released.
 
 ## Working on map0
