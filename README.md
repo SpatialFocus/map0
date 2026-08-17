@@ -8,7 +8,7 @@
 
 **Status:** approaching the M1 milestone — layer tree, WMS/WMTS/vector tiles/GeoJSON, feature info,
 legends, search, measuring, print, permalink, theming and i18n all work against live services.
-Published as an early preview (`map0-viewer` 0.0.1 on npm, MIT); APIs and the config schema are
+Published as an early preview (`map0-viewer` 0.0.2 on npm, MIT); APIs and the config schema are
 still v0 and will change without a deprecation path until 1.0. See
 [07-roadmap.md](docs/07-roadmap.md).
 

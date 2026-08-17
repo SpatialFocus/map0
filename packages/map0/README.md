@@ -9,7 +9,7 @@ MapLibre made cartography declarative — the style spec is JSON. map0 extends t
 theming and languages are all declared in a single JSON document that can live in a CMS field. It
 renders straight into the page as a web component — no iframe, no backend, no build step required.
 
-> **Early preview — version 0.0.1.** The client works against real OGC services — it is what the
+> **Early preview — version 0.0.2.** The client works against real OGC services — it is what the
 > [live demos](https://map0.net/demos) run on — but the JavaScript API and the config schema are
 > still v0 and will change without a deprecation path until 1.0. Pin an exact version.
 > TypeScript types are not published yet.
