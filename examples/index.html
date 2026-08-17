@@ -215,6 +215,21 @@
                 an inline <code>&lt;script type="application/json"&gt;</code> child as above — the
                 CMS-friendly one.
               </p>
+
+              <h3>Where that script tag comes from</h3>
+              <p>
+                One install — the package is <code>map0-viewer</code> on npm — then copy the folder
+                onto your web server. No bundler and no build step on your side:
+              </p>
+              <pre data-lang="bash" data-label="terminal">
+                npm install map0-viewer
+                cp -r node_modules/map0-viewer/dist ./public/map0
+              </pre>
+              <p>
+                Keep the folder together: <code>map0.js</code> loads its own chunks and MapLibre's
+                worker from beside it. Where you put it is your choice — the <code>/map0/</code> in
+                the snippet is just a path.
+              </p>
             </div>
           </div>
         </div>
