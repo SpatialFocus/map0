@@ -19,8 +19,10 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm smoke # component lifecycle + z-order in a real browser, on the BUILT bundle
       - run: pnpm size # fails when the eager bundle outgrows its budget (N1)
       - run: pnpm build:site # the deployed site — a broken site build must fail here, not on deploy
-      # E2E (e2e/verify-demos.mjs) stays local/manual in M0: it drives live SDI
-      # services and a real browser. Becomes a Playwright suite with recorded
-      # fixtures in M1 — see docs/07-roadmap.md.
+      # The live-service E2E pass (e2e/verify-demos.mjs) stays local/manual: it
+      # drives real SDI services, so a red run would mean "someone else's server
+      # is down". Everything that can be made deterministic lives in pnpm smoke.

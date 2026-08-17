@@ -18,6 +18,7 @@
     "size": "node scripts/check-size.mjs",
     "typecheck": "tsc --build",
     "test": "vitest run",
+    "smoke": "node e2e/smoke.mjs",
     "test:watch": "vitest"
   },
   "devDependencies": {
