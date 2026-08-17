@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "vite --config examples/vite.config.ts",
     "build": "pnpm --filter @map0/ui build",
+    "build:npm": "pnpm build && node scripts/build-npm.mjs",
     "build:site": "pnpm demo:standalone && vite build --config examples/vite.config.ts",
     "serve": "vite preview --config examples/vite.config.ts",
     "demo:standalone": "pnpm build && node -e \"const fs=require('node:fs');fs.rmSync('examples/public/standalone',{recursive:true,force:true});fs.cpSync('packages/ui/dist','examples/public/standalone',{recursive:true})\"",

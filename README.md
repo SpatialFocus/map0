@@ -3,10 +3,13 @@
 > A modern, embeddable, JSON-configurable web map client built on
 > [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/).
 > One script tag + one JSON config = a full-featured map on any web page.
+>
+> **[map0.net](https://map0.net)** — site and [live demos](https://map0.net/demos).
 
 **Status:** approaching the M1 milestone — layer tree, WMS/WMTS/vector tiles/GeoJSON, feature info,
-legends, search, measuring, print, permalink, theming and i18n all work against live services. No
-release yet; APIs and the config schema are still v0. See [07-roadmap.md](docs/07-roadmap.md).
+legends, search, measuring, print, permalink, theming and i18n all work against live services.
+Published as an early preview (`map0` 0.0.1 on npm, MIT); APIs and the config schema are still v0
+and will change without a deprecation path until 1.0. See [07-roadmap.md](docs/07-roadmap.md).
 
 ## The idea in one paragraph
 
@@ -21,7 +24,17 @@ responsive, themable, accessible.
 <map0-viewer config-src="my-map.map0.json" style="height:520px"></map0-viewer>
 ```
 
-## Getting started
+## Using it in a page
+
+```bash
+npm install map0        # prebuilt bundle, MapLibre included, no dependencies
+```
+
+`node_modules/map0/dist/` is a folder you copy next to your page and load with one script tag —
+see [packages/map0/README.md](packages/map0/README.md) for the whole integration, and
+[docs/09-engineering-notes.md](docs/09-engineering-notes.md) for how the package is released.
+
+## Working on map0
 
 Prerequisites: Node ≥ 22 and pnpm (`corepack enable` is enough — the version is pinned via
 `packageManager`).
@@ -93,3 +106,10 @@ grows.
   placeholder `*.example.gv.at` URLs mark illustrative endpoints.
 - A config key without documentation is not done; schema changes update
   [04-configuration.md](docs/04-configuration.md) in the same change.
+
+## Licence
+
+MIT — see [LICENSE](LICENSE). The published bundle contains third-party code (MapLibre GL JS
+verbatim, others compiled in); their licences are reproduced in
+[packages/map0/THIRD-PARTY-NOTICES.md](packages/map0/THIRD-PARTY-NOTICES.md), regenerated on every
+`pnpm build:npm`.

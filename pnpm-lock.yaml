@@ -49,6 +49,8 @@ importers:
         specifier: ^2.19.0
         version: 2.19.0
 
+  packages/map0: {}
+
   packages/schema:
     devDependencies:
       '@types/geojson':

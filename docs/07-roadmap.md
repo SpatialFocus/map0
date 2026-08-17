@@ -24,7 +24,7 @@ pass, and an actual npm/CDN release.
 | Configuration | ✅ one document, validation with JSON-path errors, `extends`, theming, i18n + overrides · 🟡 published JSON Schema |
 | Performance | ✅ 23 KB page tier, engine and features load on demand, CI budget |
 | Accessibility | 🟡 keyboard operation, focus trap, reduced motion · ⬜ audit, DOM-mirrored results |
-| Packaging | 🟡 built bundle + demo site · ⬜ npm/CDN release, license, name |
+| Packaging | ✅ MIT licence, name, npm package `map0` (prebuilt bundle + third-party notices) · 🟡 built bundle + demo site · ⬜ CDN release |
 
 ## M0 — Walking skeleton ✅
 
@@ -66,8 +66,8 @@ pass, and an actual npm/CDN release.
 - ⬜ **Accessibility pass** — audit, keyboard TOC review, DOM-mirrored feature results (N4)
 - ⬜ **Mobile popup as bottom sheet** below 640 px (F5.5)
 - ⬜ **TOC filter box** for configs with many layers (F2.7)
-- ⬜ **npm package + CDN build**, install docs (N11)
-- ⬜ **Decide license and name**, set up the repo home (O-01, O-02, O-07)
+- 🟡 **npm package** `map0` (prebuilt bundle, `pnpm build:npm`) · ⬜ CDN build, TypeScript types, install docs (N11)
+- ✅ **License (MIT) and name (map0)** decided (O-01, O-02) · ⬜ repo governance (O-07)
 - ⬜ **Visual regression** on the demo pages (N9)
 
 ## M1.x — Power features

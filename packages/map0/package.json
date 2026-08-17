@@ -1,0 +1,47 @@
+{
+  "name": "map0",
+  "version": "0.0.1",
+  "description": "Embeddable, JSON-configurable web map client built on MapLibre GL JS — one script tag plus one JSON config",
+  "keywords": [
+    "map",
+    "maplibre",
+    "webmap",
+    "map-client",
+    "web-component",
+    "gis",
+    "ogc",
+    "wms",
+    "wmts",
+    "vector-tiles",
+    "geojson",
+    "embeddable"
+  ],
+  "license": "MIT",
+  "author": "Christoph Perger <christoph.perger@spatial-focus.net>",
+  "homepage": "https://map0.net",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SpatialFocus/map0.git",
+    "directory": "packages/map0"
+  },
+  "bugs": {
+    "url": "https://github.com/SpatialFocus/map0/issues"
+  },
+  "type": "module",
+  "main": "./dist/map0.js",
+  "module": "./dist/map0.js",
+  "exports": {
+    ".": "./dist/map0.js",
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

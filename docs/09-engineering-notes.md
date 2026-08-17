@@ -13,6 +13,7 @@ pnpm typecheck                  # tsc --build across all packages, strict
 pnpm test                       # Vitest (pure logic only, no DOM/network)
 pnpm build && pnpm size         # library bundle + the size budget
 pnpm demo:standalone            # build + copy dist next to the standalone demo page
+pnpm build:npm                  # assemble the publishable `map0` package (§release)
 node e2e/verify-demos.mjs       # every demo page, headless, with screenshots
 node e2e/verify-demos.mjs wms   # …or one
 ```
@@ -28,6 +29,38 @@ Three of the worst bugs in this repo's history looked fine in the dev server and
 built bundle, or vice versa (§4.3, §4.4). When touching the build, the element lifecycle or a
 service adapter, check **both** paths: the dev server (`/demos/*`) and the built bundle
 (`/demos/standalone.html` after `pnpm demo:standalone`).
+
+### Release — the `map0` npm package
+
+`packages/map0` is the only publishable package: the **unscoped** `map0` on npm, containing the
+prebuilt bundle (no dependencies, MapLibre included). The `map0` org is reserved for the day
+`@map0/core` and `@map0/react` become separate installs; the workspace packages stay `private`
+until then, so a stray `pnpm publish -r` cannot leak them.
+
+```bash
+# 1. version in packages/map0/package.json — npm versions are immutable, and
+#    an unpublish is only possible within 72 h (and then the name is burnt for 24 h)
+pnpm build:npm                  # pnpm build + copy dist without sourcemaps + regenerate notices
+cd packages/map0 && npm pack     # inspect the tarball before it is public
+npm publish                      # from an account with 2FA; the publisher owns the unscoped name
+```
+
+Two things this has to get right, both of which fail *silently* if it does not:
+
+- **The folder is the unit.** `dist/` ships `map0.js`, its lazy chunks and MapLibre's three files
+  side by side (§4.4). Verify the **packed tarball**, not `packages/ui/dist`: unpack it over
+  `examples/public/standalone/` and load `/demos/standalone.html`, which then exercises exactly the
+  files a consumer gets. A vector-tile basemap is the real test — a missing worker file still paints
+  raster layers.
+- **Third-party notices are an obligation.** `scripts/build-npm.mjs` reads the build's sourcemaps to
+  find every package compiled into the bundle and reproduces each licence in full. A new bundled
+  dependency whose npm tarball ships no licence text (pmtiles, today) **fails the build** until its
+  text is added under `scripts/third-party/` and registered in `FALLBACK_LICENSES`. Do not silence
+  this check.
+
+Ownership: an unscoped package belongs to whoever publishes it first — the personal account that
+ran `npm publish`, not the org. Add a second owner (`npm owner add <user> map0`) so the name does
+not depend on one person's account.
 
 ## 2. Invariants
 
