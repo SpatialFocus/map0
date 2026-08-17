@@ -453,6 +453,13 @@ export class Map0Viewer extends LitElement {
   }
 
   private async init(): Promise<void> {
+    /* A scheduled init() can arrive after the element left the DOM — `reload()`
+       waits for the next update, and a disconnect in that window would otherwise
+       start an initialisation that immediately gives up, leaving `initStarted`
+       set. `connectedCallback()` reads that flag, so the element would never arm
+       itself again: a viewer that survived removal but not removal-during-reload.
+       Bailing out before the flag is set keeps it armable. */
+    if (!this.isConnected) return;
     const gen = ++this.generation;
     /** true while this init() is still the one the element is waiting for */
     const current = (): boolean => gen === this.generation && this.isConnected;

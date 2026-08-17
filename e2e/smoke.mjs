@@ -307,6 +307,27 @@ try {
       reconnected.alive && reconnected.layers === 2,
       `${reconnected.layers} layers`,
     );
+
+    /* R12 — the nastier variant: removed while a reload was already scheduled,
+       so the re-init lands on a detached element. It must stay armable. */
+    const racedReload = await page.evaluate(async () => {
+      const el = document.querySelector("map0-viewer");
+      const host = document.getElementById("host");
+      el.reload(); // tears down now, re-inits after the next update…
+      el.remove(); // …which happens with the element out of the DOM
+      await new Promise((r) => setTimeout(r, 100));
+      const alive = new Promise((resolve) => {
+        const timer = setTimeout(() => resolve(false), 30_000);
+        el.addEventListener("map0:ready", () => (clearTimeout(timer), resolve(true)), { once: true });
+      });
+      host.appendChild(el);
+      return { alive: await alive, layers: el.api?.layers.state.value.length ?? 0 };
+    });
+    check(
+      "a disconnect during a reload leaves the element armable",
+      racedReload.alive && racedReload.layers === 2,
+      `${racedReload.layers} layers`,
+    );
   }
 
   /* C5 — the config carries a key this version does not know */

@@ -24,6 +24,7 @@ Second round, after the fixes above were reviewed again:
 | R9 | Unknown keys became fatal, against C5 | valid | ✅ |
 | R10 | A newly appearing, higher-priority config source is ignored | valid | ✅ |
 | R11 | A failed core leaks its permalink claim | valid | ✅ |
+| R12 | A disconnect during a reload leaves the element unarmable | valid | ✅ |
 
 ---
 
@@ -233,3 +234,19 @@ so a retry wrongly gets `map0-2`.
 **Fix.** `createCore()` is now a thin wrapper that claims the parameter and rolls the claim back if
 the core never comes into existence; `buildCore()` holds the actual construction. Covered by a unit
 test that fails the style fetch against a refused port and then asserts the name is free again.
+
+## R12 · Disconnect during a reload [P2] ✅
+
+**Claim.** `reload()` schedules `init()` for after the next update. If the element is removed in that
+window, `init()` starts on a detached element, sets `initStarted = true` and gives up at its first
+`current()` check — and `connectedCallback()` reads exactly that flag, so the element never arms
+itself again.
+
+**Verdict: valid.** The R2 fix covered "removed while initialising" (teardown clears the flag) but
+not "removed *before* the re-init starts", where nothing clears it afterwards.
+
+**Fix.** `init()` returns before touching `initStarted` when the element is not connected. A viewer
+that is reloaded and removed in the same breath comes back on the next `connectedCallback()`, and
+`load()` on a detached element no longer half-starts one either.
+
+Covered by `pnpm smoke` — `el.reload(); el.remove();` then re-attach — which fails without the guard.
