@@ -180,3 +180,127 @@ describe("normalizeConfig", () => {
     expect(new Set(ids).size).toBe(2);
   });
 });
+
+/* ---- review findings R1/R3: the config as a system boundary ---- */
+
+describe("validateConfig — invariants (R3)", () => {
+  it("rejects duplicate explicit ids across basemaps and layers", () => {
+    const r = validateConfig({
+      ...minimal,
+      basemaps: [{ type: "empty", id: "base" }],
+      layers: [
+        { type: "raster", id: "dup", url: "https://e.org/{z}/{x}/{y}.png" },
+        { type: "group", children: [{ type: "raster", id: "dup", url: "https://e.org/a/{z}/{x}/{y}.png" }] },
+        { type: "raster", id: "base", url: "https://e.org/b/{z}/{x}/{y}.png" },
+      ],
+    });
+    expect(r.valid).toBe(false);
+    const paths = r.errors.map((e) => e.path);
+    expect(paths).toContain("$.layers[1].children[0].id");
+    expect(paths).toContain("$.layers[2].id");
+  });
+
+  it("flags unknown keys instead of silently ignoring a typo", () => {
+    const r = validateConfig({
+      ...minimal,
+      contorls: { navigation: false },
+      layers: [{ type: "raster", url: "https://e.org/{z}/{x}/{y}.png", opactiy: 0.5 }],
+    });
+    expect(r.errors.map((e) => e.path)).toEqual(
+      expect.arrayContaining(["$.contorls", "$.layers[0].opactiy"]),
+    );
+  });
+
+  it("enforces the https policy (N6) but allows loopback and relative URLs", () => {
+    const bad = validateConfig({
+      ...minimal,
+      basemaps: [{ type: "raster", url: "http://tiles.example.org/{z}/{x}/{y}.png" }],
+    });
+    expect(bad.errors.some((e) => e.path === "$.basemaps[0].url")).toBe(true);
+
+    const ok = validateConfig({
+      version: 1,
+      basemaps: [{ type: "raster", url: "http://localhost:8080/{z}/{x}/{y}.png" }],
+      layers: [{ type: "geojson", data: "./trees.geojson" }],
+    });
+    expect(ok.valid).toBe(true);
+  });
+
+  it("rejects javascript: URLs", () => {
+    const r = validateConfig({
+      ...minimal,
+      layers: [{ type: "raster", url: "javascript:alert(1)" }],
+    });
+    expect(r.errors.some((e) => e.path === "$.layers[0].url")).toBe(true);
+  });
+
+  it("validates nested control and permalink shapes", () => {
+    const r = validateConfig({
+      ...minimal,
+      controls: { legend: { position: "middle", open: "yes" }, scale: { unit: "furlongs" } },
+      permalink: { param: "map 0" },
+    });
+    const paths = r.errors.map((e) => e.path);
+    expect(paths).toContain("$.controls.legend.position");
+    expect(paths).toContain("$.controls.legend.open");
+    expect(paths).toContain("$.controls.scale.unit");
+    expect(paths).toContain("$.permalink.param");
+  });
+
+  it("still accepts the fully configured example shape", () => {
+    const r = validateConfig({
+      version: 1,
+      $schema: "https://map0.example.org/schema/v1.json",
+      meta: { title: "Demo" },
+      map: { center: [16.37, 48.2], zoom: 12, projection: "globe", hash: false },
+      basemaps: [{ type: "style", url: "https://e.org/style.json", title: "Karte", default: true }],
+      layers: [
+        {
+          type: "group",
+          title: "Umwelt",
+          collapsed: true,
+          children: [
+            {
+              type: "wms",
+              url: "https://e.org/ows",
+              layers: "laerm",
+              info: { title: "{{name}}", fields: [{ key: "name", label: "Name" }] },
+              legend: [{ label: "laut", color: "#f00", shape: "square" }],
+              metadata: { url: "https://e.org/meta", title: "Metadaten" },
+            },
+          ],
+        },
+        {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+          cluster: { enabled: true, radius: 40 },
+          popup: { content: "<b>{{name}}</b>" },
+          hover: { content: "{{name}}" },
+        },
+      ],
+      controls: { layerSwitcher: { position: "top-right", open: "auto", allowAdd: false } },
+      search: { provider: { url: "https://geo.example/api?q={query}", format: "geojson" } },
+      print: { formats: ["png"], sizes: ["A4-landscape"], dpi: [150], elements: ["title"] },
+      theme: { mode: "dark", primary: "#0e7490", radius: "lg" },
+      i18n: { locale: "de", overrides: { de: { "layers.title": "Themen" } } },
+      permalink: { param: "karte" },
+    });
+    expect(r.errors).toEqual([]);
+  });
+});
+
+describe("normalizeConfig — id namespace (R3)", () => {
+  it("never generates an id that an author already used", () => {
+    const n = normalizeConfig({
+      version: 1,
+      basemaps: [{ type: "empty", title: "Karte" }],
+      layers: [
+        { type: "geojson", title: "Punkte", data: "https://e.org/a.json" },
+        { type: "geojson", id: "punkte", data: "https://e.org/b.json" },
+      ],
+    });
+    const ids = [n.basemaps[0]!.id, ...n.layers.map((l) => l.id)];
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids).toContain("punkte");
+  });
+});

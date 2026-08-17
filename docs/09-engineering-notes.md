@@ -11,6 +11,7 @@ pnpm install
 pnpm dev                        # demo site on :5173 — /demos is where the work shows up
 pnpm typecheck                  # tsc --build across all packages, strict
 pnpm test                       # Vitest (pure logic only, no DOM/network)
+pnpm build && pnpm smoke        # browser smoke test on the BUILT bundle, network-free (CI runs it)
 pnpm build && pnpm size         # library bundle + the size budget
 pnpm demo:standalone            # build + copy dist next to the standalone demo page
 pnpm build:npm                  # assemble the publishable `map0` package (§release)
@@ -82,8 +83,11 @@ Break one of these and something breaks quietly, usually only in production buil
    the template is rendered *and* the result is sanitised before it touches the DOM.
 4. **The config is data, never code.** No `eval`, no expression language. The template syntax is a
    closed mustache subset on purpose.
-5. **Config order is drawing order.** The layer tree is the single source of truth; groups exist only
-   in the TOC. Adapter mounts are therefore sequential, not parallel.
+5. **Config order is z-order, top of the list first** (F2.1). The layer tree is the single source of
+   truth; groups exist only in the TOC. MapLibre appends every new layer on top, so core mounts the
+   tree **bottom-up** (`drawOrder()`) — and sequentially, never in parallel, or the stack is a race.
+   Everything that reads the stack (TOC, legend, hit test) uses `stackOrder()`: runtime-added layers
+   first, then the configured tree.
 6. **Overlays survive style changes.** `map.setStyle()` drops runtime sources and layers, so the
    basemap manager re-injects them via `transformStyle` — including the highlight source and the
    current projection. Anything added to the map outside an adapter needs to be in that set.

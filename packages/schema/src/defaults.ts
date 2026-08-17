@@ -61,7 +61,10 @@ export interface NormalizedConfig {
   map: Required<Pick<MapConfig, "projection">> & MapConfig;
   basemaps: NormalizedBasemap[];
   defaultBasemapId: string;
-  /** flat list of leaf layers in tree (drawing) order — first item = bottom-most overlay */
+  /**
+   * flat list of leaf layers in tree order — first item = **top-most** overlay
+   * ("top of the list = top of the map", F2.1). Core mounts this list bottom-up.
+   */
   layers: NormalizedLayer[];
   /** tree structure for the TOC (same order as `layers`) */
   toc: TocNode[];
@@ -104,8 +107,20 @@ function slugify(s: string): string {
   );
 }
 
+/** every id the author wrote down, so generated ids can never collide with one */
+function collectExplicitIds(defs: LayerDef[], into: Set<string>): void {
+  for (const def of defs) {
+    if (def.type === "group") collectExplicitIds(def.children, into);
+    else if (def.id) into.add(def.id);
+  }
+}
+
 export function normalizeConfig(cfg: Map0Config): NormalizedConfig {
+  /* basemaps and layers share one id namespace: permalink and the share state
+     address both by id (validateConfig rejects duplicates) */
   const usedIds = new Set<string>();
+  for (const bm of cfg.basemaps) if (bm.id) usedIds.add(bm.id);
+  collectExplicitIds(cfg.layers ?? [], usedIds);
 
   /* basemaps */
   const basemaps: NormalizedBasemap[] = cfg.basemaps.map((bm, i) => ({
@@ -277,7 +292,6 @@ function normalizeLayerList(
     } else {
       const title = def.title ?? def.id ?? `Layer ${out.length + 1}`;
       const id = def.id ?? uniqueId(slugify(title), usedIds);
-      if (def.id) usedIds.add(def.id);
       const norm = {
         ...def,
         id,

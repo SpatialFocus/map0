@@ -21,7 +21,7 @@ pass, and an actual npm/CDN release.
 | Sharing | ✅ permalink incl. user-added layers · ⬜ embed-snippet helper |
 | Search | ✅ type-ahead geocoding, pluggable providers, coordinate input |
 | Measuring | ✅ distance & area, geodesic, draggable vertices |
-| Configuration | ✅ one document, validation with JSON-path errors, `extends`, theming, i18n + overrides · 🟡 published JSON Schema |
+| Configuration | ✅ one document, validation with JSON-path errors (unknown keys, unique ids, https policy), `extends`, theming, i18n + overrides · 🟡 published JSON Schema |
 | Performance | ✅ 23 KB page tier, engine and features load on demand, CI budget |
 | Accessibility | 🟡 keyboard operation, focus trap, reduced motion · ⬜ audit, DOM-mirrored results |
 | Packaging | ✅ MIT licence, name, npm package `map0` (prebuilt bundle + third-party notices) · 🟡 built bundle + demo site · ⬜ CDN release |
@@ -61,14 +61,17 @@ pass, and an actual npm/CDN release.
 
 ### Remaining for v1.0
 
-- ⬜ **Published JSON Schema** + config reference generated from it (C3, N12)
-- ⬜ **Unknown-key warnings** on config load (C5)
+- ⬜ **Published JSON Schema** + config reference generated from it (C3, N12) — generated from the
+  key tables in `packages/schema/src/validate.ts`, so schema and validator cannot drift
+- ✅ **Unknown-key errors**, id uniqueness, nested shapes and the https policy in the validator (C5, N6)
 - ⬜ **Accessibility pass** — audit, keyboard TOC review, DOM-mirrored feature results (N4)
 - ⬜ **Mobile popup as bottom sheet** below 640 px (F5.5)
 - ⬜ **TOC filter box** for configs with many layers (F2.7)
 - 🟡 **npm package** `map0` (prebuilt bundle, `pnpm build:npm`) · ⬜ CDN build, TypeScript types, install docs (N11)
 - ✅ **License (MIT) and name (map0)** decided (O-01, O-02) · ⬜ repo governance (O-07)
 - ⬜ **Visual regression** on the demo pages (N9)
+- ✅ **Deterministic browser smoke test in CI** — element lifecycle, z-order and the built bundle,
+  network-free (`pnpm smoke`); see [10-review-fixes.md](10-review-fixes.md)
 
 ## M1.x — Power features
 

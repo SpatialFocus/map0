@@ -45,8 +45,22 @@ export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer>
   protected ctx!: AdapterContext;
   /** [maplibre layer id, opacity paint property, base value] triplets for opacity control */
   protected opacityEntries: Array<[string, string, number]> = [];
+  /** everything registered on the map, undone by unmount() */
+  private disposers: Array<() => void> = [];
+  private unmounted = false;
 
   constructor(readonly def: D) {}
+
+  /**
+   * Register a map listener that `unmount()` removes again. Adapters come and go
+   * at runtime (F3.1/F3.3); a listener left behind keeps its adapter — and the
+   * layer's whole state — alive for the lifetime of the map.
+   */
+  protected listen(type: string, handler: (e: never) => void): void {
+    const { map } = this.ctx;
+    map.on(type as never, handler as never);
+    this.disposers.push(() => map.off(type as never, handler as never));
+  }
 
   abstract get sourceIds(): string[];
   abstract get layerIds(): string[];
@@ -63,8 +77,12 @@ export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer>
     this.trackStatus();
   }
 
-  /** remove this layer's MapLibre layers and sources (runtime layer removal, F3.3) */
+  /** remove this layer's MapLibre layers, sources and listeners (F3.3) */
   unmount(): void {
+    if (this.unmounted || !this.ctx) return;
+    this.unmounted = true;
+    for (const dispose of this.disposers) dispose();
+    this.disposers = [];
     const { map } = this.ctx;
     for (const id of this.layerIds) {
       if (map.getLayer(id)) map.removeLayer(id);
@@ -133,7 +151,6 @@ export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer>
 
   /** default status tracking via source events; adapters may override */
   protected trackStatus(): void {
-    const { map } = this.ctx;
     const sourceIds = new Set(this.sourceIds);
     const onData = (e: { sourceId?: string; isSourceLoaded?: boolean }) => {
       if (e.sourceId && sourceIds.has(e.sourceId) && e.isSourceLoaded) {
@@ -145,8 +162,8 @@ export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer>
         this.status.value = "error";
       }
     };
-    map.on("sourcedata", onData);
-    map.on("error", onError as never);
+    this.listen("sourcedata", onData as (e: never) => void);
+    this.listen("error", onError as (e: never) => void);
   }
 
   featureInfo?(query: FeatureInfoQuery): Promise<FeatureInfoResult | null>;

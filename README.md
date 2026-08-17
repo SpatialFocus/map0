@@ -99,6 +99,7 @@ grows.
 | [07-roadmap.md](docs/07-roadmap.md) | **Status: what is done, what is left**, milestones M0 → M2 |
 | [08-decisions.md](docs/08-decisions.md) | Decision log D-01…D-05 + open items |
 | [09-engineering-notes.md](docs/09-engineering-notes.md) | Invariants, field notes on MapLibre and real SDI services, debugging playbook |
+| [10-review-fixes.md](docs/10-review-fixes.md) | External review findings, verdicts and what was changed in response |
 
 ## Conventions
 

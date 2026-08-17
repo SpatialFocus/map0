@@ -4,6 +4,9 @@ import { expandSimpleStyle } from "./adapters/geojson.js";
 import { deriveFromStyleLayers, entryFromPaint } from "./adapters/legend-derive.js";
 import { escapeHtml, renderFields, renderTemplate } from "./template.js";
 import { lngLatToMercator } from "./mercator.js";
+import type { NormalizedLayer } from "@map0/schema";
+import { drawOrder, stackOrder } from "./layers.js";
+import { claimShareParam } from "./permalink.js";
 
 describe("buildWmsTileUrl", () => {
   it("builds a 1.3.0 GetMap template with literal bbox placeholder", () => {
@@ -538,5 +541,45 @@ describe("mercator", () => {
     const [x, y] = lngLatToMercator(16.3725, 48.2083);
     expect(x).toBeCloseTo(1822570, -3);
     expect(y).toBeCloseTo(6141868, -3);
+  });
+});
+
+/* ---- review findings R1/R5 ---- */
+
+describe("layer stacking (R1, F2.1)", () => {
+  const layer = (id: string): NormalizedLayer => ({
+    type: "raster",
+    url: `https://e.org/${id}/{z}/{x}/{y}.png`,
+    id,
+    title: id,
+    visible: true,
+    opacity: 1,
+    groupPath: [],
+  });
+
+  it("mounts bottom-up so the first configured layer ends up on top", () => {
+    const configured = [layer("a"), layer("b"), layer("c")];
+    expect(drawOrder(configured).map((l) => l.id)).toEqual(["c", "b", "a"]);
+    expect(configured.map((l) => l.id)).toEqual(["a", "b", "c"]); // input untouched
+  });
+
+  it("puts runtime-added layers above the configured tree, newest first", () => {
+    const stack = stackOrder([layer("a"), layer("b")], [layer("added1"), layer("added2")]);
+    expect(stack.map((l) => l.id)).toEqual(["added2", "added1", "a", "b"]);
+  });
+});
+
+describe("claimShareParam (R5)", () => {
+  it("gives each viewer its own hash parameter and releases it again", () => {
+    const first = claimShareParam("map0");
+    const second = claimShareParam("map0");
+    expect(first.param).toBe("map0");
+    expect(second.param).toBe("map0-2");
+    second.release();
+    const third = claimShareParam("map0");
+    expect(third.param).toBe("map0-2"); // the freed name is reusable
+    first.release();
+    third.release();
+    expect(claimShareParam("map0").param).toBe("map0");
   });
 });

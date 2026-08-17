@@ -148,6 +148,8 @@ export class Map0Viewer extends LitElement {
   private initialized = false;
   private initStarted = false;
   private observer?: IntersectionObserver;
+  /** bumped by every teardown; an init() whose token is stale must not attach */
+  private generation = 0;
 
   /** imperative access to the running map (available after `map0:ready`) */
   get api(): Map0Core | undefined {
@@ -171,11 +173,28 @@ export class Map0Viewer extends LitElement {
 
   protected override firstUpdated(): void {
     this.initialized = true;
+    this.arm();
+  }
+
+  /**
+   * `firstUpdated()` runs once per element, but the element can be taken out of
+   * the DOM and put back (SPA routing, tabs, CMS re-renders, `appendChild` of a
+   * live node). `disconnectedCallback()` tears the map down, so re-connecting
+   * has to arm it again — otherwise the element comes back dead.
+   */
+  override connectedCallback(): void {
+    super.connectedCallback();
+    if (this.initialized && !this.initStarted) this.arm();
+  }
+
+  /** start now, or wait for the element to approach the viewport */
+  private arm(): void {
     /* start early enough that the map is ready by the time it scrolls in */
     if (this.loading === "eager" || typeof IntersectionObserver === "undefined") {
       void this.init();
       return;
     }
+    this.observer?.disconnect();
     this.observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) this.load();
@@ -195,7 +214,8 @@ export class Map0Viewer extends LitElement {
   protected override updated(changed: PropertyValues): void {
     if (
       this.initialized &&
-      this.core &&
+      /* also while init() is still running — the token retires that attempt */
+      (this.core || this.initStarted) &&
       (changed.has("config") || changed.has("configSrc")) &&
       (changed.get("config") !== undefined || changed.get("configSrc") !== undefined)
     ) {
@@ -213,24 +233,34 @@ export class Map0Viewer extends LitElement {
   /** tear down and re-init (e.g. after assigning a new config) */
   reload(): void {
     this.teardown();
-    this._errors = null;
-    this._fatal = null;
-    this._layers = [];
-    this._ready = false;
-    this._loading = false;
     void this.updateComplete.then(() => void this.init());
   }
 
   private teardown(): void {
+    /* retires any init() still in flight: it checks the token after every await
+       and destroys a core that finished for a generation nobody waits for */
+    this.generation++;
     for (const u of this.unsubs) u();
     this.unsubs = [];
     this.statusSeen.clear();
-    this._notices = [];
     this.popup?.remove();
     this.popup = undefined;
     this.core?.destroy();
     this.core = undefined;
+    this.measureController = undefined; // destroyed via unsubs — never reuse it
+    clearTimeout(this.searchTimer);
+    this.searchAbort?.abort();
+    this.searchAbort = undefined;
     this.initStarted = false;
+    this._notices = [];
+    this._errors = null;
+    this._fatal = null;
+    this._layers = [];
+    this._measure = null;
+    this._searchResults = [];
+    this._hover = null;
+    this._ready = false;
+    this._loading = false;
   }
 
   private emit(name: string, detail: unknown): void {
@@ -406,10 +436,14 @@ export class Map0Viewer extends LitElement {
   }
 
   private async init(): Promise<void> {
+    const gen = ++this.generation;
+    /** true while this init() is still the one the element is waiting for */
+    const current = (): boolean => gen === this.generation && this.isConnected;
     this.initStarted = true;
     this._loading = true;
     try {
       const raw = await this.loadRawConfig();
+      if (!current()) return;
       const result = validateConfig(raw);
       if (!result.valid) {
         this._errors = result.errors;
@@ -431,14 +465,22 @@ export class Map0Viewer extends LitElement {
         loadPopupRenderer(),
         loadMaplibreCss().then((m) => m.default),
       ]);
+      if (!current()) return;
       this.createPopup = createPopup;
       this.popups = popups;
       this.adoptMaplibreCss(maplibreCss);
 
       await this.updateComplete;
+      if (!current()) return;
       if (!this.mapEl) throw new Error("internal: map container missing");
 
       const core = await createCore({ container: this.mapEl, config: cfg, fullscreenTarget: this });
+      /* the element was removed or re-configured while the engine was starting:
+         the finished core belongs to nobody, so it must not be kept */
+      if (!current()) {
+        core.destroy();
+        return;
+      }
       this.core = core;
       this._basemapId = core.basemaps.current.value;
       this.unsubs.push(
@@ -510,6 +552,7 @@ export class Map0Viewer extends LitElement {
       const readyFallback = setTimeout(() => (this._ready = true), 12_000);
       this.unsubs.push(() => clearTimeout(readyFallback));
     } catch (e) {
+      if (!current()) return; // a failure nobody is waiting for any more
       this._fatal = e instanceof Error ? e.message : String(e);
       this.emit("map0:error", { message: this._fatal });
     }
@@ -867,13 +910,13 @@ export class Map0Viewer extends LitElement {
         </button>
         ${this._tocOpen
           ? html`<div class="panel-body">
-              ${this.renderNodes(cfg.toc, byId, "")}
               ${extras.length > 0
                 ? html`<div class="toc-extras">
                     <div class="group-label">${t("layers.added")}</div>
                     ${extras.map((l) => this.renderLayerRow(l))}
                   </div>`
                 : nothing}
+              ${this.renderNodes(cfg.toc, byId, "")}
               ${cfg.layers.length === 0 && extras.length === 0
                 ? html`<div class="toc-empty">${t("layers.empty")}</div>`
                 : nothing}

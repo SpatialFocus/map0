@@ -16,6 +16,7 @@ import { HighlightManager } from "./highlight.js";
 import { makeT, maplibreLocale, resolveLocale, type Translate } from "./i18n.js";
 import { LayerManager } from "./layers.js";
 import {
+  claimShareParam,
   decodeShareState,
   encodeShareState,
   readShareParam,
@@ -75,6 +76,7 @@ export {
   type SearchResult,
 } from "./search.js";
 export {
+  claimShareParam,
   decodeShareState,
   encodeShareState,
   readShareParam,
@@ -151,8 +153,11 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
   const events = new Emitter<CoreEvents>();
   const background = themeBackground(cfg.theme.mode);
 
-  /* shared state from the URL (F10.1) — wins over the configured initial view */
-  const shareParam = cfg.permalink === false ? null : cfg.permalink.param;
+  /* shared state from the URL (F10.1) — wins over the configured initial view.
+     The parameter is claimed per instance so two viewers on one page cannot
+     overwrite each other's state (docs/10-review-fixes.md R5). */
+  const shareClaim = cfg.permalink === false ? null : claimShareParam(cfg.permalink.param);
+  const shareParam = shareClaim?.param ?? null;
   let initialShare: ShareState | null = null;
   if (shareParam && typeof location !== "undefined") {
     const raw = readShareParam(location.hash, shareParam);
@@ -197,6 +202,8 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
     map.once("style.load", () => map.setProjection({ type: "globe" }));
   }
 
+  /** teardown hooks for everything that outlives a single map event */
+  const cleanups: Array<() => void> = [];
   const layers = new LayerManager(map, cfg);
   const highlight = new HighlightManager(map, cfg.theme.primary);
   /** set while measuring: clicks set vertices instead of querying features */
@@ -299,16 +306,28 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
           }, 400);
         };
         map.on("moveend", sync);
-        layers.state.subscribe(sync);
-        basemaps.current.subscribe(sync);
+        const unsubs = [layers.state.subscribe(sync), basemaps.current.subscribe(sync)];
+        /* a pending write must not land after the viewer is gone */
+        cleanups.push(() => {
+          clearTimeout(timer);
+          for (const u of unsubs) u();
+        });
       }
       events.emit("ready", {});
     })();
   });
 
   map.on("error", (e) => {
-    /* surface tile/source errors without crashing; adapters track their own status */
-    console.warn("[map0]", e.error ?? e);
+    /* surface tile/source errors without crashing; adapters track their own status.
+       Also goes out as map0:error so a host page sees one consistent signal
+       instead of having to scrape the console (docs/06-architecture.md). */
+    const err = e.error ?? e;
+    console.warn("[map0]", err);
+    const source = (e as { sourceId?: string }).sourceId;
+    events.emit("error", {
+      message: err instanceof Error ? err.message : String(err),
+      ...(source ? { sourceId: source } : {}),
+    });
   });
 
   /* coordinate readout: right-click (desktop) + long-press (touch), F5.6 */
@@ -384,6 +403,10 @@ export async function createCore(opts: CoreOptions): Promise<Map0Core> {
     },
     getShareUrl,
     destroy: () => {
+      for (const c of cleanups) c();
+      /* detach adapters and their listeners while the style is still there */
+      layers.destroy();
+      shareClaim?.release();
       map.remove();
       events.clear();
     },

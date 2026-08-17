@@ -65,14 +65,14 @@ inside the config it would gate. It mirrors `<img loading>`:
 | `meta` | title/description of the map (used in print header, aria-label) | no |
 | `map` | initial view & constraints | no |
 | `basemaps[]` | exclusive background layers | **yes** (≥1) |
-| `layers[]` | overlay tree (groups + layers, order = drawing order) | no |
+| `layers[]` | overlay tree (groups + layers); **top of the list = top of the map**, and runtime-added layers go above all of them | no |
 | `controls` | which UI elements exist, where | no |
 | `print` | what the print dialog offers: formats, paper sizes, resolutions, sheet elements | no |
 | `search` | geocoder config | no |
 | `print` | print/export layout options | no |
 | `theme` | design tokens, light/dark | no |
 | `i18n` | locale, string overrides (`overrides: { "<locale>": { "<key>": "<text>" } }`) | no |
-| `permalink` | shareable state in the URL hash (F10.1): view, basemap, layer states, user-added layers; `true` or `{ "param": "map0" }` — opt-in, coexists with host hash routing | no |
+| `permalink` | shareable state in the URL hash (F10.1): view, basemap, layer states, user-added layers; `true` or `{ "param": "map0" }` — opt-in, coexists with host hash routing. Two viewers on one page need **different** `param` values; a second viewer claiming the same one falls back to `map0-2` and says so in the console | no |
 
 ## Full annotated example
 

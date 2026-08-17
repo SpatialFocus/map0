@@ -10,5 +10,6 @@ export interface CoreEvents {
     lngLat: [number, number];
     entries: Array<{ code: string; label: string; text: string }>;
   };
-  error: { message: string; layerId?: string };
+  /** anything that went wrong on the map; `sourceId` is set for MapLibre source/tile errors */
+  error: { message: string; layerId?: string; sourceId?: string };
 }

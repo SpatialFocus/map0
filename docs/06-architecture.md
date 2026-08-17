@@ -91,8 +91,9 @@ v1.x: `ogcapi-features`, `wfs`, `cog`. The adapter registry is a public extensio
    A sentinel layer id marks the basemap/overlay boundary so overlays always stack above basemaps
    and label placement stays sane.
 2. **Z-order model**: the config tree (depth-first order) is the single source of truth; core maps
-   tree order → MapLibre layer order on every change (drag-reorder, add, remove). Groups are a
-   TOC/UI concept only — MapLibre sees a flat, ordered layer list.
+   tree order → MapLibre layer order on every change (drag-reorder, add, remove). The first entry in
+   the tree is the top-most overlay (F2.1), so the mapping is a reversal: core mounts bottom-up.
+   Groups are a TOC/UI concept only — MapLibre sees a flat, ordered layer list.
 
 ### Feature info pipeline (F5)
 

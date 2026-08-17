@@ -43,6 +43,34 @@ export function decodeShareState(encoded: string): ShareState | null {
   }
 }
 
+/** hash parameters currently driven by a live viewer on this page */
+const claimedParams = new Set<string>();
+
+/**
+ * Claim the hash parameter for one viewer. Two viewers writing the same
+ * parameter would overwrite each other's state, and `map0` is the default for
+ * every instance — so a second claim of a name becomes `map0-2`, `map0-3`, …
+ * Share links stay stable as long as the page creates its viewers in a stable
+ * order; give each viewer an explicit `permalink.param` when it does not.
+ */
+export function claimShareParam(param: string): { param: string; release: () => void } {
+  let name = param;
+  for (let n = 2; claimedParams.has(name); n++) name = `${param}-${n}`;
+  if (name !== param) {
+    console.warn(
+      `[map0] permalink parameter "${param}" is already in use by another viewer on this page — ` +
+        `this one uses "${name}". Give each viewer its own "permalink.param" for stable share links.`,
+    );
+  }
+  claimedParams.add(name);
+  return {
+    param: name,
+    release: () => {
+      claimedParams.delete(name);
+    },
+  };
+}
+
 /** read the share param from a URL hash like `#map0=…&other=…` */
 export function readShareParam(hash: string, param: string): string | null {
   const match = new RegExp(`(?:^#|[#&])${param}=([^&]+)`).exec(hash);

@@ -33,13 +33,38 @@ export interface LayerUIState {
   attribution?: string;
 }
 
+/**
+ * Mounting order for the configured tree: bottom-most first, because MapLibre
+ * appends every new layer on top. Reversing here is what makes the config
+ * contract "top of the list = top of the map" (F2.1) true on the map.
+ */
+export function drawOrder(configured: readonly NormalizedLayer[]): NormalizedLayer[] {
+  return [...configured].reverse();
+}
+
+/**
+ * All layers, top-most on the map first. Runtime-added layers (F3) go above the
+ * configured tree — MapLibre puts each new one on top — and the most recently
+ * added one is the top-most of those. This is the order the TOC, the legend and
+ * the feature-info hit test all read.
+ */
+export function stackOrder(
+  configured: readonly NormalizedLayer[],
+  extra: readonly NormalizedLayer[],
+): NormalizedLayer[] {
+  return [...[...extra].reverse(), ...configured];
+}
+
 export class LayerManager {
   readonly state = new Signal<LayerUIState[]>([]);
   private readonly adapters = new Map<string, SourceAdapter>();
   private readonly runtime = new Map<string, { visible: boolean; opacity: number }>();
-  /** layers added at runtime (F3) — rendered after the configured tree, top-most on the map */
+  /** unsubscribe handles for the adapters' status signals, by layer id */
+  private readonly statusSubs = new Map<string, () => void>();
+  /** layers added at runtime (F3) — above the configured tree, top-most on the map */
   private readonly extra: NormalizedLayer[] = [];
   private ctx?: AdapterContext;
+  private readonly onZoom: () => void;
 
   constructor(
     private readonly map: MapLibreMap,
@@ -47,17 +72,19 @@ export class LayerManager {
   ) {
     /* re-evaluate zoom-range hints; only refresh when a layer enters/leaves its range */
     let rangeSignature = "";
-    this.map.on("zoom", () => {
+    this.onZoom = () => {
       const sig = this.allDefs.map((d) => this.inZoomRange(d)).join(",");
       if (sig !== rangeSignature) {
         rangeSignature = sig;
         this.refresh();
       }
-    });
+    };
+    this.map.on("zoom", this.onZoom);
   }
 
+  /** every layer, top-most first */
   private get allDefs(): NormalizedLayer[] {
-    return [...this.cfg.layers, ...this.extra];
+    return stackOrder(this.cfg.layers, this.extra);
   }
 
   private inZoomRange(def: NormalizedLayer): boolean {
@@ -105,14 +132,18 @@ export class LayerManager {
 
   /** adapters that can answer clicks, top-most first, only when visible */
   get queryable(): SourceAdapter[] {
-    return [...this.adapters.values()]
-      .filter((a) => a.featureInfo && (this.runtime.get(a.def.id)?.visible ?? a.def.visible))
-      .reverse();
+    return this.allDefs
+      .map((def) => this.adapters.get(def.id))
+      .filter(
+        (a): a is SourceAdapter =>
+          !!a?.featureInfo && (this.runtime.get(a.def.id)?.visible ?? a.def.visible),
+      );
   }
 
   async mountAll(ctx: AdapterContext): Promise<void> {
     this.ctx = ctx;
-    const defs: NormalizedLayer[] = this.cfg.layers;
+    /* bottom-up: MapLibre appends on top, so the first configured layer lands last */
+    const defs = drawOrder(this.cfg.layers);
     const needsPmtiles = defs.some(
       (d) => d.type === "vector" && typeof d.url === "string" && d.url.startsWith("pmtiles://"),
     );
@@ -122,14 +153,17 @@ export class LayerManager {
       const adapter = createAdapter(def);
       if (!adapter) continue; // validator prevents unknown types; belt & braces
       try {
-        await adapter.mount(ctx); // sequential keeps config order = drawing order
+        await adapter.mount(ctx); // sequential keeps the stack deterministic
       } catch (e) {
         adapter.status.value = "error";
         console.error(`[map0] failed to mount layer "${def.id}"`, e);
       }
       this.adapters.set(def.id, adapter);
       this.runtime.set(def.id, { visible: def.visible, opacity: def.opacity });
-      adapter.status.subscribe(() => this.refresh());
+      this.statusSubs.set(
+        def.id,
+        adapter.status.subscribe(() => this.refresh()),
+      );
     }
     this.refresh();
   }
@@ -153,7 +187,10 @@ export class LayerManager {
     this.extra.push(norm);
     this.adapters.set(norm.id, adapter);
     this.runtime.set(norm.id, { visible: norm.visible, opacity: norm.opacity });
-    adapter.status.subscribe(() => this.refresh());
+    this.statusSubs.set(
+      norm.id,
+      adapter.status.subscribe(() => this.refresh()),
+    );
     this.refresh();
     return norm.id;
   }
@@ -164,11 +201,22 @@ export class LayerManager {
     const adapter = this.adapters.get(id);
     if (idx === -1 || !adapter) return false;
     adapter.unmount();
+    this.statusSubs.get(id)?.();
+    this.statusSubs.delete(id);
     this.extra.splice(idx, 1);
     this.adapters.delete(id);
     this.runtime.delete(id);
     this.refresh();
     return true;
+  }
+
+  /** detach everything this manager registered on the map (the map itself may outlive it) */
+  destroy(): void {
+    this.map.off("zoom", this.onZoom);
+    for (const unsub of this.statusSubs.values()) unsub();
+    this.statusSubs.clear();
+    for (const adapter of this.adapters.values()) adapter.unmount();
+    this.adapters.clear();
   }
 
   setVisibility(id: string, visible: boolean): void {

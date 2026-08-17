@@ -652,9 +652,11 @@ export const componentStyles = css`
     height: 20px;
     font-size: 12px;
   }
+  /* runtime-added layers sit on top of the map, so they head the list (F2.1) */
   .toc-extras {
-    margin-top: 6px;
-    border-top: 1px solid var(--map0-border);
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--map0-border);
+    padding-bottom: 6px;
   }
   .group-label {
     padding: 8px 4px 4px;
