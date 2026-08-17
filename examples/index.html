@@ -161,7 +161,7 @@
 
       <section class="section" id="start">
         <div class="wrap">
-          <div class="sec-head reveal">
+          <div class="sec-head center reveal">
             <p class="kicker">Quick start</p>
             <h2>A styled basemap and a live WMS overlay, in one file.</h2>
             <p>
@@ -186,6 +186,10 @@
             </div>
 
             <div class="aside">
+              <p class="step">the result</p>
+              <p>
+                Live, not a screenshot — the snippet on the left is printed from this element.
+              </p>
               <map0-viewer id="quickstart">
                 <script type="application/json">
                   {
@@ -576,23 +580,6 @@
 
           <div class="cta-row">
             <a class="btn primary" href="/demos/">Open the demo gallery →</a>
-          </div>
-
-          <div class="status reveal">
-            <div class="mark">🚧</div>
-            <div>
-              <h3>Honest status: pre-release</h3>
-              <p>
-                Everything on this page works today against live services, but map0 has not shipped
-                yet. The config schema is v0 and may still change, and there is no npm or CDN
-                package.
-              </p>
-              <p>
-                Until the release: clone the repository, run <code>pnpm build</code>, and copy
-                <code>packages/ui/dist/</code> next to your page — it is a flat folder, deployed as
-                a unit, and the embed stays one script tag.
-              </p>
-            </div>
           </div>
         </div>
       </section>

@@ -365,7 +365,10 @@ figure.code.full pre {
 .split .steps figure.code {
   margin: 0;
 }
-.split .step {
+/* Both columns open with the same small label, so their tops line up — the
+   aside needs its own selector to outrank `.split .aside p` below. */
+.split .steps .step,
+.split .aside .step {
   margin: 10px 0 0;
   font-size: 12px;
   font-weight: 700;
@@ -373,7 +376,8 @@ figure.code.full pre {
   text-transform: uppercase;
   color: var(--accent);
 }
-.split .steps > .step:first-child {
+.split .steps > .step:first-child,
+.split .aside > .step:first-child {
   margin-top: 0;
 }
 .split .aside > :first-child {
@@ -573,35 +577,6 @@ table.compare tbody tr:last-child td:last-child {
 }
 
 /* --------------------------------- status -------------------------------- */
-
-.status {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 16px;
-  align-items: start;
-  margin-top: clamp(56px, 7vw, 88px);
-  padding: 22px 24px;
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: 0 var(--radius) var(--radius) 0;
-  background: var(--surface);
-}
-.status .mark {
-  font-size: 20px;
-  line-height: 1.4;
-}
-.status h3 {
-  margin: 0 0 6px;
-  font-size: 16px;
-}
-.status p {
-  margin: 0 0 8px;
-  font-size: 14.5px;
-  color: var(--muted);
-}
-.status p:last-child {
-  margin-bottom: 0;
-}
 
 /* ---------------------------------- misc --------------------------------- */
 
