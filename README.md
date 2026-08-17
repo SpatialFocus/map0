@@ -8,8 +8,9 @@
 
 **Status:** approaching the M1 milestone — layer tree, WMS/WMTS/vector tiles/GeoJSON, feature info,
 legends, search, measuring, print, permalink, theming and i18n all work against live services.
-Published as an early preview (`map0` 0.0.1 on npm, MIT); APIs and the config schema are still v0
-and will change without a deprecation path until 1.0. See [07-roadmap.md](docs/07-roadmap.md).
+Published as an early preview (`map0-viewer` 0.0.1 on npm, MIT); APIs and the config schema are
+still v0 and will change without a deprecation path until 1.0. See
+[07-roadmap.md](docs/07-roadmap.md).
 
 ## The idea in one paragraph
 
@@ -27,10 +28,10 @@ responsive, themable, accessible.
 ## Using it in a page
 
 ```bash
-npm install map0        # prebuilt bundle, MapLibre included, no dependencies
+npm install map0-viewer   # prebuilt bundle, MapLibre included, no dependencies
 ```
 
-`node_modules/map0/dist/` is a folder you copy next to your page and load with one script tag —
+`node_modules/map0-viewer/dist/` is a folder you copy next to your page and load with one script tag —
 see [packages/map0/README.md](packages/map0/README.md) for the whole integration, and
 [docs/09-engineering-notes.md](docs/09-engineering-notes.md) for how the package is released.
 

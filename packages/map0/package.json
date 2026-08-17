@@ -1,8 +1,9 @@
 {
-  "name": "map0",
+  "name": "map0-viewer",
   "version": "0.0.1",
-  "description": "Embeddable, JSON-configurable web map client built on MapLibre GL JS — one script tag plus one JSON config",
+  "description": "map0 — embeddable, JSON-configurable web map client built on MapLibre GL JS — one script tag plus one JSON config",
   "keywords": [
+    "map0",
     "map",
     "maplibre",
     "webmap",

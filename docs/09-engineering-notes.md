@@ -32,17 +32,22 @@ service adapter, check **both** paths: the dev server (`/demos/*`) and the built
 
 ### Release — the `map0` npm package
 
-`packages/map0` is the only publishable package: the **unscoped** `map0` on npm, containing the
-prebuilt bundle (no dependencies, MapLibre included). The `map0` org is reserved for the day
-`@map0/core` and `@map0/react` become separate installs; the workspace packages stay `private`
-until then, so a stray `pnpm publish -r` cannot leak them.
+`packages/map0` is the only publishable package: **`map0-viewer`** on npm, containing the prebuilt
+bundle (no dependencies, MapLibre included). The folder keeps the product name, the package cannot:
+npm's typosquatting heuristic rejects the unscoped `map0` as too similar to `mcp1`, `hapi`, `tap`
+and `tape` — short names are normalised (`0` reads as *o*) and compared by edit distance, and the
+check is server-side only, so `npm pack`/`--dry-run` will not warn you. The name is unregistered but
+unavailable; only npm support can release it. Scoped names skip the check entirely, which is why the
+`map0` org is reserved for the day `@map0/core` and `@map0/react` become separate installs. The
+workspace packages stay `private` until then, so a stray `pnpm publish -r` cannot leak them.
 
 ```bash
 # 1. version in packages/map0/package.json — npm versions are immutable, and
 #    an unpublish is only possible within 72 h (and then the name is burnt for 24 h)
 pnpm build:npm                  # pnpm build + copy dist without sourcemaps + regenerate notices
 cd packages/map0 && npm pack     # inspect the tarball before it is public
-npm publish                      # from an account with 2FA; the publisher owns the unscoped name
+npm publish --otp=<6 digits>     # the account has 2FA at auth-and-writes: without an OTP the
+                                 # registry answers 403, it does not prompt when a token is in .npmrc
 ```
 
 Two things this has to get right, both of which fail *silently* if it does not:
@@ -59,8 +64,8 @@ Two things this has to get right, both of which fail *silently* if it does not:
   this check.
 
 Ownership: an unscoped package belongs to whoever publishes it first — the personal account that
-ran `npm publish`, not the org. Add a second owner (`npm owner add <user> map0`) so the name does
-not depend on one person's account.
+ran `npm publish`, not the org. Add a second owner (`npm owner add <user> map0-viewer`) so the name
+does not depend on one person's account.
 
 ## 2. Invariants
 

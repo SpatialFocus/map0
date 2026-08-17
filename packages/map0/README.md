@@ -13,11 +13,15 @@ renders straight into the page as a web component — no iframe, no backend, no 
 > [live demos](https://map0.net/demos) run on — but the JavaScript API and the config schema are
 > still v0 and will change without a deprecation path until 1.0. Pin an exact version.
 > TypeScript types are not published yet.
+>
+> The package is called **map0-viewer**: npm's name-similarity rule for short names rejects the
+> unscoped `map0`. The project, the element `<map0-viewer>` and the site
+> [map0.net](https://map0.net) keep the name map0.
 
 ## Install
 
 ```bash
-npm install map0
+npm install map0-viewer
 ```
 
 The package is a prebuilt ES-module bundle. MapLibre is included — there are no dependencies to
@@ -74,7 +78,7 @@ From a module, importing the package registers `<map0-viewer>`; `createMap` is t
 bootstrap for SPAs and framework wrappers:
 
 ```js
-import { createMap } from "map0";
+import { createMap } from "map0-viewer";
 
 const viewer = createMap(document.querySelector("#map"), config);
 ```
@@ -84,7 +88,7 @@ const viewer = createMap(document.querySelector("#map"), config);
 `dist/` is a folder, not a single file, and it has to stay one:
 
 ```bash
-cp -r node_modules/map0/dist ./public/map0     # then load /map0/map0.js
+cp -r node_modules/map0-viewer/dist ./public/map0   # then load /map0/map0.js
 ```
 
 `map0.js` lazy-loads its own chunks, and MapLibre builds its worker URL at **runtime** relative to
