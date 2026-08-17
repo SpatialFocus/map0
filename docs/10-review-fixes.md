@@ -87,8 +87,8 @@ surface at mount time instead of at validation time.
 - Nested shapes are validated: `meta`, `map.hash`, basemap fields, common layer fields
   (`title`/`visible`/`minZoom`/`maxZoom`/`bounds`/`metadata`/`attribution`), `controls.*`,
   `theme.*`, `i18n.*`, `print.*`, `search.*`, `permalink`.
-- Unknown keys are rejected at every level (typos are the most common config bug and used to fail
-  silently).
+- Unknown keys are reported at every level (typos are the most common config bug and used to fail
+  silently) — as **warnings**, not errors; see R9, where this first shipped the wrong way round.
 - **HTTPS policy (N6):** `http://` URLs are rejected — except on loopback hosts, and except when the
   embedding page is itself served over plain `http:` (intranet deployments). The message names the
   offending path.
