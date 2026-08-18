@@ -8,7 +8,7 @@
 
 **Status:** approaching the M1 milestone — layer tree, WMS/WMTS/vector tiles/GeoJSON, feature info,
 legends, search, measuring, print, permalink, theming and i18n all work against live services.
-Published as an early preview (`map0-viewer` 0.0.3 on npm, MIT); APIs and the config schema are
+Published as an early preview (`map0-viewer` 0.0.4 on npm, MIT); APIs and the config schema are
 still v0 and will change without a deprecation path until 1.0. See
 [07-roadmap.md](docs/07-roadmap.md).
 
@@ -36,7 +36,7 @@ npm install map0-viewer   # prebuilt bundle, MapLibre included, no dependencies
 …or straight from a CDN, nothing to install:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/map0-viewer@0.0.3/dist/map0.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/map0-viewer@0.0.4/dist/map0.js"></script>
 ```
 
 See [packages/map0/README.md](packages/map0/README.md) for the whole integration, and
