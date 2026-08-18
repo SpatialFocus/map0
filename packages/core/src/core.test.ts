@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildGetFeatureInfoUrl, buildLegendUrl, buildWmsTileUrl, WmsAdapter } from "./adapters/wms.js";
+import {
+  buildGetFeatureInfoUrl,
+  buildLegendUrl,
+  buildWmsTileUrl,
+  normalizeLegendUrl,
+  WmsAdapter,
+} from "./adapters/wms.js";
 import { expandSimpleStyle } from "./adapters/geojson.js";
 import { deriveFromStyleLayers, entryFromPaint } from "./adapters/legend-derive.js";
 import { escapeHtml, renderFields, renderTemplate } from "./template.js";
@@ -122,8 +128,41 @@ describe("legend", () => {
     if (spec?.kind === "image") {
       expect(spec.url).toContain("REQUEST=GetLegendGraphic");
       expect(spec.url).toContain("LAYER=laerm");
+      /* our standard sizing: 20px icons (GeoServer reads WIDTH/HEIGHT per icon)
+         plus font/dpi options for a crisp downscale in the panel */
+      expect(spec.url).toContain("WIDTH=20");
+      expect(spec.url).toContain("HEIGHT=20");
+      expect(spec.url).toContain("fontSize%3A12");
+      expect(spec.url).toContain("dpi%3A120");
       expect(spec.url).toBe(buildLegendUrl({ url: "https://sdi.example.gv.at/ows", layers: "laerm" }));
     }
+  });
+
+  it("normalizeLegendUrl replaces baked-in width/height with the standard sizing", () => {
+    /* real shape of a GeoServer capabilities LegendURL: the advertised numbers
+       are the TOTAL image size, but replayed as request params they become the
+       per-icon size and the image explodes (282x120 advertised → 544x720 served) */
+    const advertised =
+      "https://geo.example.at/geoserver/ows?service=WMS&request=GetLegendGraphic" +
+      "&format=image%2Fpng&width=282&height=120&layer=oerok%3Afi_ogd_2025_v25";
+    const out = normalizeLegendUrl(advertised);
+    expect(out).toContain("width=20");
+    expect(out).toContain("height=20");
+    expect(out).not.toContain("282");
+    expect(out).not.toContain("120");
+    expect(out).toContain("legend_options=forceLabels%3Aon");
+    expect(out).toContain("dpi%3A120");
+    /* untouched: everything that identifies the legend */
+    expect(out).toContain("layer=oerok%3Afi_ogd_2025_v25");
+    expect(out).toContain("format=image%2Fpng");
+  });
+
+  it("normalizeLegendUrl leaves non-GetLegendGraphic and unparseable URLs alone", () => {
+    const png = "https://e.org/static/legend.png";
+    expect(normalizeLegendUrl(png)).toBe(png);
+    const getmap = "https://e.org/ows?request=GetMap&width=256&height=256";
+    expect(normalizeLegendUrl(getmap)).toBe(getmap);
+    expect(normalizeLegendUrl("not a url")).toBe("not a url");
   });
 
   it("legend: false suppresses, string overrides, entries pass through", () => {

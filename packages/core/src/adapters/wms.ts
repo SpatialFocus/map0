@@ -86,6 +86,16 @@ export function buildGetFeatureInfoUrl(
   });
 }
 
+/* Standard sizing for every GetLegendGraphic request. GeoServer reads
+   WIDTH/HEIGHT as the size of EACH rule icon, not of the whole image as the
+   SLD spec suggests — 20 is its native default. The dpi option (default 91)
+   scales icons *and* text together, so a 2x image downscaled into the legend
+   panel stays crisp instead of blurry; fontSize is in points at that dpi.
+   LEGEND_OPTIONS is GeoServer vendor territory — QGIS Server and MapServer
+   ignore it (and largely WIDTH/HEIGHT too), so the params are harmless there. */
+const LEGEND_ICON_SIZE = "20";
+const LEGEND_OPTIONS = "forceLabels:on;fontAntiAliasing:true;fontSize:12;dpi:120";
+
 /** GetLegendGraphic URL for the legend panel (F4.2). */
 export function buildLegendUrl(def: WmsParams): string {
   return baseAndParams(def, {
@@ -93,9 +103,39 @@ export function buildLegendUrl(def: WmsParams): string {
     FORMAT: "image/png",
     LAYER: def.layers.split(",")[0] ?? def.layers,
     SLD_VERSION: "1.1.0",
-    /* GeoServer vendor option (ignored elsewhere): label every rule, nicer text */
-    LEGEND_OPTIONS: "forceLabels:on;fontAntiAliasing:true",
+    WIDTH: LEGEND_ICON_SIZE,
+    HEIGHT: LEGEND_ICON_SIZE,
+    LEGEND_OPTIONS,
   });
+}
+
+/**
+ * Re-issue a capabilities-advertised GetLegendGraphic URL with our standard
+ * sizing. GeoServer bakes the *total* legend size into the advertised href
+ * (e.g. width=282&height=120), but replayed as request params those numbers
+ * mean per-icon size and the image explodes (observed: 544x720 from a legend
+ * advertised as 282x120). Anything that is not a GetLegendGraphic request
+ * passes through untouched.
+ */
+export function normalizeLegendUrl(raw: string): string {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return raw;
+  }
+  const isLegendGraphic = [...url.searchParams].some(
+    ([k, v]) => k.toLowerCase() === "request" && v.toLowerCase() === "getlegendgraphic",
+  );
+  if (!isLegendGraphic) return raw;
+  for (const key of [...url.searchParams.keys()]) {
+    const k = key.toLowerCase();
+    if (k === "width" || k === "height" || k === "legend_options") url.searchParams.delete(key);
+  }
+  url.searchParams.set("width", LEGEND_ICON_SIZE);
+  url.searchParams.set("height", LEGEND_ICON_SIZE);
+  url.searchParams.set("legend_options", LEGEND_OPTIONS);
+  return url.toString();
 }
 
 export class WmsAdapter extends SourceAdapter<NormalizedWms> {

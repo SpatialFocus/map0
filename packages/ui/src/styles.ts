@@ -440,7 +440,10 @@ export const componentStyles = css`
   /* ------------------------------- legend ------------------------------- */
 
   .legend {
-    width: 236px;
+    /* wide enough to show a typical GetLegendGraphic image (~290px logical
+       width at our standard 20px icons) near its natural size */
+    width: 300px;
+    max-width: calc(100% - 20px);
     max-height: 45%;
     display: flex;
     flex-direction: column;
@@ -1049,8 +1052,10 @@ export const componentStyles = css`
   }
 
   @container map0 (max-width: 480px) {
+    /* not the full width: the map controls keep their top-left column (10px +
+       ~38px buttons + gap), the panel takes the rest of the row */
     .toc {
-      left: 10px;
+      left: 56px;
       right: 10px;
       width: auto;
       max-height: 55%;
@@ -1060,14 +1065,17 @@ export const componentStyles = css`
     .stage[data-search] .toc {
       left: 104px;
     }
-    .basemaps {
-      bottom: 28px;
-    }
     .legend {
       left: 10px;
       right: 10px;
       width: auto;
       max-height: 40%;
+    }
+    /* full-width down here, so a bottom legend must clear the basemap bar
+       (bottom: 34px + 42px bar height + a gap) instead of covering it */
+    .stage:has(.basemaps) .legend[data-pos="bottom-right"],
+    .stage:has(.basemaps) .legend[data-pos="bottom-left"] {
+      bottom: 84px;
     }
   }
 

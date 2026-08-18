@@ -1,6 +1,7 @@
 import type { NormalizedLayer, WmtsLayerDef } from "@map0/schema";
 import { mercatorToLngLat } from "../mercator.js";
 import { loadOgcClient } from "../ogc.js";
+import { normalizeLegendUrl } from "./wms.js";
 import { SourceAdapter, type LegendSpec } from "./types.js";
 
 interface ResourceLinkLike {
@@ -331,7 +332,8 @@ export class WmtsAdapter extends SourceAdapter<NormalizedWmts> {
     const template = makeTemplate(chosen);
 
     const styleInfo = layer.styles.find((s) => s.name === style);
-    this.legendUrl = (styleInfo as { legendUrl?: string } | undefined)?.legendUrl ?? null;
+    const rawLegendUrl = (styleInfo as { legendUrl?: string } | undefined)?.legendUrl;
+    this.legendUrl = rawLegendUrl ? normalizeLegendUrl(rawLegendUrl) : null;
 
     /* Clip requests to what the server serves: outside a regional layer's
        TileMatrixSetLimits GWC answers 400 TileOutOfRange, not an empty tile.
