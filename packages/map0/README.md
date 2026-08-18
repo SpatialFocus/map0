@@ -25,7 +25,24 @@ npm install map0-viewer
 ```
 
 The package is a prebuilt ES-module bundle. MapLibre is included — there are no dependencies to
-install and nothing to configure.
+install and nothing to configure. Copy `node_modules/map0-viewer/dist/` next to your page and load
+`map0.js` from there.
+
+### …or load it from a CDN
+
+Nothing to install or copy — point a script tag at a pinned version:
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/npm/map0-viewer@0.0.2/dist/map0.js"></script>
+```
+
+unpkg serves the same tarball, if you prefer it:
+`https://unpkg.com/map0-viewer@0.0.2/dist/map0.js`.
+
+Both send `Access-Control-Allow-Origin: *`, and the entry resolves its lazy chunks and MapLibre's
+worker relative to itself — so the folder stays a unit on the CDN too, with no configuration on your
+side. Pin the **exact** version: this is a v0, and `@latest` would swap the bundle under your page on
+every release.
 
 ## Use it
 

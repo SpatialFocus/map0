@@ -43,7 +43,21 @@
           <code>node_modules/map0-viewer/dist</code> is the folder you copy. The package name is the
           one npm would give us; the element, the config and this folder are map0.
         </p>
-        <p>What ends up on your web server:</p>
+        <p>
+          If you would rather not host anything, replace that first line with a pinned CDN URL — the
+          element below it stays exactly as it is, and there is nothing to copy onto your server. The
+          entry finds its chunks and MapLibre's worker on the CDN just as it does in your own folder:
+        </p>
+        <pre data-lang="html" data-label="from a CDN">
+          &lt;script type="module"
+                  src="https://cdn.jsdelivr.net/npm/map0-viewer@0.0.2/dist/map0.js"
+          &gt;&lt;/script&gt;
+        </pre>
+        <p>
+          <code>unpkg.com/map0-viewer@0.0.2/dist/map0.js</code> serves the same tarball. Pin the exact
+          version either way: the config schema is still v0.
+        </p>
+        <p>Self-hosted, this is what ends up on your web server:</p>
         <ul class="checks">
           <li><code>map0.js</code> — the client, MapLibre and all UI included</li>
           <li><code>maplibre-gl-worker.mjs</code> and <code>maplibre-gl-shared.mjs</code> — MapLibre loads its worker from separate files next to the bundle</li>

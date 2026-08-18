@@ -68,6 +68,33 @@ Ownership: an unscoped package belongs to whoever publishes it first — the per
 ran `npm publish`, not the org. Add a second owner (`npm owner add <user> map0-viewer`) so the name
 does not depend on one person's account.
 
+#### The CDN release is the npm release
+
+`npm publish` *is* the CDN release: jsDelivr and unpkg mirror the tarball at
+`…/npm/map0-viewer@<version>/dist/map0.js` — versioned, immutable, `Access-Control-Allow-Origin: *`.
+Verified cross-origin against 0.0.1 from a foreign page: the entry, every lazy chunk **and**
+`maplibre-gl-worker.mjs` load from the CDN, 12,849 vector-tile features on screen, no console errors.
+
+What makes that work is MapLibre v6 handling the cross-origin worker itself: a same-origin `Worker`
+is a hard browser rule, so it wraps the absolute worker URL in a one-line blob module
+(`import "<url>"`) and starts *that*. The docs read as if `WORKER_URL` had to be configured for a
+CDN — it does not, as long as the files answer with CORS. Do not "fix" this with a self-hosted worker
+copy; it only recreates the folder-unit problem the bundle already solves.
+
+The docs name **jsDelivr** first and unpkg as the alternative: unpkg is the better-known name from a
+decade of tutorials, but jsDelivr is multi-CDN with documented failover, a purge API and mainland
+China coverage. Both are verified, so the choice is reversible for anyone copying a snippet.
+
+Two things `/standalone/` on map0.net is **not**: versioned, and immutable. It is the demo artefact,
+rebuilt and overwritten by every `pnpm build:site`, `max-age=3600`. `access-control-allow-origin: *`
+in `examples/public/staticwebapp.config.json` makes it *loadable* from a foreign page, which is a
+convenience for anyone copying from the demo, not a distribution channel — a redeploy changes the
+chunk hashes while a consumer's browser still holds the cached entry, and the entry then imports
+chunks that no longer exist. Anyone embedding for real gets a pinned CDN URL. Building a versioned
+`/v<x.y.z>/` path here would mean materialising every supported version at site-build time, because
+an Azure SWA deploy replaces the whole site — which is exactly the service jsDelivr performs for
+free.
+
 ## 2. Invariants
 
 Break one of these and something breaks quietly, usually only in production builds.

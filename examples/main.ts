@@ -6,8 +6,12 @@
  */
 import "@map0/ui";
 import { codeFigure, dedent, enhanceCode } from "./code.js";
+import pkg from "../packages/map0/package.json";
 
 /* ------------------------------- quick start ------------------------------ */
+
+/** The published bundle, pinned — read from the package so it cannot drift. */
+const CDN_URL = `https://cdn.jsdelivr.net/npm/${pkg.name}@${pkg.version}/dist/map0.js`;
 
 function quickStart(): void {
   const host = document.querySelector<HTMLElement>("[data-quickstart]");
@@ -21,8 +25,13 @@ function quickStart(): void {
     .map((line) => `    ${line}`)
     .join("\n");
 
+  /* One snippet, one Copy button, a page that runs: the CDN line belongs in it.
+     Self-hosting only swaps this src for your own folder — that is a developer
+     concern and lives in the README, not on the landing page. */
   const snippet = [
-    `<script type="module" src="/map0/map0.js"></script>`,
+    `<script type="module"`,
+    `        src="${CDN_URL}">`,
+    `</script>`,
     ``,
     `<map0-viewer style="height:520px">`,
     `  <script type="application/json">`,
