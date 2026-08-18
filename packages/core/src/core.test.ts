@@ -565,6 +565,117 @@ describe("wmts", () => {
     expect(tpl).toContain("TILEMATRIXSET=WebMercatorQuad");
     expect(tpl.endsWith("TILEMATRIX={z}&TILEROW={y}&TILECOL={x}")).toBe(true);
   });
+
+  /* GWC answers tiles outside a regional layer's TileMatrixSetLimits with 400
+     TileOutOfRange. Values below are real: layer oerok:fi_ogd_2025_v25 on
+     WebMercatorQuad at geoserver.lebensraumvernetzung.geo-data.space, where a
+     whole-Austria view requested column 32 at z6 (allowed: 33–35) and failed.
+     The default topLeft is exactly as published there: "y x" order (URN axis
+     rules) and print-rounded — the same document lists EPSG:900913 as "x y". */
+  const webMercatorMatrices = (
+    ident: (z: number) => string,
+    topLeft: [number, number] = [2.003750834e7, -2.003750834e7],
+  ) =>
+    Array.from({ length: 25 }, (_, z) => ({
+      identifier: ident(z),
+      scaleDenominator: 5.59082264028717e8 / 2 ** z,
+      topLeft,
+      tileWidth: 256,
+      tileHeight: 256,
+      matrixWidth: 2 ** z,
+      matrixHeight: 2 ** z,
+    }));
+
+  it("derives source coverage from TileMatrixSetLimits", async () => {
+    const { coverageFromLimits } = await import("./adapters/wmts.js");
+    const cov = coverageFromLimits(
+      [
+        { tileMatrix: "0", minTileRow: 0, maxTileRow: 0, minTileCol: 0, maxTileCol: 0 },
+        { tileMatrix: "6", minTileRow: 21, maxTileRow: 22, minTileCol: 33, maxTileCol: 35 },
+        // prettier-ignore
+        { tileMatrix: "24", minTileRow: 5758924, maxTileRow: 5944079, minTileCol: 8825625, maxTileCol: 9191992 },
+      ],
+      webMercatorMatrices(String),
+    );
+    expect(cov.minzoom).toBe(0);
+    expect(cov.maxzoom).toBe(24);
+    /* Austria, snapped outward to the z24 grid (caps bbox 9.3774 46.3656 17.2388 49.0386) */
+    const [w, s, e, n] = cov.bounds!;
+    expect(w).toBeCloseTo(9.3774, 3);
+    expect(s).toBeCloseTo(46.3656, 3);
+    expect(e).toBeCloseTo(17.2388, 3);
+    expect(n).toBeCloseTo(49.0386, 3);
+
+    /* MapLibre's tile cover for these bounds (TileBounds floor/ceil on the
+       mercator fraction) must equal the server's allowed range per level */
+    const mercX = (lng: number) => (180 + lng) / 360;
+    const mercY = (lat: number) =>
+      (180 - (180 / Math.PI) * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360))) / 360;
+    const cover = (z: number) => {
+      const tiles = 2 ** z;
+      return {
+        minCol: Math.floor(mercX(w) * tiles),
+        maxCol: Math.ceil(mercX(e) * tiles) - 1,
+        minRow: Math.floor(mercY(n) * tiles),
+        maxRow: Math.ceil(mercY(s) * tiles) - 1,
+      };
+    };
+    /* the reported failure: column 32 at z6 must not be requested any more */
+    expect(cover(6)).toEqual({ minCol: 33, maxCol: 35, minRow: 21, maxRow: 22 });
+    /* deepest level sits exactly on tile boundaries — the inset keeps float
+       noise from adding out-of-range column 9191993 */
+    // prettier-ignore
+    expect(cover(24)).toEqual({ minCol: 8825625, maxCol: 9191992, minRow: 5758924, maxRow: 5944079 });
+  });
+
+  it("takes the zoom range from which levels the limits list", async () => {
+    const { coverageFromLimits } = await import("./adapters/wmts.js");
+    /* classic GWC gridset: prefixed ids and "x y" topLeft — must not be swapped */
+    const matrices = webMercatorMatrices(
+      (z) => `EPSG:900913:${z}`,
+      [-20037508.342789244, 20037508.342789244],
+    );
+    const cov = coverageFromLimits(
+      [
+        { tileMatrix: "EPSG:900913:6", minTileRow: 21, maxTileRow: 22, minTileCol: 33, maxTileCol: 35 },
+        { tileMatrix: "EPSG:900913:12", minTileRow: 1413, maxTileRow: 1448, minTileCol: 2165, maxTileCol: 2240 },
+      ],
+      matrices,
+    );
+    expect(cov.minzoom).toBe(6);
+    expect(cov.maxzoom).toBe(12);
+    expect(cov.bounds![0]).toBeCloseTo(10.283, 2); // z12 col 2165 west edge
+  });
+
+  it("yields no coverage from absent or unusable limits", async () => {
+    const { coverageFromLimits } = await import("./adapters/wmts.js");
+    const matrices = webMercatorMatrices(String);
+    expect(coverageFromLimits([], matrices)).toEqual({});
+    /* unknown matrix id, NaN from empty XML elements, inverted range */
+    expect(
+      coverageFromLimits(
+        [
+          { tileMatrix: "nope:6", minTileRow: 1, maxTileRow: 2, minTileCol: 1, maxTileCol: 2 },
+          { tileMatrix: "3", minTileRow: NaN, maxTileRow: NaN, minTileCol: 0, maxTileCol: 1 },
+          { tileMatrix: "4", minTileRow: 5, maxTileRow: 4, minTileCol: 0, maxTileCol: 1 },
+        ],
+        matrices,
+      ),
+    ).toEqual({});
+  });
+
+  it("drops a degenerate clip but keeps the zoom range", async () => {
+    const { coverageFromLimits } = await import("./adapters/wmts.js");
+    /* a topLeft no orientation can rescue → bounds refused, zoom range kept */
+    const broken = webMercatorMatrices(String, [-4.1e7, -4.1e7]);
+    const cov = coverageFromLimits(
+      [{ tileMatrix: "6", minTileRow: 21, maxTileRow: 22, minTileCol: 33, maxTileCol: 35 }],
+      broken,
+    );
+    expect(cov.bounds).toBeUndefined();
+    expect(cov.minzoom).toBe(6);
+    expect(cov.maxzoom).toBe(6);
+  });
 });
 
 describe("mercator", () => {

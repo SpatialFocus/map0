@@ -195,6 +195,31 @@ Vector tiles from such a service are a `vector` layer, not a `wmts` one. GWC eve
 TileJSON per style (`…/wmts/rest/<layer>/<style>/tilejson/pbf`) whose `tiles` template is already in
 XYZ order, so it drops straight into a `vector` layer with `sourceLayer` from `vector_layers[].id`.
 
+### 4.1c Out-of-range tiles are a 400, not an empty picture
+
+GWC restricts a regional layer to per-level row/column ranges (`TileMatrixSetLimits`) and answers
+anything outside with **400 TileOutOfRange** — a whole-Austria view of an Austria-sized layer
+requested column 32 at z6 where the range starts at 33, and every viewport tile outside the extent
+was an error. QGIS is unaffected because it honours the limits; MapLibre has no per-level concept,
+but doesn't need one: for a quadtree pyramid the footprint of the *deepest* level's limits lies
+within every coarser level's footprint, so one source `bounds` derived from it keeps the tile cover
+equal to the server's range at **every** level (verified against all 25 published levels). Two traps
+en route:
+
+- The coverage edges sit exactly on tile boundaries, and capabilities coordinates are print-rounded
+  (GeoServer emits `2.003750834E7`, ~3 mm off). Without an inset, MapLibre's floor/ceil cover tips
+  over into a neighbouring out-of-range tile at the deepest level; `coverageFromLimits` pulls the
+  edges in by 1 % of a tile (min 2 cm).
+- **`TopLeftCorner` axis order is a coin flip.** One and the same GeoServer document publishes
+  `EPSG:900913` as "x y" and `WebMercatorQuad` as "y x" (URN axis rules). Read as-is, the clip
+  degenerates to a corner of the world and the layer silently disappears — found live, not in
+  review. A real top-left keeps the matrix inside the world square, so the adapter tries both
+  readings and keeps the one that fits; anything still degenerate is discarded in favour of the
+  WGS84 bbox, because a wrong clip (empty map) is far worse than no clip (wasted 400s).
+
+The zoom range rides along for free: levels missing from the limits are TileOutOfRange territory
+too (GWC `zoomStart`/`zoomStop`), so they bound the source's `minzoom`/`maxzoom`.
+
 ### 4.2 What Vienna's OGD services actually support
 
 Verified while building the demos, useful as a reference for what "typical" looks like:

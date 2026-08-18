@@ -1,4 +1,5 @@
 import type { NormalizedLayer, WmtsLayerDef } from "@map0/schema";
+import { mercatorToLngLat } from "../mercator.js";
 import { loadOgcClient } from "../ogc.js";
 import { SourceAdapter, type LegendSpec } from "./types.js";
 
@@ -51,6 +52,122 @@ export function pickRasterLinks<T extends { format: string }>(links: T[], wanted
   const raster = links.filter((r) => isRasterTileFormat(r.format));
   const exact = wanted ? raster.filter((r) => r.format === wanted) : [];
   return exact.length > 0 ? exact : raster;
+}
+
+export interface MatrixSetLimitLike {
+  tileMatrix: string;
+  minTileRow: number;
+  maxTileRow: number;
+  minTileCol: number;
+  maxTileCol: number;
+}
+
+export interface TileMatrixLike {
+  identifier: string;
+  scaleDenominator: number;
+  topLeft: [number, number];
+  tileWidth: number;
+  tileHeight: number;
+  matrixWidth: number;
+  matrixHeight: number;
+}
+
+export interface WmtsCoverage {
+  /** [west, south, east, north] of the served tile rectangle */
+  bounds?: [number, number, number, number];
+  /** first / last zoom level the server has tiles for */
+  minzoom?: number;
+  maxzoom?: number;
+}
+
+/** OGC standardized rendering pixel size: scaleDenominator × this = resolution in m/px */
+const OGC_PIXEL_M = 0.00028;
+
+/** half-width of the EPSG:3857 world square in metres */
+const MERC_MAX = 20037508.342789244;
+
+/**
+ * TopLeftCorner axis order is a coin flip in the wild: one GeoServer document
+ * publishes EPSG:900913 as "x y" and WebMercatorQuad as "y x" (URN axis
+ * rules). A real top-left corner keeps the whole matrix inside the world
+ * square, so try both readings and keep the one that fits; as-given wins a
+ * tie. Wrong pick would mean a degenerate clip — an empty map, not a 400.
+ */
+function orientTopLeft(m: TileMatrixLike, spanX: number, spanY: number): [number, number] {
+  const LIMIT = MERC_MAX * 1.01;
+  const fits = (x: number, y: number): boolean =>
+    Math.abs(x) <= LIMIT &&
+    Math.abs(y) <= LIMIT &&
+    x + m.matrixWidth * spanX <= LIMIT &&
+    y - m.matrixHeight * spanY >= -LIMIT;
+  const [a, b] = m.topLeft;
+  if (!fits(a, b) && fits(b, a)) return [b, a];
+  return [a, b];
+}
+
+/**
+ * What the server will actually serve, from the layer's TileMatrixSetLimits.
+ *
+ * GeoWebCache answers any tile outside a regional layer's per-level row/column
+ * range with **400 TileOutOfRange** instead of an empty tile, so the source
+ * must not request them in the first place. MapLibre can't express per-level
+ * limits, but for a quadtree pyramid it doesn't need to: the geographic
+ * footprint of the *deepest* level's limits (the layer extent snapped outward
+ * to the finest tile grid) lies within every coarser level's footprint, so a
+ * source `bounds` derived from it never produces an out-of-range request.
+ *
+ * The zoom range comes from which levels are listed at all — a level missing
+ * from the limits is TileOutOfRange territory too (GWC zoomStart/zoomStop).
+ *
+ * `matrices` must be sorted by zoom (index = {z}, largest scale denominator
+ * first), same as the template mapping. Returns `{}` when no usable limit
+ * matches a known matrix identifier.
+ */
+export function coverageFromLimits(
+  limits: MatrixSetLimitLike[],
+  matrices: TileMatrixLike[],
+): WmtsCoverage {
+  const zOf = new Map(matrices.map((m, z) => [m.identifier, z]));
+  let minzoom: number | undefined;
+  let maxzoom: number | undefined;
+  let deepest: { z: number; limit: MatrixSetLimitLike } | undefined;
+  for (const limit of limits) {
+    const z = zOf.get(limit.tileMatrix);
+    /* tolerate garbage entries (NaN from empty elements, inverted ranges) */
+    if (z === undefined) continue;
+    if (!(limit.minTileCol <= limit.maxTileCol) || !(limit.minTileRow <= limit.maxTileRow)) continue;
+    if (minzoom === undefined || z < minzoom) minzoom = z;
+    if (maxzoom === undefined || z > maxzoom) maxzoom = z;
+    if (!deepest || z > deepest.z) deepest = { z, limit };
+  }
+  if (!deepest) return {};
+
+  const m = matrices[deepest.z]!;
+  const { limit } = deepest;
+  const spanX = m.tileWidth * m.scaleDenominator * OGC_PIXEL_M;
+  const spanY = m.tileHeight * m.scaleDenominator * OGC_PIXEL_M;
+  const [originX, originY] = orientTopLeft(m, spanX, spanY);
+  /* The edges land exactly on tile boundaries, where MapLibre's floor/ceil
+     tile cover would request a neighbouring out-of-range tile over float
+     noise — or over the ~5 mm print rounding of capabilities coordinates
+     (GeoServer emits "2.003750834E7"). Pull the edges in by 1% of a tile,
+     at least 2 cm: invisible on the ground, and the cover equals the
+     server's range at every level. */
+  const insetX = Math.max(spanX / 100, 0.02);
+  const insetY = Math.max(spanY / 100, 0.02);
+  const [west, south] = mercatorToLngLat(
+    originX + limit.minTileCol * spanX + insetX,
+    originY - (limit.maxTileRow + 1) * spanY + insetY,
+  );
+  const [east, north] = mercatorToLngLat(
+    originX + (limit.maxTileCol + 1) * spanX - insetX,
+    originY - limit.minTileRow * spanY - insetY,
+  );
+  /* a clip that is wrong is far worse than no clip (it blanks the layer) —
+     refuse anything degenerate and let the caller fall back to the bbox.
+     The zoom range stays: it never depends on the corner coordinates. */
+  if (!(west < east && south < north)) return { minzoom, maxzoom };
+  return { bounds: [west, south, east, north], minzoom, maxzoom };
 }
 
 export interface WmtsTemplateParts {
@@ -215,9 +332,14 @@ export class WmtsAdapter extends SourceAdapter<NormalizedWmts> {
 
     const styleInfo = layer.styles.find((s) => s.name === style);
     this.legendUrl = (styleInfo as { legendUrl?: string } | undefined)?.legendUrl ?? null;
-    if (!this.def.bounds && layer.latLonBoundingBox) {
-      this.def.bounds = layer.latLonBoundingBox as [number, number, number, number];
-    }
+
+    /* Clip requests to what the server serves: outside a regional layer's
+       TileMatrixSetLimits GWC answers 400 TileOutOfRange, not an empty tile.
+       The WGS84 bbox stands in for services that publish no limits. */
+    const coverage = coverageFromLimits(link.limits ?? [], matrices);
+    const capsBounds = layer.latLonBoundingBox as [number, number, number, number] | undefined;
+    if (!this.def.bounds) this.def.bounds = capsBounds ?? coverage.bounds;
+    const clip = coverage.bounds ?? capsBounds;
 
     const tileSize =
       (matrices[0] as { tileWidth?: number } | undefined)?.tileWidth === 512 ? 512 : 256;
@@ -225,7 +347,9 @@ export class WmtsAdapter extends SourceAdapter<NormalizedWmts> {
       type: "raster",
       tiles: [template],
       tileSize,
-      maxzoom: matrices.length - 1,
+      ...(clip ? { bounds: clip } : {}),
+      ...(coverage.minzoom ? { minzoom: coverage.minzoom } : {}),
+      maxzoom: coverage.maxzoom ?? matrices.length - 1,
       ...(this.def.attribution ? { attribution: this.def.attribution } : {}),
     });
     map.addLayer({
