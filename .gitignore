@@ -12,6 +12,9 @@ build/
 # Generated demo bundle (created by `pnpm demo:standalone`)
 examples/public/standalone/
 
+# npm pack output (inspected before publish, never committed)
+*.tgz
+
 # E2E screenshot artifacts
 e2e/shots/
 
