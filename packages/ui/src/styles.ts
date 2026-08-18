@@ -1084,11 +1084,36 @@ export const componentStyles = css`
     z-index: 4;
   }
 
-  /* Our own control buttons (print, measure, share) draw their SVG with
-     currentColor, while MapLibre's built-ins are background images on chrome
-     that stays light in both themes. Without this the dark theme's text colour
-     paints our icons white on a white button. */
+  /* MapLibre ships its control chrome light-only; retint it with our tokens so
+     the button groups follow the theme like every other panel. */
+  .maplibregl-ctrl-group {
+    background: var(--map0-bg);
+    box-shadow: var(--map0-shadow);
+  }
+  .maplibregl-ctrl-group button + button {
+    border-top-color: var(--map0-border);
+  }
+  :host([data-theme="dark"]) .maplibregl-ctrl button:not(:disabled):hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Our own control buttons (print, measure, share, home) draw their SVG with
+     currentColor and follow the theme directly... */
   .maplibregl-ctrl-group button svg {
+    color: var(--map0-fg);
+  }
+  /* ...while MapLibre's built-ins are background-image SVGs with baked-in
+     colours (#333, active blue). Invert them for dark chrome; the hue-rotate
+     keeps the geolocate/globe active blue blue instead of turning it orange. */
+  :host([data-theme="dark"]) .maplibregl-ctrl button .maplibregl-ctrl-icon {
+    filter: invert(1) hue-rotate(180deg);
+  }
+
+  /* Scale bar and attribution keep MapLibre's translucent white chrome in both
+     themes, so their text must not follow the theme either — otherwise dark
+     mode paints light text on the white badge. Links in there are already
+     pinned dark by MapLibre; this pins the plain text and separators too. */
+  .maplibregl-ctrl-attrib {
     color: #333;
   }
 `;
