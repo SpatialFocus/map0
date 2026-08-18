@@ -148,8 +148,8 @@ describe("legend", () => {
     const out = normalizeLegendUrl(advertised);
     expect(out).toContain("width=20");
     expect(out).toContain("height=20");
-    expect(out).not.toContain("282");
-    expect(out).not.toContain("120");
+    expect(out).not.toContain("width=282");
+    expect(out).not.toContain("height=120");
     expect(out).toContain("legend_options=forceLabels%3Aon");
     expect(out).toContain("dpi%3A120");
     /* untouched: everything that identifies the legend */
