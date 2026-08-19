@@ -8,8 +8,8 @@
 
 **M0 (walking skeleton) is complete. M1 (MVP) is close** — the map, the layer tree, feature info,
 legends, print, search, measuring and the whole configuration mechanism work against live Austrian
-SDI services. What is left is mostly polish and packaging: a published JSON Schema, an accessibility
-pass, and an actual npm/CDN release.
+SDI services, and the package is published (`map0-viewer` on npm, usable via the jsDelivr CDN).
+What is left is mostly polish: a published JSON Schema and an accessibility pass.
 
 | Area | Status |
 |---|---|
@@ -24,7 +24,7 @@ pass, and an actual npm/CDN release.
 | Configuration | ✅ one document, validation with JSON-path errors (unknown keys, unique ids, https policy), `extends`, theming, i18n + overrides · 🟡 published JSON Schema |
 | Performance | ✅ 23 KB page tier, engine and features load on demand, CI budget |
 | Accessibility | 🟡 keyboard operation, focus trap, reduced motion · ⬜ audit, DOM-mirrored results |
-| Packaging | ✅ MIT licence, name, npm package `map0` (prebuilt bundle + third-party notices) · 🟡 built bundle + demo site · ⬜ CDN release |
+| Packaging | ✅ MIT licence, name, npm package `map0-viewer` published (prebuilt bundle + third-party notices), CDN via jsDelivr, demo site at map0.net · ⬜ TypeScript types |
 
 ## M0 — Walking skeleton ✅
 
@@ -68,7 +68,8 @@ pass, and an actual npm/CDN release.
 - ⬜ **Accessibility pass** — audit, keyboard TOC review, DOM-mirrored feature results (N4)
 - ⬜ **Mobile popup as bottom sheet** below 640 px (F5.5)
 - ⬜ **TOC filter box** for configs with many layers (F2.7)
-- 🟡 **npm package** `map0` (prebuilt bundle, `pnpm build:npm`) · ⬜ CDN build, TypeScript types, install docs (N11)
+- ✅ **npm package** `map0-viewer` published (prebuilt bundle, `pnpm build:npm`), CDN via
+  jsDelivr, install docs in the package README · ⬜ TypeScript types (N11)
 - ✅ **License (MIT) and name (map0)** decided (O-01, O-02) · ⬜ repo governance (O-07)
 - ⬜ **Visual regression** on the demo pages (N9)
 - ✅ **Deterministic browser smoke test in CI** — element lifecycle, z-order and the built bundle,
