@@ -1,0 +1,37 @@
+{
+  "$schema": "https://unpkg.com/release-it@21/schema/release-it.json",
+  "git": {
+    "requireBranch": "main",
+    "requireCleanWorkingDir": true,
+    "requireUpstream": true,
+    "commitMessage": "chore(release): map0-viewer ${version}",
+    "tagName": "v${version}",
+    "tagAnnotation": "map0 ${version} (published as map0-viewer)",
+    "push": true
+  },
+  "github": {
+    "release": true,
+    "releaseName": "v${version}",
+    "assets": ["map0-viewer-${version}.tgz"]
+  },
+  "npm": {
+    "publish": true
+  },
+  "plugins": {
+    "@release-it/conventional-changelog": {
+      "preset": { "name": "conventionalcommits" },
+      "parserOpts": { "issuePrefixes": ["GH-"] },
+      "infile": "../../CHANGELOG.md",
+      "header": "# Changelog\n\nReleases of the `map0-viewer` npm package. Generated from the\n[conventional commits](https://www.conventionalcommits.org) by `pnpm release` (release-it) —\ndo not edit by hand."
+    }
+  },
+  "hooks": {
+    "before:init": ["pnpm -w run typecheck", "pnpm -w run test"],
+    "after:bump": [
+      "node ../../scripts/bump-version-refs.mjs ${latestVersion} ${version}",
+      "pnpm -w run build:npm",
+      "npm pack",
+      "node ../../e2e/verify-tarball.mjs map0-viewer-${version}.tgz"
+    ]
+  }
+}

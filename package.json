@@ -16,13 +16,16 @@
     "serve": "vite preview --config examples/vite.config.ts",
     "demo:standalone": "pnpm build && node -e \"const fs=require('node:fs');fs.rmSync('examples/public/standalone',{recursive:true,force:true});fs.cpSync('packages/ui/dist','examples/public/standalone',{recursive:true})\"",
     "size": "node scripts/check-size.mjs",
+    "release": "node scripts/release.mjs",
     "typecheck": "tsc --build",
     "test": "vitest run",
     "smoke": "node e2e/smoke.mjs",
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "^12.0.0",
     "playwright": "^1.62.1",
+    "release-it": "^21.0.2",
     "typescript": "^5.6.0",
     "vite": "^6.0.0",
     "vitest": "^3.0.0"

@@ -15,6 +15,7 @@ pnpm build && pnpm smoke        # browser smoke test on the BUILT bundle, networ
 pnpm build && pnpm size         # library bundle + the size budget
 pnpm demo:standalone            # build + copy dist next to the standalone demo page
 pnpm build:npm                  # assemble the publishable `map0` package (§release)
+pnpm release                    # the whole release: version, changelog, verify, publish (§release)
 node e2e/verify-demos.mjs       # every demo page, headless, with screenshots
 node e2e/verify-demos.mjs wms   # …or one
 ```
@@ -42,22 +43,44 @@ unavailable; only npm support can release it. Scoped names skip the check entire
 `map0` org is reserved for the day `@map0/core` and `@map0/react` become separate installs. The
 workspace packages stay `private` until then, so a stray `pnpm publish -r` cannot leak them.
 
+The release is one command, run from a clean `main` (release-it + `@release-it/conventional-changelog`,
+configured in `packages/map0/.release-it.json`; `scripts/release.mjs` runs it in `packages/map0` —
+that package.json carries the published version, the root one is a private 0.0.0 — and feeds it a
+`GITHUB_TOKEN` from the gh CLI's keyring login):
+
 ```bash
-# 1. version in packages/map0/package.json — npm versions are immutable, and
-#    an unpublish is only possible within 72 h (and then the name is burnt for 24 h)
-pnpm build:npm                  # pnpm build + copy dist without sourcemaps + regenerate notices
-cd packages/map0 && npm pack     # inspect the tarball before it is public
-npm publish --otp=<6 digits>     # the account has 2FA at auth-and-writes: without an OTP the
-                                 # registry answers 403, it does not prompt when a token is in .npmrc
+pnpm release                     # add --dry-run to watch without touching anything
 ```
 
-Two things this has to get right, both of which fail *silently* if it does not:
+What it does, in order — any failing step aborts before anything is public:
+
+1. gate: `pnpm typecheck` + `pnpm test`;
+2. proposes the bump from the conventional commits since the last tag (`fix:` → patch,
+   `feat:` → minor, `BREAKING CHANGE` → major — confirm or override interactively) and writes the
+   new section into `CHANGELOG.md`;
+3. `scripts/bump-version-refs.mjs` moves the CDN/prose version references in both READMEs and the
+   standalone demo page — reference counts are asserted, a reworded sentence fails the release;
+4. `pnpm build:npm` (bundle without sourcemaps + regenerated notices) and `npm pack`;
+5. `e2e/verify-tarball.mjs` — the folder-is-the-unit gate, see below;
+6. `npm publish` (the account has 2FA at auth-and-writes — release-it prompts for the OTP;
+   npm versions are immutable, an unpublish is only possible within 72 h and burns the name for 24 h);
+7. release commit + annotated tag `v<version>`, push, and a **GitHub release** with the changelog
+   section as notes and the verified `.tgz` attached as asset.
+
+Changelog fine print: issue references in commit messages only count as `GH-<n>` — with the default
+`#<n>` prefix the parser turned a `#333` grey and the `#dem` URL fragment in commit bodies into
+dead issue links. The initial CHANGELOG.md was backfilled from the tag history with the same preset
+(2026-08-19), as were the GitHub releases for v0.0.1–v0.0.5.
+
+Two things a release has to get right, both of which fail *silently* if it does not:
 
 - **The folder is the unit.** `dist/` ships `map0.js`, its lazy chunks and MapLibre's three files
-  side by side (§4.4). Verify the **packed tarball**, not `packages/ui/dist`: unpack it over
-  `examples/public/standalone/` and load `/demos/standalone.html`, which then exercises exactly the
-  files a consumer gets. A vector-tile basemap is the real test — a missing worker file still paints
-  raster layers.
+  side by side (§4.4). Verify the **packed tarball**, not `packages/ui/dist` — automated in
+  `e2e/verify-tarball.mjs` (hook step 5, or by hand: `node e2e/verify-tarball.mjs <tgz>`): it
+  unpacks the tarball over `examples/public/standalone/`, loads `/demos/standalone.html` (which
+  then exercises exactly the files a consumer gets) and asserts rendered **vector-tile** features —
+  a missing worker file still paints raster layers — plus the COG config, because the COG decoder
+  is a lazy chunk and lazy-chunk resolution is what regresses between dev server and bundle.
 - **Third-party notices are an obligation.** `scripts/build-npm.mjs` reads the build's sourcemaps to
   find every package compiled into the bundle and reproduces each licence in full. A new bundled
   dependency whose npm tarball ships no licence text (pmtiles, today) **fails the build** until its

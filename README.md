@@ -10,7 +10,7 @@
 info, legends, search, measuring, print, permalink, theming and i18n all work against live services.
 Published as an early preview (`map0-viewer` 0.0.5 on npm, MIT); APIs and the config schema are
 still v0 and will change without a deprecation path until 1.0. See
-[07-roadmap.md](docs/07-roadmap.md).
+[07-roadmap.md](docs/07-roadmap.md) and the [CHANGELOG](CHANGELOG.md).
 
 ## The idea in one paragraph
 
@@ -69,6 +69,7 @@ pnpm test                       # unit tests (Vitest)
 pnpm typecheck                  # strict TypeScript project build
 pnpm build                      # library bundle → packages/ui/dist/
 pnpm demo:standalone            # build + copy the bundle for the standalone demo page
+pnpm release                    # version, changelog, npm publish, GitHub release (docs/09 §release)
 node e2e/verify-demos.mjs       # headless smoke run over every demo, with screenshots
 node e2e/verify-demos.mjs wms   # …or just one (dev server must be running)
 ```
