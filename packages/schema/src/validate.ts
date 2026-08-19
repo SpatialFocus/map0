@@ -104,7 +104,7 @@ const LAYER_KEYS: Record<string, string[]> = {
   ],
   wmts: [...LAYER_COMMON_KEYS, "url", "layer", "matrixSet", "style", "format"],
   raster: [...LAYER_COMMON_KEYS, "url", "tileSize"],
-  cog: [...LAYER_COMMON_KEYS, "url", "color"],
+  cog: [...LAYER_COMMON_KEYS, "url", "color", "hillshade"],
   geojson: [...LAYER_COMMON_KEYS, "data", "style", "cluster", "popup", "hover", "promoteId"],
   vector: [...LAYER_COMMON_KEYS, "url", "sourceLayer", "style", "popup", "hover"],
 };
@@ -511,6 +511,21 @@ function validateLayers(
       case "cog":
         if (typeof layer.url !== "string")
           err(`${p}.url`, 'a "cog" layer needs a "url" (Cloud Optimized GeoTIFF in EPSG:3857)');
+        if (layer.color !== undefined && layer.hillshade !== undefined && layer.hillshade !== false)
+          err(`${p}.hillshade`, '"color" and "hillshade" are mutually exclusive — pick one rendering');
+        expectToggleObject(
+          layer.hillshade,
+          `${p}.hillshade`,
+          err,
+          ["exaggeration", "illuminationDirection", "shadowColor", "highlightColor", "accentColor"],
+          (o) => {
+            expectNumber(o.exaggeration, `${p}.hillshade.exaggeration`, err, 0, 1);
+            expectNumber(o.illuminationDirection, `${p}.hillshade.illuminationDirection`, err, 0, 359);
+            expectString(o.shadowColor, `${p}.hillshade.shadowColor`, err);
+            expectString(o.highlightColor, `${p}.hillshade.highlightColor`, err);
+            expectString(o.accentColor, `${p}.hillshade.accentColor`, err);
+          },
+        );
         if (layer.color !== undefined) {
           if (!isObject(layer.color)) {
             err(`${p}.color`, 'color must be { "scheme", "min", "max", "continuous"?, "reverse"? }');

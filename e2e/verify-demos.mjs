@@ -216,6 +216,16 @@ if (targets.includes("cog")) {
     legend.kind === "entries" && legend.entries >= 5 && legend.canZoom === true,
     `${legend.entries} entries, canZoom: ${legend.canZoom}`,
   );
+  const hs = await page.evaluate(() => {
+    const map = document.querySelector("map0-viewer").api?.map;
+    const src = map?.getStyle()?.sources["m0s-dgm"];
+    return { srcType: src?.type, url: src?.url, layerType: map?.getLayer("m0l-dgm")?.type };
+  });
+  record(
+    "cog · DEM renders as a hillshade layer on a raster-dem source",
+    hs.srcType === "raster-dem" && hs.url?.endsWith("#dem") && hs.layerType === "hillshade",
+    `${hs.srcType} / ${hs.layerType}`,
+  );
   await page.close();
 }
 

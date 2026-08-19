@@ -271,6 +271,17 @@ TileJSONs happened to carry nothing offensive, so this slept until the ICGC cont
 - geotiff.js (plus lerc/pako decoders) rides in the lazy cog chunk — configs without a cog layer
   never load it. `lerc@3` ships no licence text in its tarball → fallback entry in
   `scripts/build-npm.mjs` (same mechanism as pmtiles).
+- **Hillshade has no opacity paint property.** `hillshade: …` renders `#dem` (Terrain-RGB) into a
+  `raster-dem` source with a `hillshade` layer — and the TOC opacity slider maps to
+  `hillshade-exaggeration` (base = the configured exaggeration) because that is the only usable
+  intensity knob.
+- The demo DEM (`examples/public/data/bev-dgm25-grossglockner-3857.tif`, ~3 MB) is a cut of the
+  BEV 25 m terrain model (CC BY 4.0): the original `data.bev.gv.at` file is EPSG:31287 **and** its
+  server sends no `Access-Control-Allow-Origin`, so it cannot be used in place. Recipe:
+  `gdalwarp -of COG -t_srs EPSG:3857 -te <mercator bounds> -tr 36 36 -r bilinear -ot Int16
+  -dstnodata -32768 -co COMPRESS=DEFLATE -co PREDICTOR=2 /vsicurl/<url> out.tif`. Pick a nodata
+  outside the data range — a COG with **no** declared nodata treats 0 as transparent (protocol
+  behaviour), which on a DEM would punch holes at sea level.
 
 ### 4.4 The alias that broke coordinates in the built bundle only
 

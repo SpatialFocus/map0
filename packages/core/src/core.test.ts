@@ -97,16 +97,20 @@ describe("cog", () => {
   it("builds the #color fragment with modifiers", () => {
     expect(
       buildCogUrl("https://example.org/dem.tif", {
-        scheme: "BrewerSpectral7",
-        min: 1.7,
-        max: 1.8,
-        continuous: true,
-        reverse: true,
+        color: { scheme: "BrewerSpectral7", min: 1.7, max: 1.8, continuous: true, reverse: true },
       }),
     ).toBe("cog://https://example.org/dem.tif#color:BrewerSpectral7,1.7,1.8,c-");
     expect(
-      buildCogUrl("https://example.org/dem.tif", { scheme: "CartoEarth", min: 0, max: 100 }),
+      buildCogUrl("https://example.org/dem.tif", {
+        color: { scheme: "CartoEarth", min: 0, max: 100 },
+      }),
     ).toBe("cog://https://example.org/dem.tif#color:CartoEarth,0,100");
+  });
+
+  it("builds the #dem fragment for hillshade", () => {
+    expect(buildCogUrl("https://example.org/dgm.tif", { dem: true })).toBe(
+      "cog://https://example.org/dgm.tif#dem",
+    );
   });
 
   it("derives one legend entry per discrete class, with value ranges", () => {

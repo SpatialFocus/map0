@@ -52,8 +52,8 @@ a deliberate exception to the "wait for 1.0" gate in the roadmap: the API surfac
 (0.9.2 released 2026-08-17), and the whole dependency loads as a lazy chunk only when a config
 contains a cog layer. Consequence of the pin: review the changelog before any bump; `getCogMetadata`
 is documented as unstable upstream. EPSG:3857-only fits D-02 (the protocol does not reproject; the
-adapter fails fast with the projection in the error). DEM/hillshade (`#dem`) stays open until
-terrain (F1.8).
+adapter fails fast with the projection in the error). DEM **hillshade** shipped the same day
+(`hillshade` key, `#dem` → raster-dem source + hillshade layer); 3D terrain itself stays with F1.8.
 
 Requirement/priority tables in [03-requirements.md](03-requirements.md) and the layer type matrix in
 [04-configuration.md](04-configuration.md) are updated accordingly.

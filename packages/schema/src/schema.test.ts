@@ -64,6 +64,39 @@ describe("validateConfig", () => {
     expect(r.errors).toEqual([]);
   });
 
+  it("accepts a cog hillshade layer, rejects color + hillshade together", () => {
+    const ok = validateConfig({
+      ...minimal,
+      layers: [
+        {
+          type: "cog",
+          url: "https://example.org/dgm.tif",
+          hillshade: { exaggeration: 0.6, illuminationDirection: 315 },
+        },
+      ],
+    });
+    expect(ok.valid).toBe(true);
+
+    const r = validateConfig({
+      ...minimal,
+      layers: [
+        {
+          type: "cog",
+          url: "https://example.org/dgm.tif",
+          color: { scheme: "CartoEarth", min: 0, max: 100 },
+          hillshade: true,
+        },
+      ],
+    });
+    expect(r.errors.some((e) => e.path === "$.layers[0].hillshade")).toBe(true);
+
+    const bad = validateConfig({
+      ...minimal,
+      layers: [{ type: "cog", url: "https://example.org/dgm.tif", hillshade: { exaggeration: 2 } }],
+    });
+    expect(bad.errors.some((e) => e.path === "$.layers[0].hillshade.exaggeration")).toBe(true);
+  });
+
   it("flags a broken cog layer with precise paths", () => {
     const r = validateConfig({
       ...minimal,

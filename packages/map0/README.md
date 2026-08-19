@@ -137,7 +137,7 @@ silently does nothing.
 ## What is in the config
 
 Layer sources: WMS, WMTS, XYZ/raster, vector tiles, PMTiles, GeoJSON (with clustering), and COG —
-Cloud Optimized GeoTIFF as RGB imagery or single-band color ramps. Plus a
+Cloud Optimized GeoTIFF as RGB imagery, single-band color ramps or DEM hillshade. Plus a
 layer tree with groups, legends (`"auto"` derives them from the service), feature info with HTML
 templates, hover, search, measuring, coordinate readout in projected CRS, print/PDF export,
 permalinks, `extends` for shared base configs, CSS-variable theming, and per-language label

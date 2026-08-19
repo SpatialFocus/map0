@@ -15,18 +15,19 @@
         <h1>Cloud Optimized GeoTIFF</h1>
         <p class="lede">
           A raster file on plain storage, read directly by the browser — no tile server, no
-          server-side rendering. HTTP range requests fetch only the tiles in view. Two overlays
-          here: an interpolated single-band surface rendered through a color ramp, and an RGB
-          orthophoto.
+          server-side rendering. HTTP range requests fetch only the tiles in view. Three overlays
+          here: a hillshade computed from the BEV elevation model of the Großglockner region, an
+          interpolated single-band surface rendered through a color ramp, and an RGB orthophoto.
         </p>
       </div>
 
       <map0-viewer config-src="/configs/cog.map0.json"></map0-viewer>
       <p class="demo-note">
-        <strong>Try it:</strong> the legend shows the color ramp derived from the
-        <code>color</code> config. Use <em>zoom to layer</em> on the orthophoto — it sits over
-        Igualada, a town away — and watch the network tab: only small byte ranges of the 50&nbsp;MB
-        file are ever fetched.
+        <strong>Try it:</strong> the opening view shades the Hohe Tauern from a plain
+        3&nbsp;MB GeoTIFF — drag the opacity slider, which scales the shading intensity. The other
+        two overlays sit in Catalonia: use <em>zoom to layer</em> on the orthophoto and watch the
+        network tab — only small byte ranges of the 50&nbsp;MB file are ever fetched. The legend
+        shows the color ramp derived from the <code>color</code> config.
       </p>
 
       <section class="doc">
@@ -34,6 +35,7 @@
         <ul class="checks">
           <li>A <code>cog</code> layer needs nothing but a URL — bounds and zoom range come from the file's own header</li>
           <li><code>color</code> maps a single band onto a named ramp (ColorBrewer/CARTOColors), discrete classes or continuous</li>
+          <li><code>hillshade</code> renders a single-band DEM as relief shading (exaggeration, light direction, colors)</li>
           <li>The legend panel derives its entries from the color ramp automatically</li>
           <li>The decoder (geotiff.js, ~150 KB) loads on demand — configs without a COG layer never pay for it</li>
         </ul>
@@ -57,7 +59,7 @@
 
       <section class="doc">
         <h2>Configuration</h2>
-        <pre data-src="/configs/cog.map0.json" data-label="cog.map0.json" data-emphasise="&quot;cog&quot;,&quot;color&quot;,scheme,continuous"></pre>
+        <pre data-src="/configs/cog.map0.json" data-label="cog.map0.json" data-emphasise="&quot;cog&quot;,&quot;color&quot;,&quot;hillshade&quot;,scheme,continuous"></pre>
       </section>
 
       <section class="doc">
@@ -72,8 +74,11 @@
         <p>
           The protocol behind this layer type is
           <a href="https://github.com/geomatico/maplibre-cog-protocol" rel="noopener">@geomatico/maplibre-cog-protocol</a>
-          (pre-1.0, pinned): RGB and grayscale imagery plus single-band color ramps today; DEM
-          hillshading is on the map0 roadmap.
+          (pre-1.0, pinned): RGB and grayscale imagery, single-band color ramps and DEM hillshading.
+          The hillshade above is the 25&nbsp;m BEV terrain model, warped once to EPSG:3857 and cut
+          down to this region (<code>gdalwarp -of COG</code>) — the original
+          <a href="https://data.bev.gv.at/download/DGM/" rel="noopener">open-data file</a> is
+          EPSG:31287 and its server sends no CORS headers, so it cannot be read in place.
         </p>
       </section>
     </main>

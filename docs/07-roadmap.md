@@ -13,7 +13,7 @@ pass, and an actual npm/CDN release.
 
 | Area | Status |
 |---|---|
-| Data sources | ✅ WMS, WMTS, vector tiles/PMTiles, GeoJSON, COG (RGB + single-band ramps), style & raster basemaps · ⬜ WFS, OGC API Features (deferred to v1.x per D-03) |
+| Data sources | ✅ WMS, WMTS, vector tiles/PMTiles, GeoJSON, COG (RGB, single-band ramps, hillshade), style & raster basemaps · ⬜ WFS, OGC API Features (deferred to v1.x per D-03) |
 | Layer tree | ✅ groups, visibility, opacity, status, zoom hints, zoom-to-layer, metadata links, runtime add/remove · ⬜ drag reorder, filter box, radio groups |
 | Feature info | ✅ GetFeatureInfo + vector query, templates, field tables, multi-hit, hover, highlight, coordinates · ⬜ mobile bottom sheet |
 | Legend | ✅ service, style-derived, hand-written; in print |
@@ -82,10 +82,11 @@ pass, and an actual npm/CDN release.
 - ⬜ **Terrain** (F1.8)
 - ⬜ **Auth hooks** for protected services (C8)
 - ⬜ **React wrapper** (`@map0/react`)
-- ✅ **COG** layers (2026-08-19) — `type: "cog"`: RGB/grayscale imagery plus single-band color
-  ramps with auto-derived legend, bounds from the file header, decoder loaded on demand
-  (@geomatico/maplibre-cog-protocol, adopted at 0.9.x — see D-03 update) · ⬜ DEM/hillshade
-  (`#dem` mode, together with terrain F1.8)
+- ✅ **COG** layers (2026-08-19) — `type: "cog"`: RGB/grayscale imagery, single-band color
+  ramps with auto-derived legend, and DEM hillshade (`hillshade` key → raster-dem + hillshade
+  layer); bounds from the file header, decoder loaded on demand
+  (@geomatico/maplibre-cog-protocol, adopted at 0.9.x — see D-03 update) · 3D terrain itself
+  stays with F1.8
 
 ## M2 — Ecosystem
 

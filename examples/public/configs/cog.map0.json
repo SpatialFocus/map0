@@ -4,26 +4,38 @@
     "title": "Cloud Optimized GeoTIFF",
     "description": "COG overlays read directly from static storage — no tile server."
   },
-  "map": { "center": [0.501427, 41.656126], "zoom": 15 },
+  "map": { "center": [12.75, 47.1], "zoom": 11 },
   "basemaps": [
+    {
+      "id": "grau",
+      "title": "basemap.at Grey",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at",
+      "default": true
+    },
     {
       "id": "gris",
       "title": "ICGC Grey",
       "type": "style",
       "url": "https://geoserveis.icgc.cat/contextmaps/icgc_mapa_base_gris.json",
-      "attribution": "© Institut Cartogràfic i Geològic de Catalunya",
-      "default": true
-    },
-    {
-      "id": "topo",
-      "title": "ICGC Topographic",
-      "type": "style",
-      "url": "https://geoserveis.icgc.cat/contextmaps/icgc_mapa_estandard.json",
       "attribution": "© Institut Cartogràfic i Geològic de Catalunya"
     },
     { "id": "none", "title": "None", "type": "empty" }
   ],
   "layers": [
+    {
+      "id": "dgm",
+      "type": "cog",
+      "title": "Hillshade Großglockner (BEV DGM)",
+      "url": "/data/bev-dgm25-grossglockner-3857.tif",
+      "hillshade": { "exaggeration": 0.6 },
+      "attribution": "Geländemodell © BEV, data.bev.gv.at (CC BY 4.0)",
+      "metadata": {
+        "url": "https://data.bev.gv.at/download/DGM/",
+        "title": "BEV Digitales Geländemodell (Open Data)"
+      }
+    },
     {
       "id": "kriging",
       "type": "cog",

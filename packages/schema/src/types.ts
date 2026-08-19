@@ -179,12 +179,26 @@ export interface CogColorDef {
   reverse?: boolean;
 }
 
+/** hillshade rendering options for a "cog" DEM layer (MapLibre hillshade paint) */
+export interface CogHillshadeDef {
+  /** shading intensity 0..1; default 0.5 (also scaled by the layer's opacity) */
+  exaggeration?: number;
+  /** light azimuth in degrees clockwise from north; default 335 */
+  illuminationDirection?: number;
+  /** CSS colors */
+  shadowColor?: string;
+  highlightColor?: string;
+  accentColor?: string;
+}
+
 export interface CogLayerDef extends LayerCommon {
   type: "cog";
   /** Cloud Optimized GeoTIFF URL — must be in EPSG:3857 (no client-side reprojection) */
   url: string;
   /** omit for RGB/grayscale imagery; set to render a single band through a color ramp */
   color?: CogColorDef;
+  /** render a single-band DEM as hillshading (mutually exclusive with `color`) */
+  hillshade?: boolean | CogHillshadeDef;
 }
 
 /** flat paint-property object (circle-*, line-*, fill-*) */

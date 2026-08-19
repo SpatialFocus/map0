@@ -1,4 +1,4 @@
-import type { CogColorDef, CogLayerDef, NormalizedLayer } from "@map0/schema";
+import type { CogColorDef, CogHillshadeDef, CogLayerDef, NormalizedLayer } from "@map0/schema";
 import { SourceAdapter, type LegendEntry, type LegendSpec } from "./types.js";
 
 type NormalizedCog = CogLayerDef & NormalizedLayer & { type: "cog" };
@@ -20,8 +20,13 @@ async function loadCogProtocol(): Promise<CogModule> {
   return cog;
 }
 
-/** cog:// source URL, with the protocol's #color fragment for single-band ramps */
-export function buildCogUrl(url: string, color?: CogColorDef): string {
+/**
+ * cog:// source URL, with the protocol's #color fragment for single-band ramps
+ * or #dem for Terrain-RGB encoding (hillshade).
+ */
+export function buildCogUrl(url: string, opts?: { color?: CogColorDef; dem?: boolean }): string {
+  if (opts?.dem) return `cog://${url}#dem`;
+  const color = opts?.color;
   if (!color) return `cog://${url}`;
   const modifiers = `${color.continuous ? "c" : ""}${color.reverse ? "-" : ""}`;
   const parts = [color.scheme, String(color.min), String(color.max)];
@@ -129,13 +134,44 @@ export class CogAdapter extends SourceAdapter<NormalizedCog> {
       this.rampLegend = cogLegendEntries(scale, this.def.color);
     }
 
+    const hs: CogHillshadeDef | null = this.def.hillshade
+      ? this.def.hillshade === true
+        ? {}
+        : this.def.hillshade
+      : null;
+
     map.addSource(this.srcId, {
-      type: "raster",
+      type: hs ? "raster-dem" : "raster",
       /* the protocol answers this URL with a TileJSON (tiles, bounds, maxzoom) */
-      url: buildCogUrl(this.def.url, this.def.color),
+      url: buildCogUrl(this.def.url, { color: this.def.color, dem: !!hs }),
       tileSize: 256, // the protocol always renders 256-px tiles
+      ...(hs ? { encoding: "mapbox" } : {}), // #dem emits the Mapbox Terrain-RGB scheme
       ...(this.def.attribution ? { attribution: this.def.attribution } : {}),
-    });
+    } as never);
+
+    if (hs) {
+      const exaggeration = hs.exaggeration ?? 0.5;
+      map.addLayer({
+        id: this.lyrId,
+        type: "hillshade",
+        source: this.srcId,
+        ...(this.def.minZoom !== undefined ? { minzoom: this.def.minZoom } : {}),
+        ...(this.def.maxZoom !== undefined ? { maxzoom: this.def.maxZoom } : {}),
+        paint: {
+          "hillshade-exaggeration": exaggeration,
+          ...(hs.illuminationDirection !== undefined
+            ? { "hillshade-illumination-direction": hs.illuminationDirection }
+            : {}),
+          ...(hs.shadowColor ? { "hillshade-shadow-color": hs.shadowColor } : {}),
+          ...(hs.highlightColor ? { "hillshade-highlight-color": hs.highlightColor } : {}),
+          ...(hs.accentColor ? { "hillshade-accent-color": hs.accentColor } : {}),
+        },
+      });
+      /* hillshade has no opacity paint property — scale the exaggeration instead */
+      this.opacityEntries = [[this.lyrId, "hillshade-exaggeration", exaggeration]];
+      return;
+    }
+
     map.addLayer({
       id: this.lyrId,
       type: "raster",
