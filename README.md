@@ -122,3 +122,7 @@ MIT — see [LICENSE](LICENSE). The published bundle contains third-party code (
 verbatim, others compiled in); their licences are reproduced in
 [packages/map0/THIRD-PARTY-NOTICES.md](packages/map0/THIRD-PARTY-NOTICES.md), regenerated on every
 `pnpm build:npm`.
+
+----
+
+Made with :heart: by [Spatial Focus](https://spatial-focus.net/)

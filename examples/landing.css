@@ -1,7 +1,6 @@
 /* Landing page only. Loaded after demo.css and reusing its tokens and chrome. */
 
 :root {
-  --wrap: 1180px;
   --tint: color-mix(in srgb, var(--accent) 10%, transparent);
   --tint-strong: color-mix(in srgb, var(--accent) 18%, transparent);
   --accent-line: color-mix(in srgb, var(--accent) 45%, transparent);
@@ -11,24 +10,12 @@ body {
   overflow-x: hidden;
 }
 
-/* the landing page bleeds full width; every section brings its own .wrap */
+/* the landing page bleeds full width; every section brings its own .wrap
+   (the .wrap utility itself lives in demo.css) */
 body.landing main {
   max-width: none;
   margin: 0;
   padding: 0 0 clamp(56px, 7vw, 88px);
-}
-body.landing footer.site {
-  max-width: none;
-  /* not `0 auto`: as a flex item on the 404 page auto margins would shrink the
-     footer to its content instead of spanning the page */
-  margin: 0;
-  padding: 24px 0;
-}
-
-.wrap {
-  max-width: var(--wrap);
-  margin: 0 auto;
-  padding: 0 24px;
 }
 
 /* ---------------------------------- hero --------------------------------- */
@@ -599,22 +586,6 @@ body.error-page {
 body.error-page .hero {
   flex: 1 0 auto;
   padding-top: clamp(56px, 12vh, 140px);
-}
-
-body.landing footer.site .wrap {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px 14px;
-}
-.footmark {
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--fg);
-}
-.footmark span {
-  color: var(--accent);
 }
 
 /* the .js gate keeps the page readable if the module never runs */

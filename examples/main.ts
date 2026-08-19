@@ -71,8 +71,32 @@ function reveal(): void {
   });
 }
 
+/* -------------------------------- scroll spy ------------------------------ */
+
+/* The topbar marks "Demos" as current on demo pages (set at build time). On the
+   landing page, the section links get the same treatment while their section is
+   on screen, so the highlight logic feels consistent across the site. */
+function scrollSpy(): void {
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('.topbar nav a[href^="/#"]')]
+    .map((a) => ({ a, section: document.getElementById(new URL(a.href).hash.slice(1)) }))
+    .filter((x): x is { a: HTMLAnchorElement; section: HTMLElement } => x.section !== null);
+  if (links.length === 0) return;
+
+  const update = (): void => {
+    /* current = the section spanning the line just below the sticky topbar */
+    for (const { a, section } of links) {
+      const r = section.getBoundingClientRect();
+      if (r.top <= 96 && r.bottom > 96) a.setAttribute("aria-current", "location");
+      else a.removeAttribute("aria-current");
+    }
+  };
+  addEventListener("scroll", update, { passive: true });
+  update();
+}
+
 /* ---------------------------------- boot ---------------------------------- */
 
 quickStart();
 reveal();
+scrollSpy();
 void enhanceCode();

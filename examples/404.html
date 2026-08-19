@@ -11,14 +11,7 @@
     <!-- deliberately no module script: a 404 should cost a stylesheet, not a map engine -->
   </head>
   <body class="landing error-page">
-    <div class="topbar">
-      <a class="brand" href="/">map<span>0</span></a>
-      <nav>
-        <a href="/#features">Features</a>
-        <a href="/#start">Quick start</a>
-        <a href="/demos/">All demos</a>
-      </nav>
-    </div>
+    <!-- the shared topbar is injected by vite.config.ts on every page -->
 
     <header class="hero">
       <div class="wrap">
@@ -36,11 +29,6 @@
       </div>
     </header>
 
-    <footer class="site">
-      <div class="wrap">
-        <span class="footmark">map<span>0</span></span>
-        <span>The web map client you configure, not code.</span>
-      </div>
-    </footer>
+    <!-- the shared footer is injected by vite.config.ts on every page -->
   </body>
 </html>

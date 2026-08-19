@@ -1,5 +1,6 @@
 /**
- * Shared shell for every demo page: top bar, gallery grid and prev/next pager.
+ * Shared shell for every demo page: gallery grid and prev/next pager (topbar
+ * and footer are injected by vite.config.ts on every page of the site).
  * Code blocks come from ../code.ts, which the landing page uses as well.
  */
 import { DEMOS, GROUPS, type Demo } from "./demos.js";
@@ -11,17 +12,6 @@ import { enhanceCode } from "../code.js";
 if (document.body.dataset.client !== "bundle") await import("@map0/ui");
 
 /* --------------------------------- chrome -------------------------------- */
-
-function topbar(current?: Demo): string {
-  return `
-    <div class="topbar">
-      <a class="brand" href="/">map<span>0</span></a>
-      <nav>
-        <a href="/demos/" ${current ? "" : 'aria-current="page"'}>All demos</a>
-        ${current ? `<a href="/demos/${current.id}.html" aria-current="page">${current.title}</a>` : ""}
-      </nav>
-    </div>`;
-}
 
 function pager(current: Demo): string {
   const i = DEMOS.findIndex((d) => d.id === current.id);
@@ -54,7 +44,6 @@ function gallery(): string {
 
 const id = document.body.dataset.demo;
 const current = DEMOS.find((d) => d.id === id);
-document.body.insertAdjacentHTML("afterbegin", topbar(current));
 
 const galleryHost = document.querySelector("[data-gallery]");
 if (galleryHost) galleryHost.innerHTML = gallery();
@@ -63,10 +52,5 @@ if (current) {
   const main = document.querySelector("main");
   main?.insertAdjacentHTML("beforeend", pager(current));
 }
-
-document.body.insertAdjacentHTML(
-  "beforeend",
-  `<footer class="site">map0 · demo services: basemap.at, Stadt Wien OGD, MapLibre demo tiles</footer>`,
-);
 
 void enhanceCode();

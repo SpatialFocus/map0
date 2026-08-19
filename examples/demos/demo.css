@@ -14,6 +14,7 @@
   --radius: 14px;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --wrap: 1180px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -33,6 +34,12 @@
   box-sizing: border-box;
 }
 
+html {
+  /* short pages have no scrollbar; without a reserved gutter the centered
+     chrome shifts sideways when navigating between short and long pages */
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   background: var(--page-bg);
@@ -46,19 +53,31 @@ a {
   color: var(--accent);
 }
 
+/* -------------------------------- layout -------------------------------- */
+
+/* the one content width of the site; the topbar and footer keep their
+   full-bleed background and constrain their content with it */
+.wrap {
+  max-width: var(--wrap);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
 /* ------------------------------- top bar -------------------------------- */
 
 .topbar {
   position: sticky;
   top: 0;
   z-index: 50;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 10px 24px;
+  padding: 10px 0;
   background: color-mix(in srgb, var(--surface) 88%, transparent);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
+}
+.topbar .wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .brand {
@@ -74,7 +93,8 @@ a {
 
 .topbar nav {
   display: flex;
-  gap: 14px;
+  align-items: center;
+  gap: 24px;
   margin-left: auto;
   font-size: 14px;
 }
@@ -87,11 +107,16 @@ a {
 .topbar nav a[aria-current] {
   color: var(--accent);
 }
-
-/* ------------------------------- layout --------------------------------- */
+.topbar nav a.gh {
+  display: inline-flex;
+}
+.topbar nav a.gh svg {
+  display: block;
+  fill: currentColor;
+}
 
 main {
-  max-width: 1120px;
+  max-width: var(--wrap);
   margin: 0 auto;
   padding: 32px 24px 80px;
 }
@@ -359,21 +384,52 @@ a.card p {
   letter-spacing: 0.07em;
 }
 
+/* Shared footer, injected on every page by the site build (vite.config.ts). */
 footer.site {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 24px;
+  /* `margin: 0`, not `0 auto`: as a flex item on the 404 page auto margins
+     would shrink the footer to its content instead of spanning the page */
+  margin: 0;
+  padding: 24px 0;
   color: var(--muted);
   font-size: 12.5px;
   border-top: 1px solid var(--border);
+}
+footer.site .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+}
+footer.site a.footmark {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  text-decoration: none;
+}
+.footmark span {
+  color: var(--accent);
+}
+.footnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-left: auto;
+}
+.footnav a {
+  color: inherit;
+  text-underline-offset: 2px;
+}
+.footnav a:hover {
+  color: var(--accent);
 }
 
 @media (max-width: 640px) {
   main {
     padding: 24px 16px 60px;
   }
-  .topbar {
-    padding: 10px 16px;
+  .topbar .wrap {
+    padding: 0 16px;
   }
   map0-viewer {
     height: 66vh;
