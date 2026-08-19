@@ -88,8 +88,13 @@ async function inlineTileJsonSources(style: StyleSpecification, styleUrl: string
       const tj = (await res.json()) as { tiles?: string[]; [k: string]: unknown };
       if (!Array.isArray(tj.tiles)) return;
       const base = res.url || s.url;
-      for (const [key, value] of Object.entries(tj)) {
-        if (!(key in s)) (s as Record<string, unknown>)[key] = value;
+      /* only keys that are valid on this MapLibre source type — a TileJSON also
+         carries metadata (tilejson, name, center, scheme on raster-dem, …) that
+         style validation rejects as unknown, making MapLibre refuse the WHOLE style */
+      const keys = ["minzoom", "maxzoom", "bounds", "attribution"];
+      keys.push(s.type === "raster-dem" ? "encoding" : "scheme");
+      for (const key of keys) {
+        if (!(key in s) && key in tj) (s as Record<string, unknown>)[key] = tj[key];
       }
       s.tiles = tj.tiles.map((t) => absolutizeUrl(t, base));
       delete s.url;

@@ -245,6 +245,18 @@ parser for this stack, and it works well — but:
 - In Vite dev it belongs in `optimizeDeps.include`; otherwise the first dialog open triggers dep
   discovery and reloads the page mid-flow.
 
+### 4.3b Inlining a TileJSON can poison the whole style
+
+The basemap pipeline inlines TileJSON sources (see 05 §field notes: relative `tiles` templates).
+The first version copied **every** TileJSON key into the source object — and a TileJSON legally
+carries metadata (`tilejson`, `name`, `center`, `description`, …) that the MapLibre style spec does
+not allow on a source. MapLibre v6 then refuses the **entire style** ("unknown property"), the map
+never fires `style.load`, and the viewer sits behind its loading veil forever. basemap.at's
+TileJSONs happened to carry nothing offensive, so this slept until the ICGC contextmaps styles
+(COG demo) hit it. Fix in `inlineTileJsonSources`: copy only keys valid for the source *type* —
+`minzoom`/`maxzoom`/`bounds`/`attribution` plus `scheme` (vector/raster) or `encoding`
+(raster-dem, where `scheme` itself is illegal).
+
 ### 4.4 The alias that broke coordinates in the built bundle only
 
 The `proj4` → stub alias (added for ogc-client's optional peer) predated the coordinate readout. In
