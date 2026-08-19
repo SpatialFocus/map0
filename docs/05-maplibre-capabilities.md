@@ -32,7 +32,7 @@
 | **OGC API Features** | via GeoJSON | Cleanest modern fit: `/items` is GeoJSON natively; bbox + paging. |
 | OGC API Tiles/Maps | via templates | WebMercatorQuad template plugs into vector/raster sources directly. |
 | **PMTiles** | protocol plugin | [pmtiles](https://github.com/protomaps/PMTiles) v4.5 (active, 2026-08) via `addProtocol` — first-class. |
-| COG | protocol plugin | [@geomatico/maplibre-cog-protocol](https://github.com/geomatico/maplibre-cog-protocol) v0.9 (active but <1.0) — treat as beta/S-priority. |
+| COG | protocol plugin | [@geomatico/maplibre-cog-protocol](https://github.com/geomatico/maplibre-cog-protocol) — **adopted 2026-08-19** as `type: "cog"` at 0.9.x (pinned ^0.9.2, lazy chunk; see D-03 update). EPSG:3857 only, no reprojection. |
 
 **Key helper library:** [@camptocamp/ogc-client](https://github.com/camptocamp/ogc-client) — capabilities
 parsing for WMS, WFS, WMTS, OGC API Records/Features, TMS, STAC (worker-based). Actively developed
@@ -114,7 +114,8 @@ Canvas maps have structural a11y limits; map0 must add its own layer:
 
 - **Custom-CRS roadmap item** — would change the national-grid story; keep `crs` extensible in schema (D-02).
 - **MLT** (MapLibre Tiles, experimental `encoding:'mlt'`) — don't build on it yet.
-- COG protocol maturing toward 1.0.
+- COG protocol maturing toward 1.0 — map0 adopted 0.9.x (pinned); review the changelog on every
+  bump, `getCogMetadata` is documented as unstable upstream.
 - **deck.gl interop** (`@deck.gl/mapbox` `MapboxOverlay`, overlaid/interleaved) — candidate for an
   optional `deck` big-data layer adapter in M3; complement, not engine alternative
   (see [02-landscape.md](02-landscape.md) §Engine choice).

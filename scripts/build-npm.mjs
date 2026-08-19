@@ -36,6 +36,10 @@ const FALLBACK_LICENSES = {
     file: "pmtiles.LICENSE",
     source: "https://github.com/protomaps/PMTiles/blob/main/LICENSE",
   },
+  lerc: {
+    file: "lerc.LICENSE",
+    source: "https://github.com/Esri/lerc/blob/master/LICENSE",
+  },
 };
 
 const die = (message) => {

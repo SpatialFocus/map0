@@ -49,6 +49,33 @@ describe("validateConfig", () => {
     expect(r.errors.some((e) => e.path.endsWith(".opacity"))).toBe(true);
   });
 
+  it("accepts a cog layer with a color ramp", () => {
+    const r = validateConfig({
+      ...minimal,
+      layers: [
+        {
+          type: "cog",
+          url: "https://example.org/data.tif",
+          color: { scheme: "BrewerSpectral7", min: 1.7, max: 1.8, continuous: true },
+        },
+      ],
+    });
+    expect(r.valid).toBe(true);
+    expect(r.errors).toEqual([]);
+  });
+
+  it("flags a broken cog layer with precise paths", () => {
+    const r = validateConfig({
+      ...minimal,
+      layers: [{ type: "cog", color: { min: 5, max: 5, continuous: "yes" } }],
+    });
+    const paths = r.errors.map((e) => e.path);
+    expect(paths).toContain("$.layers[0].url");
+    expect(paths).toContain("$.layers[0].color.scheme");
+    expect(paths).toContain("$.layers[0].color.max"); // max must be > min
+    expect(paths).toContain("$.layers[0].color.continuous");
+  });
+
   it("rejects unknown layer types", () => {
     const r = validateConfig({ ...minimal, layers: [{ type: "wfs", url: "x" }] });
     expect(r.errors.some((e) => e.path === "$.layers[0].type")).toBe(true);

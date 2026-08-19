@@ -186,6 +186,19 @@ inside the config it would gate. It mirrors `<img loading>`:
       ]
     },
     {
+      "id": "dgm",
+      "type": "cog",                        // Cloud Optimized GeoTIFF, fetched via range requests
+      "title": "Geländehöhe",
+      "url": "https://data.example.gv.at/dgm_3857.tif",  // must be EPSG:3857 (no reprojection)
+      "color": {                            // omit for RGB imagery; single band → color ramp
+        "scheme": "BrewerSpectral7",        // ColorBrewer/CARTOColors ramp name (see below)
+        "min": 100, "max": 3000,            // data values at the ends of the ramp
+        "continuous": true,                 // default false = discrete classes
+        "reverse": true
+      },                                    // legend swatches are derived from this ramp
+      "opacity": 0.8
+    },
+    {
       "id": "districts",
       "type": "ogcapi-features",            // also: "wfs" with typeNames/version
       "title": "Bezirksgrenzen",
@@ -273,6 +286,7 @@ Result: full-quality map with default controls (zoom, attribution, fullscreen), 
 | `raster` | XYZ/WMTS-REST template | basemap or overlay |
 | `wms` | WMS 1.1.1/1.3.0 GetMap | tiled raster source; `info` enables GetFeatureInfo; `legend:"auto"` → GetLegendGraphic |
 | `wmts` | capabilities URL + `layer` (+ optional `matrixSet`/`style`/`format`) | REST & KVP; image tiles only — picks the first WebMercator matrix set (D-02) and the first advertised image format, bounds/legend from capabilities (legend URLs are re-issued with map0's standard icon size — GeoServer bakes misleading width/height into the advertised href). Requests are clipped to the layer's `TileMatrixSetLimits` (GWC answers outside tiles with 400 TileOutOfRange, not an empty tile). For a WMTS that also serves `application/vnd.mapbox-vector-tile`, use `vector` with the service's TileJSON to style it client-side. |
+| `cog` | Cloud Optimized GeoTIFF URL | raster read straight from storage via HTTP range requests (protocol plugin, loaded on demand). RGB/grayscale by default; `color` renders a single band through a named ColorBrewer/CARTOColors ramp — `{ scheme, min, max, continuous?, reverse? }` — and the legend panel derives its swatches from it. Bounds and zoom range come from the file header ("zoom to layer" needs no config). The file **must be EPSG:3857** (no client-side reprojection — the layer errors with the offending EPSG code); nodata pixels render transparent, and a file with no declared nodata treats 0 as transparent. |
 | `geojson` | URL or inline | clustering, simplified style or full style layers |
 | `vector` | TileJSON / `{z}/{x}/{y}` / `pmtiles://` | needs `sourceLayer` + style layers |
 | `wfs` | WFS 2.0 GetFeature → GeoJSON | **v1.x** (deferred per D-03); paging/limits; styled like `geojson` |
@@ -282,6 +296,15 @@ Result: full-quality map with default controls (zoom, attribution, fullscreen), 
 **Simplified style:** flat paint-property object (`circle-*`, `line-*`, `fill-*`, auto-derived per
 geometry). **Full control:** pass a MapLibre `style: [ …layer objects… ]` array instead. Both are
 valid; the simple form covers 80 % of admin needs, the full form keeps experts unblocked.
+
+**COG color-ramp names** (`color.scheme`): the ramps are the standard ColorBrewer and CARTOColors
+palettes, named `Brewer<Palette><classes>` (`BrewerSpectral9`, `BrewerYlGnBu5`, … — 3 up to 9, 11
+or 12 classes depending on the palette) and `Carto<Palette>` (`CartoEarth`, `CartoTemps`, … — always
+7 colors). The protocol library renders every ramp on one page — the
+[color scheme cheatsheet](https://labs.geomatico.es/maplibre-cog-protocol/color-cheatsheet.html) —
+and the palettes themselves are documented at [colorbrewer2.org](https://colorbrewer2.org) and
+[carto.com/carto-colors](https://carto.com/carto-colors/). A name map0 does not recognise fails
+fast: the layer goes to error state with *"… is not a supported color scheme"*.
 
 ## Runtime layer management (F3)
 

@@ -6,8 +6,8 @@
 >
 > **[map0.net](https://map0.net)** — site and [live demos](https://map0.net/demos).
 
-**Status:** approaching the M1 milestone — layer tree, WMS/WMTS/vector tiles/GeoJSON, feature info,
-legends, search, measuring, print, permalink, theming and i18n all work against live services.
+**Status:** approaching the M1 milestone — layer tree, WMS/WMTS/vector tiles/GeoJSON/COG, feature
+info, legends, search, measuring, print, permalink, theming and i18n all work against live services.
 Published as an early preview (`map0-viewer` 0.0.4 on npm, MIT); APIs and the config schema are
 still v0 and will change without a deprecation path until 1.0. See
 [07-roadmap.md](docs/07-roadmap.md).
@@ -52,12 +52,12 @@ pnpm install
 pnpm dev
 ```
 
-Then open **http://localhost:5173/demos — the demo gallery**. Nineteen single-topic demos, each
+Then open **http://localhost:5173/demos — the demo gallery**. Twenty single-topic demos, each
 with a live map against real services, a written explanation, and the exact config that produced it:
 
 | Group | Demos |
 |---|---|
-| Data sources | WMS · WMTS · Vector tiles · GeoJSON & clustering |
+| Data sources | WMS · WMTS · Vector tiles · GeoJSON & clustering · Cloud Optimized GeoTIFF |
 | Map features | Popups & hover · Legend · Search · Measure · Coordinates · Print & export · Add layers · Share & permalink · Globe |
 | Configuration | Minimal config · Theming · Languages · Config inheritance |
 | Integration | Script tag embed (built bundle — run `pnpm demo:standalone` first) · Lazy loading |
@@ -77,8 +77,8 @@ node e2e/verify-demos.mjs wms   # …or just one (dev server must be running)
 
 ```
 packages/schema   config types v0, validation (JSON-path errors), defaults
-packages/core     headless engine: basemap manager, source adapters (wms/raster/geojson/vector),
-                  feature info, i18n — no DOM UI
+packages/core     headless engine: basemap manager, source adapters (wms/wmts/raster/cog/geojson/
+                  vector), feature info, i18n — no DOM UI
 packages/ui       the <map0-viewer> web component (Lit) + panels, popups, theming
 examples/         landing page, /demos gallery and demo pages
 examples/public/  demo configs and data served as-is
@@ -89,9 +89,9 @@ docs/             specification
 Distribution note: `packages/ui/dist/` is a flat folder — `map0.js`, its chunks, and MapLibre's
 three files shipped verbatim. Deploy the folder as a unit; the embed stays one script tag.
 A page pays **~23 KB gzip** for the element itself; the engine and MapLibre (~316 KB) load when the
-map approaches the viewport, and capabilities parsing, proj4, PMTiles, measuring and the dialogs
-only when those features are used. `pnpm size` prints the breakdown and fails when the page tier
-grows.
+map approaches the viewport, and capabilities parsing, proj4, PMTiles, the COG decoder, measuring
+and the dialogs only when those features are used. `pnpm size` prints the breakdown and fails when
+the page tier grows.
 
 ## Documents
 

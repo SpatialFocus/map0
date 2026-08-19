@@ -136,7 +136,8 @@ silently does nothing.
 
 ## What is in the config
 
-Layer sources: WMS, WMTS, XYZ/raster, vector tiles, PMTiles, GeoJSON (with clustering). Plus a
+Layer sources: WMS, WMTS, XYZ/raster, vector tiles, PMTiles, GeoJSON (with clustering), and COG —
+Cloud Optimized GeoTIFF as RGB imagery or single-band color ramps. Plus a
 layer tree with groups, legends (`"auto"` derives them from the service), feature info with HTML
 templates, hover, search, measuring, coordinate readout in projected CRS, print/PDF export,
 permalinks, `extends` for shared base configs, CSS-variable theming, and per-language label
@@ -148,7 +149,7 @@ for the annotated reference.
 
 A page pays ~23 KB gzip for the element itself. The engine, MapLibre and its stylesheet (~304 KB
 gzip) load when a map actually initialises — never for a map nobody scrolls to. Capabilities
-parsing, proj4, PMTiles, measuring and the dialogs load on first use.
+parsing, proj4, PMTiles, the COG decoder, measuring and the dialogs load on first use.
 
 ## Links
 

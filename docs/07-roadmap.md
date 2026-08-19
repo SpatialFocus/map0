@@ -1,6 +1,6 @@
 # 07 — Roadmap & Status
 
-> Phases, not dates. Status as of 2026-08-15.
+> Phases, not dates. Status as of 2026-08-19.
 > Legend: ✅ done · 🟡 partial · ⬜ open. Requirement IDs refer to
 > [03-requirements.md](03-requirements.md).
 
@@ -13,7 +13,7 @@ pass, and an actual npm/CDN release.
 
 | Area | Status |
 |---|---|
-| Data sources | ✅ WMS, WMTS, vector tiles/PMTiles, GeoJSON, style & raster basemaps · ⬜ WFS, OGC API Features (deferred to v1.x per D-03) |
+| Data sources | ✅ WMS, WMTS, vector tiles/PMTiles, GeoJSON, COG (RGB + single-band ramps), style & raster basemaps · ⬜ WFS, OGC API Features (deferred to v1.x per D-03) |
 | Layer tree | ✅ groups, visibility, opacity, status, zoom hints, zoom-to-layer, metadata links, runtime add/remove · ⬜ drag reorder, filter box, radio groups |
 | Feature info | ✅ GetFeatureInfo + vector query, templates, field tables, multi-hit, hover, highlight, coordinates · ⬜ mobile bottom sheet |
 | Legend | ✅ service, style-derived, hand-written; in print |
@@ -57,7 +57,7 @@ pass, and an actual npm/CDN release.
 - ✅ **Dialog focus trap + Escape** (N4, partial)
 - ✅ **Search** — type-ahead geocoding with Photon/Nominatim/custom providers, coordinate input (F8.1, F8.2)
 - ✅ **Measure** — distance and area on the sphere, draggable vertices (F9.1)
-- ✅ **Demo site** — 19 single-topic demos with docs and live configs
+- ✅ **Demo site** — 20 single-topic demos with docs and live configs
 
 ### Remaining for v1.0
 
@@ -82,7 +82,10 @@ pass, and an actual npm/CDN release.
 - ⬜ **Terrain** (F1.8)
 - ⬜ **Auth hooks** for protected services (C8)
 - ⬜ **React wrapper** (`@map0/react`)
-- ⬜ **COG** layers, once the protocol library reaches 1.0
+- ✅ **COG** layers (2026-08-19) — `type: "cog"`: RGB/grayscale imagery plus single-band color
+  ramps with auto-derived legend, bounds from the file header, decoder loaded on demand
+  (@geomatico/maplibre-cog-protocol, adopted at 0.9.x — see D-03 update) · ⬜ DEM/hillshade
+  (`#dem` mode, together with terrain F1.8)
 
 ## M2 — Ecosystem
 

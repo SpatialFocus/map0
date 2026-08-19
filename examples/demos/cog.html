@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cloud Optimized GeoTIFF — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="cog">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow">Data sources</p>
+        <h1>Cloud Optimized GeoTIFF</h1>
+        <p class="lede">
+          A raster file on plain storage, read directly by the browser — no tile server, no
+          server-side rendering. HTTP range requests fetch only the tiles in view. Two overlays
+          here: an interpolated single-band surface rendered through a color ramp, and an RGB
+          orthophoto.
+        </p>
+      </div>
+
+      <map0-viewer config-src="/configs/cog.map0.json"></map0-viewer>
+      <p class="demo-note">
+        <strong>Try it:</strong> the legend shows the color ramp derived from the
+        <code>color</code> config. Use <em>zoom to layer</em> on the orthophoto — it sits over
+        Igualada, a town away — and watch the network tab: only small byte ranges of the 50&nbsp;MB
+        file are ever fetched.
+      </p>
+
+      <section class="doc">
+        <h2>What this demo shows</h2>
+        <ul class="checks">
+          <li>A <code>cog</code> layer needs nothing but a URL — bounds and zoom range come from the file's own header</li>
+          <li><code>color</code> maps a single band onto a named ramp (ColorBrewer/CARTOColors), discrete classes or continuous</li>
+          <li>The legend panel derives its entries from the color ramp automatically</li>
+          <li>The decoder (geotiff.js, ~150 KB) loads on demand — configs without a COG layer never pay for it</li>
+        </ul>
+        <p>
+          Ramp names follow the source palettes: <code>Brewer&lt;Name&gt;&lt;classes&gt;</code>
+          (e.g. <code>BrewerSpectral9</code>, 3–12 classes depending on the palette) and
+          <code>Carto&lt;Name&gt;</code> (e.g. <code>CartoEarth</code>). The protocol library
+          renders them all on one page:
+          <a href="https://labs.geomatico.es/maplibre-cog-protocol/color-cheatsheet.html" rel="noopener">color scheme cheatsheet</a>.
+          A typo fails fast — the layer turns to error state with "… is not a supported color scheme".
+        </p>
+        <div class="callout">
+          <strong>EPSG:3857 only.</strong>
+          The protocol reads Web Mercator COGs and does not reproject — a file in a national CRS
+          (Gauss-Krüger, Lambert, UTM) fails with a clear per-layer error. Prepare files with
+          <code>gdalwarp -t_srs EPSG:3857</code> +
+          <code>gdal_translate -of COG</code>. Nodata pixels render transparent; a file without a
+          declared nodata value treats 0 as transparent.
+        </div>
+      </section>
+
+      <section class="doc">
+        <h2>Configuration</h2>
+        <pre data-src="/configs/cog.map0.json" data-label="cog.map0.json" data-emphasise="&quot;cog&quot;,&quot;color&quot;,scheme,continuous"></pre>
+      </section>
+
+      <section class="doc">
+        <h2>When to reach for COG</h2>
+        <p>
+          COG is the raster twin of PMTiles: publish one file on any static bucket that supports
+          range requests and you have a zoomable overlay — orthophotos, elevation, model output,
+          sensor rasters. For nationwide imagery with heavy traffic, a tiled service (WMTS) with a
+          CDN in front still wins; for the long tail of project rasters that would otherwise need
+          their own GeoServer, a COG on object storage is hard to beat.
+        </p>
+        <p>
+          The protocol behind this layer type is
+          <a href="https://github.com/geomatico/maplibre-cog-protocol" rel="noopener">@geomatico/maplibre-cog-protocol</a>
+          (pre-1.0, pinned): RGB and grayscale imagery plus single-band color ramps today; DEM
+          hillshading is on the map0 roadmap.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

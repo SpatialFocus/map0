@@ -72,6 +72,7 @@ export type LayerDef =
   | WmsLayerDef
   | WmtsLayerDef
   | RasterLayerDef
+  | CogLayerDef
   | GeoJsonLayerDef
   | VectorLayerDef;
 
@@ -162,6 +163,28 @@ export interface RasterLayerDef extends LayerCommon {
   /** XYZ/WMTS-REST template */
   url: string;
   tileSize?: number;
+}
+
+/** single-band value → color mapping for a "cog" layer */
+export interface CogColorDef {
+  /** built-in ramp name (ColorBrewer/CARTOColors), e.g. "BrewerSpectral7" or "CartoEarth" */
+  scheme: string;
+  /** data value mapped to the first ramp color */
+  min: number;
+  /** data value mapped to the last ramp color */
+  max: number;
+  /** interpolate between the ramp colors instead of discrete classes; default false */
+  continuous?: boolean;
+  /** reverse the ramp; default false */
+  reverse?: boolean;
+}
+
+export interface CogLayerDef extends LayerCommon {
+  type: "cog";
+  /** Cloud Optimized GeoTIFF URL — must be in EPSG:3857 (no client-side reprojection) */
+  url: string;
+  /** omit for RGB/grayscale imagery; set to render a single band through a color ramp */
+  color?: CogColorDef;
 }
 
 /** flat paint-property object (circle-*, line-*, fill-*) */

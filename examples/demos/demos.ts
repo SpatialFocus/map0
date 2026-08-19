@@ -38,6 +38,13 @@ export const DEMOS: Demo[] = [
     icon: "💧",
   },
   {
+    id: "cog",
+    title: "Cloud Optimized GeoTIFF",
+    blurb: "Rasters read straight from static storage — RGB imagery and single-band color ramps.",
+    group: "Data sources",
+    icon: "🛰️",
+  },
+  {
     id: "popups",
     title: "Popups & hover",
     blurb: "Templates, field tables, hover tooltips, selection highlight and multi-layer hits.",

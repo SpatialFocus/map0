@@ -1,5 +1,6 @@
 import type { NormalizedLayer } from "@map0/schema";
 import type { SourceAdapter } from "./types.js";
+import { CogAdapter } from "./cog.js";
 import { GeoJsonAdapter } from "./geojson.js";
 import { RasterAdapter } from "./raster.js";
 import { VectorAdapter } from "./vector.js";
@@ -13,6 +14,7 @@ const factories = new Map<string, AdapterFactory>([
   ["wms", (def) => new WmsAdapter(def as never)],
   ["wmts", (def) => new WmtsAdapter(def as never)],
   ["raster", (def) => new RasterAdapter(def as never)],
+  ["cog", (def) => new CogAdapter(def as never)],
   ["geojson", (def) => new GeoJsonAdapter(def as never)],
   ["vector", (def) => new VectorAdapter(def as never)],
 ]);

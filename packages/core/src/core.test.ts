@@ -6,6 +6,7 @@ import {
   normalizeLegendUrl,
   WmsAdapter,
 } from "./adapters/wms.js";
+import { buildCogUrl, cogLegendEntries } from "./adapters/cog.js";
 import { expandSimpleStyle } from "./adapters/geojson.js";
 import { deriveFromStyleLayers, entryFromPaint } from "./adapters/legend-derive.js";
 import { escapeHtml, renderFields, renderTemplate } from "./template.js";
@@ -85,6 +86,56 @@ describe("expandSimpleStyle", () => {
     expect(s.fill?.["fill-color"]).toBe("#123456");
     expect(s.line?.["line-color"]).toBe("#123456");
     expect(s.circle?.["circle-color"]).toBe("#123456");
+  });
+});
+
+describe("cog", () => {
+  it("builds a plain cog:// URL for imagery", () => {
+    expect(buildCogUrl("https://example.org/ortho.tif")).toBe("cog://https://example.org/ortho.tif");
+  });
+
+  it("builds the #color fragment with modifiers", () => {
+    expect(
+      buildCogUrl("https://example.org/dem.tif", {
+        scheme: "BrewerSpectral7",
+        min: 1.7,
+        max: 1.8,
+        continuous: true,
+        reverse: true,
+      }),
+    ).toBe("cog://https://example.org/dem.tif#color:BrewerSpectral7,1.7,1.8,c-");
+    expect(
+      buildCogUrl("https://example.org/dem.tif", { scheme: "CartoEarth", min: 0, max: 100 }),
+    ).toBe("cog://https://example.org/dem.tif#color:CartoEarth,0,100");
+  });
+
+  it("derives one legend entry per discrete class, with value ranges", () => {
+    /* a 4-class threshold scale over [0, 100], like the protocol's colorScale */
+    const palette: Array<[number, number, number]> = [
+      [0, 0, 0],
+      [80, 80, 80],
+      [160, 160, 160],
+      [240, 240, 240],
+    ];
+    const scale = (v: number) => palette[Math.min(3, Math.max(0, Math.floor((v / 100) * 4)))];
+    const entries = cogLegendEntries(scale, { min: 0, max: 100, continuous: false });
+    expect(entries).toHaveLength(4);
+    expect(entries[0]).toEqual({ label: "0 – 25", color: "rgb(0, 0, 0)", shape: "square" });
+    expect(entries[3]!.label).toBe("75 – 100");
+    expect(entries[3]!.color).toBe("rgb(240, 240, 240)");
+  });
+
+  it("samples a continuous ramp with labelled stops", () => {
+    const scale = (v: number) => [Math.round(v * 255), 0, 0];
+    const entries = cogLegendEntries(scale, { min: 0, max: 1, continuous: true });
+    expect(entries).toHaveLength(5);
+    expect(entries[0]!.label).toBe("0.00");
+    expect(entries[4]!.label).toBe("1.00");
+    expect(entries[4]!.color).toBe("rgb(255, 0, 0)");
+  });
+
+  it("returns no legend for a degenerate range", () => {
+    expect(cogLegendEntries(() => [0, 0, 0], { min: 5, max: 5 })).toEqual([]);
   });
 });
 

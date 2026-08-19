@@ -257,6 +257,21 @@ TileJSONs happened to carry nothing offensive, so this slept until the ICGC cont
 `minzoom`/`maxzoom`/`bounds`/`attribution` plus `scheme` (vector/raster) or `encoding`
 (raster-dem, where `scheme` itself is illegal).
 
+### 4.3c COG layers (maplibre-cog-protocol)
+
+- The adapter calls `getCogMetadata()` **before** `addSource`: it fails fast with a clear message
+  (unreachable file, or "projection EPSG:xxxxx is not supported" — the protocol never reprojects),
+  and its `bbox` feeds "zoom to layer". The result is cached inside the library, so the protocol
+  handler does not fetch the header twice.
+- The protocol answers the source `url` with a TileJSON (tiles/bounds/maxzoom from the file
+  header); always `tileSize: 256`.
+- The ramp legend is derived from the library's `colorScale()` — for discrete ramps the class
+  count is recovered by sampling the scale (thresholds are uniform over min–max), so map0 does not
+  duplicate the palette tables.
+- geotiff.js (plus lerc/pako decoders) rides in the lazy cog chunk — configs without a cog layer
+  never load it. `lerc@3` ships no licence text in its tarball → fallback entry in
+  `scripts/build-npm.mjs` (same mechanism as pmtiles).
+
 ### 4.4 The alias that broke coordinates in the built bundle only
 
 The `proj4` → stub alias (added for ogc-client's optional peer) predated the coordinate readout. In

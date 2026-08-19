@@ -18,6 +18,7 @@ const DEMOS = [
   "wmts",
   "vector-tiles",
   "geojson",
+  "cog",
   "popups",
   "legend",
   "search",
@@ -191,6 +192,29 @@ if (targets.includes("vector-tiles")) {
       const src = document.querySelector("map0-viewer").api.map.getStyle().sources["m0s-buildings"];
       return src?.tiles?.[0]?.startsWith("https://") === true;
     }),
+  );
+  await page.close();
+}
+
+if (targets.includes("cog")) {
+  const page = await openDemo("cog");
+  record(
+    "cog · protocol source resolved from the file header",
+    await page.evaluate(() => {
+      const src = document.querySelector("map0-viewer").api?.map.getStyle()?.sources["m0s-kriging"];
+      return typeof src?.url === "string" && src.url.startsWith("cog://") && src.url.includes("#color:");
+    }),
+  );
+  const legend = await page.evaluate(() => {
+    const layer = document
+      .querySelector("map0-viewer")
+      .api?.layers.state.value.find((l) => l.id === "kriging");
+    return { kind: layer?.legend?.kind, entries: layer?.legend?.entries?.length ?? 0, canZoom: layer?.canZoom };
+  });
+  record(
+    "cog · ramp legend derived from the color config",
+    legend.kind === "entries" && legend.entries >= 5 && legend.canZoom === true,
+    `${legend.entries} entries, canZoom: ${legend.canZoom}`,
   );
   await page.close();
 }

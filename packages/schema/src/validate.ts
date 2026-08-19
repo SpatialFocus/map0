@@ -31,7 +31,7 @@ export interface ValidationResult {
 type Err = (path: string, message: string, severity?: "warning") => void;
 
 const BASEMAP_TYPES = ["style", "raster", "empty"];
-const LAYER_TYPES = ["group", "wms", "wmts", "raster", "geojson", "vector"];
+const LAYER_TYPES = ["group", "wms", "wmts", "raster", "cog", "geojson", "vector"];
 const POSITIONS = ["top-left", "top-right", "bottom-left", "bottom-right"];
 
 /* ---- the key tables: also the source for the published JSON Schema (M1) ---- */
@@ -104,6 +104,7 @@ const LAYER_KEYS: Record<string, string[]> = {
   ],
   wmts: [...LAYER_COMMON_KEYS, "url", "layer", "matrixSet", "style", "format"],
   raster: [...LAYER_COMMON_KEYS, "url", "tileSize"],
+  cog: [...LAYER_COMMON_KEYS, "url", "color"],
   geojson: [...LAYER_COMMON_KEYS, "data", "style", "cluster", "popup", "hover", "promoteId"],
   vector: [...LAYER_COMMON_KEYS, "url", "sourceLayer", "style", "popup", "hover"],
 };
@@ -506,6 +507,28 @@ function validateLayers(
         if (typeof layer.url !== "string")
           err(`${p}.url`, 'a "raster" layer needs a "url" ({z}/{x}/{y} template)');
         expectNumber(layer.tileSize, `${p}.tileSize`, err, 1, 4096);
+        break;
+      case "cog":
+        if (typeof layer.url !== "string")
+          err(`${p}.url`, 'a "cog" layer needs a "url" (Cloud Optimized GeoTIFF in EPSG:3857)');
+        if (layer.color !== undefined) {
+          if (!isObject(layer.color)) {
+            err(`${p}.color`, 'color must be { "scheme", "min", "max", "continuous"?, "reverse"? }');
+          } else {
+            const c = layer.color;
+            checkKeys(c, ["scheme", "min", "max", "continuous", "reverse"], `${p}.color`, err);
+            if (typeof c.scheme !== "string" || !c.scheme)
+              err(`${p}.color.scheme`, 'color needs a "scheme" (ramp name, e.g. "BrewerSpectral7")');
+            if (typeof c.min !== "number" || !Number.isFinite(c.min))
+              err(`${p}.color.min`, 'color needs a numeric "min" (value of the first ramp color)');
+            if (typeof c.max !== "number" || !Number.isFinite(c.max))
+              err(`${p}.color.max`, 'color needs a numeric "max" (value of the last ramp color)');
+            if (typeof c.min === "number" && typeof c.max === "number" && !(c.min < c.max))
+              err(`${p}.color.max`, '"max" must be greater than "min"');
+            expectBoolean(c.continuous, `${p}.color.continuous`, err);
+            expectBoolean(c.reverse, `${p}.color.reverse`, err);
+          }
+        }
         break;
       case "geojson":
         if (layer.data === undefined)
