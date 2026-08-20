@@ -41,6 +41,8 @@ const SRC = "m0s-measure";
 const L_FILL = "m0l-measure-fill";
 const L_CASING = "m0l-measure-casing";
 const L_LINE = "m0l-measure-line";
+const L_PREVIEW_CASING = "m0l-measure-preview-casing";
+const L_PREVIEW = "m0l-measure-preview";
 const L_VERTEX = "m0l-measure-vertex";
 
 export class MeasureController {
@@ -64,7 +66,7 @@ export class MeasureController {
   get ids(): OverlayIds {
     return {
       sources: new Set([SRC]),
-      layers: new Set([L_FILL, L_CASING, L_LINE, L_VERTEX]),
+      layers: new Set([L_FILL, L_CASING, L_LINE, L_PREVIEW_CASING, L_PREVIEW, L_VERTEX]),
     };
   }
 
@@ -230,12 +232,21 @@ export class MeasureController {
       filter: ["==", ["geometry-type"], "Polygon"],
       paint: { "fill-color": this.accent, "fill-opacity": 0.18 },
     } as never);
+    /* committed and preview segments are separate layers with constant dash
+       patterns: a data-driven `line-dasharray` breaks the whole line bucket as
+       soon as one feature fails the expression (the polygon has no `preview`
+       property), which made segments vanish seemingly at random */
+    const committedLines = [
+      "all",
+      ["==", ["geometry-type"], "LineString"],
+      ["!=", ["get", "preview"], true],
+    ];
     /* a white casing under the coloured line keeps it readable on any basemap */
     this.map.addLayer({
       id: L_CASING,
       type: "line",
       source: SRC,
-      filter: ["!=", ["geometry-type"], "Point"],
+      filter: committedLines,
       layout: { "line-cap": "round", "line-join": "round" },
       paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.9 },
     } as never);
@@ -243,13 +254,39 @@ export class MeasureController {
       id: L_LINE,
       type: "line",
       source: SRC,
-      filter: ["!=", ["geometry-type"], "Point"],
+      filter: committedLines,
       layout: { "line-cap": "round", "line-join": "round" },
+      paint: { "line-color": this.accent, "line-width": 2.5 },
+    } as never);
+    /* the segment still following the cursor is dashed until it is committed */
+    const previewLines = [
+      "all",
+      ["==", ["geometry-type"], "LineString"],
+      ["==", ["get", "preview"], true],
+    ];
+    /* dash units are line widths: 1.5 × 2.5 px on the line is 0.625 × 6 px on
+       the casing, so the two patterns stay aligned */
+    this.map.addLayer({
+      id: L_PREVIEW_CASING,
+      type: "line",
+      source: SRC,
+      filter: previewLines,
+      paint: {
+        "line-color": "#ffffff",
+        "line-width": 6,
+        "line-opacity": 0.9,
+        "line-dasharray": [0.625, 0.625],
+      },
+    } as never);
+    this.map.addLayer({
+      id: L_PREVIEW,
+      type: "line",
+      source: SRC,
+      filter: previewLines,
       paint: {
         "line-color": this.accent,
         "line-width": 2.5,
-        /* the segment to the cursor is dashed until it is committed */
-        "line-dasharray": ["case", ["get", "preview"], ["literal", [1.5, 1.5]], ["literal", [1, 0]]],
+        "line-dasharray": [1.5, 1.5],
       },
     } as never);
     this.map.addLayer({
