@@ -9,7 +9,7 @@ MapLibre made cartography declarative — the style spec is JSON. map0 extends t
 theming and languages are all declared in a single JSON document that can live in a CMS field. It
 renders straight into the page as a web component — no iframe, no backend, no build step required.
 
-> **Early preview — version 0.0.5.** The client works against real OGC services — it is what the
+> **Early preview — version 0.1.0.** The client works against real OGC services — it is what the
 > [live demos](https://map0.net/demos) run on — but the JavaScript API and the config format are
 > still drafts and will change without a deprecation path until 1.0. Pin an exact version.
 > TypeScript types are not published yet.
@@ -33,11 +33,11 @@ install and nothing to configure. Copy `node_modules/map0-viewer/dist/` next to 
 Nothing to install or copy — point a script tag at a pinned version:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/map0-viewer@0.0.5/dist/map0.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/map0-viewer@0.1.0/dist/map0.js"></script>
 ```
 
 unpkg serves the same tarball, if you prefer it:
-`https://unpkg.com/map0-viewer@0.0.5/dist/map0.js`.
+`https://unpkg.com/map0-viewer@0.1.0/dist/map0.js`.
 
 Both send `Access-Control-Allow-Origin: *`, and the entry resolves its lazy chunks and MapLibre's
 worker relative to itself — so the folder stays a unit on the CDN too, with no configuration on your
@@ -161,7 +161,7 @@ squiggles while you write a config:
 
 `https://map0.net/schema/v1.json` follows the latest release. The npm tarball carries the same file
 as `schema/v1.json`, so a version-pinned copy is on the CDN too:
-`https://cdn.jsdelivr.net/npm/map0-viewer@0.0.5/schema/v1.json`.
+`https://cdn.jsdelivr.net/npm/map0-viewer@0.1.0/schema/v1.json`.
 
 To validate configs outside an editor (CI, a CMS save hook):
 
