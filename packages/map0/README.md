@@ -163,7 +163,9 @@ squiggles while you write a config:
 as `schema/v1.json`, so a version-pinned copy is on the CDN too:
 `https://cdn.jsdelivr.net/npm/map0-viewer@0.1.0/schema/v1.json`.
 
-To validate configs outside an editor (CI, a CMS save hook):
+To check a config without installing anything, paste it into the
+[online validator](https://map0.net/demos/validate.html) — it runs `validateConfig` right in the
+page. To validate configs outside an editor (CI, a CMS save hook):
 
 ```bash
 npx ajv-cli validate -s node_modules/map0-viewer/schema/v1.json -d my-map.map0.json

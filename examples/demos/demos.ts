@@ -136,6 +136,13 @@ export const DEMOS: Demo[] = [
     icon: "🧬",
   },
   {
+    id: "validate",
+    title: "Validate a config",
+    blurb: "Paste a config and run map0's validator online — plus every other place a config is checked.",
+    group: "Configuration",
+    icon: "✅",
+  },
+  {
     id: "standalone",
     title: "Script tag embed",
     blurb: "The built bundle on a plain HTML page — no bundler, no framework.",

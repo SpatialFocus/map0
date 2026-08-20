@@ -32,6 +32,7 @@ const DEMOS = [
   "theming",
   "i18n",
   "extends",
+  "validate",
   "standalone",
   "lazy",
 ];
@@ -67,8 +68,8 @@ const IGNORED_CONSOLE = {
   wmts: [/ERR_NAME_NOT_RESOLVED/],
 };
 
-async function openDemo(id) {
-  const page = await context.newPage();
+/** console/pageerror capture shared by every demo check */
+function watchConsole(page, id) {
   const messages = [];
   const ignore = IGNORED_CONSOLE[id] ?? [];
   page.on("console", (m) => {
@@ -76,12 +77,50 @@ async function openDemo(id) {
     if (
       (m.type() === "warning" || m.type() === "error") &&
       !text.includes("Lit is in dev mode") &&
+      /* GPU-driver chatter relayed as warnings on some machines — not map0 talking
+         (same filter as verify-tarball.mjs) */
+      !/GL Driver Message/.test(text) &&
       !ignore.some((re) => re.test(text))
     ) {
       messages.push(`${m.type()}: ${text.slice(0, 200)}`);
     }
   });
   page.on("pageerror", (e) => messages.push(`pageerror: ${String(e).slice(0, 200)}`));
+  return messages;
+}
+
+/** the validate demo has no map — ready means the validator produced results */
+async function openValidateDemo() {
+  const page = await context.newPage();
+  const messages = watchConsole(page, "validate");
+  await page.goto(`${BASE}/demos/validate.html`, { waitUntil: "domcontentloaded" });
+  /* the page opens on the broken example, so results must show errors — and the
+     shell (code figures, pager) renders async too, so wait for it here; the map
+     demos get that for free from their much longer map waits */
+  const ready = await page
+    .waitForFunction(
+      () =>
+        /error/.test(document.querySelector("[data-validator-output]")?.textContent ?? "") &&
+        document.querySelectorAll("figure.code pre").length > 0 &&
+        !!document.querySelector(".pager"),
+      { timeout: 15_000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+  const chrome = await page.evaluate(() => ({
+    code: document.querySelectorAll("figure.code pre").length,
+    pager: !!document.querySelector(".pager"),
+  }));
+  record("validate", ready && chrome.code > 0 && chrome.pager, `code blocks: ${chrome.code}`);
+  if (messages.length > 0) record("validate · console", false, messages.slice(0, 3).join(" | "));
+  /* same settle as openDemo — a screenshot straight after load can beat the first frame */
+  await page.waitForTimeout(400);
+  return page;
+}
+
+async function openDemo(id) {
+  const page = await context.newPage();
+  const messages = watchConsole(page, id);
   await page.goto(`${BASE}/demos/${id}.html`, { waitUntil: "domcontentloaded" });
   /* maps load when they approach the viewport — bring it in before waiting */
   await page
@@ -137,7 +176,7 @@ async function openDemo(id) {
 
 /* ---- every demo renders ---- */
 for (const id of targets) {
-  const page = await openDemo(id);
+  const page = id === "validate" ? await openValidateDemo() : await openDemo(id);
   await page.screenshot({ path: shot(`demo-${id}`), fullPage: false });
   await page.close();
 }

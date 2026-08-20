@@ -221,6 +221,109 @@ ul.checks li::before {
   margin-bottom: 2px;
 }
 
+/* ------------------------------- validator ------------------------------ */
+/* The validate demo: a textarea wired to the real validateConfig, results
+   beside it. color-scheme is declared above, so light-dark() picks per mode. */
+
+.validator {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+.validator-buttons {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.validator-buttons button {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+}
+.validator-buttons button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.validator textarea {
+  width: 100%;
+  min-height: 380px;
+  resize: vertical;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+  tab-size: 2;
+}
+.validator textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+.validator .results {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 14px 16px;
+  overflow: auto;
+}
+.validator .results .status {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 650;
+}
+.validator .results .status.ok {
+  color: light-dark(#15803d, #4ade80);
+}
+.validator .results .status.bad {
+  color: light-dark(#b91c1c, #f87171);
+}
+.validator .results ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.validator .results li {
+  display: grid;
+  gap: 2px;
+  padding: 9px 0;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+.validator .results li:first-child {
+  border-top: 0;
+}
+.validator .results .path {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.validator .results li.error .path {
+  color: light-dark(#b91c1c, #f87171);
+}
+.validator .results li.warning .path {
+  color: light-dark(#a16207, #facc15);
+}
+.validator .results .message {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+@media (max-width: 900px) {
+  .validator {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .validator textarea {
+    min-height: 260px;
+  }
+}
+
 /* ------------------------------ code blocks ----------------------------- */
 
 figure.code {

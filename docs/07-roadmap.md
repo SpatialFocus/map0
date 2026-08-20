@@ -57,7 +57,8 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
 - ✅ **Dialog focus trap + Escape** (N4, partial)
 - ✅ **Search** — type-ahead geocoding with Photon/Nominatim/custom providers, coordinate input (F8.1, F8.2)
 - ✅ **Measure** — distance and area on the sphere, draggable vertices (F9.1)
-- ✅ **Demo site** — 20 single-topic demos with docs and live configs
+- ✅ **Demo site** — 21 single-topic demos with docs and live configs, including an online
+  config validator
 
 ### Remaining for v1.0
 

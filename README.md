@@ -52,14 +52,15 @@ pnpm install
 pnpm dev
 ```
 
-Then open **http://localhost:5173/demos — the demo gallery**. Twenty single-topic demos, each
-with a live map against real services, a written explanation, and the exact config that produced it:
+Then open **http://localhost:5173/demos — the demo gallery**. Twenty-one single-topic demos, each
+with a written explanation and the exact config that produced it — almost all of them a live map
+against real services:
 
 | Group | Demos |
 |---|---|
 | Data sources | WMS · WMTS · Vector tiles · GeoJSON & clustering · Cloud Optimized GeoTIFF |
 | Map features | Popups & hover · Legend · Search · Measure · Coordinates · Print & export · Add layers · Share & permalink · Globe |
-| Configuration | Minimal config · Theming · Languages · Config inheritance |
+| Configuration | Minimal config · Theming · Languages · Config inheritance · Validate a config |
 | Integration | Script tag embed (built bundle — run `pnpm demo:standalone` first) · Lazy loading |
 
 More commands:

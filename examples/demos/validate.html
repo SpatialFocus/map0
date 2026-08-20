@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Validate a config — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+    <script type="module" src="/demos/validate.ts"></script>
+  </head>
+  <body data-demo="validate">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow">Configuration</p>
+        <h1>Validate a config</h1>
+        <p class="lede">
+          A broken config never leaves a blank map — it is validated before anything renders, and
+          the errors carry the JSON path that caused them. This page runs that same validator on
+          whatever you paste, and lists every other place a config gets checked on its way from
+          editor to page.
+        </p>
+      </div>
+
+      <section class="doc wide">
+        <h2>Paste a config</h2>
+        <p>
+          This is map0's own <code>validateConfig</code>, compiled into this page exactly as it is
+          compiled into the viewer — not a lookalike. Errors block the map; warnings (an unknown
+          key is the classic) never do, so a config written for a newer map0 still opens.
+        </p>
+        <div class="validator">
+          <div>
+            <div class="validator-buttons">
+              <button type="button" data-validator-example="broken">Broken example</button>
+              <button type="button" data-validator-example="valid">Valid example</button>
+            </div>
+            <textarea
+              data-validator-input
+              spellcheck="false"
+              autocomplete="off"
+              aria-label="map0 config JSON"
+            ></textarea>
+          </div>
+          <div class="results" data-validator-output aria-live="polite"></div>
+        </div>
+        <p class="demo-note">
+          <strong>One difference to the viewer:</strong> the viewer resolves
+          <code>extends</code> before validating, so a child config may leave
+          <code>basemaps</code> to its base — here the document is checked exactly as pasted.
+        </p>
+      </section>
+
+      <section class="doc">
+        <h2>Every place a config is checked</h2>
+
+        <h3>In your editor, as you type</h3>
+        <p>
+          The config format has a published JSON Schema. A <code>$schema</code> line is all it
+          takes — VS Code, JetBrains and Monaco embedded in a CMS then offer autocomplete,
+          documentation on hover and squiggles under typos while you write:
+        </p>
+        <pre data-lang="json" data-label="my-map.map0.json" data-emphasise="$schema">
+          {
+            "$schema": "https://map0.net/schema/v1.json",
+            "version": 1,
+            "basemaps": [{ "type": "style", "url": "…" }]
+          }
+        </pre>
+
+        <h3>In CI, before it ships</h3>
+        <p>
+          The same schema works with any JSON Schema tool — a check in a pipeline or a CMS save
+          hook costs one command:
+        </p>
+        <pre data-lang="text" data-label="shell">
+          npx ajv-cli validate -s node_modules/map0-viewer/schema/v1.json -d my-map.map0.json
+        </pre>
+        <p>
+          <code>check-jsonschema</code> does the same on the Python side. The schema checks
+          structure — keys, types, ranges, required fields — which is exactly what an editor or a
+          pipeline should catch.
+        </p>
+
+        <h3>In your own code</h3>
+        <p>
+          The validator on this page is part of the npm package, reachable through the SSR-safe
+          entry — no DOM required, so a Node backend can refuse to save a broken map:
+        </p>
+        <pre data-lang="js" data-label="save-hook.js">
+          import { validateConfig } from "map0-viewer/ssr";
+
+          const { valid, errors, warnings } = validateConfig(config);
+          // errors: [{ path: "$.layers[0].url", message: 'a "wms" layer needs a "url"' }]
+        </pre>
+
+        <h3>In the viewer, always</h3>
+        <p>
+          Whatever slipped through still cannot produce a blank map: the viewer validates before it
+          renders and shows the errors in place. This layer also enforces what a JSON Schema cannot
+          express — the https-only URL policy, id uniqueness across basemaps and layers, and
+          cross-field rules like a color ramp's <code>min</code> below its <code>max</code>.
+        </p>
+        <pre data-lang="text" data-label="error panel">
+          $.basemaps          at least one basemap is required, e.g. { "type": "style", "url": "…" }
+          $.layers[2].url     a "wms" layer needs a "url"
+          $.layers[2].layers  a "wms" layer needs "layers" (WMS LAYERS parameter)
+        </pre>
+      </section>
+
+      <section class="doc">
+        <h2>The schema, published</h2>
+        <p>One file, three URLs — pick by how you want it to move:</p>
+        <ul class="checks">
+          <li>
+            <code>https://map0.net/schema/v1.json</code> — follows the latest release; the URL to
+            put in a config's <code>$schema</code> line
+          </li>
+          <li>
+            <code>https://cdn.jsdelivr.net/npm/map0-viewer@0.1.0/schema/v1.json</code> — pinned to
+            one release, from the npm tarball
+          </li>
+          <li>
+            <code>node_modules/map0-viewer/schema/v1.json</code> — offline, next to the bundle you
+            installed
+          </li>
+        </ul>
+        <p>
+          The file is named after the config format version (<code>"version": 1</code>), not the
+          package version. It is hand-written — the descriptions are the editor documentation —
+          and a test locks its key sets and enums to the runtime validator, so the two cannot
+          drift apart.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

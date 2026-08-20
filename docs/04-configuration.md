@@ -352,6 +352,8 @@ How it is used:
 
 - **Editors** — a `$schema` key in the config gives autocomplete, hover documentation and typo
   squiggles in VS Code, JetBrains, or Monaco embedded in a CMS. Every demo config carries the line.
+- **Online** — the [validator demo](https://map0.net/demos/validate.html) runs `validateConfig`
+  right in the page: paste a config, read the errors.
 - **CI / save hooks** — `npx ajv-cli validate -s schema/v1.json -d config.map0.json`, or
   `check-jsonschema` on the Python side.
 - **Runtime** — `validateConfig` stays authoritative: the https-URL policy (N6), id uniqueness

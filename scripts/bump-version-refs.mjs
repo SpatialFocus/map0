@@ -24,6 +24,7 @@ const FILES = {
   "README.md": 2, //                          status line + jsDelivr snippet
   "packages/map0/README.md": 4, //            preview banner + jsDelivr + unpkg + schema URL
   "examples/demos/standalone.html": 2, //     jsDelivr snippet + unpkg mention
+  "examples/demos/validate.html": 1, //       pinned schema URL
 };
 
 const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
