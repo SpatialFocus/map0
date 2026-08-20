@@ -22,7 +22,7 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 /** file → how many references it must contain (assertion, not a guess) */
 const FILES = {
   "README.md": 2, //                          status line + jsDelivr snippet
-  "packages/map0/README.md": 3, //            preview banner + jsDelivr + unpkg
+  "packages/map0/README.md": 4, //            preview banner + jsDelivr + unpkg + schema URL
   "examples/demos/standalone.html": 2, //     jsDelivr snippet + unpkg mention
 };
 

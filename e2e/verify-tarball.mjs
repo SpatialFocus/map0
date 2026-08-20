@@ -53,6 +53,17 @@ if (!existsSync(join(standalone, "maplibre-gl-worker.mjs"))) {
   process.exit(1);
 }
 
+/* the published JSON Schema (C3) rides along as schema/v1.json — its jsDelivr
+   URL is documented, so a tarball without it is broken */
+const listing = spawnSync("tar", ["-tzf", basename(tarball)], {
+  cwd: dirname(tarball),
+  encoding: "utf8",
+});
+if (!listing.stdout?.includes("package/schema/v1.json")) {
+  console.error("✗ tarball has no schema/v1.json — run `pnpm build:npm` before packing");
+  process.exit(1);
+}
+
 /* ---------------------------------------------------------- dev server */
 
 const up = async () => {

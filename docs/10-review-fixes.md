@@ -94,9 +94,10 @@ surface at mount time instead of at validation time.
   offending path.
 - `normalizeConfig` registers explicit ids in the id pool before generating any.
 
-**Open.** The published JSON Schema (`$schema` target, M1 exit criterion) is *not* part of this
-change. It is a separate artifact that has to be generated from the same source of truth as the
-validator to stay in sync — tracked in [07-roadmap.md](07-roadmap.md).
+**Open — since resolved.** The published JSON Schema (`$schema` target, M1 exit criterion) shipped
+separately as hand-written `packages/schema/v1.json` (served at map0.net/schema/v1.json, shipped in
+the npm tarball); its key sets and enums are locked to the validator's exported tables by
+`v1-schema.test.ts`, so the two cannot drift.
 
 ## R4 · SSR safety of the package entry [P1] ✅
 

@@ -5,7 +5,8 @@
  * shapes, enums, ranges, unknown keys, id uniqueness and the transport policy
  * (N6). A config that passes this may still fail against a live service — that
  * is what the per-layer status is for.
- * The published JSON Schema (M1) will be generated from the same key tables.
+ * The published JSON Schema (../v1.json) is hand-written against the same key
+ * tables; v1-schema.test.ts keeps the two from drifting.
  */
 import type { Map0Config } from "./types.js";
 
@@ -30,13 +31,19 @@ export interface ValidationResult {
 /** report a problem; `severity: "warning"` keeps it out of the fatal set (C5) */
 type Err = (path: string, message: string, severity?: "warning") => void;
 
-const BASEMAP_TYPES = ["style", "raster", "empty"];
-const LAYER_TYPES = ["group", "wms", "wmts", "raster", "cog", "geojson", "vector"];
-const POSITIONS = ["top-left", "top-right", "bottom-left", "bottom-right"];
+export const BASEMAP_TYPES = ["style", "raster", "empty"];
+export const LAYER_TYPES = ["group", "wms", "wmts", "raster", "cog", "geojson", "vector"];
+export const POSITIONS = ["top-left", "top-right", "bottom-left", "bottom-right"];
 
-/* ---- the key tables: also the source for the published JSON Schema (M1) ---- */
+/* ---------------------------- key tables & enums ----------------------------
+ * The single source of truth for which keys and values exist per config shape.
+ * Exported because the published JSON Schema (v1.json, hand-written for the
+ * sake of its descriptions) is checked against these tables by
+ * v1-schema.test.ts — add a key here and that test fails until v1.json
+ * knows it too, and vice versa.
+ * --------------------------------------------------------------------------- */
 
-const CONFIG_KEYS = [
+export const CONFIG_KEYS = [
   "$schema",
   "version",
   "extends",
@@ -51,7 +58,8 @@ const CONFIG_KEYS = [
   "i18n",
   "permalink",
 ];
-const MAP_KEYS = [
+export const META_KEYS = ["title", "description"];
+export const MAP_KEYS = [
   "center",
   "zoom",
   "bounds",
@@ -63,7 +71,8 @@ const MAP_KEYS = [
   "projection",
   "hash",
 ];
-const BASEMAP_KEYS = [
+export const PROJECTIONS = ["mercator", "globe"];
+export const BASEMAP_KEYS = [
   "id",
   "title",
   "type",
@@ -88,7 +97,7 @@ const LAYER_COMMON_KEYS = [
   "metadata",
   "legend",
 ];
-const LAYER_KEYS: Record<string, string[]> = {
+export const LAYER_KEYS: Record<string, string[]> = {
   group: ["type", "title", "collapsed", "children"],
   wms: [
     ...LAYER_COMMON_KEYS,
@@ -108,8 +117,24 @@ const LAYER_KEYS: Record<string, string[]> = {
   geojson: [...LAYER_COMMON_KEYS, "data", "style", "cluster", "popup", "hover", "promoteId"],
   vector: [...LAYER_COMMON_KEYS, "url", "sourceLayer", "style", "popup", "hover"],
 };
-const POPUP_KEYS = ["title", "content", "fields", "maxWidth"];
-const CONTROL_KEYS = [
+export const POPUP_KEYS = ["title", "content", "fields", "maxWidth"];
+export const FIELD_KEYS = ["key", "label"];
+export const HOVER_KEYS = ["content"];
+export const WMS_INFO_KEYS = [...POPUP_KEYS, "format"];
+export const WMS_VERSIONS = ["1.1.1", "1.3.0"];
+export const METADATA_KEYS = ["url", "title"];
+export const LEGEND_ENTRY_KEYS = ["label", "color", "shape", "image"];
+export const LEGEND_SHAPES = ["square", "line", "circle"];
+export const CLUSTER_KEYS = ["enabled", "radius", "maxZoom"];
+export const HILLSHADE_KEYS = [
+  "exaggeration",
+  "illuminationDirection",
+  "shadowColor",
+  "highlightColor",
+  "accentColor",
+];
+export const COG_COLOR_KEYS = ["scheme", "min", "max", "continuous", "reverse"];
+export const CONTROL_KEYS = [
   "navigation",
   "scale",
   "fullscreen",
@@ -124,7 +149,16 @@ const CONTROL_KEYS = [
   "measure",
   "coordinates",
 ];
-const SEARCH_KEYS = [
+export const SCALE_KEYS = ["maxWidth", "unit"];
+export const SCALE_UNITS = ["metric", "imperial"];
+export const GEOLOCATE_KEYS = ["follow"];
+export const ATTRIBUTION_KEYS = ["compact"];
+export const LAYER_SWITCHER_KEYS = ["position", "open", "title", "allowAdd"];
+export const BASEMAP_SWITCHER_KEYS = ["position"];
+export const LEGEND_CONTROL_KEYS = ["position", "open"];
+export const COORDINATES_KEYS = ["crs"];
+export const CRS_KEYS = ["code", "label", "def"];
+export const SEARCH_KEYS = [
   "enabled",
   "provider",
   "url",
@@ -135,6 +169,18 @@ const SEARCH_KEYS = [
   "placeholder",
   "coordinates",
 ];
+export const PROVIDER_NAMES = ["photon", "nominatim"];
+export const PROVIDER_KEYS = ["url", "format", "labelField"];
+export const PROVIDER_FORMATS = ["geojson", "nominatim"];
+export const THEME_KEYS = ["mode", "primary", "radius", "font"];
+export const THEME_MODES = ["auto", "light", "dark"];
+export const THEME_RADII = ["none", "sm", "md", "lg"];
+export const I18N_KEYS = ["locale", "fallback", "overrides"];
+export const PERMALINK_KEYS = ["param"];
+export const PRINT_KEYS = ["formats", "sizes", "dpi", "elements"];
+export const PRINT_FORMATS = ["png", "pdf"];
+export const PRINT_SIZES = ["current", "A4-landscape", "A4-portrait", "A3-landscape", "A3-portrait"];
+export const PRINT_ELEMENTS = ["title", "legend", "scalebar", "attribution", "date"];
 
 /* ------------------------------- primitives ------------------------------- */
 
@@ -292,7 +338,7 @@ export function validateConfig(input: unknown): ValidationResult {
   if (input.meta !== undefined) {
     if (!isObject(input.meta)) err("$.meta", "meta must be an object");
     else {
-      checkKeys(input.meta, ["title", "description"], "$.meta", err);
+      checkKeys(input.meta, META_KEYS, "$.meta", err);
       expectString(input.meta.title, "$.meta.title", err);
       expectString(input.meta.description, "$.meta.description", err);
     }
@@ -344,8 +390,7 @@ export function validateConfig(input: unknown): ValidationResult {
       expectNumber(m.bearing, "$.map.bearing", err, -360, 360);
       expectNumber(m.pitch, "$.map.pitch", err, 0, 85);
       expectBoolean(m.hash, "$.map.hash", err);
-      if (m.projection !== undefined && m.projection !== "mercator" && m.projection !== "globe")
-        err("$.map.projection", 'projection must be "mercator" or "globe"');
+      expectEnum(m.projection, PROJECTIONS, "$.map.projection", err);
     }
   }
 
@@ -366,9 +411,9 @@ export function validateConfig(input: unknown): ValidationResult {
   if (input.theme !== undefined) {
     if (!isObject(input.theme)) err("$.theme", "theme must be an object");
     else {
-      checkKeys(input.theme, ["mode", "primary", "radius", "font"], "$.theme", err);
-      expectEnum(input.theme.mode, ["auto", "light", "dark"], "$.theme.mode", err);
-      expectEnum(input.theme.radius, ["none", "sm", "md", "lg"], "$.theme.radius", err);
+      checkKeys(input.theme, THEME_KEYS, "$.theme", err);
+      expectEnum(input.theme.mode, THEME_MODES, "$.theme.mode", err);
+      expectEnum(input.theme.radius, THEME_RADII, "$.theme.radius", err);
       expectString(input.theme.primary, "$.theme.primary", err);
       expectString(input.theme.font, "$.theme.font", err);
     }
@@ -378,7 +423,7 @@ export function validateConfig(input: unknown): ValidationResult {
   if (input.i18n !== undefined) {
     if (!isObject(input.i18n)) err("$.i18n", "i18n must be an object");
     else {
-      checkKeys(input.i18n, ["locale", "fallback", "overrides"], "$.i18n", err);
+      checkKeys(input.i18n, I18N_KEYS, "$.i18n", err);
       expectString(input.i18n.locale, "$.i18n.locale", err);
       expectString(input.i18n.fallback, "$.i18n.fallback", err);
       const ov = input.i18n.overrides;
@@ -404,7 +449,7 @@ export function validateConfig(input: unknown): ValidationResult {
     if (!isObject(input.permalink)) {
       err("$.permalink", 'permalink must be true, false, or { "param": "…" }');
     } else {
-      checkKeys(input.permalink, ["param"], "$.permalink", err);
+      checkKeys(input.permalink, PERMALINK_KEYS, "$.permalink", err);
       const param = input.permalink.param;
       if (param !== undefined && (typeof param !== "string" || !/^[A-Za-z0-9_-]+$/.test(param))) {
         err("$.permalink.param", "param must be a hash-safe name ([A-Za-z0-9_-])");
@@ -474,8 +519,7 @@ function validateLayers(
         if (typeof layer.url !== "string") err(`${p}.url`, 'a "wms" layer needs a "url"');
         if (typeof layer.layers !== "string")
           err(`${p}.layers`, 'a "wms" layer needs "layers" (WMS LAYERS parameter)');
-        if (layer.version !== undefined && layer.version !== "1.1.1" && layer.version !== "1.3.0")
-          err(`${p}.version`, 'wms version must be "1.1.1" or "1.3.0"');
+        expectEnum(layer.version, WMS_VERSIONS, `${p}.version`, err);
         expectString(layer.styles, `${p}.styles`, err);
         expectString(layer.format, `${p}.format`, err);
         expectBoolean(layer.transparent, `${p}.transparent`, err);
@@ -489,7 +533,7 @@ function validateLayers(
         if (layer.info !== undefined && layer.info !== false) {
           if (!isObject(layer.info)) err(`${p}.info`, "info must be false or a popup object");
           else {
-            checkKeys(layer.info, [...POPUP_KEYS, "format"], `${p}.info`, err);
+            checkKeys(layer.info, WMS_INFO_KEYS, `${p}.info`, err);
             validatePopupShape(layer.info, `${p}.info`, err);
           }
         }
@@ -517,7 +561,7 @@ function validateLayers(
           layer.hillshade,
           `${p}.hillshade`,
           err,
-          ["exaggeration", "illuminationDirection", "shadowColor", "highlightColor", "accentColor"],
+          HILLSHADE_KEYS,
           (o) => {
             expectNumber(o.exaggeration, `${p}.hillshade.exaggeration`, err, 0, 1);
             expectNumber(o.illuminationDirection, `${p}.hillshade.illuminationDirection`, err, 0, 359);
@@ -531,7 +575,7 @@ function validateLayers(
             err(`${p}.color`, 'color must be { "scheme", "min", "max", "continuous"?, "reverse"? }');
           } else {
             const c = layer.color;
-            checkKeys(c, ["scheme", "min", "max", "continuous", "reverse"], `${p}.color`, err);
+            checkKeys(c, COG_COLOR_KEYS, `${p}.color`, err);
             if (typeof c.scheme !== "string" || !c.scheme)
               err(`${p}.color.scheme`, 'color needs a "scheme" (ramp name, e.g. "BrewerSpectral7")');
             if (typeof c.min !== "number" || !Number.isFinite(c.min))
@@ -560,7 +604,7 @@ function validateLayers(
         )
           err(`${p}.cluster`, "cluster must be true, false, or an options object");
         if (isObject(layer.cluster)) {
-          checkKeys(layer.cluster, ["enabled", "radius", "maxZoom"], `${p}.cluster`, err);
+          checkKeys(layer.cluster, CLUSTER_KEYS, `${p}.cluster`, err);
           expectBoolean(layer.cluster.enabled, `${p}.cluster.enabled`, err);
           expectNumber(layer.cluster.radius, `${p}.cluster.radius`, err, 1, 1000);
           expectNumber(layer.cluster.maxZoom, `${p}.cluster.maxZoom`, err, 0, 24);
@@ -598,9 +642,9 @@ function validateLegend(legend: unknown, p: string, err: Err): void {
     if (!isObject(entry) || typeof entry.label !== "string") {
       return err(`${p}.legend[${j}]`, 'a legend entry needs at least a "label"');
     }
-    checkKeys(entry, ["label", "color", "shape", "image"], `${p}.legend[${j}]`, err);
+    checkKeys(entry, LEGEND_ENTRY_KEYS, `${p}.legend[${j}]`, err);
     expectString(entry.color, `${p}.legend[${j}].color`, err);
-    expectEnum(entry.shape, ["square", "line", "circle"], `${p}.legend[${j}].shape`, err);
+    expectEnum(entry.shape, LEGEND_SHAPES, `${p}.legend[${j}].shape`, err);
     checkUrl(entry.image, `${p}.legend[${j}].image`, err);
   });
 }
@@ -617,7 +661,7 @@ function validatePopupShape(popup: Record<string, unknown>, path: string, err: E
         if (!isObject(f) || typeof f.key !== "string")
           err(`${path}.fields[${j}]`, 'a field needs a "key"');
         else {
-          checkKeys(f, ["key", "label"], `${path}.fields[${j}]`, err);
+          checkKeys(f, FIELD_KEYS, `${path}.fields[${j}]`, err);
           expectString(f.label, `${path}.fields[${j}].label`, err);
         }
       });
@@ -636,7 +680,7 @@ function validateHover(hover: unknown, path: string, err: Err): void {
   if (!isObject(hover) || typeof hover.content !== "string") {
     return err(path, 'hover must be false or { "content": "template" }');
   }
-  checkKeys(hover, ["content"], path, err);
+  checkKeys(hover, HOVER_KEYS, path, err);
 }
 
 /* -------------------------------- controls -------------------------------- */
@@ -649,14 +693,14 @@ function validateControls(controls: unknown, err: Err): void {
   for (const k of ["navigation", "fullscreen", "globe", "home", "print", "measure"] as const) {
     expectBoolean(controls[k], `$.controls.${k}`, err);
   }
-  expectToggleObject(controls.scale, "$.controls.scale", err, ["maxWidth", "unit"], (o) => {
+  expectToggleObject(controls.scale, "$.controls.scale", err, SCALE_KEYS, (o) => {
     expectNumber(o.maxWidth, "$.controls.scale.maxWidth", err, 20, 500);
-    expectEnum(o.unit, ["metric", "imperial"], "$.controls.scale.unit", err);
+    expectEnum(o.unit, SCALE_UNITS, "$.controls.scale.unit", err);
   });
-  expectToggleObject(controls.geolocate, "$.controls.geolocate", err, ["follow"], (o) => {
+  expectToggleObject(controls.geolocate, "$.controls.geolocate", err, GEOLOCATE_KEYS, (o) => {
     expectBoolean(o.follow, "$.controls.geolocate.follow", err);
   });
-  expectToggleObject(controls.attribution, "$.controls.attribution", err, ["compact"], (o) => {
+  expectToggleObject(controls.attribution, "$.controls.attribution", err, ATTRIBUTION_KEYS, (o) => {
     if (o.compact !== undefined && typeof o.compact !== "boolean" && o.compact !== "auto")
       err("$.controls.attribution.compact", 'compact must be true, false, or "auto"');
   });
@@ -664,7 +708,7 @@ function validateControls(controls: unknown, err: Err): void {
     controls.layerSwitcher,
     "$.controls.layerSwitcher",
     err,
-    ["position", "open", "title", "allowAdd"],
+    LAYER_SWITCHER_KEYS,
     (o) => {
       expectEnum(o.position, POSITIONS, "$.controls.layerSwitcher.position", err);
       if (o.open !== undefined && typeof o.open !== "boolean" && o.open !== "auto")
@@ -673,21 +717,21 @@ function validateControls(controls: unknown, err: Err): void {
       expectBoolean(o.allowAdd, "$.controls.layerSwitcher.allowAdd", err);
     },
   );
-  expectToggleObject(controls.basemapSwitcher, "$.controls.basemapSwitcher", err, ["position"], (o) => {
+  expectToggleObject(controls.basemapSwitcher, "$.controls.basemapSwitcher", err, BASEMAP_SWITCHER_KEYS, (o) => {
     expectEnum(o.position, POSITIONS, "$.controls.basemapSwitcher.position", err);
   });
-  expectToggleObject(controls.legend, "$.controls.legend", err, ["position", "open"], (o) => {
+  expectToggleObject(controls.legend, "$.controls.legend", err, LEGEND_CONTROL_KEYS, (o) => {
     expectEnum(o.position, POSITIONS, "$.controls.legend.position", err);
     expectBoolean(o.open, "$.controls.legend.open", err);
   });
-  expectToggleObject(controls.coordinates, "$.controls.coordinates", err, ["crs"], (o) => {
+  expectToggleObject(controls.coordinates, "$.controls.coordinates", err, COORDINATES_KEYS, (o) => {
     if (o.crs === undefined) return;
     if (!Array.isArray(o.crs)) return err("$.controls.coordinates.crs", "crs must be an array");
     o.crs.forEach((entry, i) => {
       const p = `$.controls.coordinates.crs[${i}]`;
       if (!isObject(entry) || typeof entry.code !== "string")
         return err(p, 'a CRS entry needs a "code", e.g. { "code": "EPSG:31256" }');
-      checkKeys(entry, ["code", "label", "def"], p, err);
+      checkKeys(entry, CRS_KEYS, p, err);
       expectString(entry.label, `${p}.label`, err);
       expectString(entry.def, `${p}.def`, err);
     });
@@ -713,29 +757,25 @@ function validateSearch(search: unknown, err: Err): void {
   const provider = search.provider;
   if (provider === undefined) return;
   if (isObject(provider)) {
-    checkKeys(provider, ["url", "format", "labelField"], "$.search.provider", err);
+    checkKeys(provider, PROVIDER_KEYS, "$.search.provider", err);
     if (typeof provider.url !== "string")
       err("$.search.provider.url", "a custom geocoder needs a url template with {query}");
     else if (!provider.url.includes("{query}"))
       err("$.search.provider.url", 'the url template must contain the "{query}" placeholder');
     else checkUrl(provider.url, "$.search.provider.url", err);
-    expectEnum(provider.format, ["geojson", "nominatim"], "$.search.provider.format", err);
+    expectEnum(provider.format, PROVIDER_FORMATS, "$.search.provider.format", err);
     expectString(provider.labelField, "$.search.provider.labelField", err);
-  } else if (provider !== "photon" && provider !== "nominatim") {
+  } else if (typeof provider !== "string" || !PROVIDER_NAMES.includes(provider)) {
     err("$.search.provider", 'provider must be "photon", "nominatim", or a { url, format } object');
   }
 }
 
 /* ---------------------------------- print --------------------------------- */
 
-const PRINT_FORMATS = ["png", "pdf"];
-const PRINT_SIZES = ["current", "A4-landscape", "A4-portrait", "A3-landscape", "A3-portrait"];
-const PRINT_ELEMENTS = ["title", "legend", "scalebar", "attribution", "date"];
-
 function validatePrint(print: unknown, err: Err): void {
   if (print === undefined) return;
   if (!isObject(print)) return err("$.print", "print must be an object");
-  checkKeys(print, ["formats", "sizes", "dpi", "elements"], "$.print", err);
+  checkKeys(print, PRINT_KEYS, "$.print", err);
   const list = (value: unknown, path: string, allowed: string[]): void => {
     if (value === undefined) return;
     if (!Array.isArray(value)) return err(path, "must be an array");

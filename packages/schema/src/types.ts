@@ -1,6 +1,7 @@
 /**
- * map0 configuration types — schema v0 (draft).
- * Shapes follow docs/04-configuration.md; v0 covers the M0 spike subset.
+ * map0 configuration types — config format v1 (draft until map0-viewer 1.0).
+ * Shapes follow docs/04-configuration.md and the published JSON Schema
+ * (../v1.json, served at https://map0.net/schema/v1.json).
  */
 import type { FeatureCollection, Feature, Geometry } from "geojson";
 

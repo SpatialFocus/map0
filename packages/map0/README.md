@@ -10,8 +10,8 @@ theming and languages are all declared in a single JSON document that can live i
 renders straight into the page as a web component — no iframe, no backend, no build step required.
 
 > **Early preview — version 0.0.5.** The client works against real OGC services — it is what the
-> [live demos](https://map0.net/demos) run on — but the JavaScript API and the config schema are
-> still v0 and will change without a deprecation path until 1.0. Pin an exact version.
+> [live demos](https://map0.net/demos) run on — but the JavaScript API and the config format are
+> still drafts and will change without a deprecation path until 1.0. Pin an exact version.
 > TypeScript types are not published yet.
 >
 > The package is called **map0-viewer**: npm's name-similarity rule for short names rejects the
@@ -144,6 +144,35 @@ permalinks, `extends` for shared base configs, CSS-variable theming, and per-lan
 overrides. See
 [docs/04-configuration.md](https://github.com/SpatialFocus/map0/blob/main/docs/04-configuration.md)
 for the annotated reference.
+
+### Autocomplete and validation
+
+The config format has a published JSON Schema. Point the `$schema` key at it and any modern editor
+(VS Code, JetBrains, Monaco in a CMS) offers autocomplete, documentation on hover and typo
+squiggles while you write a config:
+
+```json
+{
+  "$schema": "https://map0.net/schema/v1.json",
+  "version": 1,
+  "basemaps": []
+}
+```
+
+`https://map0.net/schema/v1.json` follows the latest release. The npm tarball carries the same file
+as `schema/v1.json`, so a version-pinned copy is on the CDN too:
+`https://cdn.jsdelivr.net/npm/map0-viewer@0.0.5/schema/v1.json`.
+
+To validate configs outside an editor (CI, a CMS save hook):
+
+```bash
+npx ajv-cli validate -s node_modules/map0-viewer/schema/v1.json -d my-map.map0.json
+```
+
+The schema checks structure: keys, types, ranges, required fields. map0 validates further at
+runtime — https-only URLs, id uniqueness, cross-field rules — and renders those errors in place of
+the map, with JSON paths. Like everything else before 1.0, the schema is a draft: keys may still
+change from release to release.
 
 ## Weight
 

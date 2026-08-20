@@ -1,4 +1,5 @@
 {
+  "$schema": "https://map0.net/schema/v1.json",
   "version": 1,
   "meta": { "title": "Globe", "description": "MapLibre-Globus mit Inline-GeoJSON." },
   "map": {

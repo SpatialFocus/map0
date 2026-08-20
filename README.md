@@ -8,8 +8,8 @@
 
 **Status:** approaching the M1 milestone — layer tree, WMS/WMTS/vector tiles/GeoJSON/COG, feature
 info, legends, search, measuring, print, permalink, theming and i18n all work against live services.
-Published as an early preview (`map0-viewer` 0.0.5 on npm, MIT); APIs and the config schema are
-still v0 and will change without a deprecation path until 1.0. See
+Published as an early preview (`map0-viewer` 0.0.5 on npm, MIT); the API and the config format are
+still drafts and will change without a deprecation path until 1.0. See
 [07-roadmap.md](docs/07-roadmap.md) and the [CHANGELOG](CHANGELOG.md).
 
 ## The idea in one paragraph
@@ -77,7 +77,7 @@ node e2e/verify-demos.mjs wms   # …or just one (dev server must be running)
 ## Repository layout
 
 ```
-packages/schema   config types v0, validation (JSON-path errors), defaults
+packages/schema   config types, validation (JSON-path errors), defaults, published JSON Schema (v1.json)
 packages/core     headless engine: basemap manager, source adapters (wms/wmts/raster/cog/geojson/
                   vector), feature info, i18n — no DOM UI
 packages/ui       the <map0-viewer> web component (Lit) + panels, popups, theming

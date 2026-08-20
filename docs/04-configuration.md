@@ -1,7 +1,9 @@
 # 04 — Configuration Concept
 
-> Status: draft · 2026-08-14 · The config **is** the product. This document defines its philosophy,
-> shape, and a full annotated example. The normative JSON Schema will live in `packages/schema`.
+> Status: draft · 2026-08-20 · The config **is** the product. This document defines its philosophy,
+> shape, and a full annotated example. The published JSON Schema lives at
+> [`packages/schema/v1.json`](../packages/schema/v1.json) and is served at
+> <https://map0.net/schema/v1.json> — see [Schema & validation](#schema--validation).
 
 ## Principles
 
@@ -69,7 +71,6 @@ inside the config it would gate. It mirrors `<img loading>`:
 | `controls` | which UI elements exist, where | no |
 | `print` | what the print dialog offers: formats, paper sizes, resolutions, sheet elements | no |
 | `search` | geocoder config | no |
-| `print` | print/export layout options | no |
 | `theme` | design tokens, light/dark | no |
 | `i18n` | locale, string overrides (`overrides: { "<locale>": { "<key>": "<text>" } }`) | no |
 | `permalink` | shareable state in the URL hash (F10.1): view, basemap, layer states, user-added layers; `true` or `{ "param": "map0" }` — opt-in, coexists with host hash routing. Two viewers on one page need **different** `param` values; a second viewer claiming the same one falls back to `map0-2` and says so in the console | no |
@@ -78,7 +79,7 @@ inside the config it would gate. It mirrors `<img loading>`:
 
 ```jsonc
 {
-  "$schema": "https://map0.example.org/schema/v1.json",
+  "$schema": "https://map0.net/schema/v1.json",
   "version": 1,
 
   "meta": {
@@ -325,6 +326,39 @@ config — and are removable (✕ in the TOC). The same operations are available
 - All rendered HTML (templates, WMS HTML GetFeatureInfo, service abstracts) is sanitized
   (allow-list: basic formatting, links `rel="noopener"`, images) — configs come from CMS fields and
   services are third parties; XSS hygiene is non-negotiable.
+
+## Schema & validation
+
+The published JSON Schema (C3) is hand-written in [`packages/schema/v1.json`](../packages/schema/v1.json)
+— hand-written because its `description` texts are the editor documentation, which a generator
+cannot produce. It cannot drift from the validator: `v1-schema.test.ts` locks every key set and
+enum in the schema to the exported tables in `validate.ts` (both directions), and runs every demo
+config through the compiled schema. Adding a config key means touching both files, and the test
+says so.
+
+One canonical file, three places it is published:
+
+| URL | Follows |
+|---|---|
+| `https://map0.net/schema/v1.json` | latest release (copied into the site build) |
+| `https://cdn.jsdelivr.net/npm/map0-viewer@<version>/schema/v1.json` | that exact release (in the npm tarball) |
+| `https://cdn.jsdelivr.net/npm/map0-viewer/schema/v1.json` | latest release (floating) |
+
+The file is named after the **config format version** (`"version": 1`), not the package version —
+its draft status until 1.0 is carried by the `0.x` package version and a `$comment` in the schema
+itself.
+
+How it is used:
+
+- **Editors** — a `$schema` key in the config gives autocomplete, hover documentation and typo
+  squiggles in VS Code, JetBrains, or Monaco embedded in a CMS. Every demo config carries the line.
+- **CI / save hooks** — `npx ajv-cli validate -s schema/v1.json -d config.map0.json`, or
+  `check-jsonschema` on the Python side.
+- **Runtime** — `validateConfig` stays authoritative: the https-URL policy (N6), id uniqueness
+  across the layer tree, and cross-field rules (`color` vs `hillshade`, `min < max`) are not
+  expressible in JSON Schema. Note one deliberate difference: the schema flags unknown keys (that
+  squiggle is the point of editor support), while the runtime only warns about them (C5 — a config
+  written for a newer map0 still opens).
 
 ## Versioning policy
 

@@ -1,4 +1,5 @@
 {
+  "$schema": "https://map0.net/schema/v1.json",
   "version": 1,
   "meta": { "title": "Three ways to get a legend" },
   "map": { "center": [16.3725, 48.2083], "zoom": 13 },

@@ -1,4 +1,5 @@
 {
+  "$schema": "https://map0.net/schema/v1.json",
   "version": 1,
   "meta": { "title": "Coordinates in several reference systems" },
   "map": { "center": [13.35, 47.35], "zoom": 7 },

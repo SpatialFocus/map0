@@ -42,6 +42,7 @@
   },
   "files": [
     "dist",
+    "schema",
     "README.md",
     "LICENSE",
     "THIRD-PARTY-NOTICES.md"

@@ -61,8 +61,10 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
 
 ### Remaining for v1.0
 
-- ⬜ **Published JSON Schema** + config reference generated from it (C3, N12) — generated from the
-  key tables in `packages/schema/src/validate.ts`, so schema and validator cannot drift
+- ✅ **Published JSON Schema** (C3) — hand-written `packages/schema/v1.json` (the descriptions are
+  the editor documentation), served at <https://map0.net/schema/v1.json> and shipped in the npm
+  tarball; key sets and enums are locked to the validator's tables by `v1-schema.test.ts`, so
+  schema and validator cannot drift · ⬜ config reference generated from the schema (N12)
 - ✅ **Unknown-key warnings** (C5 — reported, never fatal), id uniqueness, nested shapes and the
   https policy in the validator (N6)
 - ⬜ **Accessibility pass** — audit, keyboard TOC review, DOM-mirrored feature results (N4)

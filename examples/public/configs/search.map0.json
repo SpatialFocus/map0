@@ -1,4 +1,5 @@
 {
+  "$schema": "https://map0.net/schema/v1.json",
   "version": 1,
   "meta": { "title": "Place and address search" },
   "map": { "center": [13.35, 47.6], "zoom": 6.5 },

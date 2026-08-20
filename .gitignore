@@ -12,6 +12,9 @@ build/
 # Generated demo bundle (created by `pnpm demo:standalone`)
 examples/public/standalone/
 
+# JSON Schema copied into the package by `pnpm build:npm` (canonical: packages/schema/v1.json)
+packages/map0/schema/
+
 # npm pack output (inspected before publish, never committed)
 *.tgz
 

@@ -81,6 +81,22 @@ for (const file of MAPLIBRE_FILES) {
 
 copyFileSync(join(root, "LICENSE"), join(PKG, "LICENSE"));
 
+/* ------------------------------------------------------------ the JSON Schema */
+
+/* The published config schema (C3) ships inside the package as schema/v1.json,
+   which gives it versioned CDN URLs for free (jsdelivr.net/npm/map0-viewer@x.y.z/
+   schema/v1.json). The canonical copy lives in packages/schema next to the
+   validator it is sync-tested against; map0.net serves the same file. */
+const SCHEMA_SRC = join(root, "packages", "schema", "v1.json");
+try {
+  JSON.parse(readFileSync(SCHEMA_SRC, "utf8"));
+} catch (e) {
+  die(`packages/schema/v1.json is not valid JSON: ${e.message}`);
+}
+rmSync(join(PKG, "schema"), { recursive: true, force: true });
+mkdirSync(join(PKG, "schema"), { recursive: true });
+copyFileSync(SCHEMA_SRC, join(PKG, "schema", "v1.json"));
+
 /* ------------------------------------------------- what is inside the chunks */
 
 /** every npm package whose code the sourcemaps attribute to a chunk we ship */

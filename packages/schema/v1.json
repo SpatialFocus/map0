@@ -1,0 +1,738 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://map0.net/schema/v1.json",
+  "title": "map0 config",
+  "description": "One JSON document per map: basemaps, layer tree, controls, popups, search, print, theming, i18n. Only \"version\" and one basemap are required — everything else has documented defaults. https://map0.net",
+  "$comment": "Draft: the config format is version 1, but keys may still change until map0-viewer 1.0. Hand-written for the sake of its descriptions; key sets and enums are locked to the runtime validator by packages/schema/src/v1-schema.test.ts. This schema checks structure only — the runtime validator additionally enforces the https-URL policy, id uniqueness and cross-field rules, and treats unknown keys as warnings, never as errors (a config written for a newer map0 still opens).",
+  "type": "object",
+  "required": ["version"],
+  "if": { "required": ["extends"] },
+  "else": { "required": ["basemaps"] },
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "URL of this JSON Schema — enables autocomplete and validation in editors. Not read by map0."
+    },
+    "version": {
+      "type": "integer",
+      "const": 1,
+      "description": "config format major version — map0 1.x reads version 1"
+    },
+    "extends": {
+      "type": "string",
+      "description": "URL of a base config to inherit (org-wide basemaps, theme, …). Local keys win; objects merge recursively, arrays replace as a whole. Chains up to depth 3. A config with \"extends\" may leave out \"basemaps\" when the base provides them."
+    },
+    "meta": { "$ref": "#/definitions/meta" },
+    "map": { "$ref": "#/definitions/map" },
+    "basemaps": {
+      "type": "array",
+      "description": "exclusive background layers — exactly one is active at a time; at least one is required",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/basemap" }
+    },
+    "layers": {
+      "type": "array",
+      "description": "overlay tree (groups + layers) — top of the list = top of the map; runtime-added layers go above all of them",
+      "items": { "$ref": "#/definitions/layer" }
+    },
+    "controls": { "$ref": "#/definitions/controls" },
+    "search": { "$ref": "#/definitions/search" },
+    "print": { "$ref": "#/definitions/print" },
+    "theme": { "$ref": "#/definitions/theme" },
+    "i18n": { "$ref": "#/definitions/i18n" },
+    "permalink": {
+      "description": "shareable map state in the URL hash (view, basemap, layer states, user-added layers) — opt-in; true uses the parameter name \"map0\". Two viewers on one page need different \"param\" values.",
+      "default": false,
+      "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/permalinkOptions" }]
+    }
+  },
+  "definitions": {
+    "meta": {
+      "type": "object",
+      "description": "title/description of the map — used in the print header and as the accessible label",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string", "description": "map title (print header, aria-label)" },
+        "description": { "type": "string", "description": "short description of the map" }
+      }
+    },
+    "map": {
+      "type": "object",
+      "description": "initial view and view constraints",
+      "additionalProperties": false,
+      "properties": {
+        "center": {
+          "type": "array",
+          "description": "initial center as [longitude, latitude] (WGS84)",
+          "items": [
+            { "type": "number", "minimum": -180, "maximum": 180 },
+            { "type": "number", "minimum": -90, "maximum": 90 }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "zoom": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 24,
+          "description": "initial zoom level (0–24)"
+        },
+        "bounds": {
+          "type": "array",
+          "description": "initial view as [west, south, east, north] (WGS84) — wins over center/zoom when set",
+          "items": { "type": "number" },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "minZoom": { "type": "number", "minimum": 0, "maximum": 24, "description": "the user cannot zoom out beyond this level" },
+        "maxZoom": { "type": "number", "minimum": 0, "maximum": 24, "description": "the user cannot zoom in beyond this level" },
+        "maxBounds": {
+          "type": "array",
+          "description": "pan constraint as [west, south, east, north] (WGS84)",
+          "items": { "type": "number" },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "bearing": { "type": "number", "minimum": -360, "maximum": 360, "description": "initial rotation in degrees" },
+        "pitch": { "type": "number", "minimum": 0, "maximum": 85, "description": "initial tilt in degrees" },
+        "projection": {
+          "enum": ["mercator", "globe"],
+          "default": "mercator",
+          "description": "initial projection — the globe control lets users toggle at runtime"
+        },
+        "hash": {
+          "type": "boolean",
+          "default": false,
+          "description": "opt-in URL-hash view sync — superseded by the top-level \"permalink\" key"
+        }
+      }
+    },
+    "basemap": {
+      "type": "object",
+      "description": "an exclusive background layer",
+      "required": ["type"],
+      "additionalProperties": false,
+      "if": { "properties": { "type": { "const": "empty" } }, "required": ["type"] },
+      "else": { "required": ["url"] },
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "stable id — one namespace with layer ids (permalink and the JS API address both by id); generated from the title when omitted"
+        },
+        "title": { "type": "string", "description": "label in the basemap switcher" },
+        "type": {
+          "enum": ["style", "raster", "empty"],
+          "description": "\"style\": MapLibre style JSON (vector basemap) · \"raster\": XYZ/WMTS-REST tile template · \"empty\": no background"
+        },
+        "url": {
+          "type": "string",
+          "description": "style: MapLibre style URL · raster: tile template with {z}/{x}/{y} placeholders. https required on https pages."
+        },
+        "tileSize": { "type": "number", "minimum": 1, "maximum": 4096, "default": 256, "description": "raster tile size in px" },
+        "minZoom": { "type": "number", "minimum": 0, "maximum": 24 },
+        "maxZoom": { "type": "number", "minimum": 0, "maximum": 24 },
+        "attribution": { "type": "string", "description": "attribution line, e.g. \"© basemap.at\"" },
+        "thumbnail": { "type": "string", "description": "\"auto\" renders a mini preview, or an image URL" },
+        "default": { "type": "boolean", "description": "start with this basemap (otherwise the first one)" }
+      }
+    },
+    "layer": {
+      "description": "a node of the overlay tree: a group or a layer, discriminated by \"type\"",
+      "oneOf": [
+        { "$ref": "#/definitions/groupLayer" },
+        { "$ref": "#/definitions/wmsLayer" },
+        { "$ref": "#/definitions/wmtsLayer" },
+        { "$ref": "#/definitions/rasterLayer" },
+        { "$ref": "#/definitions/cogLayer" },
+        { "$ref": "#/definitions/geojsonLayer" },
+        { "$ref": "#/definitions/vectorLayer" }
+      ]
+    },
+    "groupLayer": {
+      "type": "object",
+      "description": "a group node in the layer tree",
+      "required": ["type", "children"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "group" },
+        "title": { "type": "string", "description": "group label in the layer tree" },
+        "collapsed": { "type": "boolean", "default": false, "description": "start collapsed" },
+        "children": {
+          "type": "array",
+          "description": "nested groups and layers",
+          "items": { "$ref": "#/definitions/layer" }
+        }
+      }
+    },
+    "wmsLayer": {
+      "type": "object",
+      "description": "OGC WMS layer (tiled GetMap) — \"info\" enables GetFeatureInfo, \"legend\": \"auto\" uses GetLegendGraphic",
+      "required": ["type", "url", "layers"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "wms" },
+        "id": { "$ref": "#/definitions/layerId" },
+        "title": { "$ref": "#/definitions/layerTitle" },
+        "visible": { "$ref": "#/definitions/layerVisible" },
+        "opacity": { "$ref": "#/definitions/layerOpacity" },
+        "minZoom": { "$ref": "#/definitions/layerMinZoom" },
+        "maxZoom": { "$ref": "#/definitions/layerMaxZoom" },
+        "bounds": { "$ref": "#/definitions/layerBounds" },
+        "attribution": { "$ref": "#/definitions/layerAttribution" },
+        "metadata": { "$ref": "#/definitions/metadata" },
+        "legend": { "$ref": "#/definitions/legend" },
+        "url": { "type": "string", "description": "WMS endpoint (GetMap base URL)" },
+        "layers": { "type": "string", "description": "WMS LAYERS parameter (comma-separated)" },
+        "styles": { "type": "string", "description": "WMS STYLES parameter" },
+        "format": { "type": "string", "description": "image format, e.g. \"image/png\"" },
+        "version": { "enum": ["1.1.1", "1.3.0"], "description": "WMS protocol version" },
+        "transparent": { "type": "boolean", "description": "request transparent tiles" },
+        "tileSize": { "type": "number", "minimum": 1, "maximum": 4096, "description": "request tile size in px" },
+        "params": {
+          "type": "object",
+          "description": "extra vendor parameters appended to GetMap/GetFeatureInfo",
+          "additionalProperties": { "type": "string" }
+        },
+        "info": {
+          "description": "presence enables GetFeatureInfo on click — false disables",
+          "oneOf": [{ "const": false }, { "$ref": "#/definitions/wmsInfo" }]
+        }
+      }
+    },
+    "wmtsLayer": {
+      "type": "object",
+      "description": "OGC WMTS layer, resolved from the service capabilities (image tiles; matrix set, format, bounds and legend are picked automatically)",
+      "required": ["type", "url", "layer"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "wmts" },
+        "id": { "$ref": "#/definitions/layerId" },
+        "title": { "$ref": "#/definitions/layerTitle" },
+        "visible": { "$ref": "#/definitions/layerVisible" },
+        "opacity": { "$ref": "#/definitions/layerOpacity" },
+        "minZoom": { "$ref": "#/definitions/layerMinZoom" },
+        "maxZoom": { "$ref": "#/definitions/layerMaxZoom" },
+        "bounds": { "$ref": "#/definitions/layerBounds" },
+        "attribution": { "$ref": "#/definitions/layerAttribution" },
+        "metadata": { "$ref": "#/definitions/metadata" },
+        "legend": { "$ref": "#/definitions/legend" },
+        "url": { "type": "string", "description": "WMTS GetCapabilities URL (REST or KVP)" },
+        "layer": { "type": "string", "description": "layer identifier from the capabilities" },
+        "matrixSet": { "type": "string", "description": "tile matrix set identifier — default: the first WebMercator-compatible one" },
+        "style": { "type": "string", "description": "style identifier — default: the layer's default style" },
+        "format": { "type": "string", "description": "preferred tile format, e.g. \"image/png\"" }
+      }
+    },
+    "rasterLayer": {
+      "type": "object",
+      "description": "raster tile overlay from an XYZ/WMTS-REST template",
+      "required": ["type", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "raster" },
+        "id": { "$ref": "#/definitions/layerId" },
+        "title": { "$ref": "#/definitions/layerTitle" },
+        "visible": { "$ref": "#/definitions/layerVisible" },
+        "opacity": { "$ref": "#/definitions/layerOpacity" },
+        "minZoom": { "$ref": "#/definitions/layerMinZoom" },
+        "maxZoom": { "$ref": "#/definitions/layerMaxZoom" },
+        "bounds": { "$ref": "#/definitions/layerBounds" },
+        "attribution": { "$ref": "#/definitions/layerAttribution" },
+        "metadata": { "$ref": "#/definitions/metadata" },
+        "legend": { "$ref": "#/definitions/legend" },
+        "url": { "type": "string", "description": "tile template with {z}/{x}/{y} placeholders" },
+        "tileSize": { "type": "number", "minimum": 1, "maximum": 4096, "default": 256, "description": "tile size in px" }
+      }
+    },
+    "cogLayer": {
+      "type": "object",
+      "description": "Cloud Optimized GeoTIFF, read straight from storage via HTTP range requests. RGB/grayscale by default; \"color\" renders a single band through a color ramp, \"hillshade\" renders a single-band DEM as relief shading. Bounds and zoom range come from the file header.",
+      "required": ["type", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "cog" },
+        "id": { "$ref": "#/definitions/layerId" },
+        "title": { "$ref": "#/definitions/layerTitle" },
+        "visible": { "$ref": "#/definitions/layerVisible" },
+        "opacity": { "$ref": "#/definitions/layerOpacity" },
+        "minZoom": { "$ref": "#/definitions/layerMinZoom" },
+        "maxZoom": { "$ref": "#/definitions/layerMaxZoom" },
+        "bounds": { "$ref": "#/definitions/layerBounds" },
+        "attribution": { "$ref": "#/definitions/layerAttribution" },
+        "metadata": { "$ref": "#/definitions/metadata" },
+        "legend": { "$ref": "#/definitions/legend" },
+        "url": {
+          "type": "string",
+          "description": "Cloud Optimized GeoTIFF URL — the file must be in EPSG:3857 (no client-side reprojection) and the server must answer HTTP range requests"
+        },
+        "color": { "$ref": "#/definitions/cogColor" },
+        "hillshade": {
+          "description": "render a single-band DEM as hillshading — true, or an options object; mutually exclusive with \"color\". Layer opacity scales the exaggeration.",
+          "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/hillshadeOptions" }]
+        }
+      }
+    },
+    "geojsonLayer": {
+      "type": "object",
+      "description": "GeoJSON overlay — by URL or inline; supports clustering, popups and hover tooltips",
+      "required": ["type", "data"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "geojson" },
+        "id": { "$ref": "#/definitions/layerId" },
+        "title": { "$ref": "#/definitions/layerTitle" },
+        "visible": { "$ref": "#/definitions/layerVisible" },
+        "opacity": { "$ref": "#/definitions/layerOpacity" },
+        "minZoom": { "$ref": "#/definitions/layerMinZoom" },
+        "maxZoom": { "$ref": "#/definitions/layerMaxZoom" },
+        "bounds": { "$ref": "#/definitions/layerBounds" },
+        "attribution": { "$ref": "#/definitions/layerAttribution" },
+        "metadata": { "$ref": "#/definitions/metadata" },
+        "legend": { "$ref": "#/definitions/legend" },
+        "data": {
+          "description": "URL of a GeoJSON document, or the GeoJSON inline",
+          "oneOf": [{ "type": "string" }, { "type": "object" }]
+        },
+        "style": {
+          "description": "simplified style: one flat paint-property object (circle-*, line-*, fill-* — applied per geometry type) · full control: an array of MapLibre style-spec layers",
+          "oneOf": [
+            { "type": "object" },
+            { "type": "array", "items": { "$ref": "#/definitions/styleLayer" } }
+          ]
+        },
+        "cluster": {
+          "description": "cluster point features — true, or an options object",
+          "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/clusterOptions" }]
+        },
+        "popup": {
+          "description": "popup on feature click — false disables",
+          "oneOf": [{ "const": false }, { "$ref": "#/definitions/popup" }]
+        },
+        "hover": {
+          "description": "short tooltip on hover, e.g. { \"content\": \"{{name}}\" } — false disables",
+          "oneOf": [{ "const": false }, { "$ref": "#/definitions/hover" }]
+        },
+        "promoteId": { "type": "string", "description": "feature property to use as the feature id (hover/selection state)" }
+      }
+    },
+    "vectorLayer": {
+      "type": "object",
+      "description": "vector tile overlay styled client-side with MapLibre style-spec layers",
+      "required": ["type", "url", "style"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "vector" },
+        "id": { "$ref": "#/definitions/layerId" },
+        "title": { "$ref": "#/definitions/layerTitle" },
+        "visible": { "$ref": "#/definitions/layerVisible" },
+        "opacity": { "$ref": "#/definitions/layerOpacity" },
+        "minZoom": { "$ref": "#/definitions/layerMinZoom" },
+        "maxZoom": { "$ref": "#/definitions/layerMaxZoom" },
+        "bounds": { "$ref": "#/definitions/layerBounds" },
+        "attribution": { "$ref": "#/definitions/layerAttribution" },
+        "metadata": { "$ref": "#/definitions/metadata" },
+        "legend": { "$ref": "#/definitions/legend" },
+        "url": { "type": "string", "description": "TileJSON URL, {z}/{x}/{y} tile template, or pmtiles:// URL" },
+        "sourceLayer": { "type": "string", "description": "name of the source layer inside the tiles" },
+        "style": {
+          "type": "array",
+          "description": "MapLibre style-spec layers — \"source\"/\"source-layer\" are injected by map0",
+          "items": { "$ref": "#/definitions/styleLayer" }
+        },
+        "popup": {
+          "description": "popup on feature click — false disables",
+          "oneOf": [{ "const": false }, { "$ref": "#/definitions/popup" }]
+        },
+        "hover": {
+          "description": "short tooltip on hover, e.g. { \"content\": \"{{name}}\" } — false disables",
+          "oneOf": [{ "const": false }, { "$ref": "#/definitions/hover" }]
+        }
+      }
+    },
+    "layerId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "stable id used by permalink, share state and the JS API — one namespace with basemap ids; generated from the title when omitted"
+    },
+    "layerTitle": { "type": "string", "description": "label in the layer tree" },
+    "layerVisible": { "type": "boolean", "default": true, "description": "initially visible" },
+    "layerOpacity": { "type": "number", "minimum": 0, "maximum": 1, "default": 1, "description": "layer opacity, 0–1" },
+    "layerMinZoom": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 24,
+      "description": "hide the layer below this zoom (the layer tree shows a zoom-range hint)"
+    },
+    "layerMaxZoom": { "type": "number", "minimum": 0, "maximum": 24, "description": "hide the layer above this zoom" },
+    "layerBounds": {
+      "type": "array",
+      "description": "[west, south, east, north] (WGS84) — enables \"zoom to layer\"; auto-filled from capabilities where possible",
+      "items": { "type": "number" },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "layerAttribution": { "type": "string", "description": "attribution shown while the layer is visible" },
+    "metadata": {
+      "type": "object",
+      "description": "link to the dataset's metadata record, shown in the layer menu",
+      "additionalProperties": false,
+      "properties": {
+        "url": { "type": "string", "description": "URL of the metadata record (catalog entry)" },
+        "title": { "type": "string", "description": "link label" }
+      }
+    },
+    "legend": {
+      "description": "\"auto\" (default): WMS GetLegendGraphic / swatches derived from the style · false: no legend · string: legend image URL · array: explicit entries",
+      "oneOf": [
+        { "const": false },
+        { "type": "string" },
+        { "type": "array", "items": { "$ref": "#/definitions/legendEntry" } }
+      ]
+    },
+    "legendEntry": {
+      "type": "object",
+      "required": ["label"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string", "description": "entry text" },
+        "color": { "type": "string", "description": "CSS color for the swatch" },
+        "shape": { "enum": ["square", "line", "circle"], "default": "square", "description": "swatch shape" },
+        "image": { "type": "string", "description": "image URL instead of a color swatch" }
+      }
+    },
+    "popup": {
+      "type": "object",
+      "description": "feature popup — templates use {{property}} placeholders and are sanitized before rendering",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string", "description": "title template, e.g. \"{{name}}\"" },
+        "content": { "type": "string", "description": "HTML template with {{property}} placeholders (sanitized)" },
+        "fields": {
+          "type": "array",
+          "description": "alternative to \"content\": render the listed properties as a table",
+          "items": { "$ref": "#/definitions/field" }
+        },
+        "maxWidth": { "type": "string", "description": "CSS length, e.g. \"320px\"" }
+      }
+    },
+    "wmsInfo": {
+      "type": "object",
+      "description": "GetFeatureInfo popup — templates use {{property}} placeholders and are sanitized before rendering",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string", "description": "title template, e.g. \"{{name}}\"" },
+        "content": { "type": "string", "description": "HTML template with {{property}} placeholders (sanitized)" },
+        "fields": {
+          "type": "array",
+          "description": "alternative to \"content\": render the listed properties as a table",
+          "items": { "$ref": "#/definitions/field" }
+        },
+        "maxWidth": { "type": "string", "description": "CSS length, e.g. \"320px\"" },
+        "format": { "type": "string", "description": "GetFeatureInfo INFO_FORMAT, e.g. \"application/json\"" }
+      }
+    },
+    "field": {
+      "type": "object",
+      "required": ["key"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "type": "string", "description": "feature property name" },
+        "label": { "type": "string", "description": "display label (defaults to the key)" }
+      }
+    },
+    "hover": {
+      "type": "object",
+      "required": ["content"],
+      "additionalProperties": false,
+      "properties": {
+        "content": { "type": "string", "description": "template with {{property}} placeholders" }
+      }
+    },
+    "cogColor": {
+      "type": "object",
+      "description": "single-band value → color mapping; the legend derives its swatches from this ramp. Omit for RGB/grayscale imagery. Mutually exclusive with \"hillshade\".",
+      "required": ["scheme", "min", "max"],
+      "additionalProperties": false,
+      "properties": {
+        "scheme": {
+          "type": "string",
+          "description": "ColorBrewer/CARTOColors ramp name — \"Brewer<Palette><classes>\" (e.g. \"BrewerSpectral7\", \"BrewerYlGnBu5\") or \"Carto<Palette>\" (e.g. \"CartoEarth\")"
+        },
+        "min": { "type": "number", "description": "data value mapped to the first ramp color" },
+        "max": { "type": "number", "description": "data value mapped to the last ramp color — must be greater than \"min\"" },
+        "continuous": { "type": "boolean", "default": false, "description": "interpolate between the ramp colors instead of discrete classes" },
+        "reverse": { "type": "boolean", "default": false, "description": "reverse the ramp" }
+      }
+    },
+    "hillshadeOptions": {
+      "type": "object",
+      "description": "hillshade rendering options (MapLibre hillshade paint)",
+      "additionalProperties": false,
+      "properties": {
+        "exaggeration": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.5, "description": "shading intensity" },
+        "illuminationDirection": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 359,
+          "default": 335,
+          "description": "light azimuth in degrees clockwise from north"
+        },
+        "shadowColor": { "type": "string", "description": "CSS color" },
+        "highlightColor": { "type": "string", "description": "CSS color" },
+        "accentColor": { "type": "string", "description": "CSS color" }
+      }
+    },
+    "clusterOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "radius": { "type": "number", "minimum": 1, "maximum": 1000, "description": "cluster radius in px" },
+        "maxZoom": { "type": "number", "minimum": 0, "maximum": 24, "description": "stop clustering above this zoom" }
+      }
+    },
+    "styleLayer": {
+      "type": "object",
+      "description": "a MapLibre style-spec layer — \"source\"/\"source-layer\" are injected by map0",
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string", "description": "style layer type, e.g. \"fill\", \"line\", \"circle\", \"symbol\"" }
+      }
+    },
+    "controls": {
+      "type": "object",
+      "description": "which UI controls exist and where — every control has a sensible default; set one to false to remove it",
+      "additionalProperties": false,
+      "properties": {
+        "navigation": { "type": "boolean", "default": true, "description": "zoom buttons + compass" },
+        "scale": {
+          "description": "scale bar",
+          "default": true,
+          "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/scaleOptions" }]
+        },
+        "fullscreen": { "type": "boolean", "default": true, "description": "fullscreen button" },
+        "geolocate": {
+          "description": "geolocate button (asks for browser location permission on use)",
+          "default": true,
+          "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/geolocateOptions" }]
+        },
+        "globe": { "type": "boolean", "default": true, "description": "2D/globe projection toggle" },
+        "home": { "type": "boolean", "default": false, "description": "button that returns to the initial view" },
+        "attribution": {
+          "description": "attribution line",
+          "default": true,
+          "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/attributionOptions" }]
+        },
+        "layerSwitcher": {
+          "description": "the layer tree panel (TOC)",
+          "default": true,
+          "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/layerSwitcherOptions" }]
+        },
+        "basemapSwitcher": {
+          "description": "basemap picker — appears only when there are at least two basemaps",
+          "default": true,
+          "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/basemapSwitcherOptions" }]
+        },
+        "legend": {
+          "description": "legend panel",
+          "default": true,
+          "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/legendControlOptions" }]
+        },
+        "print": { "type": "boolean", "default": true, "description": "print & export dialog (see the top-level \"print\" key for what it offers)" },
+        "measure": { "type": "boolean", "default": true, "description": "measure distance and area (on the sphere)" },
+        "coordinates": {
+          "description": "coordinate readout on right-click/long-press — default CRS list: WGS 84 + matching Austrian GK strip + matching UTM zone",
+          "default": true,
+          "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/coordinatesOptions" }]
+        }
+      }
+    },
+    "scaleOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxWidth": { "type": "number", "minimum": 20, "maximum": 500, "default": 100, "description": "maximum bar length in px" },
+        "unit": { "enum": ["metric", "imperial"], "default": "metric" }
+      }
+    },
+    "geolocateOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "follow": { "type": "boolean", "default": false, "description": "keep the map centered on the position" }
+      }
+    },
+    "attributionOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "compact": {
+          "enum": [true, false, "auto"],
+          "default": "auto",
+          "description": "collapse to an ⓘ button — \"auto\" collapses on small screens"
+        }
+      }
+    },
+    "layerSwitcherOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "position": { "enum": ["top-left", "top-right", "bottom-left", "bottom-right"], "default": "top-right" },
+        "open": {
+          "enum": [true, false, "auto"],
+          "default": "auto",
+          "description": "\"auto\": open on desktop, collapsed on mobile"
+        },
+        "title": { "type": "string", "description": "panel heading override" },
+        "allowAdd": { "type": "boolean", "default": true, "description": "show the add-layer dialog (paste a WMS/WMTS URL)" }
+      }
+    },
+    "basemapSwitcherOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "position": { "enum": ["top-left", "top-right", "bottom-left", "bottom-right"], "default": "bottom-left" }
+      }
+    },
+    "legendControlOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "position": { "enum": ["top-left", "top-right", "bottom-left", "bottom-right"], "default": "bottom-right" },
+        "open": { "type": "boolean", "default": false, "description": "start with the panel open" }
+      }
+    },
+    "coordinatesOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "crs": {
+          "type": "array",
+          "description": "coordinate systems to offer instead of the default list",
+          "items": { "$ref": "#/definitions/crs" }
+        }
+      }
+    },
+    "crs": {
+      "type": "object",
+      "required": ["code"],
+      "additionalProperties": false,
+      "properties": {
+        "code": { "type": "string", "description": "EPSG code, e.g. \"EPSG:31256\"" },
+        "label": { "type": "string", "description": "display label (defaults to the code)" },
+        "def": { "type": "string", "description": "proj4 definition — required for CRS the built-in registry does not know" }
+      }
+    },
+    "search": {
+      "type": "object",
+      "description": "type-ahead geocoding search box — present in the UI once this key exists",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean", "default": true, "description": "false removes the search box" },
+        "provider": {
+          "description": "geocoder — \"photon\" (default) · \"nominatim\" · a custom provider object",
+          "default": "photon",
+          "oneOf": [{ "enum": ["photon", "nominatim"] }, { "$ref": "#/definitions/customGeocoder" }]
+        },
+        "url": { "type": "string", "description": "override the service instance (self-hosted Photon/Nominatim)" },
+        "country": { "type": "string", "description": "ISO country code to restrict results to, e.g. \"AT\"" },
+        "bias": { "type": "boolean", "default": true, "description": "prefer results near the current view" },
+        "limit": { "type": "number", "minimum": 1, "maximum": 50, "default": 8, "description": "maximum number of results" },
+        "minLength": { "type": "number", "minimum": 1, "maximum": 20, "default": 3, "description": "start searching after this many characters" },
+        "placeholder": { "type": "string", "description": "input placeholder text" },
+        "coordinates": { "type": "boolean", "default": true, "description": "accept coordinate input like \"48.2083, 16.3725\" (latitude first)" }
+      }
+    },
+    "customGeocoder": {
+      "type": "object",
+      "description": "custom geocoder: a URL template plus the shape of its answer",
+      "required": ["url"],
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "type": "string",
+          "pattern": "\\{query\\}",
+          "description": "URL template — placeholders: {query} {limit} {lang} {bbox} {lng} {lat}"
+        },
+        "format": {
+          "enum": ["geojson", "nominatim"],
+          "description": "\"geojson\": FeatureCollection of points (Photon-like) · \"nominatim\": array of results"
+        },
+        "labelField": { "type": "string", "description": "property to use as the result label (geojson only; default: name/label/title)" }
+      }
+    },
+    "print": {
+      "type": "object",
+      "description": "what the print & export dialog offers — the dialog itself is toggled by \"controls.print\"",
+      "additionalProperties": false,
+      "properties": {
+        "formats": {
+          "type": "array",
+          "description": "download buttons to show; the browser print view is always available",
+          "items": { "enum": ["png", "pdf"] },
+          "default": ["png", "pdf"]
+        },
+        "sizes": {
+          "type": "array",
+          "description": "paper sizes offered — \"current\" is the map viewport as-is",
+          "items": { "enum": ["current", "A4-landscape", "A4-portrait", "A3-landscape", "A3-portrait"] },
+          "default": ["current", "A4-landscape", "A4-portrait"]
+        },
+        "dpi": {
+          "type": "array",
+          "description": "export resolutions offered",
+          "items": { "type": "number", "minimum": 72, "maximum": 600 },
+          "default": [96, 150, 300]
+        },
+        "elements": {
+          "type": "array",
+          "description": "parts of the composed sheet",
+          "items": { "enum": ["title", "legend", "scalebar", "attribution", "date"] },
+          "default": ["title", "legend", "scalebar", "attribution", "date"]
+        }
+      }
+    },
+    "theme": {
+      "type": "object",
+      "description": "design tokens for the UI",
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "enum": ["auto", "light", "dark"], "default": "auto", "description": "color scheme — \"auto\" follows the system" },
+        "primary": { "type": "string", "default": "#0e7490", "description": "primary CSS color (buttons, active states)" },
+        "radius": { "enum": ["none", "sm", "md", "lg"], "default": "md", "description": "corner radius of panels and buttons" },
+        "font": { "type": "string", "description": "CSS font-family for the UI (inherits the page font when omitted)" }
+      }
+    },
+    "i18n": {
+      "type": "object",
+      "description": "language of the UI",
+      "additionalProperties": false,
+      "properties": {
+        "locale": { "type": "string", "default": "auto", "description": "BCP 47 locale, or \"auto\" to detect from the browser" },
+        "fallback": { "type": "string", "default": "en", "description": "locale used for strings the active locale does not cover" },
+        "overrides": {
+          "type": "object",
+          "description": "per-locale UI string overrides, e.g. { \"de\": { \"layers.title\": \"Kartenthemen\" } }",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        }
+      }
+    },
+    "permalinkOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "param": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "default": "map0",
+          "description": "hash parameter name — give each viewer on a page its own"
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 {
+  "$schema": "https://map0.net/schema/v1.json",
   "version": 1,
   "extends": "/configs/_base.map0.json",
   "meta": { "title": "Noise map — inherits the organisation defaults" },

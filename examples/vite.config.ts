@@ -1,6 +1,6 @@
 import { defineConfig, type Plugin } from "vite";
 import { fileURLToPath } from "node:url";
-import { readdirSync } from "node:fs";
+import { copyFileSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { optionalPeerStubs } from "../scripts/stub-aliases.mjs";
 import { copyMaplibreDist, maplibreExternal } from "../scripts/maplibre-dist.mjs";
 
@@ -97,6 +97,31 @@ function sharedChrome(): Plugin {
 }
 
 /**
+ * The published config schema (C3), served at /schema/v1.json — the stable
+ * `$schema` URL on map0.net. The canonical file lives in packages/schema next
+ * to the validator it is sync-tested against, so it is copied in at build (and
+ * served from source in dev) rather than committed twice; the npm package
+ * carries the same file (scripts/build-npm.mjs).
+ */
+function schemaFile(): Plugin {
+  const src = r("../packages/schema/v1.json");
+  return {
+    name: "map0:schema",
+    configureServer(server) {
+      server.middlewares.use("/schema/v1.json", (_req, res) => {
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.end(readFileSync(src));
+      });
+    },
+    closeBundle() {
+      mkdirSync(r("../dist-site/schema"), { recursive: true });
+      copyFileSync(src, r("../dist-site/schema/v1.json"));
+    },
+  };
+}
+
+/**
  * The demo site: dev server (workspace packages resolved to their sources) and
  * the static build deployed as the project website (`pnpm build:site`).
  */
@@ -108,7 +133,7 @@ export default defineConfig({
      MapLibre's worker with status 200 and it died without a word. */
   appType: "mpa",
   /* MapLibre's three files land next to the hashed chunks in assets/ */
-  plugins: [copyMaplibreDist(r("../dist-site/assets")), analytics(), sharedChrome()],
+  plugins: [copyMaplibreDist(r("../dist-site/assets")), analytics(), sharedChrome(), schemaFile()],
   build: {
     /* same target as the library bundle: the demo shell loads @map0/ui with a
        top-level await, which the default (es2020) target rejects */

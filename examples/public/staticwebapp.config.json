@@ -27,6 +27,13 @@
         "cache-control": "public, max-age=3600",
         "access-control-allow-origin": "*"
       }
+    },
+    {
+      "route": "/schema/*",
+      "headers": {
+        "cache-control": "public, max-age=3600",
+        "access-control-allow-origin": "*"
+      }
     }
   ]
 }
