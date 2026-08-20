@@ -1,4 +1,5 @@
 {
+  "$schema": "https://map0.net/schema/v1.json",
   "version": 1,
   "meta": { "title": "Vienna — three sources, one document" },
   "map": { "center": [16.3725, 48.2083], "zoom": 12.2 },
@@ -49,7 +50,12 @@
       "title": "Water bodies (vector tiles)",
       "url": "https://mapsneu.wien.gv.at/basemapv/bmapv/3857/",
       "sourceLayer": "GEWAESSER_F_GEWF",
-      "style": [{ "type": "fill", "paint": { "fill-color": "#0ea5e9", "fill-opacity": 0.6 } }],
+      "style": [
+        {
+          "type": "fill",
+          "paint": { "fill-color": "#0ea5e9", "fill-opacity": 0.6 }
+        }
+      ],
       "legend": [{ "label": "Water body", "color": "#0ea5e9" }],
       "attribution": "© basemap.at"
     },
@@ -64,11 +70,24 @@
         "circle-stroke-color": "#ffffff",
         "circle-stroke-width": 1.2
       },
-      "popup": { "title": "{{BASIS_TYP_TXT}}", "fields": [{ "key": "BEZIRK", "label": "District" }] },
-      "legend": [{ "label": "Drinking fountain", "color": "#0e7490", "shape": "circle" }],
+      "popup": {
+        "title": "{{BASIS_TYP_TXT}}",
+        "fields": [{ "key": "BEZIRK", "label": "District" }]
+      },
+      "legend": [
+        {
+          "label": "Drinking fountain",
+          "color": "#0e7490",
+          "shape": "circle"
+        }
+      ],
       "attribution": "Stadt Wien — data.wien.gv.at"
     }
   ],
-  "search": { "provider": "photon", "country": "AT", "coordinates": true },
+  "search": {
+    "provider": "photon",
+    "country": "AT",
+    "coordinates": true
+  },
   "theme": { "primary": "#0e7490", "radius": "md" }
 }

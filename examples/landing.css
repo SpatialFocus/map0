@@ -339,6 +339,13 @@ body.landing main {
 .split > figure.code {
   margin: 0;
 }
+/* Code on this page wraps instead of scrolling sideways — on the blocks that
+   sell the product, nothing may hide beyond the right edge. Long URLs wrap
+   mid-string; JSON one-liners are broken by hand in the config instead. */
+figure.code pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 figure.code.full pre {
   max-height: none;
 }
@@ -366,6 +373,17 @@ figure.code.full pre {
 .split .steps > .step:first-child,
 .split .aside > .step:first-child {
   margin-top: 0;
+}
+/* .steps is a 12px grid while the aside is normal flow — the aside label needs
+   the same 12px below it, and the intro paragraphs the same face, or the two
+   columns open with misaligned first lines in two different fonts. */
+.split .aside .step {
+  margin-bottom: 12px;
+}
+.split .steps p {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--muted);
 }
 .split .aside > :first-child {
   margin-top: 0;

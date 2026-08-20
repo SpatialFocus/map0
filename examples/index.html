@@ -169,8 +169,10 @@
               <p class="step">the whole page</p>
               <p>
                 Nothing to install: one script tag from a CDN, and one element carrying its
-                configuration. Copy it as it stands — the version is pinned, because the config
-                schema is still v0 and will change without a deprecation path.
+                configuration. Copy it as it stands — the version is pinned, because this is a 0.x
+                release and the config format may still change without a deprecation path until
+                1.0. The <code>$schema</code> line is optional and buys autocomplete and validation
+                in your editor the moment the config moves into a file of its own.
               </p>
               <div data-quickstart>
                 <!-- replaced at runtime with the running configuration -->
@@ -185,6 +187,7 @@
               <map0-viewer id="quickstart">
                 <script type="application/json">
                   {
+                    "$schema": "https://map0.net/schema/v1.json",
                     "version": 1,
                     "map": { "center": [16.3689, 48.2015], "zoom": 15.2 },
                     "basemaps": [
@@ -206,11 +209,12 @@
                   }
                 </script>
               </map0-viewer>
-              <p class="demo-note">
-                <strong>What those 20 lines bought:</strong> zoom, compass, scale bar, fullscreen,
-                geolocation, globe, attribution, a layer tree with an opacity slider, a legend
-                fetched from the service, clickable features, coordinate readout, measuring, print
-                and export, and a light/dark theme that follows the operating system.
+              <h3>What those few lines bought</h3>
+              <p>
+                Zoom, compass, scale bar, fullscreen, geolocation, globe, attribution, a layer tree
+                with an opacity slider, a legend fetched from the service, clickable features,
+                coordinate readout, measuring, print and export, and a light/dark theme that
+                follows the operating system.
               </p>
 
               <h3>Three ways to hand over the config</h3>
