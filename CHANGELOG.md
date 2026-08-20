@@ -4,6 +4,22 @@ Releases of the `map0-viewer` npm package. Generated from the
 [conventional commits](https://www.conventionalcommits.org) by `pnpm release` (release-it) —
 do not edit by hand.
 
+## [0.1.0](https://github.com/SpatialFocus/map0/compare/v0.0.5...v0.1.0) (2026-08-20)
+
+### Features
+
+* **schema:** publish the config JSON Schema as v1.json ([11ef233](https://github.com/SpatialFocus/map0/commit/11ef233876136a1e0fb18ea6b9d7353c923d7b5f))
+
+### Bug Fixes
+
+* **measure:** stop area polygons from breaking line rendering ([16fb06f](https://github.com/SpatialFocus/map0/commit/16fb06f370edd4a2fb5a498da253cff9584c88c2))
+
+# Changelog
+
+Releases of the `map0-viewer` npm package. Generated from the
+[conventional commits](https://www.conventionalcommits.org) by `pnpm release` (release-it) —
+do not edit by hand.
+
 ## [0.0.5](https://github.com/SpatialFocus/map0/compare/v0.0.4...v0.0.5) (2026-08-19)
 
 ### Features
