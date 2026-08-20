@@ -125,11 +125,17 @@ try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const messages = [];
   const requests = [];
+  /* Chromium relays GPU-driver chatter as console warnings on some machines —
+     "[.WebGL-…]GL Driver Message (OpenGL, Performance, …): GPU stall due to
+     ReadPixels" and friends. That is the driver talking, not map0, and it broke
+     a release on a machine whose GPU emits it; the console-clean gate is about
+     OUR warnings only. */
+  const driverNoise = /GL Driver Message/;
   page.on("console", (m) => {
     const t = m.text();
-    if ((m.type() === "error" || m.type() === "warning") && !t.includes("Lit is in dev mode")) {
-      messages.push(`${m.type()}: ${t.slice(0, 160)}`);
-    }
+    if (m.type() !== "error" && m.type() !== "warning") return;
+    if (t.includes("Lit is in dev mode") || driverNoise.test(t)) return;
+    messages.push(`${m.type()}: ${t.slice(0, 160)}`);
   });
   page.on("pageerror", (e) => messages.push(`pageerror: ${String(e).slice(0, 160)}`));
   page.on("request", (r) => requests.push(r.url()));
