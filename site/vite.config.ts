@@ -64,6 +64,17 @@ const MOON_ICON =
   `<path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/>` +
   `</svg>`;
 
+/* Burger/cross for the small-screen menu — like sun/moon, which one shows is
+   pure CSS (`.topbar.open`), so no state lives in the icon markup. */
+const BURGER_ICON =
+  `<svg class="burger" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">` +
+  `<path stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none" d="M4 7h16M4 12h16M4 17h16"/>` +
+  `</svg>`;
+const CROSS_ICON =
+  `<svg class="cross" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">` +
+  `<path stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none" d="M6 6l12 12M18 6 6 18"/>` +
+  `</svg>`;
+
 /* Head script on every page: apply a stored dark/light choice before first
    paint (no stored choice = the OS decides, live, via the media queries in
    demo.css), and expose the two handlers the topbar controls call. Embedded
@@ -76,9 +87,16 @@ const CHROME_SCRIPT =
   `theme:function(){var d=document.documentElement,dark=d.classList.contains("dark")||` +
   `(!d.classList.contains("light")&&matchMedia("(prefers-color-scheme: dark)").matches),n=dark?"light":"dark";` +
   `d.classList.remove("dark","light");d.classList.add(n);try{localStorage.setItem("map0-theme",n)}catch(e){}mapsTo(n)},` +
-  `lang:function(l){try{localStorage.setItem("map0-lang",l)}catch(e){}}};` +
+  `lang:function(l){try{localStorage.setItem("map0-lang",l)}catch(e){}},` +
+  `nav:function(b){var o=document.querySelector(".topbar").classList.toggle("open");` +
+  `b.setAttribute("aria-expanded",o?"true":"false")}};` +
   `addEventListener("DOMContentLoaded",function(){try{var t=localStorage.getItem("map0-theme");` +
-  `if(t==="dark"||t==="light")mapsTo(t)}catch(e){}});` +
+  `if(t==="dark"||t==="light")mapsTo(t)}catch(e){}` +
+  /* picking a menu entry must close the panel — an anchor link scrolls the page
+     underneath and would otherwise leave the panel hanging over it */
+  `var n=document.querySelector(".topbar nav");if(n)n.addEventListener("click",function(e){` +
+  `if(!e.target.closest("a"))return;var t=document.querySelector(".topbar");t.classList.remove("open");` +
+  `var b=t.querySelector(".nav-toggle");if(b)b.setAttribute("aria-expanded","false")});});` +
   `})()`;
 
 /**
@@ -99,21 +117,25 @@ function sharedChrome(): Plugin {
             tag: "div",
             attrs: { class: "topbar" },
             children:
+              /* theme toggle and language switcher sit OUTSIDE the nav: on small
+                 screens the nav collapses into a burger panel, and those two must
+                 stay reachable in the bar without opening it */
               `<div class="wrap">` +
               `<a class="brand" href="/">map<span>0</span></a>` +
-              `<nav>` +
+              `<nav id="site-nav">` +
               `<a href="/#start" data-i18n="chrome.nav.start">Quick start</a>` +
               `<a href="/#features" data-i18n="chrome.nav.features">Features</a>` +
               `<a href="/#next" data-i18n="chrome.nav.next">What's next</a>` +
               `<a href="/demos/"${ctx.path.includes("demos/") ? ' aria-current="page"' : ""} data-i18n="chrome.nav.demos">Demos</a>` +
               `<a href="/playground/"${ctx.path.includes("playground") ? ' aria-current="page"' : ""} data-i18n="chrome.nav.playground">Playground</a>` +
-              `<a class="gh" href="https://github.com/SpatialFocus/map0" aria-label="map0 on GitHub" data-i18n-attrs="aria-label:chrome.nav.github">${GITHUB_ICON}</a>` +
+              `<a class="gh" href="https://github.com/SpatialFocus/map0" aria-label="map0 on GitHub" data-i18n-attrs="aria-label:chrome.nav.github">${GITHUB_ICON}<span class="gh-label">GitHub</span></a>` +
+              `</nav>` +
               `<button class="theme-toggle" type="button" aria-label="Toggle dark mode" data-i18n-attrs="aria-label:chrome.theme" onclick="__map0.theme()">${SUN_ICON}${MOON_ICON}</button>` +
               `<div class="lang" role="group" aria-label="Language" data-i18n-attrs="aria-label:chrome.lang">` +
               `<a data-lang="en" href="${prettyPath(page)}" aria-current="true" onclick="__map0.lang('en')">EN</a>` +
               `<a data-lang="de" href="/de${prettyPath(page)}" onclick="__map0.lang('de')">DE</a>` +
               `</div>` +
-              `</nav>` +
+              `<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Menu" data-i18n-attrs="aria-label:chrome.menu" onclick="__map0.nav(this)">${BURGER_ICON}${CROSS_ICON}</button>` +
               `</div>`,
             injectTo: "body-prepend",
           },

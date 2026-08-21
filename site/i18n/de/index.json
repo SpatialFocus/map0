@@ -2,7 +2,7 @@
   "title": "map0 — der Webkarten-Client, den man konfiguriert statt programmiert",
   "meta.description": "map0 ist ein einbettbarer Webkarten-Client auf Basis von MapLibre GL JS. Ein Script-Tag und ein JSON-Dokument genügen für Layerbaum, Legende, Feature-Info, Suche, Messen und Druck — ohne iframe, ohne Backend, ohne Build-Step.",
 
-  "hero.eyebrow": "<b>Open Source</b>&nbsp;· basiert auf MapLibre GL JS · Web Component · entwickelt in der EU",
+  "hero.eyebrow": "<b>Open Source</b>&nbsp;· basiert auf MapLibre&nbsp;GL&nbsp;JS · Web Component · entwickelt in der EU",
   "hero.subtitle": "Der Webkarten-Client, den man konfiguriert statt programmiert.",
   "hero.lede": "Der Name ist Programm: ein vollständiger Webkarten-Client, ohne eine einzige Zeile Code. Basemaps, Layerbaum, Legenden, Popups, Suche, Druck — alles definiert in einem einzigen JSON-Dokument, das in ein CMS-Feld passt.",
   "hero.cta.start": "Zum Schnellstart",

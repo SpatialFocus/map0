@@ -166,7 +166,8 @@ a {
   display: none;
 }
 
-/* language switcher */
+/* language switcher — outside the nav, so it stays in the bar when the nav
+   collapses into the burger panel */
 .lang {
   display: inline-flex;
   gap: 2px;
@@ -174,13 +175,15 @@ a {
   border: 1px solid var(--border);
   border-radius: 9px;
 }
-.topbar nav .lang a {
+.topbar .lang a {
   padding: 1px 7px;
   border-radius: 6px;
   font-size: 12.5px;
   font-weight: 600;
+  text-decoration: none;
+  color: var(--muted);
 }
-.topbar nav .lang a[aria-current] {
+.topbar .lang a[aria-current] {
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   color: var(--accent);
 }
@@ -188,6 +191,83 @@ a {
 .topbar nav a.gh svg {
   display: block;
   fill: currentColor;
+}
+/* the GitHub link is icon-only in the bar; the burger panel spells it out */
+.gh-label {
+  display: none;
+}
+
+/* burger — hidden until the nav no longer fits (media query below) */
+.nav-toggle {
+  display: none;
+  align-items: center;
+  padding: 4px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.nav-toggle:hover {
+  color: var(--accent);
+}
+.nav-toggle svg {
+  display: block;
+}
+.nav-toggle .cross {
+  display: none;
+}
+.topbar.open .nav-toggle .burger {
+  display: none;
+}
+.topbar.open .nav-toggle .cross {
+  display: block;
+}
+
+/* Below this, brand + five links + controls no longer share one row (German
+   labels are the widest): the links move into a panel under the bar, theme
+   toggle and language switcher stay reachable without opening it. */
+@media (max-width: 780px) {
+  .nav-toggle {
+    display: inline-flex;
+  }
+  .theme-toggle {
+    margin-left: auto; /* the nav leaves the flow, something must push right */
+  }
+  .topbar nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    margin: 0;
+    padding: 4px 16px 10px;
+    font-size: 15px;
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .topbar.open nav {
+    display: flex;
+  }
+  .topbar nav a {
+    padding: 11px 6px;
+  }
+  .topbar nav a + a {
+    border-top: 1px solid var(--border);
+  }
+  .topbar nav a.gh {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .gh-label {
+    display: inline;
+  }
 }
 
 main {
@@ -789,15 +869,6 @@ footer.site a.footmark {
   }
   .topbar .wrap {
     padding: 0 16px;
-  }
-  /* the toggle and switcher joined the topbar; the landing anchor links are
-     the ones a small screen can do without */
-  .topbar nav {
-    gap: 14px;
-  }
-  .topbar nav a[href^="/#"],
-  .topbar nav a[href^="/de/#"] {
-    display: none;
   }
   map0-viewer {
     height: 66vh;

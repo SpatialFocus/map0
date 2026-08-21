@@ -40,9 +40,11 @@ body.landing main {
   mask-image: linear-gradient(to bottom, #000 55%, transparent);
 }
 
+/* inline-block, not inline-flex: flex would treat the <b> and the text run as
+   separate items and centre them against each other once the text wraps —
+   on a phone the pill broke into oddly stacked fragments */
 .hero .eyebrow {
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
   margin: 0 0 20px;
   padding: 5px 13px 5px 9px;
   border: 1px solid var(--border);
@@ -52,6 +54,9 @@ body.landing main {
   font-weight: 600;
   color: var(--muted);
   letter-spacing: 0.01em;
+  line-height: 1.7;
+  max-width: 100%;
+  text-wrap: balance;
 }
 .hero .eyebrow b {
   color: var(--accent);
@@ -713,6 +718,31 @@ body.js .reveal.in {
   .wrap,
   .stage {
     padding: 0 16px;
+  }
+  /* the badge line wraps here — a gentler radius, or two lines in a capsule
+     look like a lozenge */
+  .hero .eyebrow {
+    border-radius: 18px;
+    padding: 6px 14px;
+  }
+  /* The comparison scrolls sideways to reach the map0 column — pin the row
+     labels so the reader always knows what they are comparing. The corner
+     clipping moves from the table to the scroller: `overflow: hidden` on the
+     table would make the table itself the sticky container and the labels
+     would scroll away with it. */
+  table.compare {
+    overflow: visible;
+  }
+  .compare-scroll {
+    border-radius: var(--radius);
+  }
+  table.compare th:first-child,
+  table.compare td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--surface);
+    box-shadow: inset -1px 0 0 var(--border);
   }
   .stage-frame {
     padding: 6px;
