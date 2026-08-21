@@ -4,6 +4,17 @@ Releases of the `map0-viewer` npm package. Generated from the
 [conventional commits](https://www.conventionalcommits.org) by `pnpm release` (release-it) —
 do not edit by hand.
 
+## [0.2.1](https://github.com/SpatialFocus/map0/compare/v0.2.0...v0.2.1) (2026-08-21)
+
+### Bug Fixes
+
+* **release:** bump and stage every version reference, German ones included ([0b4a19c](https://github.com/SpatialFocus/map0/commit/0b4a19c18bbaa6d192f652ab814fee6fbccd1ccc))
+* **release:** stop the changelog header from multiplying on every release ([e7c0f95](https://github.com/SpatialFocus/map0/commit/e7c0f950c9b886301f09cd1e4020b92edc5c58a3))
+* **site:** burger menu and small-screen fixes for the main pages ([6e3801f](https://github.com/SpatialFocus/map0/commit/6e3801f58664d90a4ef0cd5b8188c23580c02b8f))
+* **site:** pin the playground pill right on phones too ([69d187e](https://github.com/SpatialFocus/map0/commit/69d187ea9521d09c50786b8539231da948ea186a))
+* **ui:** leave the geolocate button out when it could never work ([c80de0d](https://github.com/SpatialFocus/map0/commit/c80de0d740624f2888728ad43326743bba9b99fa))
+* **ui:** make the viewer usable on phones ([cdf5551](https://github.com/SpatialFocus/map0/commit/cdf55514cfa1a4c278c7f779e541fc9fd04cdcfb))
+
 ## [0.2.0](https://github.com/SpatialFocus/map0/compare/v0.1.0...v0.2.0) (2026-08-21)
 
 ### Features

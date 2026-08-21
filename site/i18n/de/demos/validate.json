@@ -22,7 +22,7 @@
   "schema.h2": "Das veröffentlichte Schema",
   "schema.p1": "Eine Datei, drei URLs — gewählt wird danach, wie das Schema den Releases folgen soll:",
   "schema.li1": "<code>https://map0.net/schema/v1.json</code> — folgt dem jeweils neuesten Release; die URL für die <code>$schema</code>-Zeile einer Config",
-  "schema.li2": "<code>https://cdn.jsdelivr.net/npm/map0-viewer@0.2.0/schema/v1.json</code> — auf ein Release gepinnt, aus dem npm-Tarball",
+  "schema.li2": "<code>https://cdn.jsdelivr.net/npm/map0-viewer@0.2.1/schema/v1.json</code> — auf ein Release gepinnt, aus dem npm-Tarball",
   "schema.li3": "<code>node_modules/map0-viewer/schema/v1.json</code> — offline, neben dem installierten Bundle",
   "schema.p2": "Die Datei ist nach der Version des Config-Formats benannt (<code>\"version\": 1</code>), nicht nach der Paketversion. Sie ist handgeschrieben — die Beschreibungen sind die Editor-Dokumentation — und ein Test koppelt ihre Schlüsselmengen und Enums an den Laufzeit-Validator, damit die beiden nicht auseinanderdriften können."
 }

@@ -6,7 +6,7 @@
   "whole.h2": "Die gesamte Integration",
   "whole.p1": "Das Bundle kommt von npm — <code>npm install map0-viewer</code> — und <code>node_modules/map0-viewer/dist</code> ist der Ordner, den man kopiert. Der Paketname ist der, den npm uns geben würde; das Element, die Config und dieser Ordner sind map0.",
   "whole.p2": "Wer lieber gar nichts hostet, ersetzt die erste Zeile durch eine gepinnte CDN-URL — das Element darunter bleibt exakt, wie es ist, und auf den eigenen Server muss nichts kopiert werden. Der Entry findet seine Chunks und MapLibres Worker am CDN genauso wie im eigenen Ordner:",
-  "whole.p3": "<code>unpkg.com/map0-viewer@0.2.0/dist/map0.js</code> liefert denselben Tarball aus. So oder so die exakte Version pinnen: Das ist ein 0.x-Release und kann sich ohne Deprecation-Pfad ändern.",
+  "whole.p3": "<code>unpkg.com/map0-viewer@0.2.1/dist/map0.js</code> liefert denselben Tarball aus. So oder so die exakte Version pinnen: Das ist ein 0.x-Release und kann sich ohne Deprecation-Pfad ändern.",
   "whole.p4": "Beim Selbst-Hosten landet Folgendes auf dem Webserver:",
   "whole.li1": "<code>map0.js</code> — der Client, inklusive MapLibre und der gesamten UI",
   "whole.li2": "<code>maplibre-gl-worker.mjs</code> und <code>maplibre-gl-shared.mjs</code> — MapLibre lädt seinen Worker aus separaten Dateien neben dem Bundle",
