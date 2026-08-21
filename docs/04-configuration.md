@@ -55,6 +55,12 @@ inside the config it would gate. It mirrors `<img loading>`:
 <map0-viewer config-src="…" loading="eager"></map0-viewer>  <!-- above the fold -->
 ```
 
+**`theme` is an attribute for the same reason.** `theme.mode` in the config suits a map that owns
+the light/dark decision, but a host page with its own dark-mode toggle knows better than the
+config can. `theme="dark"` / `theme="light"` on the element overrides `theme.mode`, and flipping
+the attribute restyles a running map — map0.net's own topbar toggle drives its demo maps this way.
+Unset, the config decides as usual.
+
 *(Element/API names indicative; final naming in [06-architecture.md](06-architecture.md), pending D-01.)*
 
 ## Top-level shape

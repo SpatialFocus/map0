@@ -105,6 +105,13 @@ export class Map0Viewer extends LitElement {
    * whether the config is fetched at all.
    */
   @property({ attribute: "loading" }) loading: "lazy" | "eager" = "lazy";
+  /**
+   * Host-page override for the colour scheme. Unset, the config's `theme.mode`
+   * decides; `theme="dark"` / `theme="light"` wins over it, and flipping the
+   * attribute restyles a running map. This is the hook for a host page with its
+   * own dark-mode toggle — the config cannot know what the page around it did.
+   */
+  @property({ attribute: "theme" }) theme?: "light" | "dark";
 
   @state() private _errors: ValidationError[] | null = null;
   @state() private _fatal: string | null = null;
@@ -228,6 +235,8 @@ export class Map0Viewer extends LitElement {
   }
 
   protected override updated(changed: PropertyValues): void {
+    /* the theme attribute restyles the running map in place — no reload */
+    if (changed.has("theme") && this.normalized) this.applyTheme(this.normalized);
     /* while init() is still running too — the generation token retires it */
     if (!this.initialized || !this.initStarted || !this.activeSource) return;
     if (!changed.has("config") && !changed.has("configSrc")) return;
@@ -585,18 +594,26 @@ export class Map0Viewer extends LitElement {
     }
   }
 
+  /** removes the previous scheme listener when applyTheme runs again (attribute flip) */
+  private themeUnsub?: () => void;
+
   private applyTheme(cfg: NormalizedConfig): void {
     this.style.setProperty("--map0-primary", cfg.theme.primary);
     this.style.setProperty("--map0-radius", RADII[cfg.theme.radius]);
     this.style.setProperty("--map0-radius-sm", RADII_SM[cfg.theme.radius]);
     if (cfg.theme.font) this.style.setProperty("--map0-font", cfg.theme.font);
 
+    this.themeUnsub?.();
+    this.themeUnsub = undefined;
     const apply = (dark: boolean) => this.setAttribute("data-theme", dark ? "dark" : "light");
-    if (cfg.theme.mode === "auto" && typeof matchMedia !== "undefined") {
+    if (this.theme === "dark" || this.theme === "light") {
+      apply(this.theme === "dark");
+    } else if (cfg.theme.mode === "auto" && typeof matchMedia !== "undefined") {
       const mq = matchMedia("(prefers-color-scheme: dark)");
       const listener = (e: MediaQueryListEvent) => apply(e.matches);
       mq.addEventListener("change", listener);
-      this.unsubs.push(() => mq.removeEventListener("change", listener));
+      this.themeUnsub = () => mq.removeEventListener("change", listener);
+      this.unsubs.push(this.themeUnsub);
       apply(mq.matches);
     } else {
       apply(cfg.theme.mode === "dark");

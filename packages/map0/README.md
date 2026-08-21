@@ -77,8 +77,10 @@ change the map without touching the page:
 ```
 
 The element also takes `loading="eager"` (the default `"lazy"` initialises the map when it comes
-near the viewport), accepts a config object via its `config` property, and talks to the page
-without imports:
+near the viewport) and `theme="dark"` / `theme="light"` — a host-page override for the colour
+scheme that beats the config's `theme.mode` and restyles a running map when flipped, so a page
+with its own dark-mode toggle just sets the attribute. It accepts a config object via its
+`config` property, and talks to the page without imports:
 
 ```js
 const viewer = document.querySelector("map0-viewer");
