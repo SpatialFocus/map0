@@ -1,0 +1,20 @@
+{
+  "title": "Popups &amp; Hover — map0-Demos",
+  "eyebrow": "Kartenfunktionen",
+  "h1": "Popups &amp; Hover",
+  "lede": "Was passiert, wenn jemand in die Karte klickt: drei Layer antworten gleichzeitig, und jeder formatiert seine Attribute anders.",
+  "note": "<strong>Ausprobieren:</strong> Fahren Sie mit der Maus über einen Brunnen oder eine Demo-Zone, um einen Tooltip zu sehen. Beim Klick wird die Geometrie hervorgehoben, solange das Popup geöffnet ist. Klicken Sie dorthin, wo sich Flächenwidmungsplan, Demo-Zone und Brunnen überlappen — das Popup gruppiert die Antworten pro Layer.",
+  "what.h2": "Was diese Demo zeigt",
+  "what.li1": "Vektor-Layer werden im Browser abgefragt, WMS-Layer per GetFeatureInfo — parallel, in einem Popup",
+  "what.li2": "<code>popup.content</code> rendert ein HTML-Template mit <code>{{property}}</code>-Platzhaltern",
+  "what.li3": "<code>popup.fields</code> rendert stattdessen eine beschriftete Attributtabelle — ganz ohne HTML",
+  "what.li4": "<code>hover.content</code> ergänzt einen kurzen Tooltip, der dem Mauszeiger folgt",
+  "what.li5": "Die angeklickte Geometrie wird in einen Highlight-Layer gespiegelt und beim Schließen des Popups wieder entfernt",
+  "what.li6": "Mehr als zehn Treffer auf einem Layer werden zu einem ausklappbaren Abschnitt zusammengefasst",
+  "safe.h2": "Alles wird bereinigt",
+  "safe.p1": "Templates kommen aus einem CMS-Feld, GetFeatureInfo-Antworten von einem fremden Dienst — beides gilt daher als nicht vertrauenswürdig. Attributwerte werden beim Rendern des Templates HTML-escaped, und das fertige Markup läuft durch DOMPurify, bevor es das DOM erreicht. Links werden auf <code>rel=\"noopener noreferrer\"</code> umgeschrieben.",
+  "safe.p2": "Die Template-Sprache ist bewusst geschlossen: Platzhalter und sonst nichts. Keine Ausdrücke, kein <code>eval</code>, nichts, was ein Config-Autor zu ausführbarem Code machen könnte.",
+  "config.h2": "Konfiguration",
+  "host.h2": "Reagieren auf der Host-Seite",
+  "host.p": "Jeder Klick ist zugleich ein DOM-Event, auf das die umgebende Seite reagieren kann:"
+}

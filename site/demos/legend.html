@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Legend — map0 demos</title>
+    <title data-i18n="title">Legend — map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -11,33 +11,33 @@
   <body data-demo="legend">
     <main>
       <div class="page-head">
-        <p class="eyebrow">Map features</p>
-        <h1>Legend</h1>
-        <p class="lede">
+        <p class="eyebrow" data-i18n="eyebrow">Map features</p>
+        <h1 data-i18n="h1">Legend</h1>
+        <p class="lede" data-i18n="lede">
           Three layers, three ways to end up with a legend entry — and one panel that only lists
           what is actually visible right now.
         </p>
       </div>
 
       <map0-viewer config-src="/configs/legend.map0.json"></map0-viewer>
-      <p class="demo-note">
+      <p class="demo-note" data-i18n="note">
         <strong>Try it:</strong> switch layers off and on — entries appear and disappear with them.
         A layer outside its zoom range drops out of the legend too, because it is not on the map.
       </p>
 
       <section class="doc">
-        <h2>Three sources, one panel</h2>
+        <h2 data-i18n="sources.h2">Three sources, one panel</h2>
         <ul class="checks">
-          <li><strong>From the service:</strong> <code>legend: "auto"</code> on a WMS layer builds a GetLegendGraphic request</li>
-          <li><strong>From the style:</strong> vector layers with literal colours produce swatches automatically</li>
-          <li><strong>By hand:</strong> an array of entries with label, colour and shape (square, line, circle)</li>
+          <li data-i18n="sources.li1"><strong>From the service:</strong> <code>legend: "auto"</code> on a WMS layer builds a GetLegendGraphic request</li>
+          <li data-i18n="sources.li2"><strong>From the style:</strong> vector layers with literal colours produce swatches automatically</li>
+          <li data-i18n="sources.li3"><strong>By hand:</strong> an array of entries with label, colour and shape (square, line, circle)</li>
         </ul>
-        <p>
+        <p data-i18n="sources.p">
           <code>legend: false</code> keeps a layer out of the panel entirely, and a plain string is
           read as the URL of a legend image — useful when a service draws a bad legend and you host
           a better one.
         </p>
-        <div class="callout">
+        <div class="callout" data-i18n="callout">
           <strong>Why not always derive it?</strong>
           A data-driven style — colour by attribute, width by zoom — has no single swatch that
           honestly represents it. map0 only derives a swatch from literal colours and stays quiet
@@ -46,7 +46,7 @@
       </section>
 
       <section class="doc">
-        <h2>Configuration</h2>
+        <h2 data-i18n="config.h2">Configuration</h2>
         <pre data-src="/configs/legend.map0.json" data-label="legend.map0.json" data-emphasise="legend"></pre>
       </section>
     </main>

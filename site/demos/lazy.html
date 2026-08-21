@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Lazy loading — map0 demos</title>
+    <title data-i18n="title">Lazy loading — map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <style>
@@ -30,8 +30,8 @@
     <main>
       <div class="page-head">
         <p class="eyebrow">Integration</p>
-        <h1>Lazy loading</h1>
-        <p class="lede">
+        <h1 data-i18n="h1">Lazy loading</h1>
+        <p class="lede" data-i18n="lede">
           A map embedded far down a CMS article should not make the whole page slower. Until someone
           scrolls near it, this page has downloaded 20 KB of map0 and nothing else — no MapLibre, no
           config, no tiles.
@@ -39,8 +39,8 @@
       </div>
 
       <section class="doc wide">
-        <h2>Try it</h2>
-        <p>
+        <h2 data-i18n="try.h2">Try it</h2>
+        <p data-i18n="try.p">
           Open the network panel of your developer tools, reload this page, and look at what arrives:
           <code>map0.js</code> and one chunk. Then scroll down. As the map approaches the viewport,
           the engine, MapLibre, its stylesheet, the config and finally the tiles are fetched.
@@ -48,45 +48,45 @@
       </section>
 
       <div class="filler">
-        <strong>↓ keep scrolling</strong>
-        <span>an article, a form, whatever your page has above the map</span>
+        <strong data-i18n="filler.strong">↓ keep scrolling</strong>
+        <span data-i18n="filler.span">an article, a form, whatever your page has above the map</span>
       </div>
 
       <map0-viewer config-src="/configs/wms.map0.json"></map0-viewer>
-      <p class="demo-note">
+      <p class="demo-note" data-i18n="note">
         <strong>Loaded on demand:</strong> the observer starts loading 300&nbsp;px before the element
         enters the viewport, so in normal scrolling the map is usually ready by the time you see it.
       </p>
 
       <section class="doc">
-        <h2>What it costs, and when</h2>
+        <h2 data-i18n="cost.h2">What it costs, and when</h2>
         <table style="width: 100%; border-collapse: collapse; font-size: 14px">
           <tbody>
             <tr>
-              <td style="padding: 6px 10px 6px 0"><strong>Page load</strong></td>
-              <td style="padding: 6px 0">~20 KB gz — the custom element and Lit</td>
+              <td style="padding: 6px 10px 6px 0" data-i18n="cost.r1.label"><strong>Page load</strong></td>
+              <td style="padding: 6px 0" data-i18n="cost.r1.value">~20 KB gz — the custom element and Lit</td>
             </tr>
             <tr>
-              <td style="padding: 6px 10px 6px 0"><strong>Map in view</strong></td>
-              <td style="padding: 6px 0">+ ~314 KB gz — engine, MapLibre, its stylesheet</td>
+              <td style="padding: 6px 10px 6px 0" data-i18n="cost.r2.label"><strong>Map in view</strong></td>
+              <td style="padding: 6px 0" data-i18n="cost.r2.value">+ ~314 KB gz — engine, MapLibre, its stylesheet</td>
             </tr>
             <tr>
-              <td style="padding: 6px 10px 6px 0"><strong>On demand</strong></td>
-              <td style="padding: 6px 0">
+              <td style="padding: 6px 10px 6px 0" data-i18n="cost.r3.label"><strong>On demand</strong></td>
+              <td style="padding: 6px 0" data-i18n="cost.r3.value">
                 capabilities parsing, proj4, PMTiles and the dialogs, per feature used
               </td>
             </tr>
           </tbody>
         </table>
-        <p style="margin-top: 14px">
+        <p style="margin-top: 14px" data-i18n="cost.p">
           A page with three maps below the fold pays the 20 KB once, and the rest only for the maps
           a reader actually reaches — MapLibre itself is shared between them.
         </p>
       </section>
 
       <section class="doc">
-        <h2>Controlling it</h2>
-        <p>
+        <h2 data-i18n="control.h2">Controlling it</h2>
+        <p data-i18n="control.p1">
           Lazy is the default. The attribute mirrors <code>&lt;img loading&gt;</code>, and it lives
           on the element rather than in the JSON config for a simple reason: it decides whether the
           config is fetched at all.
@@ -98,7 +98,7 @@
           &lt;!-- above the fold, or a screenshot service: start immediately --&gt;
           &lt;map0-viewer config-src="/configs/map.json" loading="eager"&gt;&lt;/map0-viewer&gt;
         </pre>
-        <p>
+        <p data-i18n="control.p2">
           Elements inside a hidden tab or accordion never intersect, so they stay unloaded until
           shown — which also avoids MapLibre initialising into a zero-size container. If you need to
           force it, call <code>load()</code>:

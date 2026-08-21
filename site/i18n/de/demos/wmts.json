@@ -1,0 +1,16 @@
+{
+  "title": "WMTS — map0-Demos",
+  "eyebrow": "Datenquellen",
+  "lede": "Vorgerenderte Kacheln, konfiguriert wie in einer GDI üblich: eine Capabilities-URL und ein Layer-Identifier. Alles Weitere wird aus dem Dienst gelesen.",
+  "note": "<strong>Ausprobieren:</strong> zwei WMTS-Layer von basemap.at über einer grauen Basemap — Geländeschummerung mit 70&nbsp;% Deckkraft und ein Beschriftungs-Overlay darüber.",
+  "what.h2": "Was diese Demo zeigt",
+  "what.li1": "Kein handgeschriebenes Kachel-Template — <code>url</code> zeigt auf <code>WMTSCapabilities.xml</code>",
+  "what.li2": "map0 wählt das erste WebMercator-kompatible Tile-Matrix-Set und warnt, wenn ein Layer keines anbietet",
+  "what.li3": "REST- und KVP-Dienste funktionieren beide; Matrix-Identifier wie <code>EPSG:900913:7</code> werden auf <code>{z}</code> abgebildet",
+  "what.li4": "Zoombereich, Standard-Style, Ausdehnung und Legende kommen aus dem Capabilities-Dokument",
+  "what.p": "Capabilities werden im Browser mit <a href=\"https://github.com/camptocamp/ogc-client\">@camptocamp/ogc-client</a> geparst — in einem Worker, damit ein XML-Dokument mit 30&nbsp;000 Zeilen die Karte nicht blockiert.",
+  "callout": "<strong>Praxisnotiz: tote Mirrors</strong> basemap.at listet in seinen Capabilities fünf Kachel-Hosts, von denen vier im DNS nicht mehr auflösen. map0 prüft pro Kandidat eine echte Kachel und verwendet den ersten Host, der antwortet — eine Karte, die stillschweigend leer bleibt, ist der schlimmste denkbare Fehlerfall.",
+  "config.h2": "Konfiguration",
+  "config.h3": "Optionale Schlüssel",
+  "config.p": "Ergänzen Sie <code>matrixSet</code>, <code>style</code> oder <code>format</code>, wenn ein Dienst mehrere anbietet und Sie nicht die Defaults von map0 wollen:"
+}

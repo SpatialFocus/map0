@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Theming — map0 demos</title>
+    <title data-i18n="title">Theming — map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <style>
@@ -48,19 +48,19 @@
   <body data-demo="theming">
     <main>
       <div class="page-head">
-        <p class="eyebrow">Configuration</p>
+        <p class="eyebrow" data-i18n="eyebrow">Configuration</p>
         <h1>Theming</h1>
-        <p class="lede">
+        <p class="lede" data-i18n="lede">
           The client should look like the site it sits on — not like a GIS product. Colours, radii
           and fonts are design tokens, settable from the config or from the host page's CSS.
         </p>
       </div>
 
       <div class="swatches">
-        <button data-color="#d946ef"><i style="background:#d946ef"></i>Config default</button>
-        <button data-color="#0e7490"><i style="background:#0e7490"></i>Teal</button>
-        <button data-color="#b45309"><i style="background:#b45309"></i>Amber</button>
-        <button data-color="#166534"><i style="background:#166534"></i>Forest</button>
+        <button data-color="#d946ef" data-i18n="swatch.default"><i style="background:#d946ef"></i>Config default</button>
+        <button data-color="#0e7490" data-i18n="swatch.teal"><i style="background:#0e7490"></i>Teal</button>
+        <button data-color="#b45309" data-i18n="swatch.amber"><i style="background:#b45309"></i>Amber</button>
+        <button data-color="#166534" data-i18n="swatch.forest"><i style="background:#166534"></i>Forest</button>
         <span class="sep"></span>
         <button data-font="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">Aa System</button>
         <button data-font="Georgia, 'Times New Roman', serif" style="font-family: Georgia, serif">
@@ -70,23 +70,23 @@
           Aa Mono
         </button>
         <span class="sep"></span>
-        <button data-mode="toggle">Toggle light / dark</button>
+        <button data-mode="toggle" data-i18n="swatch.toggle">Toggle light / dark</button>
       </div>
 
       <map0-viewer config-src="/configs/theming.map0.json"></map0-viewer>
-      <p class="demo-note">
+      <p class="demo-note" data-i18n="note">
         <strong>Try it:</strong> the buttons above set CSS custom properties on the element from
         outside — no rebuild, no config reload. Note what the font buttons do <em>not</em> touch:
         the labels drawn inside the map.
       </p>
 
       <section class="doc">
-        <h2>Two ways in</h2>
-        <p>
+        <h2 data-i18n="ways.h2">Two ways in</h2>
+        <p data-i18n="ways.p1">
           From the config, for the CMS editor who never touches CSS:
         </p>
         <pre data-src="/configs/theming.map0.json" data-label="theming.map0.json" data-emphasise="theme,mode,primary,radius,font"></pre>
-        <p>
+        <p data-i18n="ways.p2">
           Or from the host page's stylesheet, for the integrator who wants the map to inherit the
           site's design system:
         </p>
@@ -101,14 +101,14 @@
       </section>
 
       <section class="doc">
-        <h2>Light, dark, or whatever the visitor prefers</h2>
-        <p>
+        <h2 data-i18n="mode.h2">Light, dark, or whatever the visitor prefers</h2>
+        <p data-i18n="mode.p">
           <code>theme.mode</code> takes <code>"light"</code>, <code>"dark"</code> or
           <code>"auto"</code> (the default), which follows the operating system and reacts when the
           visitor changes it mid-session. Panels, popups, dialogs and the synthetic background of
           raster basemaps all switch together.
         </p>
-        <div class="callout">
+        <div class="callout" data-i18n="callout">
           <strong>Shadow DOM, on purpose</strong>
           map0 renders into a shadow root, so the host page's stylesheet cannot accidentally break
           the map, and the map cannot leak styles into the page. Custom properties and documented
@@ -117,13 +117,13 @@
       </section>
 
       <section class="doc">
-        <h2>Where the font token stops</h2>
-        <p>
+        <h2 data-i18n="font.h2">Where the font token stops</h2>
+        <p data-i18n="font.p1">
           <code>theme.font</code> styles the interface — panels, popups, dialogs, buttons. It does
           not reach the labels drawn inside the map: those are rendered from the glyph set the
           basemap style points at, and changing them means changing the style, not the client.
         </p>
-        <p>
+        <p data-i18n="font.p2">
           That split is worth knowing before you pick a display font. A serif interface next to
           sans-serif map labels reads as a mistake even when both are deliberate, so the safe
           choice is a UI font close to the one the basemap uses — which is why this demo ships with

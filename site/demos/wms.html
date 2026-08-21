@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>WMS — map0 demos</title>
+    <title data-i18n="title">WMS — map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -11,36 +11,36 @@
   <body data-demo="wms">
     <main>
       <div class="page-head">
-        <p class="eyebrow">Data sources</p>
+        <p class="eyebrow" data-i18n="eyebrow">Data sources</p>
         <h1>WMS</h1>
-        <p class="lede">
+        <p class="lede" data-i18n="lede">
           The workhorse of every spatial data infrastructure: a raster map service, queried on
           click and explained by a legend the server draws for us.
         </p>
       </div>
 
       <map0-viewer config-src="/configs/wms.map0.json"></map0-viewer>
-      <p class="demo-note">
+      <p class="demo-note" data-i18n="note">
         <strong>Try it:</strong> click anywhere on the zoning plan to query the service, drag the
         opacity slider in the layer panel, and switch on the tree register — it only draws from zoom
         15, so the panel tells you why nothing appears yet.
       </p>
 
       <section class="doc">
-        <h2>What this demo shows</h2>
+        <h2 data-i18n="what.h2">What this demo shows</h2>
         <ul class="checks">
-          <li>WMS layers requested as tiles in <code>EPSG:3857</code> (a requirement of MapLibre — see decision D-02)</li>
-          <li><code>info</code> turns a layer into a queryable one: clicks become GetFeatureInfo requests</li>
-          <li><code>legend: "auto"</code> pulls a GetLegendGraphic image into the legend panel</li>
-          <li><code>minZoom</code> keeps a heavy layer off small scales, and the layer panel explains the gap</li>
-          <li><code>metadata.url</code> links the layer to its catalogue record — the SDI connection</li>
+          <li data-i18n="what.li1">WMS layers requested as tiles in <code>EPSG:3857</code> (a requirement of MapLibre — see decision D-02)</li>
+          <li data-i18n="what.li2"><code>info</code> turns a layer into a queryable one: clicks become GetFeatureInfo requests</li>
+          <li data-i18n="what.li3"><code>legend: "auto"</code> pulls a GetLegendGraphic image into the legend panel</li>
+          <li data-i18n="what.li4"><code>minZoom</code> keeps a heavy layer off small scales, and the layer panel explains the gap</li>
+          <li data-i18n="what.li5"><code>metadata.url</code> links the layer to its catalogue record — the SDI connection</li>
         </ul>
-        <p>
+        <p data-i18n="what.p">
           map0 builds the GetMap URL for you, including the axis-order-safe <code>CRS</code>
           parameter for WMS 1.3.0, and keeps any vendor parameters your base URL already carries
           (a MapServer <code>map=</code> path, for example).
         </p>
-        <div class="callout">
+        <div class="callout" data-i18n="callout">
           <strong>Browser-direct, no proxy</strong>
           Capabilities, tiles and GetFeatureInfo are fetched straight from the service, so it has to
           send CORS headers. The City of Vienna services used here do.
@@ -48,13 +48,13 @@
       </section>
 
       <section class="doc">
-        <h2>Configuration</h2>
-        <p>This is the actual file the map above is running on:</p>
+        <h2 data-i18n="config.h2">Configuration</h2>
+        <p data-i18n="config.p">This is the actual file the map above is running on:</p>
         <pre data-src="/configs/wms.map0.json" data-label="wms.map0.json" data-emphasise="&quot;wms&quot;,info,legend,minZoom,metadata"></pre>
       </section>
 
       <section class="doc">
-        <h2>Embedding</h2>
+        <h2 data-i18n="embed.h2">Embedding</h2>
         <pre data-lang="html" data-label="page.html">
           &lt;script type="module" src="/map0.js"&gt;&lt;/script&gt;
           &lt;map0-viewer config-src="/configs/wms.map0.json" style="height:520px"&gt;&lt;/map0-viewer&gt;

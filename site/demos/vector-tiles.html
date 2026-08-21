@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Vector tiles — map0 demos</title>
+    <title data-i18n="title">Vector tiles — map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -11,34 +11,34 @@
   <body data-demo="vector-tiles">
     <main>
       <div class="page-head">
-        <p class="eyebrow">Data sources</p>
-        <h1>Vector tiles</h1>
-        <p class="lede">
+        <p class="eyebrow" data-i18n="eyebrow">Data sources</p>
+        <h1 data-i18n="h1">Vector tiles</h1>
+        <p class="lede" data-i18n="lede">
           The format MapLibre was built for. Three overlays are cut from the same basemap.at vector
           tile service and styled completely differently — client-side, at 60&nbsp;fps.
         </p>
       </div>
 
       <map0-viewer config-src="/configs/vector-tiles.map0.json"></map0-viewer>
-      <p class="demo-note">
+      <p class="demo-note" data-i18n="note">
         <strong>Try it:</strong> toggle the three overlays, then switch the basemap to
         <em>None</em> — the vector layers keep rendering, because the drawing order and the sources
         are re-injected into every style change.
       </p>
 
       <section class="doc">
-        <h2>What this demo shows</h2>
+        <h2 data-i18n="what.h2">What this demo shows</h2>
         <ul class="checks">
-          <li>One vector tile service, three overlays — each picks a different <code>sourceLayer</code></li>
-          <li><code>style</code> takes real MapLibre style-spec layers; <code>source</code> and <code>source-layer</code> are injected by map0</li>
-          <li>Styling stays data-driven: colours, widths and dash patterns are just paint properties</li>
-          <li>Legends are written by hand here, because a style can say more than a swatch can show</li>
+          <li data-i18n="what.li1">One vector tile service, three overlays — each picks a different <code>sourceLayer</code></li>
+          <li data-i18n="what.li2"><code>style</code> takes real MapLibre style-spec layers; <code>source</code> and <code>source-layer</code> are injected by map0</li>
+          <li data-i18n="what.li3">Styling stays data-driven: colours, widths and dash patterns are just paint properties</li>
+          <li data-i18n="what.li4">Legends are written by hand here, because a style can say more than a swatch can show</li>
         </ul>
-        <p>
+        <p data-i18n="what.p">
           Unlike raster overlays, vector tiles are restyled without a single new network request —
           switching the basemap or changing opacity is a GPU operation.
         </p>
-        <div class="callout">
+        <div class="callout" data-i18n="callout">
           <strong>Field note: relative TileJSON</strong>
           basemap.at's TileJSON declares its tiles as <code>tile/{z}/{y}/{x}.pbf</code> — relative,
           which MapLibre does not resolve. map0 fetches the TileJSON, makes the templates absolute
@@ -47,13 +47,13 @@
       </section>
 
       <section class="doc">
-        <h2>Configuration</h2>
+        <h2 data-i18n="config.h2">Configuration</h2>
         <pre data-src="/configs/vector-tiles.map0.json" data-label="vector-tiles.map0.json" data-emphasise="&quot;vector&quot;,sourceLayer,&quot;style&quot;"></pre>
       </section>
 
       <section class="doc">
         <h2>PMTiles</h2>
-        <p>
+        <p data-i18n="pmtiles.p1">
           A single-file tile archive on plain storage — no tile server. It is the same layer type
           with a <code>pmtiles://</code> URL; the protocol handler is loaded on demand the first
           time such a layer appears in a config:
@@ -70,7 +70,7 @@
             ]
           }
         </pre>
-        <p>
+        <p data-i18n="pmtiles.p2">
           The public Protomaps demo bucket does not send CORS headers, so this page cannot show a
           live PMTiles layer — host the file yourself (any static bucket that supports HTTP range
           requests works) and it behaves exactly like the overlays above.

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Search — map0 demos</title>
+    <title data-i18n="title">Search — map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -11,31 +11,31 @@
   <body data-demo="search">
     <main>
       <div class="page-head">
-        <p class="eyebrow">Map features</p>
-        <h1>Search</h1>
-        <p class="lede">
+        <p class="eyebrow" data-i18n="eyebrow">Map features</p>
+        <h1 data-i18n="h1">Search</h1>
+        <p class="lede" data-i18n="lede">
           Type-ahead search for places and addresses. The service behind it is a config choice —
           two are built in, and an SDI can point the same box at its own gazetteer.
         </p>
       </div>
 
       <map0-viewer config-src="/configs/search.map0.json"></map0-viewer>
-      <p class="demo-note">
+      <p class="demo-note" data-i18n="note">
         <strong>Try it:</strong> type <code>stephansplatz</code>, or a district, or a mountain. Arrow
         keys move through the list, Enter picks. Paste <code>47.2692, 11.4041</code> and it is
         recognised as a coordinate instead of a query.
       </p>
 
       <section class="doc">
-        <h2>What this demo shows</h2>
+        <h2 data-i18n="what.h2">What this demo shows</h2>
         <ul class="checks">
-          <li>Debounced type-ahead — one request per pause, and a slow answer never overwrites a newer one</li>
-          <li>Results are biased toward the current view, so nearby matches come first</li>
-          <li>Keyboard operation throughout: arrows, Enter, Escape; the list is a proper <code>combobox</code>/<code>listbox</code></li>
-          <li>Picking a hit flies to it and marks it with the same highlight the map uses for selected features</li>
-          <li>Coordinate input (<code>lat, lon</code>) short-circuits the service entirely</li>
+          <li data-i18n="what.li1">Debounced type-ahead — one request per pause, and a slow answer never overwrites a newer one</li>
+          <li data-i18n="what.li2">Results are biased toward the current view, so nearby matches come first</li>
+          <li data-i18n="what.li3">Keyboard operation throughout: arrows, Enter, Escape; the list is a proper <code>combobox</code>/<code>listbox</code></li>
+          <li data-i18n="what.li4">Picking a hit flies to it and marks it with the same highlight the map uses for selected features</li>
+          <li data-i18n="what.li5">Coordinate input (<code>lat, lon</code>) short-circuits the service entirely</li>
         </ul>
-        <div class="callout">
+        <div class="callout" data-i18n="callout">
           <strong>Photon is the default, not the commitment</strong>
           The built-in default is Photon (OSM data, made for type-ahead). Public instances come with
           fair-use expectations — for production, self-host it or point the config at the gazetteer
@@ -44,13 +44,13 @@
       </section>
 
       <section class="doc">
-        <h2>Configuration</h2>
+        <h2 data-i18n="config.h2">Configuration</h2>
         <pre data-src="/configs/search.map0.json" data-label="search.map0.json" data-emphasise="search,provider,country,coordinates"></pre>
       </section>
 
       <section class="doc">
-        <h2>Your own gazetteer</h2>
-        <p>
+        <h2 data-i18n="custom.h2">Your own gazetteer</h2>
+        <p data-i18n="custom.p1">
           A custom provider is a URL template plus the shape of the answer. Placeholders:
           <code>{query}</code>, <code>{limit}</code>, <code>{lang}</code>, <code>{lng}</code>,
           <code>{lat}</code>.
@@ -65,7 +65,7 @@
             "placeholder": "Ort, Adresse oder Grundstück…"
           }
         </pre>
-        <p>
+        <p data-i18n="custom.p2">
           <code>format: "geojson"</code> expects a FeatureCollection of points — the same shape
           Photon and most OGC API Features endpoints return. <code>"nominatim"</code> handles the
           classic array with <code>lat</code>/<code>lon</code>/<code>display_name</code>. Either way
@@ -74,7 +74,7 @@
       </section>
 
       <section class="doc">
-        <h2>From the host page</h2>
+        <h2 data-i18n="host.h2">From the host page</h2>
         <pre data-lang="js" data-label="host-page.js">
           const viewer = document.querySelector('map0-viewer');
 

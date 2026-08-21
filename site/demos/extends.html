@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Config inheritance — map0 demos</title>
+    <title data-i18n="title">Config inheritance — map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -11,9 +11,9 @@
   <body data-demo="extends">
     <main>
       <div class="page-head">
-        <p class="eyebrow">Configuration</p>
-        <h1>Config inheritance</h1>
-        <p class="lede">
+        <p class="eyebrow" data-i18n="eyebrow">Configuration</p>
+        <h1 data-i18n="h1">Config inheritance</h1>
+        <p class="lede" data-i18n="lede">
           Fifty maps across an organisation should not repeat the same three basemaps fifty times.
           One shared base config holds the house standard; each map only writes down what makes it
           different.
@@ -21,30 +21,30 @@
       </div>
 
       <map0-viewer config-src="/configs/extends.map0.json"></map0-viewer>
-      <p class="demo-note">
+      <p class="demo-note" data-i18n="note">
         <strong>What you see:</strong> three basemaps, the home button, the legend position and the
         share link all come from the organisation base file. This map itself only declares one
         layer, a view and its own accent colour.
       </p>
 
       <section class="doc">
-        <h2>The map config</h2>
-        <p>Short, because it inherits:</p>
+        <h2 data-i18n="config.h2">The map config</h2>
+        <p data-i18n="config.p">Short, because it inherits:</p>
         <pre data-src="/configs/extends.map0.json" data-label="extends.map0.json" data-emphasise="extends,theme"></pre>
-        <h3>The shared base</h3>
-        <p>Maintained once, centrally, and reused by every map in the organisation:</p>
+        <h3 data-i18n="config.h3">The shared base</h3>
+        <p data-i18n="config.p2">Maintained once, centrally, and reused by every map in the organisation:</p>
         <pre data-src="/configs/_base.map0.json" data-label="_base.map0.json"></pre>
       </section>
 
       <section class="doc">
-        <h2>Merge rules</h2>
+        <h2 data-i18n="merge.h2">Merge rules</h2>
         <ul class="checks">
-          <li>Objects merge recursively — the child's <code>theme.primary</code> wins, the base's <code>theme.radius</code> survives</li>
-          <li>Arrays replace as a whole — a layer list is an ordered statement, not a set to merge</li>
-          <li>Chains up to three levels deep (global → department → map), with cycle detection</li>
-          <li>Relative <code>extends</code> URLs resolve against the config file that declares them</li>
+          <li data-i18n="merge.li1">Objects merge recursively — the child's <code>theme.primary</code> wins, the base's <code>theme.radius</code> survives</li>
+          <li data-i18n="merge.li2">Arrays replace as a whole — a layer list is an ordered statement, not a set to merge</li>
+          <li data-i18n="merge.li3">Chains up to three levels deep (global → department → map), with cycle detection</li>
+          <li data-i18n="merge.li4">Relative <code>extends</code> URLs resolve against the config file that declares them</li>
         </ul>
-        <div class="callout">
+        <div class="callout" data-i18n="merge.callout">
           <strong>Why arrays replace</strong>
           Merging layer arrays sounds convenient until you try to remove an inherited layer, reorder
           two of them, or explain to an editor why layer three appeared out of nowhere. Replacing is

@@ -1,0 +1,16 @@
+{
+  "title": "GeoJSON &amp; Clustering — map0-Demos",
+  "h1": "GeoJSON &amp; Clustering",
+  "eyebrow": "Datenquellen",
+  "lede": "Drei Wege, Features auf die Karte zu bringen — ein externer Dienst, eine Datei neben der Seite und eine FeatureCollection, direkt in die Config geschrieben.",
+  "note": "<strong>Ausprobieren:</strong> ~2400 Trinkbrunnen kommen als ein einziges GeoJSON-Dokument an und werden auf der GPU geclustert. Zoomen Sie hinein, bis die Cluster aufbrechen, und springen Sie mit „Auf Ebene zoomen“ im Layer-Panel zur lokalen Demo-Datei.",
+  "what.h2": "Was diese Demo zeigt",
+  "what.li1": "<code>data</code> akzeptiert eine URL oder ein Inline-GeoJSON-Objekt — hier eine WFS-Antwort, eine statische Datei und ein Literal",
+  "what.li2": "Clustering ist ein einziger Config-Schlüssel; die Gruppierung übernimmt MapLibre",
+  "what.li3": "Der vereinfachte Style (<code>circle-*</code>, <code>line-*</code>, <code>fill-*</code>) wird je Geometrietyp zu vollwertigen Style-Layern expandiert",
+  "what.li4": "„Auf Ebene zoomen“ berechnet die Bounding Box aus den Daten selbst",
+  "what.p": "Bei einem WFS besteht der Trick darin, einfach GeoJSON anzufordern: Hängen Sie <code>outputFormat=json</code> und <code>srsName=EPSG:4326</code> an einen GetFeature-Request an, und die Antwort ist eine Quelle, die map0 direkt verwenden kann. Ein eigener <code>wfs</code>-Layer-Typ, der Paging beherrscht, folgt in v1.x.",
+  "config.h2": "Konfiguration",
+  "full.h2": "Volle Kontrolle über den Style",
+  "full.p": "Wenn das flache Style-Objekt nicht reicht, übergeben Sie stattdessen ein Array von Layern nach MapLibre-Style-Spec — Expressions, Filter, alles. map0 injiziert die Quelle und behält die Layer-Reihenfolge bei:"
+}

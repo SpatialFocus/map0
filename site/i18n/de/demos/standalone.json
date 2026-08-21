@@ -1,0 +1,17 @@
+{
+  "title": "Script-Tag-Einbindung — map0-Demos",
+  "h1": "Script-Tag-Einbindung",
+  "lede": "Diese Seite lädt das gebaute Bundle statt der Entwicklungsquellen — dieselbe Datei, die Sie neben eine CMS-Seite legen würden. Kein Bundler, kein Framework, kein Build-Schritt auf Ihrer Seite.",
+  "note": "<strong>Hinweis:</strong> Fehlt die Karte oben, führen Sie einmal <code>pnpm demo:standalone</code> aus — das baut das Bundle und kopiert es neben diese Seite. Alle anderen Demos laufen über den Dev-Server aus den Quellen.",
+  "whole.h2": "Die gesamte Integration",
+  "whole.p1": "Das Bundle kommt von npm — <code>npm install map0-viewer</code> — und <code>node_modules/map0-viewer/dist</code> ist der Ordner, den Sie kopieren. Der Paketname ist der, den npm uns geben würde; das Element, die Config und dieser Ordner sind map0.",
+  "whole.p2": "Wenn Sie lieber gar nichts hosten, ersetzen Sie die erste Zeile durch eine gepinnte CDN-URL — das Element darunter bleibt exakt, wie es ist, und auf Ihren Server muss nichts kopiert werden. Der Entry findet seine Chunks und MapLibres Worker am CDN genauso wie in Ihrem eigenen Ordner:",
+  "whole.p3": "<code>unpkg.com/map0-viewer@0.1.0/dist/map0.js</code> liefert denselben Tarball aus. Pinnen Sie so oder so die exakte Version: Das ist ein 0.x-Release und kann sich ohne Deprecation-Pfad ändern.",
+  "whole.p4": "Wenn Sie selbst hosten, landet Folgendes auf Ihrem Webserver:",
+  "whole.li1": "<code>map0.js</code> — der Client, inklusive MapLibre und der gesamten UI",
+  "whole.li2": "<code>maplibre-gl-worker.mjs</code> und <code>maplibre-gl-shared.mjs</code> — MapLibre lädt seinen Worker aus separaten Dateien neben dem Bundle",
+  "whole.li3": "Ihre Config-Dateien, wo immer Sie möchten — ein statischer Ordner oder ein CMS-Feld",
+  "whole.callout": "<strong>Nur ESM</strong> MapLibre v6 hat seinen UMD-Build gestrichen, das Script-Tag braucht also <code>type=\"module\"</code>. In jedem Browser, den map0 unterstützt, ist das kein Problem — aber ein kopiertes Snippet ohne dieses Attribut tut stillschweigend gar nichts.",
+  "talk.h2": "Das Element von der Seite aus steuern",
+  "talk.p": "Sobald das Element fertig geladen ist, stellt es ein imperatives Handle bereit und feuert DOM-Events, auf die die Host-Seite reagieren kann — ganz ohne Imports:"
+}

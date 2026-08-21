@@ -1,0 +1,16 @@
+{
+  "title": "Koordinaten — map0-Demos",
+  "eyebrow": "Kartenfunktionen",
+  "h1": "Koordinaten",
+  "lede": "Die Karte rendert in Web Mercator — aber niemand in einem österreichischen Amt notiert Web Mercator. Koordinaten werden in genau den Systemen angezeigt, die Ihre Nutzer tatsächlich brauchen.",
+  "note": "<strong>Ausprobieren:</strong> Klicken Sie mit der rechten Maustaste irgendwo in die Karte (oder drücken und halten Sie auf einem Touch-Gerät). Jede Zeile hat einen Kopier-Button.",
+  "what.h2": "Was diese Demo zeigt",
+  "what.li1": "Rechtsklick oder langes Drücken — beides öffnet die Anzeige",
+  "what.li2": "Die Umprojektion passiert clientseitig mit proj4 — ohne Dienstaufruf",
+  "what.li3": "Eingebaute Definitionen: MGI/Gauß-Krüger M28, M31, M34, Austria Lambert und alle UTM-Zonen",
+  "what.li4": "Jedes andere CRS funktioniert über eine proj4-<code>def</code> in der Config (im Beispiel unten: EPSG:3416)",
+  "what.p": "Ohne <code>crs</code>-Liste trifft map0 selbst eine vernünftige Auswahl: WGS 84, der zum angeklickten Längengrad passende Gauß-Krüger-Meridianstreifen und die passende UTM-Zone. Diesen Standard verwenden die anderen Demos auf dieser Website.",
+  "callout": "<strong>Anzeige, nicht Rendering</strong> Das ist eine Koordinaten-<em>Anzeige</em>. MapLibre rendert weiterhin in EPSG:3857 — Dienste, die kein Web Mercator liefern können, bleiben bewusst außen vor (Entscheidung D-02). Zahlen für Menschen umzuprojizieren ist ein anderes Problem, als Kacheln für eine GPU umzuprojizieren.",
+  "config.h2": "Konfiguration",
+  "config.h3": "Standardwerte — oder aus"
+}

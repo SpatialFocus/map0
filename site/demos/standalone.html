@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Script tag embed — map0 demos</title>
+    <title data-i18n="title">Script tag embed — map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <!-- The built bundle, not the dev sources: run `pnpm demo:standalone` first. -->
@@ -14,22 +14,22 @@
     <main>
       <div class="page-head">
         <p class="eyebrow">Integration</p>
-        <h1>Script tag embed</h1>
-        <p class="lede">
+        <h1 data-i18n="h1">Script tag embed</h1>
+        <p class="lede" data-i18n="lede">
           This page loads the built bundle instead of the development sources — the same file you
           would drop next to a CMS page. No bundler, no framework, no build step on your side.
         </p>
       </div>
 
       <map0-viewer config-src="/configs/wms.map0.json"></map0-viewer>
-      <p class="demo-note">
+      <p class="demo-note" data-i18n="note">
         <strong>Note:</strong> if the map above is missing, run
         <code>pnpm demo:standalone</code> once — it builds the bundle and copies it next to this
         page. Every other demo runs from source via the dev server.
       </p>
 
       <section class="doc">
-        <h2>The whole integration</h2>
+        <h2 data-i18n="whole.h2">The whole integration</h2>
         <pre data-lang="html" data-label="any-page.html">
           &lt;script type="module" src="/map0/map0.js"&gt;&lt;/script&gt;
 
@@ -38,12 +38,12 @@
             style="height: 520px"&gt;
           &lt;/map0-viewer&gt;
         </pre>
-        <p>
+        <p data-i18n="whole.p1">
           The bundle comes from npm — <code>npm install map0-viewer</code> — and
           <code>node_modules/map0-viewer/dist</code> is the folder you copy. The package name is the
           one npm would give us; the element, the config and this folder are map0.
         </p>
-        <p>
+        <p data-i18n="whole.p2">
           If you would rather not host anything, replace that first line with a pinned CDN URL — the
           element below it stays exactly as it is, and there is nothing to copy onto your server. The
           entry finds its chunks and MapLibre's worker on the CDN just as it does in your own folder:
@@ -53,17 +53,17 @@
                   src="https://cdn.jsdelivr.net/npm/map0-viewer@0.1.0/dist/map0.js"
           &gt;&lt;/script&gt;
         </pre>
-        <p>
+        <p data-i18n="whole.p3">
           <code>unpkg.com/map0-viewer@0.1.0/dist/map0.js</code> serves the same tarball. Pin the exact
           version either way: this is a 0.x release and may change without a deprecation path.
         </p>
-        <p>Self-hosted, this is what ends up on your web server:</p>
+        <p data-i18n="whole.p4">Self-hosted, this is what ends up on your web server:</p>
         <ul class="checks">
-          <li><code>map0.js</code> — the client, MapLibre and all UI included</li>
-          <li><code>maplibre-gl-worker.mjs</code> and <code>maplibre-gl-shared.mjs</code> — MapLibre loads its worker from separate files next to the bundle</li>
-          <li>Your config files, wherever you like — a static folder or a CMS field</li>
+          <li data-i18n="whole.li1"><code>map0.js</code> — the client, MapLibre and all UI included</li>
+          <li data-i18n="whole.li2"><code>maplibre-gl-worker.mjs</code> and <code>maplibre-gl-shared.mjs</code> — MapLibre loads its worker from separate files next to the bundle</li>
+          <li data-i18n="whole.li3">Your config files, wherever you like — a static folder or a CMS field</li>
         </ul>
-        <div class="callout">
+        <div class="callout" data-i18n="whole.callout">
           <strong>ESM only</strong>
           MapLibre v6 dropped its UMD build, so the script tag needs
           <code>type="module"</code>. That is fine in every browser map0 targets, but a copied
@@ -72,8 +72,8 @@
       </section>
 
       <section class="doc">
-        <h2>Talking to it from the page</h2>
-        <p>
+        <h2 data-i18n="talk.h2">Talking to it from the page</h2>
+        <p data-i18n="talk.p">
           The element exposes an imperative handle once it is ready, and emits DOM events the host
           page can listen to without importing anything:
         </p>

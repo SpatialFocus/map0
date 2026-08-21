@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Languages — map0 demos</title>
+    <title data-i18n="title">Languages — map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -11,30 +11,30 @@
   <body data-demo="i18n">
     <main>
       <div class="page-head">
-        <p class="eyebrow">Configuration</p>
-        <h1>Languages</h1>
-        <p class="lede">
+        <p class="eyebrow" data-i18n="eyebrow">Configuration</p>
+        <h1 data-i18n="h1">Languages</h1>
+        <p class="lede" data-i18n="lede">
           German and English ship with the client. Every single string can be overridden per
           locale from the config — including terms your organisation insists on.
         </p>
       </div>
 
       <map0-viewer config-src="/configs/i18n.map0.json"></map0-viewer>
-      <p class="demo-note">
+      <p class="demo-note" data-i18n="note">
         <strong>Look closely:</strong> the panel is titled <em>Kartenthemen</em>, not the built-in
         <em>Kartenebenen</em>, and the legend reads <em>Zeichenerklärung</em>. Both come from
         <code>i18n.overrides</code>. Tooltips of the MapLibre controls follow the same locale.
       </p>
 
       <section class="doc">
-        <h2>How the locale is chosen</h2>
+        <h2 data-i18n="how.h2">How the locale is chosen</h2>
         <ul class="checks">
-          <li><code>locale: "auto"</code> (the default) follows the visitor's browser language</li>
-          <li>A fixed <code>locale</code> pins the UI — useful when the surrounding page is single-language</li>
-          <li><code>fallback</code> catches keys the chosen locale does not define</li>
-          <li>Overrides can even introduce a locale map0 does not ship, without a rebuild</li>
+          <li data-i18n="how.li1"><code>locale: "auto"</code> (the default) follows the visitor's browser language</li>
+          <li data-i18n="how.li2">A fixed <code>locale</code> pins the UI — useful when the surrounding page is single-language</li>
+          <li data-i18n="how.li3"><code>fallback</code> catches keys the chosen locale does not define</li>
+          <li data-i18n="how.li4">Overrides can even introduce a locale map0 does not ship, without a rebuild</li>
         </ul>
-        <p>
+        <p data-i18n="how.p">
           Lookup order per key: your override for the locale, the built-in dictionary for the
           locale, your override for the fallback, the built-in fallback. Nothing crashes on a
           missing key — the key itself is shown, which makes gaps obvious in testing.
@@ -42,12 +42,12 @@
       </section>
 
       <section class="doc">
-        <h2>Configuration</h2>
+        <h2 data-i18n="config.h2">Configuration</h2>
         <pre data-src="/configs/i18n.map0.json" data-label="i18n.map0.json" data-emphasise="i18n,locale,overrides"></pre>
       </section>
 
       <section class="doc">
-        <h2>A new language from config alone</h2>
+        <h2 data-i18n="newlang.h2">A new language from config alone</h2>
         <pre data-lang="json" data-label="excerpt">
           "i18n": {
             "locale": "it",
@@ -61,7 +61,7 @@
             }
           }
         </pre>
-        <p>Anything not translated falls back to English rather than disappearing.</p>
+        <p data-i18n="newlang.p">Anything not translated falls back to English rather than disappearing.</p>
       </section>
     </main>
   </body>

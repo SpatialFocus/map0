@@ -1,0 +1,21 @@
+{
+  "title": "Impressum — map0",
+  "meta.description": "Impressum von map0.net, betrieben von der Spatial Focus GmbH, Wien.",
+  "eyebrow": "Rechtliches",
+  "h1": "Impressum",
+  "lede": "Impressum für map0.net gemäß § 5 E-Commerce-Gesetz (ECG), § 14 Unternehmensgesetzbuch (UGB) und Offenlegung gemäß § 25 Mediengesetz.",
+  "owner.h2": "Medieninhaber und Diensteanbieter",
+  "owner.addr": "<strong>Spatial Focus GmbH</strong><br /> Absberggasse 27/7/3<br /> 1100 Wien, Österreich",
+  "owner.contact": "Kontakt: über <a href=\"https://www.spatial-focus.net/contact\">www.spatial-focus.net/contact</a><br /> Web: <a href=\"https://www.spatial-focus.net\">www.spatial-focus.net</a>",
+  "owner.register": "Rechtsform: Gesellschaft mit beschränkter Haftung<br /> Firmenbuchnummer: FN 432080m<br /> Firmenbuchgericht: Handelsgericht Wien<br /> UID-Nummer: ATU69583006<br /> Geschäftsführer: Christoph Perger, Christopher Dresel, Sebastian Greifeneder<br /> Mitglied der Wirtschaftskammer Österreich (WKO)",
+  "owner.purpose": "Unternehmensgegenstand: Softwareentwicklung, IT-Dienstleistungen, Consulting, geografische Informationssysteme, Datenbereitstellung.",
+  "site.h2": "Zweck dieser Website",
+  "site.p": "map0.net präsentiert <strong>map0</strong>, einen Open-Source-Webkarten-Client. Die Site bündelt Dokumentation, Live-Demos und Release-Informationen.",
+  "copyright.h2": "Urheberrecht und Lizenzen",
+  "copyright.p1": "map0 ist Open Source und unter der <a href=\"https://github.com/SpatialFocus/map0/blob/main/LICENSE\">MIT-Lizenz</a> veröffentlicht; der Quellcode ist auf <a href=\"https://github.com/SpatialFocus/map0\">GitHub</a> verfügbar. Die Inhalte dieser Website — etwa Texte, Grafiken und Beispielkonfigurationen — sind urheberrechtlich geschützt, sofern die Lizenz des Repositories, aus dem sie stammen, nichts anderes bestimmt.",
+  "copyright.p2": "Die Demo-Karten zeigen Daten von Geodatendiensten Dritter: basemap.at, Open Government Data der Stadt Wien und MapLibre-Demo-Kacheln. Diese Daten unterliegen weiterhin den Bedingungen und Attributionspflichten ihrer jeweiligen Herausgeber, die die Karten anzeigen.",
+  "liability.h2": "Haftung und externe Links",
+  "liability.p": "Die Inhalte dieser Site wurden mit Sorgfalt erstellt. Die Spatial Focus GmbH übernimmt dennoch keine Haftung für deren Richtigkeit, Vollständigkeit oder Eignung für einen bestimmten Zweck. Diese Site verlinkt auf externe Websites und lädt Daten von externen Diensten; auf deren Inhalte hat die Spatial Focus GmbH keinen Einfluss und übernimmt dafür keine Verantwortung. Solche Links stellen keine Empfehlung dar.",
+  "privacy.h2": "Datenschutz",
+  "privacy.p": "Wie diese Site mit personenbezogenen Daten umgeht, beschreibt die <a href=\"/privacy.html\">Datenschutzerklärung</a>."
+}

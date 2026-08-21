@@ -1,0 +1,14 @@
+{
+  "title": "Legende — map0-Demos",
+  "eyebrow": "Kartenfunktionen",
+  "h1": "Legende",
+  "lede": "Drei Layer, drei Wege zu einem Legendeneintrag — und ein Panel, das nur auflistet, was gerade tatsächlich sichtbar ist.",
+  "note": "<strong>Ausprobieren:</strong> Schalten Sie Layer aus und wieder ein — die Einträge erscheinen und verschwinden mit ihnen. Auch ein Layer außerhalb seines Zoombereichs fällt aus der Legende, weil er nicht auf der Karte ist.",
+  "sources.h2": "Drei Quellen, ein Panel",
+  "sources.li1": "<strong>Vom Dienst:</strong> <code>legend: \"auto\"</code> auf einem WMS-Layer baut einen GetLegendGraphic-Request",
+  "sources.li2": "<strong>Aus dem Style:</strong> Vektor-Layer mit literalen Farben erzeugen automatisch Farbfelder",
+  "sources.li3": "<strong>Von Hand:</strong> ein Array von Einträgen mit Beschriftung, Farbe und Form (Quadrat, Linie, Kreis)",
+  "sources.p": "<code>legend: false</code> hält einen Layer ganz aus dem Panel heraus, und ein einfacher String wird als URL eines Legendenbilds interpretiert — nützlich, wenn ein Dienst eine schlechte Legende zeichnet und Sie eine bessere hosten.",
+  "callout": "<strong>Warum nicht immer ableiten?</strong> Ein datengetriebener Style — Farbe nach Attribut, Breite nach Zoom — hat kein einzelnes Farbfeld, das ihn ehrlich abbildet. map0 leitet ein Farbfeld nur aus literalen Farben ab — sonst zeigt es lieber gar nichts als etwas Irreführendes.",
+  "config.h2": "Konfiguration"
+}

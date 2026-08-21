@@ -351,6 +351,23 @@ it, or drop it when a real dependency arrives.
   undefined name (`Popup is not defined`, only in the bundle). Wrap it in a function that *uses* the
   binding instead — `createPopup()` — and the import survives.
 
+### 5.1 Site i18n: two languages from one source, at build time
+
+The site (map0.net) is bilingual without a framework. The English page is the only source:
+elements carry `data-i18n="key"` (inner HTML) or `data-i18n-attrs="attr:key"` (attribute values)
+and keep their English text inline; one JSON catalogue per page under `site/i18n/de/` supplies the
+German. `site/i18n/plugin.ts` emits every built page a second time under `/de/` (and serves `/de/…`
+on the fly in dev), sets `<html lang="de">`, rewrites internal page links, injects `hreflang`
+pairs, and puts a one-time browser-language redirect on `/` (choice persisted in localStorage by
+the topbar switcher — same behaviour as spatial-focus.net's `redirectOn: "root"`). The build warns
+about **missing** keys (page stays English there) and **stale** keys (catalogue entries nothing
+asks for) — after editing English copy, touch the German catalogue or the build will say so.
+Strings that scripts render at runtime (gallery cards, pager, Copy buttons, validator status) key
+off `document.documentElement.lang` via `site/lang.ts` instead. The dark/light topbar toggle works
+the same way at the other end: an inline chrome script applies the stored choice before first
+paint, CSS carries the dark tokens twice (`@media` for the OS default, `:root.dark` for the
+explicit choice), and embedded maps follow through the viewer's `theme` attribute.
+
 ## 6. Field notes: component and browser
 
 - **Focus lives in the shadow root.** `document.activeElement` returns the host element, never what
@@ -404,6 +421,7 @@ packages/core     the engine: map creation, basemap manager, source adapters, fe
 packages/ui       <map0-viewer>, panels, dialogs, popup rendering, focus trap, styles
                   → imports core lazily (see invariant 1)
 site/             landing page + /demos (one page per topic) + configs and data
+site/i18n/        German page catalogues + the build-time translation plugin (§5.1)
 e2e/              headless verification
 scripts/          build-adjacent tooling (size budget)
 ```

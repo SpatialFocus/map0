@@ -1,0 +1,16 @@
+{
+  "title": "Sprachen — map0-Demos",
+  "eyebrow": "Konfiguration",
+  "h1": "Sprachen",
+  "lede": "Deutsch und Englisch sind im Client enthalten. Jeder einzelne String lässt sich pro Locale aus der Config überschreiben — auch die Begriffe, auf denen Ihre Organisation besteht.",
+  "note": "<strong>Genau hinsehen:</strong> Das Panel heißt <em>Kartenthemen</em> statt der eingebauten Bezeichnung <em>Kartenebenen</em>, und die Legende trägt den Titel <em>Zeichenerklärung</em>. Beides kommt aus <code>i18n.overrides</code>. Auch die Tooltips der MapLibre-Controls folgen derselben Locale.",
+  "how.h2": "Wie die Locale gewählt wird",
+  "how.li1": "<code>locale: \"auto\"</code> (der Standard) folgt der Browsersprache des Besuchers",
+  "how.li2": "Eine fixe <code>locale</code> legt die Sprache der UI fest — praktisch, wenn die umgebende Seite einsprachig ist",
+  "how.li3": "<code>fallback</code> fängt Schlüssel ab, die die gewählte Locale nicht definiert",
+  "how.li4": "Overrides können sogar eine Locale einführen, die map0 gar nicht mitliefert — ohne Rebuild",
+  "how.p": "Lookup-Reihenfolge pro Schlüssel: Ihr Override für die Locale, das eingebaute Wörterbuch der Locale, Ihr Override für den Fallback, der eingebaute Fallback. Fehlt ein Schlüssel, stürzt nichts ab — angezeigt wird dann der Schlüssel selbst, Lücken fallen beim Testen also sofort auf.",
+  "config.h2": "Konfiguration",
+  "newlang.h2": "Eine neue Sprache allein aus der Config",
+  "newlang.p": "Was nicht übersetzt ist, fällt auf Englisch zurück, statt zu verschwinden."
+}

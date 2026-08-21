@@ -3,6 +3,10 @@
  * copy button, and the rule that a snippet is FETCHED from the very file the
  * map loads wherever possible — so a snippet can never drift from what runs.
  */
+import { LANG } from "./lang.js";
+
+const STR =
+  LANG === "de" ? { copy: "Kopieren", copied: "Kopiert" } : { copy: "Copy", copied: "Copied" };
 
 const escapeHtml = (s: string): string =>
   s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -91,11 +95,11 @@ export function codeFigure(
   const copy = document.createElement("button");
   copy.className = "copy";
   copy.type = "button";
-  copy.textContent = "Copy";
+  copy.textContent = STR.copy;
   copy.addEventListener("click", () => {
     void navigator.clipboard.writeText(code).then(() => {
-      copy.textContent = "Copied";
-      setTimeout(() => (copy.textContent = "Copy"), 1600);
+      copy.textContent = STR.copied;
+      setTimeout(() => (copy.textContent = STR.copy), 1600);
     });
   });
   caption.appendChild(copy);
@@ -141,7 +145,7 @@ export async function enhanceCode(): Promise<void> {
           const text = (await res.text()).trimEnd();
           renderCode(pre, label, text, pre.dataset.lang ?? "json");
         } catch {
-          pre.textContent = `could not load ${src}`;
+          pre.textContent = LANG === "de" ? `${src} konnte nicht geladen werden` : `could not load ${src}`;
         }
         return;
       }

@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Privacy — map0</title>
-    <meta name="description" content="Privacy policy for map0.net: a static site with no cookies, no accounts and cookieless self-hosted analytics." />
+    <title data-i18n="title">Privacy — map0</title>
+    <meta name="description" data-i18n-attrs="content:meta.description" content="Privacy policy for map0.net: a static site with no cookies, no accounts and cookieless self-hosted analytics." />
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <!-- deliberately no module script: a legal page costs a stylesheet, not a map engine -->
@@ -14,9 +14,9 @@
 
     <main>
       <div class="page-head">
-        <p class="eyebrow">Legal</p>
-        <h1>Privacy policy</h1>
-        <p class="lede">
+        <p class="eyebrow" data-i18n="eyebrow">Legal</p>
+        <h1 data-i18n="h1">Privacy policy</h1>
+        <p class="lede" data-i18n="lede">
           map0.net is a static website. It sets no cookies, has no accounts and no forms, and its
           analytics are cookieless and anonymous. This page explains where personal data still comes
           into play, and why.
@@ -24,24 +24,25 @@
       </div>
 
       <section class="doc">
-        <h2>Controller</h2>
-        <p>
+        <h2 data-i18n="controller.h2">Controller</h2>
+        <p data-i18n="controller.p">
           <strong>Spatial Focus GmbH</strong><br />
           Absberggasse 27/7/3<br />
           1100 Vienna, Austria<br />
           Contact: via <a href="https://www.spatial-focus.net/contact">www.spatial-focus.net/contact</a>
         </p>
 
-        <h2>What this site does not do</h2>
+        <h2 data-i18n="notdo.h2">What this site does not do</h2>
         <ul class="checks">
-          <li>No cookies, and nothing stored in your browser.</li>
-          <li>No accounts, logins, forms or newsletters.</li>
-          <li>No advertising and no cross-site tracking.</li>
-          <li>No profiles of individual visitors. Analytics are aggregated and anonymous.</li>
+          <li data-i18n="notdo.li1">No cookies. The only things kept in your browser are your own choices — language and
+            light/dark theme — stored locally (localStorage) and never transmitted.</li>
+          <li data-i18n="notdo.li2">No accounts, logins, forms or newsletters.</li>
+          <li data-i18n="notdo.li3">No advertising and no cross-site tracking.</li>
+          <li data-i18n="notdo.li4">No profiles of individual visitors. Analytics are aggregated and anonymous.</li>
         </ul>
 
-        <h2>Hosting and server logs</h2>
-        <p>
+        <h2 data-i18n="hosting.h2">Hosting and server logs</h2>
+        <p data-i18n="hosting.p">
           The site is served as static files by Microsoft Azure Static Web Apps (Microsoft Ireland
           Operations Ltd.). To deliver a page, the web server necessarily processes the technical data
           of each request, such as the IP address, the requested URL, the time and the browser
@@ -51,8 +52,8 @@
           <a href="https://www.microsoft.com/licensing/docs/view/Microsoft-Products-and-Services-Data-Protection-Addendum-DPA">data protection addendum</a>.
         </p>
 
-        <h2>Web analytics</h2>
-        <p>
+        <h2 data-i18n="analytics.h2">Web analytics</h2>
+        <p data-i18n="analytics.p">
           We use <a href="https://umami.is">Umami</a>, a privacy-friendly analytics tool, self-hosted on
           Spatial Focus infrastructure, so no analytics data leaves our own systems. Umami sets no
           cookies, stores no IP addresses and does not track individual visitors. It only produces
@@ -61,31 +62,31 @@
           only on the deployed site, never in local development builds.
         </p>
 
-        <h2>Map data from third-party services</h2>
-        <p>
+        <h2 data-i18n="mapdata.h2">Map data from third-party services</h2>
+        <p data-i18n="mapdata.p1">
           The live demos are real maps. When one loads, your browser fetches basemaps and geodata
           directly from the servers of third parties, and those requests carry your IP address and
           browser identification, like any web request. The services in use:
         </p>
         <ul class="checks">
-          <li>
+          <li data-i18n="mapdata.li1">
             <strong>basemap.at and City of Vienna geodata</strong> (mapsneu.wien.gv.at,
             data.wien.gv.at, wien.gv.at), operated by the City of Vienna and the Austrian basemap.at
             cooperation.
           </li>
-          <li>
+          <li data-i18n="mapdata.li2">
             <strong>MapLibre demo tiles</strong> (demotiles.maplibre.org), operated by the MapLibre
             project and used by the globe demo.
           </li>
         </ul>
-        <p>
+        <p data-i18n="mapdata.p2">
           These operators act as independent controllers of the requests they receive; their own
           privacy policies apply. The maps are the purpose of this site, so they load with the page.
           If you prefer not to contact these services, do not open the demo pages.
         </p>
 
-        <h2>Your rights</h2>
-        <p>
+        <h2 data-i18n="rights.h2">Your rights</h2>
+        <p data-i18n="rights.p">
           Under the GDPR you have the right to access, rectification, erasure, restriction of
           processing, data portability and objection regarding your personal data (Art. 15 to 21 GDPR).
           This site stores nothing about identifiable visitors, so there will usually be nothing to
@@ -95,7 +96,7 @@
           (<a href="https://www.dsb.gv.at">Datenschutzbehörde</a>).
         </p>
 
-        <p><em>Last updated: August 2026.</em></p>
+        <p data-i18n="updated"><em>Last updated: August 2026.</em></p>
       </section>
     </main>
 

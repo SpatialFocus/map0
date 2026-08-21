@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Cloud Optimized GeoTIFF — map0 demos</title>
+    <title data-i18n="title">Cloud Optimized GeoTIFF — map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -11,9 +11,9 @@
   <body data-demo="cog">
     <main>
       <div class="page-head">
-        <p class="eyebrow">Data sources</p>
+        <p class="eyebrow" data-i18n="eyebrow">Data sources</p>
         <h1>Cloud Optimized GeoTIFF</h1>
-        <p class="lede">
+        <p class="lede" data-i18n="lede">
           A raster file on plain storage, read directly by the browser — no tile server, no
           server-side rendering. HTTP range requests fetch only the tiles in view. One map per
           rendering mode below: RGB imagery, a DEM as terrain, and a classified single-band raster
@@ -22,14 +22,14 @@
       </div>
 
       <section class="doc">
-        <h2>Imagery — a URL is enough</h2>
-        <p>
+        <h2 data-i18n="imagery.h2">Imagery — a URL is enough</h2>
+        <p data-i18n="imagery.p">
           An RGB orthophoto over Catalonia. The layer definition is nothing but a URL: bounds and
           zoom range come from the file's own header.
         </p>
       </section>
       <map0-viewer config-src="/configs/cog-imagery.map0.json"></map0-viewer>
-      <p class="demo-note">
+      <p class="demo-note" data-i18n="imagery.note">
         <strong>Try it:</strong> open the network tab and pan around — only small byte ranges of
         the 50&nbsp;MB file are ever fetched, and tiles already seen never hit the network again.
       </p>
@@ -38,8 +38,8 @@
       </section>
 
       <section class="doc">
-        <h2>Terrain — one DEM, two renderings</h2>
-        <p>
+        <h2 data-i18n="terrain.h2">Terrain — one DEM, two renderings</h2>
+        <p data-i18n="terrain.p">
           The same 3&nbsp;MB elevation file (BEV 25&nbsp;m terrain model, Großglockner region)
           drives two layers: <code>hillshade</code> renders relief shading,
           <code>color</code> maps the elevation band onto a hypsometric ramp. The legend derives
@@ -47,7 +47,7 @@
         </p>
       </section>
       <map0-viewer config-src="/configs/cog-terrain.map0.json"></map0-viewer>
-      <p class="demo-note">
+      <p class="demo-note" data-i18n="terrain.note">
         <strong>Try it:</strong> toggle either layer off to see the other alone. A hillshade paints
         only shadows and highlights — flat terrain stays see-through — and its opacity slider
         scales the shading intensity.
@@ -57,8 +57,8 @@
       </section>
 
       <section class="doc">
-        <h2>Classification — your own values and colors</h2>
-        <p>
+        <h2 data-i18n="classes.h2">Classification — your own values and colors</h2>
+        <p data-i18n="classes.p">
           A ramp never fits categorical data. <code>color.classes</code> styles exact pixel values
           (or from–to ranges) with hand-picked colors instead — here a binary sealed-surfaces
           raster for all of Austria, 1.3&nbsp;GB on a plain bucket. The legend takes one labelled
@@ -66,7 +66,7 @@
         </p>
       </section>
       <map0-viewer config-src="/configs/cog-classes.map0.json"></map0-viewer>
-      <p class="demo-note">
+      <p class="demo-note" data-i18n="classes.note">
         <strong>Try it:</strong> the unsealed class uses an 8-digit hex color — the last two digits
         are alpha, so the basemap shows through. Drop that class from the config and unsealed
         pixels disappear entirely.
@@ -76,16 +76,16 @@
       </section>
 
       <section class="doc">
-        <h2>What these demos show</h2>
+        <h2 data-i18n="what.h2">What these demos show</h2>
         <ul class="checks">
-          <li>A <code>cog</code> layer needs nothing but a URL — bounds and zoom range come from the file's own header</li>
-          <li><code>color</code> maps a single band onto a named ramp (ColorBrewer/CARTOColors), discrete classes or continuous</li>
-          <li><code>color.classes</code> instead styles exact values or from–to ranges directly, with hand-picked colors and labels</li>
-          <li><code>hillshade</code> renders a single-band DEM as relief shading (exaggeration, light direction, colors)</li>
-          <li>The legend panel derives its entries from the color ramp or the classes automatically</li>
-          <li>The decoder (geotiff.js, ~150 KB) loads on demand — configs without a COG layer never pay for it</li>
+          <li data-i18n="what.li1">A <code>cog</code> layer needs nothing but a URL — bounds and zoom range come from the file's own header</li>
+          <li data-i18n="what.li2"><code>color</code> maps a single band onto a named ramp (ColorBrewer/CARTOColors), discrete classes or continuous</li>
+          <li data-i18n="what.li3"><code>color.classes</code> instead styles exact values or from–to ranges directly, with hand-picked colors and labels</li>
+          <li data-i18n="what.li4"><code>hillshade</code> renders a single-band DEM as relief shading (exaggeration, light direction, colors)</li>
+          <li data-i18n="what.li5">The legend panel derives its entries from the color ramp or the classes automatically</li>
+          <li data-i18n="what.li6">The decoder (geotiff.js, ~150 KB) loads on demand — configs without a COG layer never pay for it</li>
         </ul>
-        <p>
+        <p data-i18n="what.p1">
           Ramp names follow the source palettes: <code>Brewer&lt;Name&gt;&lt;classes&gt;</code>
           (e.g. <code>BrewerSpectral9</code>, 3–12 classes depending on the palette) and
           <code>Carto&lt;Name&gt;</code> (e.g. <code>CartoEarth</code>). The protocol library
@@ -93,7 +93,7 @@
           <a href="https://labs.geomatico.es/maplibre-cog-protocol/color-cheatsheet.html" rel="noopener">color scheme cheatsheet</a>.
           A typo fails fast — the layer turns to error state with "… is not a supported color scheme".
         </p>
-        <p>
+        <p data-i18n="what.p2">
           Class ranges follow one fixed rule instead of an inclusive/exclusive knob:
           <code>from</code> is inclusive, <code>to</code> is exclusive — except the class with the
           highest <code>to</code>, which includes it, so the data maximum never falls off the top
@@ -101,7 +101,7 @@
           <code>classes</code> with a ramp or hillshade rendering on one page (the per-pixel color
           function is keyed by the COG URL).
         </p>
-        <div class="callout">
+        <div class="callout" data-i18n="callout">
           <strong>EPSG:3857 only.</strong>
           The protocol reads Web Mercator COGs and does not reproject — a file in a national CRS
           (Gauss-Krüger, Lambert, UTM) fails with a clear per-layer error. Prepare files with
@@ -112,15 +112,15 @@
       </section>
 
       <section class="doc">
-        <h2>When to reach for COG</h2>
-        <p>
+        <h2 data-i18n="when.h2">When to reach for COG</h2>
+        <p data-i18n="when.p1">
           COG is the raster twin of PMTiles: publish one file on any static bucket that supports
           range requests and you have a zoomable overlay — orthophotos, elevation, model output,
           sensor rasters. For nationwide imagery with heavy traffic, a tiled service (WMTS) with a
           CDN in front still wins; for the long tail of project rasters that would otherwise need
           their own GeoServer, a COG on object storage is hard to beat.
         </p>
-        <p>
+        <p data-i18n="when.p2">
           The protocol behind this layer type is
           <a href="https://github.com/geomatico/maplibre-cog-protocol" rel="noopener">@geomatico/maplibre-cog-protocol</a>
           (pre-1.0, pinned): RGB and grayscale imagery, single-band color ramps and DEM hillshading.

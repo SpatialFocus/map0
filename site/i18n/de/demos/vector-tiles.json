@@ -1,0 +1,17 @@
+{
+  "title": "Vector Tiles — map0-Demos",
+  "h1": "Vector Tiles",
+  "eyebrow": "Datenquellen",
+  "lede": "Das Format, für das MapLibre gebaut wurde. Drei Overlays stammen aus demselben Vector-Tile-Dienst von basemap.at und sind völlig unterschiedlich gestylt — clientseitig, mit 60&nbsp;fps.",
+  "note": "<strong>Ausprobieren:</strong> Schalten Sie die drei Overlays ein und aus und stellen Sie dann den Hintergrund auf <em>None</em> — die Vector-Layer werden weiter gerendert, weil Zeichenreihenfolge und Quellen bei jedem Style-Wechsel neu injiziert werden.",
+  "what.h2": "Was diese Demo zeigt",
+  "what.li1": "Ein Vector-Tile-Dienst, drei Overlays — jedes wählt einen anderen <code>sourceLayer</code>",
+  "what.li2": "<code>style</code> akzeptiert echte Layer nach MapLibre-Style-Spec; <code>source</code> und <code>source-layer</code> injiziert map0",
+  "what.li3": "Das Styling bleibt datengetrieben: Farben, Strichstärken und Strichmuster sind einfach Paint-Properties",
+  "what.li4": "Die Legenden sind hier handgeschrieben, weil ein Style mehr aussagen kann, als ein Farbfeld zeigt",
+  "what.p": "Anders als Raster-Overlays werden Vector Tiles ohne einen einzigen neuen Netzwerk-Request umgestylt — die Basemap zu wechseln oder die Deckkraft zu ändern ist eine GPU-Operation.",
+  "callout": "<strong>Praxisnotiz: relatives TileJSON</strong> Das TileJSON von basemap.at deklariert seine Kacheln als <code>tile/{z}/{y}/{x}.pbf</code> — relativ, was MapLibre nicht auflöst. map0 lädt das TileJSON, macht die Templates absolut und übernimmt dessen Zoombereich, was zugleich 404-Stürme durch überzoomte Requests verhindert.",
+  "config.h2": "Konfiguration",
+  "pmtiles.p1": "Ein Kachelarchiv als einzelne Datei auf einfachem Storage — ohne Tile-Server. Es ist derselbe Layer-Typ mit einer <code>pmtiles://</code>-URL; der Protokoll-Handler wird bei Bedarf geladen, sobald ein solcher Layer zum ersten Mal in einer Config auftaucht:",
+  "pmtiles.p2": "Der öffentliche Protomaps-Demo-Bucket sendet keine CORS-Header, daher kann diese Seite keinen PMTiles-Layer live zeigen — hosten Sie die Datei selbst (jeder statische Bucket mit HTTP-Range-Requests genügt), und sie verhält sich genau wie die Overlays oben."
+}

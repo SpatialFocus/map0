@@ -5,6 +5,7 @@
  * compiled into the viewer, so the two can never disagree.
  */
 import { validateConfig } from "@map0/schema";
+import { LANG } from "../lang.js";
 
 const EXAMPLES = {
   /* three errors and one typo warning — every kind of feedback on one screen */
@@ -71,7 +72,8 @@ function render(): void {
 
   const raw = input.value.trim();
   if (!raw) {
-    status.textContent = "Paste a config to check it.";
+    status.textContent =
+      LANG === "de" ? "Config einfügen, um sie zu prüfen." : "Paste a config to check it.";
     return;
   }
 
@@ -79,24 +81,32 @@ function render(): void {
   try {
     parsed = JSON.parse(raw);
   } catch (e) {
-    status.textContent = "Not JSON yet";
+    status.textContent = LANG === "de" ? "Noch kein JSON" : "Not JSON yet";
     status.classList.add("bad");
     row(list, "error", "$", (e as Error).message);
     return;
   }
 
   const result = validateConfig(parsed);
+  const n = result.warnings.length;
   const warnings =
-    result.warnings.length > 0
-      ? ` (${result.warnings.length} warning${result.warnings.length === 1 ? "" : "s"})`
+    n > 0
+      ? LANG === "de"
+        ? ` (${n} Warnung${n === 1 ? "" : "en"})`
+        : ` (${n} warning${n === 1 ? "" : "s"})`
       : "";
   if (result.valid) {
-    status.textContent = `Valid — the map opens${warnings}`;
+    status.textContent =
+      LANG === "de"
+        ? `Gültig — die Karte öffnet sich${warnings}`
+        : `Valid — the map opens${warnings}`;
     status.classList.add("ok");
   } else {
+    const e = result.errors.length;
     status.textContent =
-      `${result.errors.length} error${result.errors.length === 1 ? "" : "s"}` +
-      `${warnings} — the viewer renders these instead of a map`;
+      LANG === "de"
+        ? `${e} Fehler${warnings} — der Viewer zeigt sie statt einer Karte an`
+        : `${e} error${e === 1 ? "" : "s"}${warnings} — the viewer renders these instead of a map`;
     status.classList.add("bad");
   }
   for (const e of result.errors) row(list, "error", e.path, e.message);

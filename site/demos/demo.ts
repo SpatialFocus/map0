@@ -3,8 +3,9 @@
  * and footer are injected by vite.config.ts on every page of the site).
  * Code blocks come from ../code.ts, which the landing page uses as well.
  */
-import { DEMOS, GROUPS, type Demo } from "./demos.js";
+import { DEMOS, GROUPS, GROUP_LABELS_DE, type Demo } from "./demos.js";
 import { enhanceCode } from "../code.js";
+import { LANG, LANG_PREFIX } from "../lang.js";
 
 /* The standalone demo ships the built bundle and registers the element itself.
    It must NOT fall back to the sources: a silent fallback would make a broken
@@ -13,14 +14,19 @@ if (document.body.dataset.client !== "bundle") await import("@map0/ui");
 
 /* --------------------------------- chrome -------------------------------- */
 
+const title = (d: Demo): string => (LANG === "de" && d.titleDe) || d.title;
+const blurb = (d: Demo): string => (LANG === "de" ? d.blurbDe : d.blurb);
+const href = (d: Demo): string => `${LANG_PREFIX}/demos/${d.id}.html`;
+
 function pager(current: Demo): string {
   const i = DEMOS.findIndex((d) => d.id === current.id);
   const prev = DEMOS[i - 1];
   const next = DEMOS[i + 1];
+  const [prevLabel, nextLabel] = LANG === "de" ? ["Zurück", "Weiter"] : ["Previous", "Next"];
   return `
     <div class="pager">
-      ${prev ? `<a href="/demos/${prev.id}.html"><small>Previous</small>${prev.icon} ${prev.title}</a>` : "<span></span>"}
-      ${next ? `<a class="next" href="/demos/${next.id}.html"><small>Next</small>${next.icon} ${next.title}</a>` : ""}
+      ${prev ? `<a href="${href(prev)}"><small>${prevLabel}</small>${prev.icon} ${title(prev)}</a>` : "<span></span>"}
+      ${next ? `<a class="next" href="${href(next)}"><small>${nextLabel}</small>${next.icon} ${title(next)}</a>` : ""}
     </div>`;
 }
 
@@ -29,14 +35,15 @@ function gallery(): string {
     const cards = DEMOS.filter((d) => d.group === group)
       .map(
         (d) => `
-        <a class="card" href="/demos/${d.id}.html">
+        <a class="card" href="${href(d)}">
           <div class="icon">${d.icon}</div>
-          <h3>${d.title}</h3>
-          <p>${d.blurb}</p>
+          <h3>${title(d)}</h3>
+          <p>${blurb(d)}</p>
         </a>`,
       )
       .join("");
-    return `<h2 class="group-title">${group}</h2><div class="grid">${cards}</div>`;
+    const label = LANG === "de" ? GROUP_LABELS_DE[group] : group;
+    return `<h2 class="group-title">${label}</h2><div class="grid">${cards}</div>`;
   }).join("");
 }
 

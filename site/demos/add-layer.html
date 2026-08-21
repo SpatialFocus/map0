@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Add layers — map0 demos</title>
+    <title data-i18n="title">Add layers — map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -11,16 +11,16 @@
   <body data-demo="add-layer">
     <main>
       <div class="page-head">
-        <p class="eyebrow">Map features</p>
-        <h1>Add layers</h1>
-        <p class="lede">
+        <p class="eyebrow" data-i18n="eyebrow">Map features</p>
+        <h1 data-i18n="h1">Add layers</h1>
+        <p class="lede" data-i18n="lede">
           This map starts empty on purpose. Users bring their own services — paste a URL, pick from
           the capabilities, done.
         </p>
       </div>
 
       <map0-viewer config-src="/configs/add-layer.map0.json"></map0-viewer>
-      <p class="demo-note">
+      <p class="demo-note" data-i18n="note">
         <strong>Try it:</strong> the <strong>+</strong> button in the layer panel. Paste
         <code>https://data.wien.gv.at/daten/geo</code> as WMS (375 layers, use the filter box), or
         switch to WMTS and paste
@@ -28,20 +28,20 @@
       </p>
 
       <section class="doc">
-        <h2>What this demo shows</h2>
+        <h2 data-i18n="what.h2">What this demo shows</h2>
         <ul class="checks">
-          <li>WMS and WMTS capabilities parsed in the browser — no server component involved</li>
-          <li>Filterable layer list with multi-select for services with hundreds of layers</li>
-          <li>Layers arrive fully wired: GetFeatureInfo, legend, metadata link, and a zoom range derived from the service's scale hints</li>
-          <li>Layers without a WebMercator offering are flagged before you add them (D-02)</li>
-          <li>Added layers appear in their own section of the panel and can be removed again</li>
+          <li data-i18n="what.li1">WMS and WMTS capabilities parsed in the browser — no server component involved</li>
+          <li data-i18n="what.li2">Filterable layer list with multi-select for services with hundreds of layers</li>
+          <li data-i18n="what.li3">Layers arrive fully wired: GetFeatureInfo, legend, metadata link, and a zoom range derived from the service's scale hints</li>
+          <li data-i18n="what.li4">Layers without a WebMercator offering are flagged before you add them (D-02)</li>
+          <li data-i18n="what.li5">Added layers appear in their own section of the panel and can be removed again</li>
         </ul>
-        <p>
+        <p data-i18n="what.p">
           User-added layers never touch the page config. They live in session state — and, because
           this demo also enables <code>permalink</code>, they travel in the share link, so a
           colleague opens the map with your services already loaded.
         </p>
-        <div class="callout">
+        <div class="callout" data-i18n="callout">
           <strong>CORS decides what works</strong>
           The browser talks to the service directly. Services without CORS headers fail here — that
           is a property of the service, not of the client, and the dialog says so instead of hanging.
@@ -49,13 +49,13 @@
       </section>
 
       <section class="doc">
-        <h2>Configuration</h2>
+        <h2 data-i18n="config.h2">Configuration</h2>
         <pre data-src="/configs/add-layer.map0.json" data-label="add-layer.map0.json" data-emphasise="allowAdd,permalink,layers"></pre>
-        <p>Set <code>allowAdd: false</code> for a locked-down map where only configured layers exist.</p>
+        <p data-i18n="config.p">Set <code>allowAdd: false</code> for a locked-down map where only configured layers exist.</p>
       </section>
 
       <section class="doc">
-        <h2>The same thing from code</h2>
+        <h2 data-i18n="code.h2">The same thing from code</h2>
         <pre data-lang="js" data-label="host-page.js">
           const api = document.querySelector('map0-viewer').api;
 

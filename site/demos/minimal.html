@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Minimal config — map0 demos</title>
+    <title data-i18n="title">Minimal config — map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -11,9 +11,9 @@
   <body data-demo="minimal">
     <main>
       <div class="page-head">
-        <p class="eyebrow">Configuration</p>
-        <h1>Minimal config</h1>
-        <p class="lede">
+        <p class="eyebrow" data-i18n="eyebrow">Configuration</p>
+        <h1 data-i18n="h1">Minimal config</h1>
+        <p class="lede" data-i18n="lede">
           The promise from the specification: a version and one basemap must already produce a
           usable map. Everything else is a default you can override, never boilerplate you must
           write.
@@ -33,15 +33,15 @@
           }
         </script>
       </map0-viewer>
-      <p class="demo-note">
+      <p class="demo-note" data-i18n="note">
         <strong>Note:</strong> no view, no controls, no theme configured — yet you get zoom,
         compass, fullscreen, geolocation, globe, scale bar, attribution, coordinate readout, print
         and a light/dark theme that follows the operating system.
       </p>
 
       <section class="doc">
-        <h2>The whole thing</h2>
-        <p>The config above is embedded in the page itself — no separate file, no build step:</p>
+        <h2 data-i18n="whole.h2">The whole thing</h2>
+        <p data-i18n="whole.p1">The config above is embedded in the page itself — no separate file, no build step:</p>
         <pre data-lang="html" data-label="minimal.html">
           &lt;script type="module" src="/map0.js"&gt;&lt;/script&gt;
 
@@ -59,17 +59,17 @@
             &lt;/script&gt;
           &lt;/map0-viewer&gt;
         </pre>
-        <p>Three ways to hand over a config, in this order of precedence:</p>
+        <p data-i18n="whole.p2">Three ways to hand over a config, in this order of precedence:</p>
         <ul class="checks">
-          <li>A <code>config</code> property set from JavaScript (for SPAs and wrappers)</li>
-          <li>A <code>config-src</code> attribute pointing at a JSON file</li>
-          <li>An inline <code>&lt;script type="application/json"&gt;</code> child, as above — the CMS-friendly one</li>
+          <li data-i18n="whole.li1">A <code>config</code> property set from JavaScript (for SPAs and wrappers)</li>
+          <li data-i18n="whole.li2">A <code>config-src</code> attribute pointing at a JSON file</li>
+          <li data-i18n="whole.li3">An inline <code>&lt;script type="application/json"&gt;</code> child, as above — the CMS-friendly one</li>
         </ul>
       </section>
 
       <section class="doc">
-        <h2>When the config is wrong</h2>
-        <p>
+        <h2 data-i18n="wrong.h2">When the config is wrong</h2>
+        <p data-i18n="wrong.p">
           A broken config never leaves a blank map. It is validated before anything renders, and
           the errors are shown in place with the JSON path that caused them — so an editor can fix
           it without opening a developer console:

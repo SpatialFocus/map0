@@ -1,0 +1,20 @@
+{
+  "title": "Theming — map0-Demos",
+  "eyebrow": "Konfiguration",
+  "lede": "Der Client soll aussehen wie die Website, in die er eingebettet ist — nicht wie ein GIS-Produkt. Farben, Radien und Schriften sind Design-Tokens und lassen sich aus der Config oder aus dem CSS der Host-Seite setzen.",
+  "swatch.default": "<i style=\"background:#d946ef\"></i>Config-Standard",
+  "swatch.teal": "<i style=\"background:#0e7490\"></i>Petrol",
+  "swatch.amber": "<i style=\"background:#b45309\"></i>Bernstein",
+  "swatch.forest": "<i style=\"background:#166534\"></i>Waldgrün",
+  "swatch.toggle": "Hell / Dunkel umschalten",
+  "note": "<strong>Ausprobieren:</strong> Die Buttons oben setzen CSS-Custom-Properties von außen auf das Element — kein Rebuild, kein Neuladen der Config. Beachten Sie, was die Schrift-Buttons <em>nicht</em> anfassen: die Beschriftungen, die in der Karte selbst gezeichnet werden.",
+  "ways.h2": "Zwei Wege",
+  "ways.p1": "Aus der Config, für die CMS-Redaktion, die nie CSS anfasst:",
+  "ways.p2": "Oder aus dem Stylesheet der Host-Seite — für Integratoren, deren Karte das Design-System der Website übernehmen soll:",
+  "mode.h2": "Hell, dunkel — oder was die Besucher bevorzugen",
+  "mode.p": "<code>theme.mode</code> akzeptiert <code>\"light\"</code>, <code>\"dark\"</code> oder <code>\"auto\"</code> (den Standard) — Letzteres folgt dem Betriebssystem und reagiert, wenn Besucher es mitten in der Sitzung umstellen. Panels, Popups, Dialoge und der synthetische Hintergrund von Raster-Basemaps schalten gemeinsam um.",
+  "callout": "<strong>Shadow DOM, mit Absicht</strong> map0 rendert in eine Shadow Root — das Stylesheet der Host-Seite kann die Darstellung der Karte also nicht versehentlich stören, und umgekehrt gelangen keine Styles aus der Karte in die Seite. Custom Properties und dokumentierte <code>::part()</code>-Namen sind der vorgesehene Weg durch diese Grenze.",
+  "font.h2": "Wo das Schrift-Token endet",
+  "font.p1": "<code>theme.font</code> gestaltet die Oberfläche — Panels, Popups, Dialoge, Buttons. Die Beschriftungen in der Karte erreicht es nicht: Sie werden aus dem Glyphen-Satz gerendert, auf den der Basemap-Style zeigt — sie zu ändern heißt, den Style zu ändern, nicht den Client.",
+  "font.p2": "Diese Trennung sollten Sie kennen, bevor Sie eine Schrift wählen. Eine Serifen-Oberfläche neben serifenlosen Kartenbeschriftungen wirkt wie ein Fehler, selbst wenn beides Absicht ist — am sichersten ist also eine UI-Schrift, die der Schrift der Basemap nahekommt. Deshalb nutzt diese Demo den System-Stack und überlässt die auffälligen Varianten den Buttons."
+}

@@ -1,0 +1,19 @@
+{
+  "title": "Suche — map0-Demos",
+  "eyebrow": "Kartenfunktionen",
+  "h1": "Suche",
+  "lede": "Type-ahead-Suche für Orte und Adressen. Welcher Dienst dahintersteht, ist eine Config-Entscheidung — zwei sind eingebaut, und eine GDI kann dasselbe Suchfeld an ihren eigenen Gazetteer anbinden.",
+  "note": "<strong>Ausprobieren:</strong> Tippen Sie <code>stephansplatz</code>, einen Bezirk oder einen Berg. Die Pfeiltasten führen durch die Liste, Enter wählt aus. Fügen Sie <code>47.2692, 11.4041</code> ein — das wird als Koordinate erkannt statt als Suchbegriff.",
+  "what.h2": "Was diese Demo zeigt",
+  "what.li1": "Entprelltes Type-ahead — ein Request pro Tipppause, und eine langsame Antwort überschreibt nie eine neuere",
+  "what.li2": "Ergebnisse werden zugunsten der aktuellen Ansicht gewichtet — Treffer in der Nähe kommen zuerst",
+  "what.li3": "Durchgehende Tastaturbedienung: Pfeiltasten, Enter, Escape; die Liste ist eine echte <code>combobox</code>/<code>listbox</code>",
+  "what.li4": "Bei Auswahl eines Treffers fliegt die Karte dorthin und markiert ihn mit demselben Highlight, das sie für ausgewählte Features verwendet",
+  "what.li5": "Koordinateneingabe (<code>lat, lon</code>) umgeht den Dienst vollständig",
+  "callout": "<strong>Photon ist der Standard, kein Muss</strong> Der eingebaute Standard ist Photon (OSM-Daten, gemacht für Type-ahead). Bei öffentlichen Instanzen gilt Fair Use — für den Produktivbetrieb hosten Sie es selbst oder tragen in der Config den Gazetteer ein, den Ihre Organisation verwenden muss.",
+  "config.h2": "Konfiguration",
+  "custom.h2": "Ihr eigener Gazetteer",
+  "custom.p1": "Ein eigener Provider besteht aus einem URL-Template und der Angabe, wie die Antwort aufgebaut ist. Platzhalter: <code>{query}</code>, <code>{limit}</code>, <code>{lang}</code>, <code>{lng}</code>, <code>{lat}</code>.",
+  "custom.p2": "<code>format: \"geojson\"</code> erwartet eine FeatureCollection aus Punkten — dieselbe Form, die Photon und die meisten OGC-API-Features-Endpunkte liefern. <code>\"nominatim\"</code> versteht das klassische Array mit <code>lat</code>/<code>lon</code>/<code>display_name</code>. In beiden Fällen muss der Dienst CORS-Header senden, weil der Browser ihn direkt aufruft.",
+  "host.h2": "Von der Host-Seite aus"
+}

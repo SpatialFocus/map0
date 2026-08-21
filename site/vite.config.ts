@@ -3,6 +3,8 @@ import { fileURLToPath } from "node:url";
 import { copyFileSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { optionalPeerStubs } from "../scripts/stub-aliases.mjs";
 import { copyMaplibreDist, maplibreExternal } from "../scripts/maplibre-dist.mjs";
+import { i18n } from "./i18n/plugin.js";
+import { prettyPath } from "./i18n/translate.js";
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
@@ -73,7 +75,8 @@ const CHROME_SCRIPT =
   `window.__map0={` +
   `theme:function(){var d=document.documentElement,dark=d.classList.contains("dark")||` +
   `(!d.classList.contains("light")&&matchMedia("(prefers-color-scheme: dark)").matches),n=dark?"light":"dark";` +
-  `d.classList.remove("dark","light");d.classList.add(n);try{localStorage.setItem("map0-theme",n)}catch(e){}mapsTo(n)}};` +
+  `d.classList.remove("dark","light");d.classList.add(n);try{localStorage.setItem("map0-theme",n)}catch(e){}mapsTo(n)},` +
+  `lang:function(l){try{localStorage.setItem("map0-lang",l)}catch(e){}}};` +
   `addEventListener("DOMContentLoaded",function(){try{var t=localStorage.getItem("map0-theme");` +
   `if(t==="dark"||t==="light")mapsTo(t)}catch(e){}});` +
   `})()`;
@@ -88,40 +91,47 @@ function sharedChrome(): Plugin {
   return {
     name: "map0:chrome",
     transformIndexHtml: {
-      handler: (_html, ctx) => [
-        { tag: "script", children: CHROME_SCRIPT, injectTo: "head-prepend" },
-        {
-          tag: "div",
-          attrs: { class: "topbar" },
-          children:
-            `<div class="wrap">` +
-            `<a class="brand" href="/">map<span>0</span></a>` +
-            `<nav>` +
-            `<a href="/#start">Quick start</a>` +
-            `<a href="/#features">Features</a>` +
-            `<a href="/demos/"${ctx.path.includes("demos/") ? ' aria-current="page"' : ""}>Demos</a>` +
-            `<a class="gh" href="https://github.com/SpatialFocus/map0" aria-label="map0 on GitHub">${GITHUB_ICON}</a>` +
-            `<button class="theme-toggle" type="button" aria-label="Toggle dark mode" onclick="__map0.theme()">${SUN_ICON}${MOON_ICON}</button>` +
-            `</nav>` +
-            `</div>`,
-          injectTo: "body-prepend",
-        },
-        {
-          tag: "footer",
-          attrs: { class: "site" },
-          children:
-            `<div class="wrap">` +
-            `<a class="footmark" href="/">map<span>0</span></a>` +
-            `<span>The web map client you configure, not code.</span>` +
-            `<nav class="footnav">` +
-            `<a href="/imprint.html">Imprint</a>` +
-            `<a href="/privacy.html">Privacy</a>` +
-            `<span>Made with ❤️ by <a href="https://www.spatial-focus.net">Spatial Focus</a></span>` +
-            `</nav>` +
-            `</div>`,
-          injectTo: "body",
-        },
-      ],
+      handler: (_html, ctx) => {
+        const page = ctx.path.replace(/^\//, "") || "index.html";
+        return [
+          { tag: "script", children: CHROME_SCRIPT, injectTo: "head-prepend" },
+          {
+            tag: "div",
+            attrs: { class: "topbar" },
+            children:
+              `<div class="wrap">` +
+              `<a class="brand" href="/">map<span>0</span></a>` +
+              `<nav>` +
+              `<a href="/#start" data-i18n="chrome.nav.start">Quick start</a>` +
+              `<a href="/#features" data-i18n="chrome.nav.features">Features</a>` +
+              `<a href="/demos/"${ctx.path.includes("demos/") ? ' aria-current="page"' : ""} data-i18n="chrome.nav.demos">Demos</a>` +
+              `<a class="gh" href="https://github.com/SpatialFocus/map0" aria-label="map0 on GitHub" data-i18n-attrs="aria-label:chrome.nav.github">${GITHUB_ICON}</a>` +
+              `<button class="theme-toggle" type="button" aria-label="Toggle dark mode" data-i18n-attrs="aria-label:chrome.theme" onclick="__map0.theme()">${SUN_ICON}${MOON_ICON}</button>` +
+              `<div class="lang" role="group" aria-label="Language" data-i18n-attrs="aria-label:chrome.lang">` +
+              `<a data-lang="en" href="${prettyPath(page)}" aria-current="true" onclick="__map0.lang('en')">EN</a>` +
+              `<a data-lang="de" href="/de${prettyPath(page)}" onclick="__map0.lang('de')">DE</a>` +
+              `</div>` +
+              `</nav>` +
+              `</div>`,
+            injectTo: "body-prepend",
+          },
+          {
+            tag: "footer",
+            attrs: { class: "site" },
+            children:
+              `<div class="wrap">` +
+              `<a class="footmark" href="/">map<span>0</span></a>` +
+              `<span data-i18n="chrome.tagline">The web map client you configure, not code.</span>` +
+              `<nav class="footnav">` +
+              `<a href="/imprint.html" data-i18n="chrome.imprint">Imprint</a>` +
+              `<a href="/privacy.html" data-i18n="chrome.privacy">Privacy</a>` +
+              `<span data-i18n="chrome.madeby">Made with ❤️ by <a href="https://www.spatial-focus.net">Spatial Focus</a></span>` +
+              `</nav>` +
+              `</div>`,
+            injectTo: "body",
+          },
+        ];
+      },
     },
   };
 }
@@ -163,7 +173,7 @@ export default defineConfig({
      MapLibre's worker with status 200 and it died without a word. */
   appType: "mpa",
   /* MapLibre's three files land next to the hashed chunks in assets/ */
-  plugins: [copyMaplibreDist(r("../dist-site/assets")), analytics(), sharedChrome(), schemaFile()],
+  plugins: [copyMaplibreDist(r("../dist-site/assets")), analytics(), sharedChrome(), schemaFile(), i18n(r("../dist-site"))],
   build: {
     /* same target as the library bundle: the demo shell loads @map0/ui with a
        top-level await, which the default (es2020) target rejects */

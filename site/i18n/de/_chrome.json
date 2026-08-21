@@ -1,0 +1,12 @@
+{
+  "chrome.nav.start": "Schnellstart",
+  "chrome.nav.features": "Funktionen",
+  "chrome.nav.demos": "Demos",
+  "chrome.nav.github": "map0 auf GitHub",
+  "chrome.theme": "Dunkelmodus umschalten",
+  "chrome.lang": "Sprache",
+  "chrome.tagline": "Der Webkarten-Client, den Sie konfigurieren statt programmieren.",
+  "chrome.imprint": "Impressum",
+  "chrome.privacy": "Datenschutz",
+  "chrome.madeby": "Mit ❤️ von <a href=\"https://www.spatial-focus.net\">Spatial Focus</a>"
+}

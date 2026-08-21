@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Print &amp; export — map0 demos</title>
+    <title data-i18n="title">Print &amp; export — map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -11,42 +11,42 @@
   <body data-demo="print">
     <main>
       <div class="page-head">
-        <p class="eyebrow">Map features</p>
-        <h1>Print &amp; export</h1>
-        <p class="lede">
+        <p class="eyebrow" data-i18n="eyebrow">Map features</p>
+        <h1 data-i18n="h1">Print &amp; export</h1>
+        <p class="lede" data-i18n="lede">
           A composed map sheet — title, legend, scale bar, attribution, date — rendered entirely in
           the browser at up to 300&nbsp;dpi.
         </p>
       </div>
 
       <map0-viewer config-src="/configs/print.map0.json"></map0-viewer>
-      <p class="demo-note">
+      <p class="demo-note" data-i18n="note">
         <strong>Try it:</strong> the printer button in the top-left control stack. Pick A4 landscape
         and 300&nbsp;dpi, then take the PDF, the PNG, or send it to the browser's print dialog.
       </p>
 
       <section class="doc">
-        <h2>How it works</h2>
-        <p>
+        <h2 data-i18n="how.h2">How it works</h2>
+        <p data-i18n="how.p1">
           A hidden clone of the map is created at the target paper size and pixel ratio, sharing the
           live style — including every overlay you have switched on. Once it reports idle, its
           canvas is composed onto a layout canvas together with the legend, a rounded scale bar and
           the attribution collected from all active sources.
         </p>
         <ul class="checks">
-          <li>Paper: current view, A4 or A3, landscape or portrait</li>
-          <li>Resolution: 96, 150 or 300&nbsp;dpi — everything in the layout scales with it</li>
-          <li>Legend images and swatches are drawn into the sheet, not screenshotted</li>
-          <li>PDF pages are real paper sizes: an A4 export measures 297 × 210 mm and prints without "fit to page"</li>
-          <li>No server, no upload — the map never leaves the browser</li>
+          <li data-i18n="how.li1">Paper: current view, A4 or A3, landscape or portrait</li>
+          <li data-i18n="how.li2">Resolution: 96, 150 or 300&nbsp;dpi — everything in the layout scales with it</li>
+          <li data-i18n="how.li3">Legend images and swatches are drawn into the sheet, not screenshotted</li>
+          <li data-i18n="how.li4">PDF pages are real paper sizes: an A4 export measures 297 × 210 mm and prints without "fit to page"</li>
+          <li data-i18n="how.li5">No server, no upload — the map never leaves the browser</li>
         </ul>
-        <p>
+        <p data-i18n="how.p2">
           The PDF is the composed sheet placed on the page, centred inside 10&nbsp;mm margins. It is
           embedded as PNG rather than JPEG: a map is fine lines and small text, exactly what JPEG
           artefacts ruin. <a href="https://github.com/parallax/jsPDF">jsPDF</a> only loads when
           someone actually asks for a PDF — it is the heaviest module in the client.
         </p>
-        <div class="callout">
+        <div class="callout" data-i18n="callout">
           <strong>Export what you see, not survey-grade</strong>
           The scale bar is computed for the exported extent, but this is not a true-to-scale plot:
           label sizes and symbols scale with the pixel ratio. A server-side renderer for scale-true
@@ -55,14 +55,14 @@
       </section>
 
       <section class="doc">
-        <h2>Configuration</h2>
-        <p>
+        <h2 data-i18n="config.h2">Configuration</h2>
+        <p data-i18n="config.p1">
           Print is on by default. The <code>meta.title</code> becomes the pre-filled sheet title,
           and layer legends flow into the sheet automatically:
         </p>
         <pre data-src="/configs/print.map0.json" data-label="print.map0.json" data-emphasise="meta,legend,print"></pre>
-        <h3>Narrowing the choices</h3>
-        <p>
+        <h3 data-i18n="config.h3">Narrowing the choices</h3>
+        <p data-i18n="config.p2">
           A top-level <code>print</code> block decides what the dialog offers — useful when an
           organisation wants one format on one paper size and no discussion:
         </p>
@@ -74,7 +74,7 @@
             "elements": ["title", "legend", "scalebar", "attribution", "date"]
           }
         </pre>
-        <p>
+        <p data-i18n="config.p3">
           Everything is optional; the defaults are PNG and PDF, current view plus A4 in both
           orientations, 96/150/300&nbsp;dpi, and all sheet elements. Dropping an entry from
           <code>elements</code> removes it from the composed sheet — a map without a title block, or
