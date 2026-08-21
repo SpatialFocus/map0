@@ -37,6 +37,7 @@
   "start.p": "Mehr braucht es nicht: ein Script-Tag, das das Custom Element registriert, und das Element selbst mit seiner Konfiguration. Das Snippet unten wird aus der Karte daneben erzeugt — die beiden können gar nicht auseinanderlaufen.",
   "start.step1.label": "die komplette Seite",
   "start.step1.p": "Nichts zu installieren: ein Script-Tag vom CDN, ein Element mit Konfiguration. Das Snippet lässt sich unverändert übernehmen — die Version ist bewusst fixiert, denn bis 1.0 kann sich das Config-Format noch ohne Deprecation-Pfad ändern. Die <code>$schema</code>-Zeile ist optional; sobald die Config in einer eigenen Datei liegt, liefert sie Autovervollständigung und Validierung im Editor.",
+  "start.playground": "Diese Karte im Playground bearbeiten →",
   "start.aside.label": "das Ergebnis",
   "start.aside.p": "Live, kein Screenshot — das Snippet links wird aus genau diesem Element erzeugt.",
   "start.bought.h3": "Was in diesen paar Zeilen steckt",
@@ -149,7 +150,7 @@
   "pos.r7.td4": "Passt sich der Seite an",
 
   "next.kicker": "Was als Nächstes kommt",
-  "next.h2": "Alles oben gibt es heute. Das hier kommt danach.",
+  "next.h2": "Das alles gibt es heute schon. Danach geht es damit weiter.",
   "next.p": "map0 ist eine 0.x-Version und aktiv in Entwicklung. Das sind die nächsten geplanten Highlights.",
   "next1.h3": "♿ Barrierefreiheits-Audit",
   "next1.p": "Tastaturbedienung, Fokus-Handling und Reduced Motion sind eingebaut. Als Nächstes folgt das Audit: der Layerbaum vollständig per Tastatur, und Abfrageergebnisse zusätzlich im DOM, damit ein Screenreader vorlesen kann, was die Karte zeichnet.",

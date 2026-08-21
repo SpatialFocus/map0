@@ -343,50 +343,50 @@ ul.checks li::before {
   outline: 2px solid var(--accent);
   outline-offset: -1px;
 }
-.validator .results {
+:is(.validator, .playground) .results {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
   padding: 14px 16px;
   overflow: auto;
 }
-.validator .results .status {
+:is(.validator, .playground) .results .status {
   margin: 0 0 4px;
   font-size: 14px;
   font-weight: 650;
 }
-.validator .results .status.ok {
+:is(.validator, .playground) .results .status.ok {
   color: light-dark(#15803d, #4ade80);
 }
-.validator .results .status.bad {
+:is(.validator, .playground) .results .status.bad {
   color: light-dark(#b91c1c, #f87171);
 }
-.validator .results ul {
+:is(.validator, .playground) .results ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.validator .results li {
+:is(.validator, .playground) .results li {
   display: grid;
   gap: 2px;
   padding: 9px 0;
   border-top: 1px solid var(--border);
   font-size: 13px;
 }
-.validator .results li:first-child {
+:is(.validator, .playground) .results li:first-child {
   border-top: 0;
 }
-.validator .results .path {
+:is(.validator, .playground) .results .path {
   font-family: var(--mono);
   font-size: 12px;
 }
-.validator .results li.error .path {
+:is(.validator, .playground) .results li.error .path {
   color: light-dark(#b91c1c, #f87171);
 }
-.validator .results li.warning .path {
+:is(.validator, .playground) .results li.warning .path {
   color: light-dark(#a16207, #facc15);
 }
-.validator .results .message {
+:is(.validator, .playground) .results .message {
   color: var(--muted);
   overflow-wrap: anywhere;
 }
@@ -396,6 +396,187 @@ ul.checks li::before {
   }
   .validator textarea {
     min-height: 260px;
+  }
+}
+
+/* ------------------------------- playground ------------------------------ */
+/* /playground/: Ace editor left, live viewer right. The editor shell reuses
+   figure.code, so it looks like every other code block on the site — just
+   editable. The results panel shares the validator styles above. */
+
+.playground {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  /* one height for editor shell and map, so the two columns line up exactly */
+  --pg-h: min(60vh, 580px);
+}
+/* .playground prefix: outranks the later `figure.code` margin rule */
+.playground .pg-shell {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: var(--pg-h);
+}
+.pg-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+.pg-actions .copy {
+  margin-left: 0;
+}
+.pg-apply {
+  border-color: transparent;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 650;
+}
+.pg-apply:hover {
+  background: color-mix(in srgb, var(--accent) 82%, #000);
+  color: #fff;
+}
+.pg-apply[disabled] {
+  opacity: 0.45;
+  cursor: default;
+}
+.pg-apply[disabled]:hover {
+  background: var(--accent);
+}
+.pg-editor {
+  flex: 1;
+  min-height: 0;
+}
+/* Ace brings its own theme; pin the canvas to the site's code-block colours */
+.pg-editor.ace_editor {
+  background: var(--code-bg);
+}
+.pg-editor .ace_gutter {
+  background: rgba(255, 255, 255, 0.04);
+  color: #64748b;
+}
+.pg-left .results {
+  margin-top: 14px;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+/* vertically centred when it is alone; the list brings its own spacing */
+.pg-left .results .status {
+  margin-bottom: 0;
+}
+.pg-right {
+  position: sticky;
+  top: 80px;
+}
+.pg-map {
+  position: relative;
+  min-height: var(--pg-h);
+  border-radius: var(--radius);
+}
+.pg-map:not(:has(map0-viewer)) {
+  border: 1px dashed var(--border);
+}
+.playground map0-viewer {
+  height: var(--pg-h);
+}
+.pg-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--page-bg) 30%, transparent);
+  -webkit-backdrop-filter: blur(5px) saturate(0.65);
+  backdrop-filter: blur(5px) saturate(0.65);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.pg-map[data-stale] .pg-veil {
+  opacity: 1;
+  pointer-events: auto;
+}
+.pg-veil button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  padding: 10px 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fg);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+.pg-veil button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+/* the "Open in the playground" pill the demo shell puts beside the heading of
+   each map (falling back to a line under the map when the heading is taken) */
+.try-playground {
+  float: right;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: normal;
+  white-space: nowrap;
+  margin: 8px 0 0 14px;
+  padding: 8px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  text-decoration: none;
+}
+h2 .try-playground,
+h3 .try-playground {
+  margin-top: -2px;
+}
+.try-playground:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.try-playground-row {
+  margin: 10px 2px 0;
+  text-align: right;
+}
+.try-playground-row .try-playground {
+  float: none;
+  display: inline-block;
+  margin: 0;
+}
+@media (max-width: 900px) {
+  .playground {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pg-right {
+    position: static;
+  }
+  .playground .pg-shell {
+    height: auto;
+  }
+  .pg-editor {
+    flex: none;
+    height: 340px;
+  }
+  .pg-map,
+  .playground map0-viewer {
+    min-height: 0;
+    height: 380px;
+  }
+}
+@media (max-width: 700px) {
+  .try-playground {
+    float: none;
+    display: inline-block;
+    margin: 10px 0 0;
   }
 }
 

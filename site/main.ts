@@ -43,6 +43,17 @@ function quickStart(): void {
   const figure = codeFigure("index.html", snippet, "html");
   figure.classList.add("full"); // a quick start nobody can read is not one
   host.replaceWith(figure);
+
+  /* the button below the snippet hands this same config to the playground */
+  const link = document.querySelector<HTMLAnchorElement>("[data-playground-link]");
+  if (link) {
+    try {
+      const json = JSON.stringify(JSON.parse(inline.textContent ?? ""));
+      link.href = `${link.getAttribute("href")}?c=${encodeURIComponent(json)}`;
+    } catch {
+      /* keep the plain playground link */
+    }
+  }
 }
 
 /* ------------------------------- countdown ------------------------------- */

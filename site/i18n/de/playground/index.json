@@ -1,0 +1,16 @@
+{
+  "title": "Playground — map0",
+  "eyebrow": "Live ausprobieren",
+  "h1": "Playground",
+  "lede": "Links die Config, rechts die Karte, die daraus entsteht. Beginnen Sie mit dem Beispiel oder holen Sie sich eine Demo herüber, ändern Sie, übernehmen Sie — Fehler fängt derselbe Validator ab, der jede eingebettete Karte schützt.",
+  "btn.format": "Formatieren",
+  "btn.apply": "Übernehmen",
+  "btn.applyTitle": "Strg+Enter",
+  "veil": "Config geändert — übernehmen",
+  "note": "<strong>Was der Validator nicht sehen kann:</strong> Eine Config kann gültig sein und trotzdem auf Dienste zeigen, die dieser Browser nicht lesen darf (CORS) — der betroffene Layer meldet seinen Fehler dann auf der Karte. <code>http://</code>-URLs lehnt die Validierung von vornherein ab: map0 lädt nur über <code>https</code>.",
+  "how.h2": "Wie Configs hierher kommen",
+  "how.li1": "Jede Demo trägt unter ihrer Karte einen Link „Im Playground öffnen“ — die Config kommt mit.",
+  "how.li2": "<code>?config=/configs/wms.map0.json</code> lädt jede Config-Datei dieser Site in den Editor.",
+  "how.li3": "Die Karte lädt nur neu, wenn Sie eine gültige Config übernehmen — beim Tippen bleibt die letzte funktionierende Karte stehen und wird unscharf, sobald der Editor ihr voraus ist.",
+  "how.p": "Die Validierung hier ist die erste Prüfstelle, nicht die ganze Geschichte — wo eine Config auf dem Weg vom Editor zur Seite sonst noch geprüft wird, zeigt <a href=\"/demos/validate.html\">Config validieren</a>."
+}

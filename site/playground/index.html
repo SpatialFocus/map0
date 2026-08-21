@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="title">Playground — map0</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/playground/playground.ts"></script>
+  </head>
+  <body>
+    <main>
+      <div class="page-head">
+        <p class="eyebrow" data-i18n="eyebrow">Try it live</p>
+        <h1 data-i18n="h1">Playground</h1>
+        <p class="lede" data-i18n="lede">
+          The config on the left, the map it produces on the right. Start from the example or
+          bring a demo over, edit, apply — mistakes are caught below the editor by the same
+          validator that guards every embedded map.
+        </p>
+      </div>
+
+      <div class="playground">
+        <div class="pg-left">
+          <figure class="code pg-shell">
+            <figcaption>
+              config.map0.json
+              <span class="pg-actions">
+                <button type="button" class="copy" data-pg-format data-i18n="btn.format">Format</button>
+                <button
+                  type="button"
+                  class="copy pg-apply"
+                  data-pg-apply
+                  title="Ctrl+Enter"
+                  data-i18n="btn.apply"
+                  data-i18n-attrs="title:btn.applyTitle"
+                >Apply</button>
+              </span>
+            </figcaption>
+            <div class="pg-editor" data-pg-editor></div>
+          </figure>
+          <div class="results" data-pg-output aria-live="polite"></div>
+        </div>
+
+        <div class="pg-right">
+          <div class="pg-map" data-pg-map>
+            <div class="pg-veil">
+              <button type="button" data-pg-apply-veil data-i18n="veil">Config changed — apply it</button>
+            </div>
+          </div>
+          <p class="demo-note" data-i18n="note">
+            <strong>What the validator cannot see:</strong> a config can be valid and still point
+            at services this browser may not read (CORS) — the affected layer then reports its
+            error on the map. <code>http://</code> URLs are rejected outright: map0 loads over
+            <code>https</code> only.
+          </p>
+        </div>
+      </div>
+
+      <section class="doc">
+        <h2 data-i18n="how.h2">How configs get here</h2>
+        <ul class="checks">
+          <li data-i18n="how.li1">
+            Every demo carries an “Open in the playground” link under its map — the config comes
+            along.
+          </li>
+          <li data-i18n="how.li2">
+            <code>?config=/configs/wms.map0.json</code> loads any config file of this site into
+            the editor.
+          </li>
+          <li data-i18n="how.li3">
+            The map only reloads when you apply a valid config — while you type, the last working
+            map stays and blurs once the editor has moved ahead of it.
+          </li>
+        </ul>
+        <p data-i18n="how.p">
+          Validation here is the first line, not the whole story — where else a config is checked
+          on its way from editor to page is on
+          <a href="/demos/validate.html">Validate a config</a>.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

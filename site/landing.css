@@ -409,6 +409,9 @@ figure.code.full pre {
   font-size: 14.5px;
   color: var(--muted);
 }
+.split .steps .start-cta {
+  margin-top: 2px;
+}
 .split .aside > :first-child {
   margin-top: 0;
 }

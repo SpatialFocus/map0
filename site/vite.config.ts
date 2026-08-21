@@ -106,6 +106,7 @@ function sharedChrome(): Plugin {
               `<a href="/#features" data-i18n="chrome.nav.features">Features</a>` +
               `<a href="/#next" data-i18n="chrome.nav.next">What's next</a>` +
               `<a href="/demos/"${ctx.path.includes("demos/") ? ' aria-current="page"' : ""} data-i18n="chrome.nav.demos">Demos</a>` +
+              `<a href="/playground/"${ctx.path.includes("playground") ? ' aria-current="page"' : ""} data-i18n="chrome.nav.playground">Playground</a>` +
               `<a class="gh" href="https://github.com/SpatialFocus/map0" aria-label="map0 on GitHub" data-i18n-attrs="aria-label:chrome.nav.github">${GITHUB_ICON}</a>` +
               `<button class="theme-toggle" type="button" aria-label="Toggle dark mode" data-i18n-attrs="aria-label:chrome.theme" onclick="__map0.theme()">${SUN_ICON}${MOON_ICON}</button>` +
               `<div class="lang" role="group" aria-label="Language" data-i18n-attrs="aria-label:chrome.lang">` +
@@ -182,7 +183,7 @@ export default defineConfig({
     outDir: r("../dist-site"),
     emptyOutDir: true,
     rollupOptions: {
-      input: { ...pagesIn("."), ...pagesIn("demos") },
+      input: { ...pagesIn("."), ...pagesIn("demos"), ...pagesIn("playground") },
       external: maplibreExternal.external,
       output: { paths: maplibreExternal.paths },
     },
