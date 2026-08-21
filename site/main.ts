@@ -45,6 +45,53 @@ function quickStart(): void {
   host.replaceWith(figure);
 }
 
+/* ------------------------------- countdown ------------------------------- */
+
+/* The three zeros are the pitch, so they arrive as a countdown — every other
+   landing page counts up. A number spins down to the zero that was in the
+   markup all along: the digits live in an injected, aria-hidden overlay, so the
+   HTML itself only ever says "0" and a crawler, a reader without JavaScript and
+   a screen reader all get the promise instead of the animation. */
+const COUNT_MS = 1100;
+
+function countdown(): void {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  /* A second digit grows into the space left of the zero: 19 rather than a
+     wider start, because the narrow leading 1 keeps the overlay inside the
+     column gap. That gap only exists from tablet up — narrower screens count
+     from a single digit. */
+  const from = matchMedia("(min-width: 700px)").matches ? 19 : 9;
+
+  document.querySelectorAll<HTMLElement>(".zeros b").forEach((zero, i) => {
+    const tick = document.createElement("span");
+    tick.className = "tick";
+    tick.setAttribute("aria-hidden", "true");
+    tick.textContent = String(from);
+    zero.classList.add("counting");
+    zero.append(tick);
+
+    const delay = i * 130; // one stagger step per zero: the three read as a sequence
+    const start = performance.now() + delay;
+    const finish = (): void => {
+      tick.remove();
+      zero.classList.remove("counting");
+    };
+    const step = (now: number): void => {
+      const t = Math.min(Math.max((now - start) / COUNT_MS, 0), 1);
+      if (t === 1) return finish();
+      tick.textContent = String(Math.round(from * (1 - t) ** 3)); // fast, then settling
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+
+    /* A hidden tab gets no frames at all, so the overlay would sit there on its
+       first number. The timer is the guarantee that the markup ends up back at
+       the plain 0 whatever the browser did with the animation. */
+    setTimeout(finish, delay + COUNT_MS + 200);
+  });
+}
+
 /* ------------------------------ scroll reveal ----------------------------- */
 
 function reveal(): void {
@@ -97,6 +144,7 @@ function scrollSpy(): void {
 /* ---------------------------------- boot ---------------------------------- */
 
 quickStart();
+countdown();
 reveal();
 scrollSpy();
 void enhanceCode();

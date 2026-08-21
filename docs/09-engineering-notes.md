@@ -124,7 +124,7 @@ Break one of these and something breaks quietly, usually only in production buil
 
 1. **The element must not import values from `@map0/core`.** Only `import type` (erased at build
    time) plus value imports from `@map0/schema`. One value import pulls MapLibre into the entry
-   chunk and undoes the 20 KB page tier. The engine arrives through `loadEngine()`.
+   chunk and undoes the 31 KB page tier. The engine arrives through `loadEngine()`.
 2. **One import site per heavy dependency.** Every `import()` statement becomes its own chunk, so a
    library imported dynamically from two modules ships twice. `core/src/ogc.ts` is the only place
    that loads ogc-client; proj4 goes through `loadProj4()`.

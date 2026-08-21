@@ -91,7 +91,7 @@ docs/             specification
 
 Distribution note: `packages/ui/dist/` is a flat folder — `map0.js`, its chunks, and MapLibre's
 three files shipped verbatim. Deploy the folder as a unit; the embed stays one script tag.
-A page pays **~23 KB gzip** for the element itself; the engine and MapLibre (~316 KB) load when the
+A page pays **~31 KB gzip** for the element itself; the engine and MapLibre (~305 KB) load when the
 map approaches the viewport, and capabilities parsing, proj4, PMTiles, the COG decoder, measuring
 and the dialogs only when those features are used. `pnpm size` prints the breakdown and fails when
 the page tier grows.

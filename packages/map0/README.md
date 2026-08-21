@@ -181,7 +181,7 @@ change from release to release.
 
 ## Weight
 
-A page pays ~23 KB gzip for the element itself. The engine, MapLibre and its stylesheet (~304 KB
+A page pays ~31 KB gzip for the element itself. The engine, MapLibre and its stylesheet (~305 KB
 gzip) load when a map actually initialises — never for a map nobody scrolls to. Capabilities
 parsing, proj4, PMTiles, the COG decoder, measuring and the dialogs load on first use.
 

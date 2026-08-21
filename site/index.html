@@ -82,20 +82,20 @@
       <div class="wrap">
         <div class="stats reveal">
           <div>
-            <b>~23 <small>KB</small></b>
+            <b>~<span data-size="page">31</span> <small>KB</small></b>
             <span data-i18n="stats.load">gzip on page load, before the map is even in view</span>
           </div>
           <div>
-            <b>1</b>
-            <span data-i18n="stats.json">JSON document per map — validated, no second config file</span>
+            <b data-config-key-count>114</b>
+            <span data-i18n="stats.keys">config keys — and all of them in one schema-validated JSON document</span>
+          </div>
+          <div>
+            <b>7</b>
+            <span data-i18n="stats.sources">source types, from WMS and WMTS to PMTiles and COG</span>
           </div>
           <div>
             <b data-demo-count>21</b>
             <span data-i18n="stats.demos">demos running against live public services</span>
-          </div>
-          <div>
-            <b>2</b>
-            <span data-i18n="stats.langs">UI languages built in, every string overridable per locale</span>
           </div>
         </div>
       </div>
@@ -121,11 +121,7 @@
               <p data-i18n="pillar1.p1">
                 <code>&lt;map0-viewer&gt;</code> is a standard custom element with its own shadow
                 DOM. Drop it into a CMS field, a Rails view, Next.js, Vue, or a plain HTML file — no
-                wrapper, no version lock-in.
-              </p>
-              <p data-i18n="pillar1.p2">
-                Styles never leak in or out, so it looks the same on every host page, and three maps
-                on one page cost you MapLibre exactly once.
+                wrapper, no version lock-in, and no styles leaking in or out.
               </p>
             </article>
 
@@ -133,13 +129,9 @@
               <div class="mark">⌨️</div>
               <h3 data-i18n="pillar2.h3">Everything is configuration</h3>
               <p data-i18n="pillar2.p1">
-                Every feature is reachable from the JSON config — configurability is the design
-                principle behind every feature. Basemaps, overlays, popups, legends, print layout,
-                theme, languages: all keys in one document.
-              </p>
-              <p data-i18n="pillar2.p2">
-                That document lives happily in a CMS text field, so the person who maintains the map
-                never needs a developer, a build step or a deployment.
+                Configurability is the design principle behind every feature: basemaps, overlays,
+                popups, legends, print layout, theme, languages — all keys in one document that
+                fits in a CMS text field. No developer, no build step, no deployment.
               </p>
             </article>
 
@@ -147,13 +139,9 @@
               <div class="mark">🪶</div>
               <h3 data-i18n="pillar3.h3">Light on the page</h3>
               <p data-i18n="pillar3.p1">
-                A page carrying a map0 embed downloads about 23 KB gzip. The engine and MapLibre
-                only arrive when the map approaches the viewport — a map nobody scrolls to costs
-                nothing.
-              </p>
-              <p data-i18n="pillar3.p2">
-                Measuring, printing, coordinate projections and capabilities parsing are separate
-                chunks, fetched the first time somebody actually uses them.
+                A page carrying a map0 embed downloads about <span data-size="page">31</span> KB
+                gzip. The engine and MapLibre only arrive when the map approaches the viewport —
+                measuring, printing and coordinate maths only when somebody uses them.
               </p>
             </article>
 
@@ -161,14 +149,9 @@
               <div class="mark">📱</div>
               <h3 data-i18n="pillar4.h3">At home on every screen</h3>
               <p data-i18n="pillar4.p1">
-                One embed serves every visitor: the UI is responsive from a 320 px phone to a 4K
-                display, controls are sized for touch as much as for a mouse, and light/dark
-                follows the operating system.
-              </p>
-              <p data-i18n="pillar4.p2">
-                It adapts with container queries — to the column it actually sits in, not the
-                browser window. In a narrow CMS column the panels collapse out of the way, and
-                fullscreen is one tap away.
+                One embed serves every visitor: responsive from a 320 px phone to a 4K display,
+                controls sized for touch as much as for a mouse, light/dark following the operating
+                system. Container queries adapt it to the column it sits in, not the window.
               </p>
             </article>
           </div>
@@ -378,17 +361,17 @@
                 <div>
                   <dt data-i18n="perf.dt1">Page load</dt>
                   <span class="bar"><i style="width: 7%"></i></span>
-                  <dd data-size="page">~23 KB gz</dd>
+                  <dd>~<span data-size="page">31</span> KB gz</dd>
                 </div>
                 <div>
                   <dt data-i18n="perf.dt2">Map enters the viewport</dt>
                   <span class="bar later"><i style="width: 100%"></i></span>
-                  <dd data-size="map">+ ~304 KB gz</dd>
+                  <dd>+ ~<span data-size="map">305</span> KB gz</dd>
                 </div>
                 <div>
                   <dt data-i18n="perf.dt3">First use of a feature</dt>
                   <span class="bar later"><i style="width: 22%"></i></span>
-                  <dd data-size="deferred" data-i18n="perf.dd3">0.2–138 KB gz each</dd>
+                  <dd data-i18n="perf.dd3"><span data-size="deferred">0.2–136</span> KB gz each</dd>
                 </div>
               </dl>
             </div>
@@ -586,6 +569,101 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      <!-- -------------------------------- what's next ----------------------------- -->
+
+      <section class="section" id="next">
+        <div class="wrap">
+          <div class="sec-head center reveal">
+            <p class="kicker" data-i18n="next.kicker">What's next</p>
+            <h2 data-i18n="next.h2">Everything above ships today. This is what comes after.</h2>
+            <p data-i18n="next.p">map0 is a 0.x release under active development. These are the next planned highlights.</p>
+          </div>
+
+          <div class="next-grid">
+            <article class="next reveal">
+              <h3 data-i18n="next1.h3">♿ Accessibility audit</h3>
+              <p data-i18n="next1.p">
+                Keyboard operation, focus handling and reduced motion are in. What follows is the
+                audit: the layer tree fully keyboard-driven, and feature results mirrored into the
+                DOM so a screen reader can read what the map draws.
+              </p>
+            </article>
+
+            <article class="next reveal">
+              <h3 data-i18n="next2.h3">📡 WFS and OGC API Features</h3>
+              <p data-i18n="next2.p">
+                Features straight from the service instead of a file — the two layer types an SDI
+                keeps asking for, with the same popups, legends and layer-tree behaviour as
+                everything else.
+              </p>
+            </article>
+
+            <article class="next reveal">
+              <h3 data-i18n="next3.h3">📥 GeoJSON, KML and GPX</h3>
+              <p data-i18n="next3.p">
+                A GeoJSON export, a KML file or a GPX track dropped onto the map, or added by URL,
+                becomes a layer at runtime — the way the add-layer dialog already takes WMS and
+                WMTS.
+              </p>
+            </article>
+
+            <article class="next reveal">
+              <h3 data-i18n="next4.h3">⚛️ React and Angular wrappers</h3>
+              <p data-i18n="next4.p">
+                The custom element works in every framework today. The wrappers add typed props and
+                events, SSR-safe mounting and TypeScript types for the config, so it behaves like a
+                native component.
+              </p>
+            </article>
+
+            <article class="next reveal">
+              <h3 data-i18n="next5.h3">🖨️ Scale-true print</h3>
+              <p data-i18n="next5.p">
+                Printing in the browser already gives you PNG and PDF on real A4/A3 pages. An
+                optional server adapter renders the same sheet at an exact scale — 1:5000 that
+                measures 1:5000 on paper.
+              </p>
+            </article>
+
+            <article class="next reveal">
+              <h3 data-i18n="next6.h3">🎛️ The map0 configurator</h3>
+              <p data-i18n="next6.p">
+                A visual editor for the config: pick services, arrange the layer tree, set popups,
+                legend and theme with the map live beside you, then copy the JSON into your CMS
+                field. The point where nobody writes JSON by hand any more.
+              </p>
+            </article>
+
+            <article class="next reveal">
+              <h3 data-i18n="next7.h3">🧩 Plugin API</h3>
+              <p data-i18n="next7.p">
+                A documented seam for third-party adapters and panels — your own layer type, your
+                own tool, your own side panel — without forking the project and without waiting for
+                us.
+              </p>
+            </article>
+
+            <article class="next reveal">
+              <h3 data-i18n="next8.h3">🗂️ Catalog search</h3>
+              <p data-i18n="next8.p">
+                Find a service in a metadata catalog — CSW or OGC API Records — and add it as a
+                layer without leaving the map. The catalog you already run becomes the layer picker.
+              </p>
+            </article>
+          </div>
+
+          <p class="next-note reveal" data-i18n="next.note">
+            Also on the list: 3D terrain, drawing and annotations, time-enabled layers (WMS TIME),
+            drag-reorder and a filter box in the layer tree, auth hooks for protected services and a
+            deck.gl overlay for very large datasets. The full picture lives in the
+            <a href="https://github.com/SpatialFocus/map0/blob/main/docs/07-roadmap.md">repository</a>,
+            and if something you need is missing, an
+            <a href="https://github.com/SpatialFocus/map0/issues">issue</a> is the fastest way to
+            influence the order.
+          </p>
         </div>
       </section>
 

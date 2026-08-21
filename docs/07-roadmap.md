@@ -22,7 +22,7 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
 | Search | ✅ type-ahead geocoding, pluggable providers, coordinate input |
 | Measuring | ✅ distance & area, geodesic, draggable vertices |
 | Configuration | ✅ one document, validation with JSON-path errors (unknown keys, unique ids, https policy), `extends`, theming, i18n + overrides · 🟡 published JSON Schema |
-| Performance | ✅ 23 KB page tier, engine and features load on demand, CI budget |
+| Performance | ✅ 31 KB page tier, engine and features load on demand, CI budget |
 | Accessibility | 🟡 keyboard operation, focus trap, reduced motion · ⬜ audit, DOM-mirrored results |
 | Packaging | ✅ MIT licence, name, npm package `map0-viewer` published (prebuilt bundle + third-party notices), CDN via jsDelivr, demo site at map0.net · ⬜ TypeScript types |
 
@@ -53,7 +53,7 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
 - ✅ **i18n** de/en + per-locale overrides (F11.1–F11.3)
 - ✅ **Config inheritance** via `extends` (C6)
 - ✅ **Error toasts** and TOC zoom-range hints (F2.5)
-- ✅ **Code splitting + lazy loading** — 23 KB page tier, MapLibre deferred until the map is in view, size budget in CI (N1)
+- ✅ **Code splitting + lazy loading** — 31 KB page tier, MapLibre deferred until the map is in view, size budget in CI (N1)
 - ✅ **Dialog focus trap + Escape** (N4, partial)
 - ✅ **Search** — type-ahead geocoding with Photon/Nominatim/custom providers, coordinate input (F8.1, F8.2)
 - ✅ **Measure** — distance and area on the sphere, draggable vertices (F9.1)
@@ -82,10 +82,10 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
 
 - ⬜ **WFS and OGC API Features** layer types (deferred from D-03)
 - ⬜ **Drag-and-drop reorder** in the TOC (F2.6)
-- ⬜ **GeoJSON/GPX by URL and file drop** (F3.2)
+- ⬜ **GeoJSON/KML/GPX by URL and file drop** (F3.2)
 - ⬜ **Terrain** (F1.8)
 - ⬜ **Auth hooks** for protected services (C8)
-- ⬜ **React wrapper** (`@map0/react`)
+- ⬜ **React and Angular wrappers** (`@map0/react`, `@map0/angular`)
 - ✅ **COG** layers (2026-08-19) — `type: "cog"`: RGB/grayscale imagery, single-band color
   ramps with auto-derived legend, and DEM hillshade (`hillshade` key → raster-dem + hillshade
   layer); bounds from the file header, decoder loaded on demand

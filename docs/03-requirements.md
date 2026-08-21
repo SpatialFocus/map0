@@ -38,7 +38,7 @@
 | ID | Requirement | Prio |
 |---|---|---|
 | F3.1 | "Add layer" dialog: paste a service URL (WMS/WMTS), client parses capabilities, user picks layers | M → D-03 |
-| F3.2 | Add GeoJSON by URL; drag & drop a local GeoJSON/GPX file | S |
+| F3.2 | Add GeoJSON by URL; drag & drop a local GeoJSON/KML/GPX file | S |
 | F3.3 | Remove/rename user-added layers; clearly distinguished from configured layers | M |
 | F3.4 | Catalog search (CSW / OGC API Records) as source for adding layers | C → D-05 |
 | F3.5 | User-added layers survive in the share/permalink state (not in the page config) | S |

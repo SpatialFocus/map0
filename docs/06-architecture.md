@@ -127,8 +127,8 @@ Measured with `pnpm size` (gzip, current). Three tiers, paid at different moment
 
 | Tier | Size | Paid when |
 |---|---|---|
-| **page** — custom element + Lit | ~20 KB | the page loads — budget 40 KB, enforced in CI |
-| **map** — engine, MapLibre (3 files), its stylesheet, popup renderer | ~314 KB | the element approaches the viewport |
+| **page** — custom element + Lit | ~31 KB | the page loads — budget 40 KB, enforced in CI |
+| **map** — engine, MapLibre (3 files), its stylesheet, popup renderer | ~305 KB | the element approaches the viewport |
 | ogc-client (capabilities parsing) | ~62 KB | first add-layer dialog or WMTS layer |
 | proj4 (+ wkt-parser, mgrs) | ~47 KB | first coordinate readout |
 | PMTiles | ~8 KB | first `pmtiles://` layer |
@@ -136,7 +136,7 @@ Measured with `pnpm size` (gzip, current). Three tiers, paid at different moment
 
 **Nothing but the element loads until the map is needed.** `<map0-viewer>` observes itself with an
 IntersectionObserver (300 px root margin) and only then fetches the config, the engine and MapLibre
-— so an article with a map at the bottom pays 20 KB unless a reader scrolls there. `loading="eager"`
+— so an article with a map at the bottom pays 31 KB unless a reader scrolls there. `loading="eager"`
 opts out, `load()` forces it, and elements inside a hidden tab stay unloaded until shown, which also
 avoids MapLibre initialising into a zero-size container. This is an attribute rather than a config
 key because it decides whether the config is fetched at all.

@@ -1,6 +1,7 @@
 {
   "chrome.nav.start": "Schnellstart",
   "chrome.nav.features": "Funktionen",
+  "chrome.nav.next": "Geplant",
   "chrome.nav.demos": "Demos",
   "chrome.nav.github": "map0 auf GitHub",
   "chrome.theme": "Dunkelmodus umschalten",

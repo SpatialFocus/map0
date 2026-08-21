@@ -10,6 +10,10 @@ import { fileURLToPath } from "node:url";
 import type { Plugin } from "vite";
 import { SITE_URL, catalogFor, prettyPath, sitePages, translatePage } from "./translate.js";
 import { DEMOS } from "../demos/demos.js";
+import { measure } from "../../scripts/check-size.mjs";
+
+type Sizes = ReturnType<typeof measure>;
+type Lang = "en" | "de";
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
@@ -20,15 +24,68 @@ const REDIRECT_SRC =
   `(function(){try{var l=localStorage.getItem("map0-lang");` +
   `if(l==="de"||(!l&&/^de/i.test(navigator.language||"")))location.replace("/de/"+location.hash)}catch(e){}})()`;
 
-/* Elements marked data-demo-count show the size of the demo registry — filled
-   here so prose can never lag behind a new demo again. The marker must wrap
-   only the number itself. Runs on the final HTML of BOTH language variants
-   (the German catalogue may carry the marker inside a translated heading). */
-function fillDemoCount(html: string): string {
-  return html.replace(
-    /(<([a-z0-9]+)[^>]*\bdata-demo-count\b[^>]*>)\s*\d*\s*(<\/\2>)/g,
-    `$1${DEMOS.length}$3`,
+/* Every number on this site that could drift from reality is filled in here
+   rather than typed: the demo count from the registry, the config-key count
+   from the published schema, the bundle tiers from the built package. A marker
+   must wrap only the number itself — unit, tilde and wording stay in the copy
+   (and in the catalogues, so a translated sentence can carry one too). Runs on
+   the final HTML of BOTH language variants. */
+const once = <T>(compute: () => T): (() => T) => {
+  let cache: { value: T } | undefined;
+  return () => (cache ??= { value: compute() }).value;
+};
+
+/** distinct key names in the published schema: the configurable surface */
+const schemaKeys = once((): number => {
+  const names = new Set<string>();
+  const walk = (node: unknown): void => {
+    if (node === null || typeof node !== "object") return;
+    const record = node as Record<string, unknown>;
+    const properties = record["properties"];
+    if (typeof properties === "object" && properties !== null)
+      for (const key of Object.keys(properties)) names.add(key);
+    for (const value of Object.values(record)) walk(value);
+  };
+  walk(JSON.parse(readFileSync(r("../../packages/schema/v1.json"), "utf8")));
+  return names.size;
+});
+
+/** The measured bundle tiers, or undefined when there is no dist to weigh: dev
+    serves the package from source, and the copy then keeps its written number.
+    `pnpm build:site` builds the package first, so a deploy always has real ones. */
+const bundle = once((): Sizes | undefined => {
+  try {
+    return measure();
+  } catch {
+    return undefined;
+  }
+});
+
+/** smallest to largest single deferred chunk, e.g. "0.2–136" ("0,2–136" in German) */
+function deferredRange(sizes: Sizes, lang: Lang): string {
+  const chunks = sizes.rows.filter((row) => row.tier === "deferred").map((row) => row.kb);
+  const decimal = lang === "de" ? "," : ".";
+  const round = (n: number): string =>
+    n < 10 ? n.toFixed(1).replace(".", decimal) : String(Math.round(n));
+  return `${round(Math.min(...chunks))}–${round(Math.max(...chunks))}`;
+}
+
+const fill = (html: string, marker: string, value: string): string =>
+  html.replace(
+    new RegExp(String.raw`(<([a-z0-9]+)[^>]*${marker}[^>]*>)[^<]*(</\2>)`, "g"),
+    `$1${value}$3`,
   );
+
+function fillNumbers(html: string, lang: Lang): string {
+  let out = fill(html, "data-demo-count", String(DEMOS.length));
+  out = fill(out, "data-config-key-count", String(schemaKeys()));
+  const sizes = bundle();
+  if (sizes) {
+    out = fill(out, 'data-size="page"', String(Math.round(sizes.page)));
+    out = fill(out, 'data-size="map"', String(Math.round(sizes.map)));
+    out = fill(out, 'data-size="deferred"', deferredRange(sizes, lang));
+  }
+  return out;
 }
 
 function translateBuilt(html: string, page: string, pages: Set<string>, warnings: string[]): string {
@@ -37,7 +94,7 @@ function translateBuilt(html: string, page: string, pages: Set<string>, warnings
   const { html: out, missing, stale } = translatePage(html, page, catalog, pages);
   if (missing.length > 0) warnings.push(`${page}: missing keys → ${missing.join(", ")}`);
   if (stale.length > 0) warnings.push(`${page}: stale keys (nothing asks for them) → ${stale.join(", ")}`);
-  return fillDemoCount(out);
+  return fillNumbers(out, "de");
 }
 
 export function i18n(outDir: string): Plugin {
@@ -49,7 +106,7 @@ export function i18n(outDir: string): Plugin {
       order: "post",
       handler: (html, ctx) => {
         const page = ctx.path.replace(/^\//, "");
-        const counted = fillDemoCount(html);
+        const counted = fillNumbers(html, "en");
         if (page === "404.html") return { html: counted, tags: [] }; // noindex — no alternates, no redirect
         const en = `${SITE_URL}${prettyPath(page)}`;
         const de = `${SITE_URL}/de${prettyPath(page)}`;
