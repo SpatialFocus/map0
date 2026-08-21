@@ -652,13 +652,9 @@ h3 .try-playground {
     height: 380px;
   }
 }
-@media (max-width: 700px) {
-  .try-playground {
-    float: none;
-    display: inline-block;
-    margin: 10px 0 0;
-  }
-}
+/* No un-floating on phones: pinned right, the pill keeps its 14px gap to the
+   heading text, and a long heading simply wraps around it — flowing inline it
+   sat glued to the last word instead. */
 
 /* ------------------------------ code blocks ----------------------------- */
 
