@@ -384,11 +384,13 @@ Cloudflare does not cache — HTML, `.mjs`, `.json` — passes untouched. `cf-ca
 REVALIDATED` is the useful signal that the origin's `no-cache` did arrive: the edge revalidates on
 every request, so it never serves a stale bundle. Only the browser-facing header is rewritten.
 
-Two ways out, both outside this file: set **Browser Cache TTL → "Respect Existing Headers"** in
-Cloudflare (Caching → Configuration), which makes the origin authoritative everywhere and costs
-`/assets/*` nothing since its year comes from the origin anyway; or give the standalone bundle a
-versioned path (`/standalone/<version>/map0.js`), which makes the entry immutable by construction
-and independent of any dashboard setting.
+**Resolved outside this repo:** Cloudflare's Browser Cache TTL is now set to *Respect Existing
+Headers* (Caching → Configuration), so the origin is authoritative everywhere — `/assets/*` keeps
+its year, the entry keeps its `no-cache`. Changing that setting does not reach objects Cloudflare
+has already stored: the old copy kept serving its old header until it was purged (`MISS`, then
+`REVALIDATED` — the steady state to expect here). If the setting is ever put back to a fixed TTL,
+this breaks again silently, and the repo-side answer would be a versioned path
+(`/standalone/<version>/map0.js`), immutable by construction and independent of any dashboard.
 
 ### 5.1 Site i18n: two languages from one source, at build time
 
