@@ -1,6 +1,6 @@
 /**
  * The release gate from docs/09 §release, automated: verify the PACKED TARBALL,
- * never packages/ui/dist. Unpacks the tarball's dist over examples/public/standalone,
+ * never packages/ui/dist. Unpacks the tarball's dist over site/public/standalone,
  * loads /demos/standalone.html (which uses exactly those files), and checks the two
  * paths that only break in built bundles:
  *
@@ -30,7 +30,7 @@ if (!process.argv[2] || !existsSync(tarball)) {
 
 /* ---------------------------------------------- unpack over /standalone/ */
 
-const standalone = join(root, "examples", "public", "standalone");
+const standalone = join(root, "site", "public", "standalone");
 rmSync(standalone, { recursive: true, force: true });
 mkdirSync(standalone, { recursive: true });
 /* relative paths only: a drive-letter argument makes GNU tar (MSYS) read

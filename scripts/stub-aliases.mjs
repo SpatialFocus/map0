@@ -1,6 +1,6 @@
 /**
  * Optional peer dependencies that map0 never uses, stubbed for both builds:
- * the library bundle (packages/ui) and the demo site (examples).
+ * the library bundle (packages/ui) and the demo site (site/).
  *
  * ogc-client can hand its WMTS capabilities to OpenLayers, and jsPDF can render
  * HTML/SVG — neither path exists in map0. Without these aliases a production

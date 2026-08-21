@@ -241,7 +241,7 @@ describe("v1.json validates configs", () => {
 
   /* every demo config on map0.net carries a $schema line — they must all pass,
      and (extends-fragments aside) the runtime validator must agree */
-  const configsDir = new URL("../../../examples/public/configs/", import.meta.url);
+  const configsDir = new URL("../../../site/public/configs/", import.meta.url);
   const demoConfigs = readdirSync(configsDir).filter(
     (f) => f.endsWith(".map0.json") && !f.startsWith("_"), // _base is a fragment, not a config
   );

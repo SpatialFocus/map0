@@ -82,8 +82,8 @@ packages/schema   config types, validation (JSON-path errors), defaults, publish
 packages/core     headless engine: basemap manager, source adapters (wms/wmts/raster/cog/geojson/
                   vector), feature info, i18n — no DOM UI
 packages/ui       the <map0-viewer> web component (Lit) + panels, popups, theming
-examples/         landing page, /demos gallery and demo pages
-examples/public/  demo configs and data served as-is
+site/             landing page, /demos gallery and demo pages
+site/public/      demo configs and data served as-is
 e2e/              headless smoke verification (grows into the Playwright suite in M1)
 docs/             specification
 ```

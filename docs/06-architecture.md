@@ -31,9 +31,9 @@ map0/
 │  │              # feature-info, legend resolution, i18n runtime — NO DOM UI
 │  ├─ ui/         # <map0-viewer> Lit element + panels (TOC, legend, popup, print, …)
 │  └─ react/      # (M2) thin wrapper
-├─ examples/      # demo configs incl. live Austrian SDI services + plain-HTML/CMS embeds
-├─ site/          # docs site (config reference generated from schema) + playground
-└─ e2e/           # Playwright + visual regression against examples/
+├─ site/          # map0.net: landing + /demos + demo configs (live Austrian SDI services,
+│                 # plain-HTML/CMS embeds); grows into docs site + playground
+└─ e2e/           # Playwright + visual regression against site/
 ```
 
 `core` is deliberately UI-free: it makes the web component thin, enables the React wrapper and
@@ -198,7 +198,7 @@ documented prominently (services must send CORS headers; no proxy in core, recip
 - `schema`: golden tests for validation/defaults/migrations.
 - `core`: adapter unit tests with mocked fetch (recorded capabilities/GFI fixtures from real
   Austrian services).
-- `e2e`: Playwright against `examples/` — interaction flows + **visual regression screenshots**;
+- `e2e`: Playwright against `site/` — interaction flows + **visual regression screenshots**;
   strict-CSP smoke test; a11y audit (axe) gate.
 - CI budgets: bundle size check, Lighthouse on demo page.
 

@@ -34,7 +34,7 @@
       "node ../../e2e/verify-tarball.mjs map0-viewer-${version}.tgz"
     ],
     "before:git:release": [
-      "git add ../../CHANGELOG.md ../../README.md ../../examples/demos/standalone.html"
+      "git add ../../CHANGELOG.md ../../README.md ../../site/demos/standalone.html"
     ]
   }
 }

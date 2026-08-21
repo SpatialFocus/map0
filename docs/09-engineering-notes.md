@@ -77,7 +77,7 @@ Two things a release has to get right, both of which fail *silently* if it does 
 - **The folder is the unit.** `dist/` ships `map0.js`, its lazy chunks and MapLibre's three files
   side by side (§4.4). Verify the **packed tarball**, not `packages/ui/dist` — automated in
   `e2e/verify-tarball.mjs` (hook step 5, or by hand: `node e2e/verify-tarball.mjs <tgz>`): it
-  unpacks the tarball over `examples/public/standalone/`, loads `/demos/standalone.html` (which
+  unpacks the tarball over `site/public/standalone/`, loads `/demos/standalone.html` (which
   then exercises exactly the files a consumer gets) and asserts rendered **vector-tile** features —
   a missing worker file still paints raster layers — plus the COG config, because the COG decoder
   is a lazy chunk and lazy-chunk resolution is what regresses between dev server and bundle.
@@ -110,7 +110,7 @@ China coverage. Both are verified, so the choice is reversible for anyone copyin
 
 Two things `/standalone/` on map0.net is **not**: versioned, and immutable. It is the demo artefact,
 rebuilt and overwritten by every `pnpm build:site`, `max-age=3600`. `access-control-allow-origin: *`
-in `examples/public/staticwebapp.config.json` makes it *loadable* from a foreign page, which is a
+in `site/public/staticwebapp.config.json` makes it *loadable* from a foreign page, which is a
 convenience for anyone copying from the demo, not a distribution channel — a redeploy changes the
 chunk hashes while a consumer's browser still holds the cached entry, and the entry then imports
 chunks that no longer exist. Anyone embedding for real gets a pinned CDN URL. Building a versioned
@@ -308,7 +308,7 @@ TileJSONs happened to carry nothing offensive, so this slept until the ICGC cont
   `raster-dem` source with a `hillshade` layer — and the TOC opacity slider maps to
   `hillshade-exaggeration` (base = the configured exaggeration) because that is the only usable
   intensity knob.
-- The demo DEM (`examples/public/data/bev-dgm25-grossglockner-3857.tif`, ~3 MB) is a cut of the
+- The demo DEM (`site/public/data/bev-dgm25-grossglockner-3857.tif`, ~3 MB) is a cut of the
   BEV 25 m terrain model (CC BY 4.0): the original `data.bev.gv.at` file is EPSG:31287 **and** its
   server sends no `Access-Control-Allow-Origin`, so it cannot be used in place. Recipe:
   `gdalwarp -of COG -t_srs EPSG:3857 -te <mercator bounds> -tr 36 36 -r bilinear -ot Int16
@@ -403,7 +403,7 @@ packages/core     the engine: map creation, basemap manager, source adapters, fe
                   → imports MapLibre; never imports the UI
 packages/ui       <map0-viewer>, panels, dialogs, popup rendering, focus trap, styles
                   → imports core lazily (see invariant 1)
-examples/         landing page + /demos (one page per topic) + configs and data
+site/             landing page + /demos (one page per topic) + configs and data
 e2e/              headless verification
 scripts/          build-adjacent tooling (size budget)
 ```
