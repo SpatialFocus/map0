@@ -22,6 +22,20 @@
       "headers": { "cache-control": "public, max-age=31536000, immutable" }
     },
     {
+      "route": "/standalone/map0.js",
+      "headers": {
+        "cache-control": "no-cache",
+        "access-control-allow-origin": "*"
+      }
+    },
+    {
+      "route": "/standalone/map0-ssr.js",
+      "headers": {
+        "cache-control": "no-cache",
+        "access-control-allow-origin": "*"
+      }
+    },
+    {
       "route": "/standalone/*",
       "headers": {
         "cache-control": "public, max-age=3600",

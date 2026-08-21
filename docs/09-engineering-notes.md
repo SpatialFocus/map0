@@ -351,6 +351,28 @@ it, or drop it when a real dependency arrives.
   undefined name (`Popup is not defined`, only in the bundle). Wrap it in a function that *uses* the
   binding instead — `createPopup()` — and the import survives.
 
+### 5.0b The one file on map0.net whose name never changes
+
+Everything the site serves is either content-hashed (`/assets/*`, cached for a year and
+`immutable`) or `no-cache` HTML — except the standalone demo's bundle. `/standalone/map0.js` keeps
+its name across releases *and* imports content-hashed chunks that a deploy replaces, deleting the
+old ones. That combination breaks on its own: a browser holding the previous `map0.js` asks for
+chunk names that are now 404, and the demo shows no map at all. Its own note ("run `pnpm
+demo:standalone`") then points at the wrong cause.
+
+Cloudflare sits in front of the site and **raises short browser TTLs to its own Browser Cache TTL**
+(4 h at the time of writing) while leaving longer ones alone — so `max-age=3600` on the origin was
+served as `max-age=14400`, and a year-long `immutable` came through untouched. A short max-age is
+therefore not a fix; the entry must be `no-cache`, which Cloudflare does respect (HTML proves it:
+`no-cache` in, `no-cache` and `cf-cache-status: DYNAMIC` out).
+
+`staticwebapp.config.json` routes `/standalone/map0.js` and `map0-ssr.js` to `no-cache` and leaves
+the hashed chunks around them on a short max-age. Deliberately **not** `immutable` for the chunks,
+even though hashed names would allow it: Azure's route patterns are matched top-down, and an entry
+that slipped past its exact-path rule would inherit a year of caching — a permanently stale bundle
+for returning visitors, fixable only by renaming the file. Short everywhere fails soft; the
+bandwidth is one demo page's worth.
+
 ### 5.1 Site i18n: two languages from one source, at build time
 
 The site (map0.net) is bilingual without a framework. The English page is the only source:
