@@ -184,9 +184,12 @@ body.landing main {
     0 30px 70px -30px rgba(15, 23, 42, 0.35);
 }
 @media (prefers-color-scheme: dark) {
-  .stage-frame {
+  :root:not(.light) .stage-frame {
     box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9);
   }
+}
+:root.dark .stage-frame {
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9);
 }
 .stage-frame map0-viewer {
   height: min(66vh, 620px);

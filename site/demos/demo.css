@@ -17,8 +17,13 @@
   --wrap: 1180px;
 }
 
+/* The dark tokens exist twice on purpose: the media query serves the OS
+   default (and no-JS visitors), the .dark class serves an explicit choice made
+   with the topbar toggle (persisted by the chrome script in vite.config.ts).
+   CSS cannot share one block between those two selectors. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
+    color-scheme: dark;
     --page-bg: #14181d;
     --surface: #1c2127;
     --fg: #e8eaee;
@@ -28,6 +33,20 @@
     --code-bg: #0b1220;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.35);
   }
+}
+:root.dark {
+  color-scheme: dark;
+  --page-bg: #14181d;
+  --surface: #1c2127;
+  --fg: #e8eaee;
+  --muted: #9aa4b1;
+  --border: rgba(255, 255, 255, 0.12);
+  --accent: #22b8cf;
+  --code-bg: #0b1220;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+:root.light {
+  color-scheme: light;
 }
 
 * {
@@ -110,6 +129,43 @@ a {
 .topbar nav a.gh {
   display: inline-flex;
 }
+
+/* theme toggle — the visible icon follows the same cascade as the tokens:
+   moon in light mode, sun in dark mode (each shows what a click brings) */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.theme-toggle:hover {
+  color: var(--accent);
+}
+.theme-toggle svg {
+  display: block;
+}
+.theme-toggle .sun {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) .theme-toggle .sun {
+    display: block;
+  }
+  :root:not(.light) .theme-toggle .moon {
+    display: none;
+  }
+}
+:root.dark .theme-toggle .sun {
+  display: block;
+}
+:root.dark .theme-toggle .moon {
+  display: none;
+}
+
 .topbar nav a.gh svg {
   display: block;
   fill: currentColor;
@@ -533,6 +589,14 @@ footer.site a.footmark {
   }
   .topbar .wrap {
     padding: 0 16px;
+  }
+  /* the toggle joined the topbar; the landing anchor links are the ones a
+     small screen can do without */
+  .topbar nav {
+    gap: 14px;
+  }
+  .topbar nav a[href^="/#"] {
+    display: none;
   }
   map0-viewer {
     height: 66vh;
