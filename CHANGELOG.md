@@ -4,6 +4,28 @@ Releases of the `map0-viewer` npm package. Generated from the
 [conventional commits](https://www.conventionalcommits.org) by `pnpm release` (release-it) —
 do not edit by hand.
 
+## [0.2.0](https://github.com/SpatialFocus/map0/compare/v0.1.0...v0.2.0) (2026-08-21)
+
+### Features
+
+* **cog:** explicit value/range classes for single-band styling ([c5b0ae6](https://github.com/SpatialFocus/map0/commit/c5b0ae656217f1e5328f0ad0ee4a2ff04ee5e288))
+* **site:** dark/light toggle in the topbar ([4b1c8ec](https://github.com/SpatialFocus/map0/commit/4b1c8eced37d63c6845214b44098d134eef74182))
+* **site:** German pages built from the English source ([7a04040](https://github.com/SpatialFocus/map0/commit/7a040408a93e2a146e9e56ef582e60483aaa08c0))
+* **site:** playground — edit a config, watch the map follow ([fa9e3a9](https://github.com/SpatialFocus/map0/commit/fa9e3a9faee4bb6135f6b585f78f0de597460c8b))
+* **site:** what's next, key figures from the build, zeros that count down ([e16b5a6](https://github.com/SpatialFocus/map0/commit/e16b5a68ff2c723d5370b9791b142c37186092f5))
+* **ui:** theme attribute overriding the configured colour scheme ([8b6d0cf](https://github.com/SpatialFocus/map0/commit/8b6d0cf5e4b8706481853a729e4cc526e17fc22c))
+
+### Bug Fixes
+
+* **site:** attribution and legal notes for the COG demo data ([ec897ab](https://github.com/SpatialFocus/map0/commit/ec897ab5e5b8cef57f8e2f5fcf6a3d735e5eea06))
+* **site:** Text editing ([48342dd](https://github.com/SpatialFocus/map0/commit/48342ddf73f96c9115ffaab7bace099aea27b192))
+
+# Changelog
+
+Releases of the `map0-viewer` npm package. Generated from the
+[conventional commits](https://www.conventionalcommits.org) by `pnpm release` (release-it) —
+do not edit by hand.
+
 ## [0.1.0](https://github.com/SpatialFocus/map0/compare/v0.0.5...v0.1.0) (2026-08-20)
 
 ### Features
