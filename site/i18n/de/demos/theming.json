@@ -7,7 +7,7 @@
   "swatch.amber": "<i style=\"background:#b45309\"></i>Bernstein",
   "swatch.forest": "<i style=\"background:#166534\"></i>Waldgrün",
   "swatch.toggle": "Hell / Dunkel umschalten",
-  "note": "<strong>Ausprobieren:</strong> Die Buttons oben setzen CSS-Custom-Properties von außen auf das Element — kein Rebuild, kein Neuladen der Config. Beachten Sie, was die Schrift-Buttons <em>nicht</em> anfassen: die Beschriftungen, die in der Karte selbst gezeichnet werden.",
+  "note": "<strong>Ausprobieren:</strong> Die Buttons oben setzen CSS-Custom-Properties von außen auf das Element — kein Rebuild, kein Neuladen der Config. Bemerkenswert ist, was die Schrift-Buttons <em>nicht</em> anfassen: die Beschriftungen, die in der Karte selbst gezeichnet werden.",
   "ways.h2": "Zwei Wege",
   "ways.p1": "Aus der Config, für die CMS-Redaktion, die nie CSS anfasst:",
   "ways.p2": "Oder aus dem Stylesheet der Host-Seite — für Integratoren, deren Karte das Design-System der Website übernehmen soll:",
@@ -16,5 +16,5 @@
   "callout": "<strong>Shadow DOM, mit Absicht</strong> map0 rendert in eine Shadow Root — das Stylesheet der Host-Seite kann die Darstellung der Karte also nicht versehentlich stören, und umgekehrt gelangen keine Styles aus der Karte in die Seite. Custom Properties und dokumentierte <code>::part()</code>-Namen sind der vorgesehene Weg durch diese Grenze.",
   "font.h2": "Wo das Schrift-Token endet",
   "font.p1": "<code>theme.font</code> gestaltet die Oberfläche — Panels, Popups, Dialoge, Buttons. Die Beschriftungen in der Karte erreicht es nicht: Sie werden aus dem Glyphen-Satz gerendert, auf den der Basemap-Style zeigt — sie zu ändern heißt, den Style zu ändern, nicht den Client.",
-  "font.p2": "Diese Trennung sollten Sie kennen, bevor Sie eine Schrift wählen. Eine Serifen-Oberfläche neben serifenlosen Kartenbeschriftungen wirkt wie ein Fehler, selbst wenn beides Absicht ist — am sichersten ist also eine UI-Schrift, die der Schrift der Basemap nahekommt. Deshalb nutzt diese Demo den System-Stack und überlässt die auffälligen Varianten den Buttons."
+  "font.p2": "Diese Trennung sollte man kennen, bevor man eine Schrift wählt. Eine Serifen-Oberfläche neben serifenlosen Kartenbeschriftungen wirkt wie ein Fehler, selbst wenn beides Absicht ist — am sichersten ist also eine UI-Schrift, die der Schrift der Basemap nahekommt. Deshalb nutzt diese Demo den System-Stack und überlässt die auffälligen Varianten den Buttons."
 }

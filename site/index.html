@@ -21,11 +21,11 @@
 
     <header class="hero">
       <div class="wrap">
-        <p class="eyebrow" data-i18n="hero.eyebrow"><b>Open source</b>&nbsp;· built on MapLibre GL JS · web component</p>
+        <p class="eyebrow" data-i18n="hero.eyebrow"><b>Open source</b>&nbsp;· built on MapLibre GL JS · web component · made in the EU</p>
         <h1 class="wordmark">map<span>0</span></h1>
         <p class="subtitle" data-i18n="hero.subtitle">The web map client you configure, not code.</p>
         <p class="lede" data-i18n="hero.lede">
-          The name is the promise: a complete map client, and zero lines of code to get one.
+          The name is the promise: a complete web map client, and zero lines of code to get one.
           Basemaps, layer tree, legends, popups, search, print — every one of them declared in a
           single JSON document that fits in a CMS field.
         </p>
@@ -37,17 +37,26 @@
           <li data-i18n="hero.zero1">
             <b>0</b>
             <strong>code</strong>
-            <span>A map is a JSON document, not a frontend project.</span>
+            <span>A map is a JSON document, not a frontend project — not a single line of
+              JavaScript, CSS or npm.</span>
           </li>
           <li data-i18n="hero.zero2">
             <b>0</b>
             <strong>backend</strong>
-            <span>Static hosting is enough. No server, no database, no iframe.</span>
+            <span>Static hosting is enough. No server, no database, no iframe — and nothing that
+              needs maintaining.</span>
           </li>
           <li data-i18n="hero.zero3">
             <b>0</b>
             <strong>build steps</strong>
-            <span>One script tag and one element, on any page you already have.</span>
+            <span>One script tag and one element, on any page you already have. No bundler, no
+              build, no deployment.</span>
+          </li>
+          <li data-i18n="hero.zero4">
+            <b>0</b>
+            <strong>tracking</strong>
+            <span>The map talks to your services and no one else — no analytics, no cookies.
+              GDPR-compliant out of the box.</span>
           </li>
         </ul>
       </div>
@@ -63,7 +72,7 @@
         <strong>This is the real thing, not a screenshot.</strong> Three sources at once — a WMS, a
         vector tile layer and GeoJSON points from a WFS. Open the layer tree, switch the zoning plan
         on, click a fountain, try the aerial basemap, search for a street, measure a distance. All of
-        it came out of the single config printed further down this page.
+        it lives in one <a href="#config">config</a>.
       </p>
     </div>
 
@@ -97,7 +106,7 @@
         <div class="wrap">
           <div class="sec-head center reveal">
             <p class="kicker" data-i18n="why.kicker">Why map0</p>
-            <h2 data-i18n="why.h2">A map client, not another map library.</h2>
+            <h2 data-i18n="why.h2">A web map client, not another map library.</h2>
             <p data-i18n="why.p">
               MapLibre, OpenLayers and Leaflet render beautifully — but every layer tree, legend,
               popup and print button is a custom project, rebuilt per website. Geoportals give you
@@ -124,9 +133,9 @@
               <div class="mark">⌨️</div>
               <h3 data-i18n="pillar2.h3">Everything is configuration</h3>
               <p data-i18n="pillar2.p1">
-                Every feature is reachable from the JSON config. If it cannot be configured, it does
-                not ship. Basemaps, overlays, popups, legends, print layout, theme, languages: all
-                keys in one document.
+                Every feature is reachable from the JSON config — configurability is the design
+                principle behind every feature. Basemaps, overlays, popups, legends, print layout,
+                theme, languages: all keys in one document.
               </p>
               <p data-i18n="pillar2.p2">
                 That document lives happily in a CMS text field, so the person who maintains the map
@@ -145,6 +154,21 @@
               <p data-i18n="pillar3.p2">
                 Measuring, printing, coordinate projections and capabilities parsing are separate
                 chunks, fetched the first time somebody actually uses them.
+              </p>
+            </article>
+
+            <article class="pillar reveal">
+              <div class="mark">📱</div>
+              <h3 data-i18n="pillar4.h3">At home on every screen</h3>
+              <p data-i18n="pillar4.p1">
+                One embed serves every visitor: the UI is responsive from a 320 px phone to a 4K
+                display, controls are sized for touch as much as for a mouse, and light/dark
+                follows the operating system.
+              </p>
+              <p data-i18n="pillar4.p2">
+                It adapts with container queries — to the column it actually sits in, not the
+                browser window. In a narrow CMS column the panels collapse out of the way, and
+                fullscreen is one tap away.
               </p>
             </article>
           </div>
@@ -364,7 +388,7 @@
                 <div>
                   <dt data-i18n="perf.dt3">First use of a feature</dt>
                   <span class="bar later"><i style="width: 22%"></i></span>
-                  <dd data-size="deferred">0.2–138 KB gz each</dd>
+                  <dd data-size="deferred" data-i18n="perf.dd3">0.2–138 KB gz each</dd>
                 </div>
               </dl>
             </div>
@@ -428,7 +452,7 @@
 
       <!-- ------------------------------ configuration ----------------------------- -->
 
-      <section class="section">
+      <section class="section" id="config">
         <div class="wrap">
           <div class="sec-head center reveal">
             <p class="kicker">Config-first</p>
@@ -493,7 +517,8 @@
             <p data-i18n="pos.p">
               Three ways to put a map on a page exist already, and each asks for something you may
               not want to give: an application to operate, a setup to maintain, or a frontend project
-              to write. map0 is the fourth.
+              to write. map0 fills the middle they leave open: as complete as a portal, embedded as
+              lightly as a library.
             </p>
           </div>
 

@@ -92,9 +92,9 @@ body.landing main {
 /* the three zeros: the name, unpacked */
 .zeros {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 18px 28px;
-  max-width: 940px;
+  max-width: 1080px;
   margin: 34px auto 0;
   padding: 0;
   list-style: none;
@@ -105,6 +105,7 @@ body.landing main {
   grid-template-columns: auto 1fr;
   column-gap: 14px;
   align-items: baseline;
+  align-content: start;
 }
 .zeros b {
   grid-row: span 2;
@@ -293,7 +294,7 @@ body.landing main {
 
 .pillars {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
 }
 .pillar {

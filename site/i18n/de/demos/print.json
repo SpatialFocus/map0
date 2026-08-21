@@ -3,19 +3,19 @@
   "eyebrow": "Kartenfunktionen",
   "h1": "Drucken &amp; Export",
   "lede": "Ein fertig zusammengestelltes Kartenblatt — Titel, Legende, Maßstabsleiste, Quellenangabe, Datum — vollständig im Browser gerendert, in bis zu 300&nbsp;dpi.",
-  "note": "<strong>Ausprobieren:</strong> der Drucker-Button in der Bedienleiste links oben. Wählen Sie A4 quer und 300&nbsp;dpi, laden Sie das Ergebnis als PDF oder PNG herunter — oder schicken Sie es an den Druckdialog des Browsers.",
+  "note": "<strong>Ausprobieren:</strong> der Drucker-Button in der Bedienleiste links oben. A4 quer und 300&nbsp;dpi wählen, das Ergebnis als PDF oder PNG herunterladen — oder an den Druckdialog des Browsers schicken.",
   "how.h2": "So funktioniert es",
-  "how.p1": "Im Hintergrund entsteht ein unsichtbarer Klon der Karte im Zielformat und in der gewählten Pixeldichte, mit demselben Live-Style — inklusive aller Overlays, die Sie eingeschaltet haben. Sobald er fertig gerendert ist, wird sein Canvas gemeinsam mit der Legende, einer Maßstabsleiste mit gerundeten Werten und der Quellenangabe aller aktiven Quellen auf ein Layout-Canvas gezeichnet.",
+  "how.p1": "Im Hintergrund entsteht ein unsichtbarer Klon der Karte im Zielformat und in der gewählten Pixeldichte, mit demselben Live-Style — inklusive aller eingeschalteten Overlays. Sobald er fertig gerendert ist, wird sein Canvas gemeinsam mit der Legende, einer Maßstabsleiste mit gerundeten Werten und der Quellenangabe aller aktiven Quellen auf ein Layout-Canvas gezeichnet.",
   "how.li1": "Papier: aktuelle Ansicht, A4 oder A3, quer oder hoch",
   "how.li2": "Auflösung: 96, 150 oder 300&nbsp;dpi — das gesamte Layout skaliert mit",
   "how.li3": "Legendenbilder und Farbfelder werden ins Blatt gezeichnet, nicht per Screenshot eingefügt",
   "how.li4": "PDF-Seiten haben echte Papierformate: ein A4-Export misst 297 × 210 mm und druckt ohne \"an Seite anpassen\"",
   "how.li5": "Kein Server, kein Upload — die Karte verlässt den Browser nie",
   "how.p2": "Im PDF liegt das fertige Blatt zentriert auf der Seite, mit 10&nbsp;mm Rand. Eingebettet wird es als PNG statt JPEG: Eine Karte besteht aus feinen Linien und kleiner Schrift — genau das, was JPEG-Artefakte ruinieren. <a href=\"https://github.com/parallax/jsPDF\">jsPDF</a> wird erst geladen, wenn tatsächlich jemand ein PDF anfordert — es ist das schwerste Modul im Client.",
-  "callout": "<strong>Exportiert wird, was Sie sehen — keine Vermessungsqualität</strong> Die Maßstabsleiste wird für den exportierten Ausschnitt berechnet, das Ergebnis ist aber kein maßstabsgetreuer Plot: Beschriftungen und Symbole skalieren mit der Pixeldichte. Ein serverseitiger Renderer für maßstabsgetreue PDFs lässt sich später hinter demselben Dialog ergänzen — die Schnittstelle ist dafür reserviert.",
+  "callout": "<strong>Exportiert wird, was zu sehen ist — keine Vermessungsqualität</strong> Die Maßstabsleiste wird für den exportierten Ausschnitt berechnet, das Ergebnis ist aber kein maßstabsgetreuer Plot: Beschriftungen und Symbole skalieren mit der Pixeldichte. Ein serverseitiger Renderer für maßstabsgetreue PDFs lässt sich später hinter demselben Dialog ergänzen — die Schnittstelle ist dafür reserviert.",
   "config.h2": "Konfiguration",
   "config.p1": "Drucken ist standardmäßig aktiv. Der <code>meta.title</code> wird als Blatttitel vorbelegt, und Layer-Legenden werden automatisch ins Blatt übernommen:",
   "config.h3": "Die Auswahl eingrenzen",
   "config.p2": "Ein <code>print</code>-Block auf oberster Ebene bestimmt, was der Dialog anbietet — praktisch, wenn eine Organisation genau ein Ausgabeformat auf genau einem Papierformat vorgeben will, ohne Diskussion:",
-  "config.p3": "Alles ist optional; die Standardwerte sind PNG und PDF, aktuelle Ansicht plus A4 in beiden Ausrichtungen, 96/150/300&nbsp;dpi und alle Blattelemente. Wer einen Eintrag aus <code>elements</code> streicht, entfernt ihn vom fertigen Blatt — eine Karte ohne Titelblock oder ohne Datum ist nur einen Key entfernt."
+  "config.p3": "Alles ist optional; die Standardwerte sind PNG und PDF, aktuelle Ansicht plus A4 in beiden Ausrichtungen, 96/150/300&nbsp;dpi und alle Blattelemente. Wer einen Eintrag aus <code>elements</code> streicht, entfernt ihn vom fertigen Blatt — eine Karte ohne Titelblock oder ohne Datum ist nur einen Eintrag entfernt."
 }

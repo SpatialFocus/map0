@@ -15,7 +15,7 @@ still drafts and will change without a deprecation path until 1.0. See
 ## The idea in one paragraph
 
 MapLibre made cartography declarative (the style spec is JSON). map0 extends the same idea to the
-*map client*: basemaps, overlay tree/TOC, legends, feature popups, print, globe, GPS, theming — all
+*web map client*: basemaps, overlay tree/TOC, legends, feature popups, print, globe, GPS, theming — all
 declared in a single, schema-validated JSON document that lives in a CMS field. It renders straight
 into the page (web component / script tag — no iframe, no backend) and looks like 2026: pretty,
 responsive, themable, accessible.

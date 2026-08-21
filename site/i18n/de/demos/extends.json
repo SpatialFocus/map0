@@ -3,7 +3,7 @@
   "eyebrow": "Konfiguration",
   "h1": "Config-Vererbung",
   "lede": "Fünfzig Karten in einer Organisation sollten nicht fünfzigmal dieselben drei Basemaps wiederholen. Eine gemeinsame Basis-Config definiert den Hausstandard; jede Karte hält nur fest, was bei ihr anders ist.",
-  "note": "<strong>Was Sie sehen:</strong> Drei Basemaps, der Home-Button, die Position der Legende und der Share-Link kommen alle aus der Basisdatei der Organisation. Diese Karte selbst deklariert nur einen Layer, eine Ansicht und ihre eigene Akzentfarbe.",
+  "note": "<strong>Was hier zu sehen ist:</strong> Drei Basemaps, der Home-Button, die Position der Legende und der Share-Link kommen alle aus der Basisdatei der Organisation. Diese Karte selbst deklariert nur einen Layer, eine Ansicht und ihre eigene Akzentfarbe.",
   "config.h2": "Die Karten-Config",
   "config.p": "Kurz, weil sie erbt:",
   "config.h3": "Die gemeinsame Basis",
@@ -13,5 +13,5 @@
   "merge.li2": "Arrays werden als Ganzes ersetzt — eine Layer-Liste ist eine bewusste Reihenfolge, keine Menge zum Mergen",
   "merge.li3": "Ketten bis zu drei Ebenen tief (global → Abteilung → Karte), mit Zykluserkennung",
   "merge.li4": "Relative <code>extends</code>-URLs werden relativ zu der Config-Datei aufgelöst, die sie deklariert",
-  "merge.callout": "<strong>Warum Arrays ersetzt werden</strong> Layer-Arrays zu mergen klingt bequem — bis Sie einen geerbten Layer entfernen, zwei davon umsortieren oder einem Redakteur erklären wollen, warum Layer drei aus dem Nichts aufgetaucht ist. Ersetzen ist vorhersehbar; und wo sich Wiederverwendung lohnt — Basemaps, Theming, Control-Defaults — ist es ohnehin genau das, was Sie wollen."
+  "merge.callout": "<strong>Warum Arrays ersetzt werden</strong> Layer-Arrays zu mergen klingt bequem — bis man einen geerbten Layer entfernt, zwei davon umsortiert oder einem Redakteur erklären will, warum Layer drei aus dem Nichts aufgetaucht ist. Ersetzen ist vorhersehbar; und wo sich Wiederverwendung lohnt — Basemaps, Theming, Control-Defaults — ist es ohnehin genau das, was man will."
 }

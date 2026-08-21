@@ -3,7 +3,7 @@
   "eyebrow": "Kartenfunktionen",
   "h1": "Popups &amp; Hover",
   "lede": "Was passiert, wenn jemand in die Karte klickt: drei Layer antworten gleichzeitig, und jeder formatiert seine Attribute anders.",
-  "note": "<strong>Ausprobieren:</strong> Fahren Sie mit der Maus über einen Brunnen oder eine Demo-Zone, um einen Tooltip zu sehen. Beim Klick wird die Geometrie hervorgehoben, solange das Popup geöffnet ist. Klicken Sie dorthin, wo sich Flächenwidmungsplan, Demo-Zone und Brunnen überlappen — das Popup gruppiert die Antworten pro Layer.",
+  "note": "<strong>Ausprobieren:</strong> Mit der Maus über einen Brunnen oder eine Demo-Zone fahren, um einen Tooltip zu sehen. Beim Klick wird die Geometrie hervorgehoben, solange das Popup geöffnet ist. Dorthin klicken, wo sich Flächenwidmungsplan, Demo-Zone und Brunnen überlappen — das Popup gruppiert die Antworten pro Layer.",
   "what.h2": "Was diese Demo zeigt",
   "what.li1": "Vektor-Layer werden im Browser abgefragt, WMS-Layer per GetFeatureInfo — parallel, in einem Popup",
   "what.li2": "<code>popup.content</code> rendert ein HTML-Template mit <code>{{property}}</code>-Platzhaltern",

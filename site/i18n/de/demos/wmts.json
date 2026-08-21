@@ -11,6 +11,6 @@
   "what.p": "Capabilities werden im Browser mit <a href=\"https://github.com/camptocamp/ogc-client\">@camptocamp/ogc-client</a> geparst — in einem Worker, damit ein XML-Dokument mit 30&nbsp;000 Zeilen die Karte nicht blockiert.",
   "callout": "<strong>Praxisnotiz: tote Mirrors</strong> basemap.at listet in seinen Capabilities fünf Kachel-Hosts, von denen vier im DNS nicht mehr auflösen. map0 prüft pro Kandidat eine echte Kachel und verwendet den ersten Host, der antwortet — eine Karte, die stillschweigend leer bleibt, ist der schlimmste denkbare Fehlerfall.",
   "config.h2": "Konfiguration",
-  "config.h3": "Optionale Schlüssel",
-  "config.p": "Ergänzen Sie <code>matrixSet</code>, <code>style</code> oder <code>format</code>, wenn ein Dienst mehrere anbietet und Sie nicht die Defaults von map0 wollen:"
+  "config.h3": "Optionale Einträge",
+  "config.p": "<code>matrixSet</code>, <code>style</code> oder <code>format</code> kommen dazu, wenn ein Dienst mehrere anbietet und die Defaults von map0 nicht passen:"
 }

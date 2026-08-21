@@ -3,7 +3,7 @@
   "h1": "Globus",
   "eyebrow": "Kartenfunktionen",
   "lede": "Eine echte Globus-Projektion, kein Plugin und keine zweite Rendering-Engine — der eine Vorteil, den MapLibre von Haus aus mitbringt und den kein OpenLayers-basierter Client gratis bekommt.",
-  "note": "<strong>Ausprobieren:</strong> Drehen Sie den Globus und wechseln Sie dann mit der Globus-Schaltfläche in der Kartensteuerung zwischen Globus und flachem Mercator. Zoomen Sie weit genug hinein, geht die Projektion von selbst in Mercator über.",
+  "note": "<strong>Ausprobieren:</strong> Den Globus drehen und dann mit der Globus-Schaltfläche in der Kartensteuerung zwischen Globus und flachem Mercator wechseln. Weit genug hineingezoomt, geht die Projektion von selbst in Mercator über.",
   "what.h2": "Was diese Demo zeigt",
   "what.li1": "<code>map.projection: \"globe\"</code> startet die Karte als Globus",
   "what.li2": "Das Globus-Bedienelement wechselt die Projektion zur Laufzeit — Overlays werden weiter gerendert",

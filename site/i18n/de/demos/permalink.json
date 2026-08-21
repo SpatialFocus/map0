@@ -3,7 +3,7 @@
   "eyebrow": "Kartenfunktionen",
   "h1": "Teilen &amp; Permalink",
   "lede": "„Schick mir den Link“ — die alltägliche Bitte in jeder Behörde. Der gesamte Kartenzustand steckt in der URL.",
-  "note": "<strong>Ausprobieren:</strong> Verschieben Sie die Karte, schalten Sie einen Layer um, ändern Sie die Deckkraft — die Adressleiste aktualisiert sich laufend. Der Teilen-Button (links oben) kopiert den aktuellen Link; öffnen Sie ihn in einem neuen Tab, und alles ist wieder da.",
+  "note": "<strong>Ausprobieren:</strong> Die Karte verschieben, einen Layer umschalten, die Deckkraft ändern — die Adressleiste aktualisiert sich laufend. Der Teilen-Button (links oben) kopiert den aktuellen Link; in einem neuen Tab geöffnet, ist alles wieder da.",
   "what.h2": "Was im Link steckt",
   "what.li1": "Ansicht: Zentrum, Zoom sowie Drehung/Neigung, wenn sie von der Nordausrichtung abweichen",
   "what.li2": "Die aktive Basemap",
@@ -11,7 +11,7 @@
   "what.li4": "Zur Laufzeit hinzugefügte Layer, mit ihrer vollständigen Definition",
   "what.p": "Gespeichert werden nur Deltas: Ein geteilter Link bleibt kurz und — wichtiger noch — erbt weiterhin spätere Config-Änderungen. Bekommt ein Layer morgen einen neuen Titel, zeigen ihn auch die Links von gestern.",
   "host.h2": "Im Zusammenspiel mit der Host-Seite",
-  "host.p1": "Der Zustand wird base64url-kodiert in einen einzigen Hash-Parameter geschrieben, standardmäßig <code>#map0=…</code>. Anderer Hash-Inhalt bleibt unberührt — eine Single-Page-App, die über den Hash routet, funktioniert also weiter; bei Kollisionen benennen Sie den Parameter einfach um:",
+  "host.p1": "Der Zustand wird base64url-kodiert in einen einzigen Hash-Parameter geschrieben, standardmäßig <code>#map0=…</code>. Anderer Hash-Inhalt bleibt unberührt — eine Single-Page-App, die über den Hash routet, funktioniert also weiter; bei Kollisionen lässt sich der Parameter einfach umbenennen:",
   "host.p2": "Aktualisierungen nutzen <code>history.replaceState</code> und sind entprellt — beim Verschieben der Karte sammeln sich also keine Einträge im Browser-Verlauf an.",
   "config.h2": "Konfiguration",
   "code.h2": "Aus Code"

@@ -5,7 +5,7 @@
 > One script tag plus one JSON config = a full-featured map on any web page.
 
 MapLibre made cartography declarative — the style spec is JSON. map0 extends the same idea to the
-*map client*: basemaps, layer tree, legends, feature popups, search, measuring, print, globe,
+*web map client*: basemaps, layer tree, legends, feature popups, search, measuring, print, globe,
 theming and languages are all declared in a single JSON document that can live in a CMS field. It
 renders straight into the page as a web component — no iframe, no backend, no build step required.
 
