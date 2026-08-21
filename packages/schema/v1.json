@@ -105,6 +105,11 @@
           "type": "boolean",
           "default": false,
           "description": "opt-in URL-hash view sync — superseded by the top-level \"permalink\" key"
+        },
+        "cooperativeGestures": {
+          "type": "boolean",
+          "default": false,
+          "description": "gestures need a modifier: Ctrl/⌘ + scroll to zoom, two fingers to pan — so a map embedded in a scrolling page does not trap one-finger scrolling"
         }
       }
     },

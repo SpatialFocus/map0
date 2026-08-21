@@ -70,6 +70,7 @@ export const MAP_KEYS = [
   "pitch",
   "projection",
   "hash",
+  "cooperativeGestures",
 ];
 export const PROJECTIONS = ["mercator", "globe"];
 export const BASEMAP_KEYS = [
@@ -393,6 +394,7 @@ export function validateConfig(input: unknown): ValidationResult {
       expectNumber(m.bearing, "$.map.bearing", err, -360, 360);
       expectNumber(m.pitch, "$.map.pitch", err, 0, 85);
       expectBoolean(m.hash, "$.map.hash", err);
+      expectBoolean(m.cooperativeGestures, "$.map.cooperativeGestures", err);
       expectEnum(m.projection, PROJECTIONS, "$.map.projection", err);
     }
   }

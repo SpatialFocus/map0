@@ -46,6 +46,12 @@ export interface MapConfig {
   projection?: "mercator" | "globe";
   /** opt-in URL-hash view sync (may clash with host-page routing) */
   hash?: boolean;
+  /**
+   * Scroll and touch gestures need a modifier: Ctrl/⌘ + scroll to zoom, two
+   * fingers to pan. For a map embedded in a scrolling page — one finger keeps
+   * scrolling the page instead of getting trapped panning the map.
+   */
+  cooperativeGestures?: boolean;
 }
 
 /* ------------------------------- basemaps ------------------------------- */

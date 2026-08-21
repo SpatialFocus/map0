@@ -11,5 +11,5 @@ export interface CoreEvents {
     entries: Array<{ code: string; label: string; text: string }>;
   };
   /** anything that went wrong on the map; `sourceId` is set for MapLibre source/tile errors */
-  error: { message: string; layerId?: string; sourceId?: string };
+  error: { message: string; layerId?: string; sourceId?: string; control?: "geolocate" };
 }

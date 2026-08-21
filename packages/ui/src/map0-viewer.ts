@@ -544,7 +544,12 @@ export class Map0Viewer extends LitElement {
             : null;
         }),
         core.events.on("coordinates", (e) => this.showCoordinates(e)),
-        core.events.on("error", (e) => this.emit("map0:error", e)),
+        core.events.on("error", (e) => {
+          /* control failures (geolocate) surface as a toast — on a phone the
+             button gives no other feedback than "nothing happened" */
+          if (e.control) this.notify("error", e.message);
+          this.emit("map0:error", e);
+        }),
       );
       if (cfg.controls.print) {
         core.map.addControl(
@@ -797,7 +802,18 @@ export class Map0Viewer extends LitElement {
     const open = this._searchResults.length > 0 || this._searchEmpty;
     return html`
       <div class="search" part="search" ?data-expanded=${this._searchExpanded}>
-        <div class="search-field">
+        <div
+          class="search-field"
+          @click=${(e: Event) => {
+            /* Collapsed (narrow containers), the input is 0px wide — nothing
+               tappable ever focuses it, so the search could not be opened at
+               all on phones. A tap anywhere on the field expands it and hands
+               the input focus (state set here too: an unfocused document
+               swallows the focus event the input's @focus relies on). */
+            this._searchExpanded = true;
+            (e.currentTarget as HTMLElement).querySelector("input")?.focus();
+          }}
+        >
           ${icons.search}
           <input
             type="search"

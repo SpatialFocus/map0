@@ -50,6 +50,7 @@ export function applyControls(
   t: Translate,
   fullscreenContainer: HTMLElement | undefined,
   initialView: InitialView,
+  onGeolocateError?: (message: string) => void,
 ): void {
   const c = cfg.controls;
 
@@ -65,14 +66,15 @@ export function applyControls(
     );
   }
   if (c.geolocate) {
-    map.addControl(
-      new GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: c.geolocate.follow,
-        showUserLocation: true,
-      }),
-      "top-left",
-    );
+    const geolocate = new GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: c.geolocate.follow,
+      showUserLocation: true,
+    });
+    /* denied permission or no fix: without this the tap just does nothing —
+       on a phone there is no tooltip to explain the greyed-out button */
+    geolocate.on("error", () => onGeolocateError?.(t("geolocate.failed")));
+    map.addControl(geolocate, "top-left");
   }
   if (c.globe) {
     map.addControl(new GlobeControl(), "top-left");

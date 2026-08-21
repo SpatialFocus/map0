@@ -1082,6 +1082,60 @@ export const componentStyles = css`
     .stage:has(.basemaps) .legend[data-pos="bottom-left"] {
       bottom: 84px;
     }
+    /* Closed, the panels shrink to their icon — like the search does. The
+       full-width stretch above is for the OPEN state; a closed header with
+       "Map layers" / "Legend" written out covers half the map for nothing. */
+    .toc:not([data-open]),
+    .stage[data-search] .toc:not([data-open]) {
+      left: auto;
+      right: 10px;
+      width: auto;
+    }
+    .legend:not([data-open]) {
+      width: auto;
+      left: auto;
+      right: 10px;
+    }
+    .legend:not([data-open])[data-pos="bottom-left"] {
+      left: 10px;
+      right: auto;
+    }
+    .legend:not([data-open])[data-pos="top-left"] {
+      left: 56px;
+      right: auto;
+    }
+    .toc:not([data-open]) .panel-header > span,
+    .toc:not([data-open]) .panel-header .chevron,
+    .legend:not([data-open]) .panel-header > span,
+    .legend:not([data-open]) .panel-header .chevron {
+      display: none;
+    }
+  }
+
+  /* fingers are not cursors: MapLibre's 29px buttons are well under the 44px
+     touch-target guideline, and "the button did not react" reads as broken */
+  @media (pointer: coarse) {
+    .maplibregl-ctrl-group button {
+      width: 40px;
+      height: 40px;
+    }
+  }
+
+  /* iOS has no Fullscreen API for arbitrary elements, so MapLibre falls back
+     to a CSS class toggled on its container — the HOST element here. MapLibre's
+     stylesheet lives in our shadow root and cannot reach the host, so without
+     this rule the fullscreen button silently did nothing on iPhones.
+     !important throughout: host pages size the element (that is the deal), and
+     document rules would otherwise beat a :host rule. */
+  :host(.maplibregl-pseudo-fullscreen) {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    z-index: 99999 !important;
   }
 
   /* light touch on MapLibre ctrl corners so panels don't collide */

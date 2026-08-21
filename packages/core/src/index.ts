@@ -213,6 +213,7 @@ async function buildCore(
     ...(m.maxZoom !== undefined ? { maxZoom: m.maxZoom } : {}),
     ...(m.maxBounds ? { maxBounds: m.maxBounds } : {}),
     ...(m.hash && !shareParam ? { hash: "view" } : {}), // permalink supersedes map.hash
+    ...(m.cooperativeGestures ? { cooperativeGestures: true } : {}),
     attributionControl: false,
     ...(maplibreLocale(locale) ? { locale: maplibreLocale(locale) } : {}),
   });
@@ -248,7 +249,9 @@ async function buildCore(
   );
 
   const initialView: InitialView = { center: m.center, zoom: m.zoom, bounds: m.bounds };
-  applyControls(map, cfg, t, opts.fullscreenTarget, initialView);
+  applyControls(map, cfg, t, opts.fullscreenTarget, initialView, (message) =>
+    events.emit("error", { message, control: "geolocate" }),
+  );
 
   /* ---- share/permalink plumbing (F10.1) ---- */
   const buildShareState = (): ShareState => {

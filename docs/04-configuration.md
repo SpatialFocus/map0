@@ -100,7 +100,9 @@ Unset, the config decides as usual.
     "maxZoom": 20,
     "maxBounds": [9.4, 46.3, 17.3, 49.1],  // optional pan constraint (Austria)
     "projection": "mercator",              // "mercator" | "globe" (initial; toggle via control)
-    "hash": false                          // opt-in URL-hash view sync
+    "hash": false,                         // opt-in URL-hash view sync
+    "cooperativeGestures": false           // true: Ctrl/⌘+scroll to zoom, two fingers to pan —
+                                           // for maps embedded in a scrolling page
   },
 
   "basemaps": [

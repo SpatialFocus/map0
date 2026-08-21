@@ -2,7 +2,7 @@
   "$schema": "https://map0.net/schema/v1.json",
   "version": 1,
   "meta": { "title": "Vienna — three sources, one document" },
-  "map": { "center": [16.3725, 48.2083], "zoom": 12.2 },
+  "map": { "center": [16.3725, 48.2083], "zoom": 12.2, "cooperativeGestures": true },
   "basemaps": [
     {
       "id": "grau",

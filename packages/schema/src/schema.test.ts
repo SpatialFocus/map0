@@ -41,6 +41,16 @@ describe("validateConfig", () => {
     expect(paths).toContain("$.layers[0].children[0].layers");
   });
 
+  it("rejects a non-boolean cooperativeGestures", () => {
+    const result = validateConfig({
+      version: 1,
+      map: { cooperativeGestures: "yes" },
+      basemaps: [{ type: "style", url: "https://e.org/s.json" }],
+    });
+    expect(result.valid).toBe(false);
+    expect(result.errors[0]?.path).toBe("$.map.cooperativeGestures");
+  });
+
   it("validates opacity range", () => {
     const r = validateConfig({
       ...minimal,
@@ -402,7 +412,7 @@ describe("validateConfig — invariants (R3)", () => {
       version: 1,
       $schema: "https://map0.example.org/schema/v1.json",
       meta: { title: "Demo" },
-      map: { center: [16.37, 48.2], zoom: 12, projection: "globe", hash: false },
+      map: { center: [16.37, 48.2], zoom: 12, projection: "globe", hash: false, cooperativeGestures: true },
       basemaps: [{ type: "style", url: "https://e.org/style.json", title: "Karte", default: true }],
       layers: [
         {

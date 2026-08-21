@@ -62,6 +62,7 @@ const dictionaries: Record<string, Record<string, string>> = {
     "error.title": "map0 configuration error",
     "error.intro": "The map could not start. Please fix the configuration:",
     "control.home": "Initial view",
+    "geolocate.failed": "Could not determine your location — check the location permission",
   },
   de: {
     "layers.title": "Kartenebenen",
@@ -124,6 +125,7 @@ const dictionaries: Record<string, Record<string, string>> = {
     "error.title": "map0-Konfigurationsfehler",
     "error.intro": "Die Karte konnte nicht starten. Bitte Konfiguration korrigieren:",
     "control.home": "Ausgangsansicht",
+    "geolocate.failed": "Standort konnte nicht ermittelt werden — Standortfreigabe prüfen",
   },
 };
 
