@@ -45,7 +45,7 @@
     {
       "route": "/schema/*",
       "headers": {
-        "cache-control": "public, max-age=3600",
+        "cache-control": "no-cache",
         "access-control-allow-origin": "*"
       }
     }

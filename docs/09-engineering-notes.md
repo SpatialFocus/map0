@@ -360,18 +360,35 @@ old ones. That combination breaks on its own: a browser holding the previous `ma
 chunk names that are now 404, and the demo shows no map at all. Its own note ("run `pnpm
 demo:standalone`") then points at the wrong cause.
 
-Cloudflare sits in front of the site and **raises short browser TTLs to its own Browser Cache TTL**
-(4 h at the time of writing) while leaving longer ones alone — so `max-age=3600` on the origin was
-served as `max-age=14400`, and a year-long `immutable` came through untouched. A short max-age is
-therefore not a fix; the entry must be `no-cache`, which Cloudflare does respect (HTML proves it:
-`no-cache` in, `no-cache` and `cf-cache-status: DYNAMIC` out).
-
 `staticwebapp.config.json` routes `/standalone/map0.js` and `map0-ssr.js` to `no-cache` and leaves
 the hashed chunks around them on a short max-age. Deliberately **not** `immutable` for the chunks,
 even though hashed names would allow it: Azure's route patterns are matched top-down, and an entry
 that slipped past its exact-path rule would inherit a year of caching — a permanently stale bundle
 for returning visitors, fixable only by renaming the file. Short everywhere fails soft; the
 bandwidth is one demo page's worth.
+
+**That header does not reach the browser, though**, and the reason is worth knowing before
+debugging cache behaviour on this site: Cloudflare's *Browser Cache TTL* (4 h at the time of
+writing) acts as a **floor** on everything Cloudflare itself caches, which it decides by file
+extension. Measured on one deploy:
+
+| URL | origin sends | client receives | `cf-cache-status` |
+| --- | --- | --- | --- |
+| `/assets/<hash>.js` | 1 year, `immutable` | unchanged | `HIT` |
+| `/standalone/map0.js` | `no-cache` | `max-age=14400` | `REVALIDATED` |
+| a page (HTML) | `no-cache` | unchanged | `DYNAMIC` |
+| `/standalone/*.mjs`, `/schema/v1.json` | `max-age=3600` / `no-cache` | unchanged | `DYNAMIC` |
+
+So TTLs *below* four hours get raised (3600 and `no-cache` alike), longer ones pass, and anything
+Cloudflare does not cache — HTML, `.mjs`, `.json` — passes untouched. `cf-cache-status:
+REVALIDATED` is the useful signal that the origin's `no-cache` did arrive: the edge revalidates on
+every request, so it never serves a stale bundle. Only the browser-facing header is rewritten.
+
+Two ways out, both outside this file: set **Browser Cache TTL → "Respect Existing Headers"** in
+Cloudflare (Caching → Configuration), which makes the origin authoritative everywhere and costs
+`/assets/*` nothing since its year comes from the origin anyway; or give the standalone bundle a
+versioned path (`/standalone/<version>/map0.js`), which makes the entry immutable by construction
+and independent of any dashboard setting.
 
 ### 5.1 Site i18n: two languages from one source, at build time
 
