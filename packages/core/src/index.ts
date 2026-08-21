@@ -8,7 +8,7 @@ import {
   type ValidationError,
 } from "@map0/schema";
 import { BasemapManager, basemapStyle, resolveBasemapStyle, type OverlayIds } from "./basemaps.js";
-import { applyControls, type InitialView } from "./controls.js";
+import { applyControls, geolocationAvailable, type InitialView } from "./controls.js";
 import type { CoreEvents } from "./events.js";
 import { formatCoordinatesAsync } from "./coordinates.js";
 import { wireFeatureInfo } from "./featureinfo.js";
@@ -190,6 +190,8 @@ async function buildCore(
       : cfg.defaultBasemapId;
   const initialBasemap = cfg.basemaps.find((b) => b.id === sharedBasemapId)!;
   const initialStyle = await resolveBasemapStyle(initialBasemap, background);
+  /* probed while there is no map yet — awaiting later would race style.load */
+  const geolocateOk = cfg.controls.geolocate !== false && (await geolocationAvailable());
   const m = cfg.map;
 
   const map = new MaplibreMap({
@@ -249,7 +251,7 @@ async function buildCore(
   );
 
   const initialView: InitialView = { center: m.center, zoom: m.zoom, bounds: m.bounds };
-  applyControls(map, cfg, t, opts.fullscreenTarget, initialView, (message) =>
+  applyControls(map, cfg, t, opts.fullscreenTarget, initialView, geolocateOk, (message) =>
     events.emit("error", { message, control: "geolocate" }),
   );
 

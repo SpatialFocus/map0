@@ -44,12 +44,34 @@ export interface InitialView {
   bounds?: [number, number, number, number];
 }
 
+/**
+ * The same probe MapLibre runs internally (it is not exported): no geolocation
+ * on the navigator, or a permission already denied — an insecure origin, a
+ * user's earlier "never" — means the button could not possibly do anything.
+ * MapLibre then renders it greyed-out with a slash, which on a phone (no
+ * tooltip) just reads as broken; we leave the button out entirely instead.
+ *
+ * Awaited BEFORE the map is created (see buildCore): an await between map
+ * creation and the style.load hook would miss the event entirely on a basemap
+ * that loads instantly (type "empty").
+ */
+export async function geolocationAvailable(): Promise<boolean> {
+  if (typeof navigator === "undefined" || !navigator.geolocation) return false;
+  if (!navigator.permissions?.query) return true;
+  try {
+    return (await navigator.permissions.query({ name: "geolocation" })).state !== "denied";
+  } catch {
+    return true; // iOS ≤16 rejects the query yet supports geolocation
+  }
+}
+
 export function applyControls(
   map: MapLibreMap,
   cfg: NormalizedConfig,
   t: Translate,
   fullscreenContainer: HTMLElement | undefined,
   initialView: InitialView,
+  geolocateAvailable: boolean,
   onGeolocateError?: (message: string) => void,
 ): void {
   const c = cfg.controls;
@@ -65,14 +87,14 @@ export function applyControls(
       "top-left",
     );
   }
-  if (c.geolocate) {
+  if (c.geolocate && geolocateAvailable) {
     const geolocate = new GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: c.geolocate.follow,
       showUserLocation: true,
     });
-    /* denied permission or no fix: without this the tap just does nothing —
-       on a phone there is no tooltip to explain the greyed-out button */
+    /* a fix can still fail at runtime (denied on the prompt, no signal):
+       without this the tap just does nothing */
     geolocate.on("error", () => onGeolocateError?.(t("geolocate.failed")));
     map.addControl(geolocate, "top-left");
   }
