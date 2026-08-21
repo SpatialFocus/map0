@@ -192,8 +192,13 @@ export const DEMOS: Demo[] = [
     id: "lazy",
     title: "Lazy loading",
     titleDe: "Lazy Loading",
-    blurb: "A map below the fold costs 20 KB until someone scrolls to it.",
-    blurbDe: "Eine Karte unterhalb des sichtbaren Bereichs kostet 20 KB — bis jemand hinscrollt.",
+    /* No figure here on purpose: the gallery is rendered at runtime, so the
+       build-time number fill (see fillNumbers in i18n/plugin.ts) cannot reach
+       this string — and a typed one drifts, as "20 KB" did while the page it
+       links to had moved on to 31. The measured figures live on that page. */
+    blurb: "A map below the fold costs only the custom element until someone scrolls to it.",
+    blurbDe:
+      "Eine Karte unterhalb des sichtbaren Bereichs kostet nur das Custom Element — bis jemand hinscrollt.",
     group: "Integration",
     icon: "🪶",
   },

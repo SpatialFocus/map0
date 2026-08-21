@@ -42,6 +42,13 @@
         background: var(--border);
         margin: 0 4px;
       }
+      /* thumbs need more than the 34px a mouse is happy with */
+      @media (pointer: coarse) {
+        .swatches button {
+          min-height: 40px;
+          padding: 8px 14px;
+        }
+      }
     </style>
     <script type="module" src="/demos/demo.ts"></script>
   </head>

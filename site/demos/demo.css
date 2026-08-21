@@ -343,6 +343,11 @@ code {
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   padding: 1px 5px;
   border-radius: 5px;
+  /* prose carries service URLs inline, and one of them (the WMTS capabilities
+     URL on the add-layer demo) was wider than a phone: an unbreakable word
+     widens the whole page, so let long ones break. Short spans are untouched —
+     this only applies when the word does not fit. */
+  overflow-wrap: anywhere;
 }
 
 ul.checks {
@@ -866,7 +871,23 @@ footer.site a.footmark {
   .topbar .wrap {
     padding: 0 16px;
   }
+  /* leave the page visible around the map: a viewer taller than this reads as
+     "the map IS the page" and a thumb has nowhere left to scroll from */
   map0-viewer {
-    height: 66vh;
+    height: min(66vh, 460px);
+  }
+}
+
+/* Fingers, not cursors: the page's own controls are sized for a mouse (the
+   copy button on a code block is 25px tall). 40px matches what the viewer's
+   map controls use on coarse pointers. */
+@media (pointer: coarse) {
+  figure.code .copy {
+    min-height: 40px;
+    padding: 8px 14px;
+  }
+  .validator-buttons button {
+    min-height: 40px;
+    padding: 8px 14px;
   }
 }
