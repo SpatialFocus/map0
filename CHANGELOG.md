@@ -20,12 +20,6 @@ do not edit by hand.
 * **site:** attribution and legal notes for the COG demo data ([ec897ab](https://github.com/SpatialFocus/map0/commit/ec897ab5e5b8cef57f8e2f5fcf6a3d735e5eea06))
 * **site:** Text editing ([48342dd](https://github.com/SpatialFocus/map0/commit/48342ddf73f96c9115ffaab7bace099aea27b192))
 
-# Changelog
-
-Releases of the `map0-viewer` npm package. Generated from the
-[conventional commits](https://www.conventionalcommits.org) by `pnpm release` (release-it) —
-do not edit by hand.
-
 ## [0.1.0](https://github.com/SpatialFocus/map0/compare/v0.0.5...v0.1.0) (2026-08-20)
 
 ### Features
@@ -35,12 +29,6 @@ do not edit by hand.
 ### Bug Fixes
 
 * **measure:** stop area polygons from breaking line rendering ([16fb06f](https://github.com/SpatialFocus/map0/commit/16fb06f370edd4a2fb5a498da253cff9584c88c2))
-
-# Changelog
-
-Releases of the `map0-viewer` npm package. Generated from the
-[conventional commits](https://www.conventionalcommits.org) by `pnpm release` (release-it) —
-do not edit by hand.
 
 ## [0.0.5](https://github.com/SpatialFocus/map0/compare/v0.0.4...v0.0.5) (2026-08-19)
 
