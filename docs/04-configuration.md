@@ -197,6 +197,10 @@ inside the config it would gate. It mirrors `<img loading>`:
         "continuous": true,                 // default false = discrete classes
         "reverse": true
       },                                    // legend swatches are derived from this ramp
+                                            // — or classify explicitly instead of a ramp:
+                                            // "color": { "classes": [
+                                            //   { "value": 1, "color": "#c22f2f", "label": "sealed" },
+                                            //   { "from": 2, "to": 5, "color": "#67a9cf" } ] }
                                             // DEM instead? "hillshade": true — or
                                             // { "exaggeration": 0.6, "illuminationDirection": 315,
                                             //   "shadowColor": "…" } (mutually exclusive w/ color)
@@ -309,6 +313,17 @@ or 12 classes depending on the palette) and `Carto<Palette>` (`CartoEarth`, `Car
 and the palettes themselves are documented at [colorbrewer2.org](https://colorbrewer2.org) and
 [carto.com/carto-colors](https://carto.com/carto-colors/). A name map0 does not recognise fails
 fast: the layer goes to error state with *"… is not a supported color scheme"*.
+
+**COG explicit classes** (`color.classes`, instead of a ramp): an array of classes, each an exact
+`value` (categorical/binary rasters) or a `from`/`to` range, with a hex `color` (8-digit = with
+alpha) and an optional legend `label`. Ranges include `from` and exclude `to` — except the class
+with the highest `to`, which includes it, so the data maximum never falls off the top class; there
+is deliberately no inclusive/exclusive knob. Exact values win over ranges; pixels matching no class
+(and noData pixels) are transparent, which doubles as a way to blank out irrelevant value ranges.
+Values are compared after the COG's scale/offset are applied — the numbers in the config are the
+real-world values. One caveat: the underlying color function is keyed by the COG URL, so two layers
+reading the **same file** cannot mix `classes` with a ramp/hillshade rendering (see engineering
+notes).
 
 ## Runtime layer management (F3)
 

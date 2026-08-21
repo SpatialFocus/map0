@@ -189,7 +189,7 @@ try {
 
   /* -- 2: the COG path — same bundle, different config -- */
   await page.evaluate(() => {
-    document.querySelector("map0-viewer").setAttribute("config-src", "/configs/cog.map0.json");
+    document.querySelector("map0-viewer").setAttribute("config-src", "/configs/cog-terrain.map0.json");
   });
   await page.waitForFunction(
     () => {
@@ -220,7 +220,7 @@ try {
       demLayer: api.map.getLayer("m0l-dgm")?.type,
       statuses: layers.map((l) => `${l.id}:${l.status}`).join(" "),
       allReady: layers.every((l) => l.status === "ready"),
-      rampEntries: byId("kriging")?.legend?.entries?.length ?? 0,
+      rampEntries: byId("dgm-elevation")?.legend?.entries?.length ?? 0,
     };
   });
   record(

@@ -166,8 +166,11 @@ export interface RasterLayerDef extends LayerCommon {
   tileSize?: number;
 }
 
-/** single-band value → color mapping for a "cog" layer */
-export interface CogColorDef {
+/** single-band value → color mapping for a "cog" layer: a built-in ramp or explicit classes */
+export type CogColorDef = CogColorRampDef | CogColorClassesDef;
+
+/** built-in color ramp stretched over [min, max] */
+export interface CogColorRampDef {
   /** built-in ramp name (ColorBrewer/CARTOColors), e.g. "BrewerSpectral7" or "CartoEarth" */
   scheme: string;
   /** data value mapped to the first ramp color */
@@ -178,6 +181,31 @@ export interface CogColorDef {
   continuous?: boolean;
   /** reverse the ramp; default false */
   reverse?: boolean;
+}
+
+/** explicit classification: each pixel gets the color of the class it falls into */
+export interface CogColorClassesDef {
+  classes: CogColorClassDef[];
+}
+
+/**
+ * One class: either an exact `value` (categorical rasters) or a `from`/`to`
+ * range. Ranges include `from` and exclude `to` — except the class with the
+ * highest `to`, which includes it, so the data maximum is never unstyled.
+ * Exact values win over ranges; pixels matching no class are transparent
+ * (as are noData pixels).
+ */
+export interface CogColorClassDef {
+  /** exact data value (compared after the COG's scale/offset are applied) */
+  value?: number;
+  /** range start, inclusive */
+  from?: number;
+  /** range end, exclusive (inclusive for the class with the highest "to") */
+  to?: number;
+  /** hex color, e.g. "#ef8a62" — 3, 6, or 8 digits (8 = with alpha) */
+  color: string;
+  /** legend text; default: the value, or "from – to" */
+  label?: string;
 }
 
 /** hillshade rendering options for a "cog" DEM layer (MapLibre hillshade paint) */

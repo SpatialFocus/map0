@@ -109,6 +109,94 @@ describe("validateConfig", () => {
     expect(paths).toContain("$.layers[0].color.continuous");
   });
 
+  it("accepts a cog layer classified by exact values and ranges", () => {
+    const r = validateConfig({
+      ...minimal,
+      layers: [
+        {
+          type: "cog",
+          url: "https://example.org/binary.tif",
+          color: {
+            classes: [
+              { value: 0, color: "#67a9cf", label: "unversiegelt" },
+              { value: 1, color: "#ef8a62" },
+              { from: 2, to: 5, color: "#999" },
+              { from: 5, to: 10, color: "#33333380", label: "5 – 9" },
+            ],
+          },
+        },
+      ],
+    });
+    expect(r.errors).toEqual([]);
+  });
+
+  it("flags broken cog classes with precise paths", () => {
+    const r = validateConfig({
+      ...minimal,
+      layers: [
+        {
+          type: "cog",
+          url: "https://example.org/binary.tif",
+          color: {
+            scheme: "BrewerSpectral9", // cannot combine a ramp with classes
+            classes: [
+              { value: 0, color: "red" }, // not hex
+              { value: 0, color: "#fff" }, // duplicate value
+              { value: 1, from: 2, to: 3, color: "#fff" }, // value and range together
+              { from: 3, to: 3, color: "#fff" }, // empty range
+              { color: "#fff" }, // neither value nor range
+            ],
+          },
+        },
+      ],
+    });
+    const paths = r.errors.map((e) => e.path);
+    expect(paths).toContain("$.layers[0].color.scheme");
+    expect(paths).toContain("$.layers[0].color.classes[0].color");
+    expect(paths).toContain("$.layers[0].color.classes[1].value");
+    expect(paths).toContain("$.layers[0].color.classes[2]");
+    expect(paths).toContain("$.layers[0].color.classes[3].to");
+    expect(paths).toContain("$.layers[0].color.classes[4]");
+  });
+
+  it("rejects overlapping class ranges but lets them touch", () => {
+    const touching = validateConfig({
+      ...minimal,
+      layers: [
+        {
+          type: "cog",
+          url: "https://example.org/data.tif",
+          color: {
+            classes: [
+              { from: 0, to: 10, color: "#fff" },
+              { from: 10, to: 20, color: "#000" },
+            ],
+          },
+        },
+      ],
+    });
+    expect(touching.errors).toEqual([]);
+
+    const overlapping = validateConfig({
+      ...minimal,
+      layers: [
+        {
+          type: "cog",
+          url: "https://example.org/data.tif",
+          color: {
+            classes: [
+              { from: 0, to: 10, color: "#fff" },
+              { from: 9, to: 20, color: "#000" },
+            ],
+          },
+        },
+      ],
+    });
+    expect(
+      overlapping.errors.some((e) => e.path === "$.layers[0].color.classes[1]"),
+    ).toBe(true);
+  });
+
   it("rejects unknown layer types", () => {
     const r = validateConfig({ ...minimal, layers: [{ type: "wfs", url: "x" }] });
     expect(r.errors.some((e) => e.path === "$.layers[0].type")).toBe(true);

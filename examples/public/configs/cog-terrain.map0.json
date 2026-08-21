@@ -1,0 +1,45 @@
+{
+  "$schema": "https://map0.net/schema/v1.json",
+  "version": 1,
+  "meta": {
+    "title": "COG terrain",
+    "description": "One DEM file, two renderings: hillshade and a hypsometric color ramp."
+  },
+  "map": { "bounds": [12.45, 46.95, 13.05, 47.3] },
+  "basemaps": [
+    {
+      "id": "grau",
+      "title": "basemap.at Grey",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at",
+      "default": true
+    },
+    { "id": "none", "title": "None", "type": "empty" }
+  ],
+  "layers": [
+    {
+      "id": "dgm",
+      "type": "cog",
+      "title": "Hillshade (BEV DGM 25 m)",
+      "url": "/data/bev-dgm25-grossglockner-3857.tif",
+      "hillshade": { "exaggeration": 0.6 },
+      "attribution": "Geländemodell © BEV, data.bev.gv.at (CC BY 4.0)",
+      "metadata": {
+        "url": "https://geoportal.inspire.gv.at/metadatensuche/inspire/ger/catalog.search#/metadata/6a853c17-8960-44a4-81fb-18e0549a1c80",
+        "title": "Digitales Geländehöhenmodell – Höhenraster 25m, Stichtag 31.12.2022 (BEV)"
+      }
+    },
+    {
+      "id": "dgm-elevation",
+      "type": "cog",
+      "title": "Elevation (CartoEarth ramp)",
+      "url": "/data/bev-dgm25-grossglockner-3857.tif",
+      "color": { "scheme": "CartoEarth", "min": 800, "max": 3800 },
+      "opacity": 0.7,
+      "attribution": "Geländemodell © BEV, data.bev.gv.at (CC BY 4.0)"
+    }
+  ],
+  "controls": { "legend": { "open": true }, "home": true },
+  "i18n": { "locale": "en" }
+}

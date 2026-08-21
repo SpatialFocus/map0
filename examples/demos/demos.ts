@@ -40,7 +40,7 @@ export const DEMOS: Demo[] = [
   {
     id: "cog",
     title: "Cloud Optimized GeoTIFF",
-    blurb: "Rasters read straight from static storage — RGB imagery, color ramps and hillshade.",
+    blurb: "Rasters read straight from static storage — imagery, terrain and classified values.",
     group: "Data sources",
     icon: "🛰️",
   },

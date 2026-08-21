@@ -501,7 +501,12 @@ export const componentStyles = css`
     width: 14px;
     height: 14px;
     border-radius: 3px;
-    background: var(--swatch);
+    /* composite the color over white, like a legend on paper — a semi-transparent
+       color must not mix with the panel background (dark theme!) but read like it
+       does over a light basemap */
+    background:
+      linear-gradient(var(--swatch), var(--swatch)),
+      #fff;
     border: 1px solid rgba(0, 0, 0, 0.18);
   }
   .swatch[data-shape="line"] {

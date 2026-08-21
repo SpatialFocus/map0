@@ -6,7 +6,12 @@ import {
   normalizeLegendUrl,
   WmsAdapter,
 } from "./adapters/wms.js";
-import { buildCogUrl, cogLegendEntries } from "./adapters/cog.js";
+import {
+  buildCogUrl,
+  classColorFunction,
+  classLegendEntries,
+  cogLegendEntries,
+} from "./adapters/cog.js";
 import { expandSimpleStyle } from "./adapters/geojson.js";
 import { deriveFromStyleLayers, entryFromPaint } from "./adapters/legend-derive.js";
 import { escapeHtml, renderFields, renderTemplate } from "./template.js";
@@ -140,6 +145,75 @@ describe("cog", () => {
 
   it("returns no legend for a degenerate range", () => {
     expect(cogLegendEntries(() => [0, 0, 0], { min: 5, max: 5 })).toEqual([]);
+  });
+
+  /* run the per-pixel function the way the protocol does: one pixel at a time */
+  const paint = (
+    fn: ReturnType<typeof classColorFunction>,
+    value: number,
+    metadata: { offset: number; scale: number; noData?: number },
+  ): number[] => {
+    const rgba = new Uint8ClampedArray(4);
+    fn(new Float64Array([value]), rgba, { ...metadata, images: [] });
+    return [...rgba];
+  };
+  const identity = { offset: 0, scale: 1 };
+
+  it("classes: colors exact values, leaves everything else transparent", () => {
+    const fn = classColorFunction([
+      { value: 0, color: "#67a9cf" },
+      { value: 1, color: "#ef8a62" },
+    ]);
+    expect(paint(fn, 0, identity)).toEqual([0x67, 0xa9, 0xcf, 255]);
+    expect(paint(fn, 1, identity)).toEqual([0xef, 0x8a, 0x62, 255]);
+    expect(paint(fn, 2, identity)).toEqual([0, 0, 0, 0]);
+    expect(paint(fn, 0.5, identity)).toEqual([0, 0, 0, 0]);
+  });
+
+  it("classes: ranges are [from, to) and the highest to is inclusive", () => {
+    const fn = classColorFunction([
+      { from: 0, to: 10, color: "#111" },
+      { from: 10, to: 20, color: "#222" },
+    ]);
+    expect(paint(fn, 0, identity)).toEqual([0x11, 0x11, 0x11, 255]);
+    expect(paint(fn, 9.99, identity)).toEqual([0x11, 0x11, 0x11, 255]);
+    expect(paint(fn, 10, identity)).toEqual([0x22, 0x22, 0x22, 255]); // boundary → upper class
+    expect(paint(fn, 20, identity)).toEqual([0x22, 0x22, 0x22, 255]); // data maximum stays styled
+    expect(paint(fn, 20.01, identity)).toEqual([0, 0, 0, 0]);
+    expect(paint(fn, -1, identity)).toEqual([0, 0, 0, 0]);
+  });
+
+  it("classes: exact values win over ranges; gaps stay transparent", () => {
+    const fn = classColorFunction([
+      { from: 0, to: 10, color: "#111" },
+      { value: 5, color: "#fff" },
+      { from: 20, to: 30, color: "#333" },
+    ]);
+    expect(paint(fn, 5, identity)).toEqual([255, 255, 255, 255]);
+    expect(paint(fn, 15, identity)).toEqual([0, 0, 0, 0]); // gap between ranges
+  });
+
+  it("classes: noData, NaN and fill pixels are transparent; scale/offset apply", () => {
+    const fn = classColorFunction([{ value: 0.03, color: "#ff0000cc" }]);
+    /* raw 3 with scale 0.01 → 0.03 despite float rounding; alpha from #…cc */
+    expect(paint(fn, 3, { offset: 0, scale: 0.01 })).toEqual([255, 0, 0, 0xcc]);
+    expect(paint(fn, 255, { ...identity, noData: 255 })).toEqual([0, 0, 0, 0]);
+    expect(paint(fn, NaN, identity)).toEqual([0, 0, 0, 0]);
+    expect(paint(fn, Infinity, identity)).toEqual([0, 0, 0, 0]);
+  });
+
+  it("classes: derives one legend entry per class, labels defaulting to the values", () => {
+    expect(
+      classLegendEntries([
+        { value: 1, color: "#ef8a62", label: "versiegelt" },
+        { value: 0, color: "#67a9cf" },
+        { from: 2, to: 5, color: "#999999" },
+      ]),
+    ).toEqual([
+      { label: "versiegelt", color: "#ef8a62", shape: "square" },
+      { label: "0", color: "#67a9cf", shape: "square" },
+      { label: "2 – 5", color: "#999999", shape: "square" },
+    ]);
   });
 });
 

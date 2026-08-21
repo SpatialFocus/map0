@@ -48,7 +48,8 @@ style-JSON basemaps · GeoJSON (incl. clustering) · PMTiles.
 **Update 2026-08-19 — COG pulled forward.** `type: "cog"` shipped (RGB/grayscale imagery +
 single-band color ramps) on @geomatico/maplibre-cog-protocol **before** its 1.0, pinned at ^0.9.2 —
 a deliberate exception to the "wait for 1.0" gate in the roadmap: the API surface map0 touches
-(`cogProtocol`, `getCogMetadata`, `colorScale`) is small, the library is actively maintained
+(`cogProtocol`, `getCogMetadata`, `colorScale`, `setColorFunction` since `color.classes`) is
+small, the library is actively maintained
 (0.9.2 released 2026-08-17), and the whole dependency loads as a lazy chunk only when a config
 contains a cog layer. Consequence of the pin: review the changelog before any bump; `getCogMetadata`
 is documented as unstable upstream. EPSG:3857-only fits D-02 (the protocol does not reproject; the

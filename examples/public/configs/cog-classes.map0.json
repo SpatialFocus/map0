@@ -1,0 +1,36 @@
+{
+  "$schema": "https://map0.net/schema/v1.json",
+  "version": 1,
+  "meta": {
+    "title": "COG classification",
+    "description": "A binary raster styled by exact pixel values with hand-picked colors."
+  },
+  "map": { "bounds": [14.38, 48.01, 14.47, 48.08] },
+  "basemaps": [
+    {
+      "id": "grau",
+      "title": "basemap.at Grey",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at",
+      "default": true
+    },
+    { "id": "none", "title": "None", "type": "empty" }
+  ],
+  "layers": [
+    {
+      "id": "versiegelung",
+      "type": "cog",
+      "title": "Sealed surfaces 2022",
+      "url": "https://map0.s3.fr-par.scw.cloud/data/VER_2022_AT_3857.tif",
+      "color": {
+        "classes": [
+          { "value": 0, "color": "#67a9cf40", "label": "unsealed (0)" },
+          { "value": 1, "color": "#c22f2f", "label": "sealed (1)" }
+        ]
+      }
+    }
+  ],
+  "controls": { "legend": { "open": true }, "home": true },
+  "i18n": { "locale": "en" }
+}

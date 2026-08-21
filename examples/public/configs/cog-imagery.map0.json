@@ -1,0 +1,35 @@
+{
+  "$schema": "https://map0.net/schema/v1.json",
+  "version": 1,
+  "meta": {
+    "title": "COG imagery",
+    "description": "An RGB orthophoto read straight from static storage — no tile server."
+  },
+  "map": { "center": [1.83369, 41.5937], "zoom": 14 },
+  "basemaps": [
+    {
+      "id": "gris",
+      "title": "ICGC Grey",
+      "type": "style",
+      "url": "https://geoserveis.icgc.cat/contextmaps/icgc_mapa_base_gris.json",
+      "attribution": "© Institut Cartogràfic i Geològic de Catalunya",
+      "default": true
+    },
+    { "id": "none", "title": "None", "type": "empty" }
+  ],
+  "layers": [
+    {
+      "id": "ortho-cog",
+      "type": "cog",
+      "title": "Orthophoto (RGB COG)",
+      "url": "https://labs.geomatico.es/maplibre-cog-protocol/data/image.tif",
+      "attribution": "Orthophoto © ICGC · demo data © Geomatico",
+      "metadata": {
+        "url": "https://github.com/geomatico/maplibre-cog-protocol",
+        "title": "maplibre-cog-protocol sample data"
+      }
+    }
+  ],
+  "controls": { "home": true },
+  "i18n": { "locale": "en" }
+}

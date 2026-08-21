@@ -133,7 +133,10 @@ export const HILLSHADE_KEYS = [
   "highlightColor",
   "accentColor",
 ];
-export const COG_COLOR_KEYS = ["scheme", "min", "max", "continuous", "reverse"];
+export const COG_COLOR_KEYS = ["scheme", "min", "max", "continuous", "reverse", "classes"];
+export const COG_COLOR_CLASS_KEYS = ["value", "from", "to", "color", "label"];
+/** classes are rendered per pixel, so the color must be machine-readable: hex only */
+export const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 export const CONTROL_KEYS = [
   "navigation",
   "scale",
@@ -572,20 +575,26 @@ function validateLayers(
         );
         if (layer.color !== undefined) {
           if (!isObject(layer.color)) {
-            err(`${p}.color`, 'color must be { "scheme", "min", "max", "continuous"?, "reverse"? }');
+            err(
+              `${p}.color`,
+              'color must be a ramp { "scheme", "min", "max" } or a classification { "classes": […] }',
+            );
           } else {
             const c = layer.color;
             checkKeys(c, COG_COLOR_KEYS, `${p}.color`, err);
-            if (typeof c.scheme !== "string" || !c.scheme)
-              err(`${p}.color.scheme`, 'color needs a "scheme" (ramp name, e.g. "BrewerSpectral7")');
-            if (typeof c.min !== "number" || !Number.isFinite(c.min))
-              err(`${p}.color.min`, 'color needs a numeric "min" (value of the first ramp color)');
-            if (typeof c.max !== "number" || !Number.isFinite(c.max))
-              err(`${p}.color.max`, 'color needs a numeric "max" (value of the last ramp color)');
-            if (typeof c.min === "number" && typeof c.max === "number" && !(c.min < c.max))
-              err(`${p}.color.max`, '"max" must be greater than "min"');
-            expectBoolean(c.continuous, `${p}.color.continuous`, err);
-            expectBoolean(c.reverse, `${p}.color.reverse`, err);
+            if (c.classes !== undefined) validateCogClasses(c, `${p}.color`, err);
+            else {
+              if (typeof c.scheme !== "string" || !c.scheme)
+                err(`${p}.color.scheme`, 'color needs a "scheme" (ramp name, e.g. "BrewerSpectral7") or "classes"');
+              if (typeof c.min !== "number" || !Number.isFinite(c.min))
+                err(`${p}.color.min`, 'color needs a numeric "min" (value of the first ramp color)');
+              if (typeof c.max !== "number" || !Number.isFinite(c.max))
+                err(`${p}.color.max`, 'color needs a numeric "max" (value of the last ramp color)');
+              if (typeof c.min === "number" && typeof c.max === "number" && !(c.min < c.max))
+                err(`${p}.color.max`, '"max" must be greater than "min"');
+              expectBoolean(c.continuous, `${p}.color.continuous`, err);
+              expectBoolean(c.reverse, `${p}.color.reverse`, err);
+            }
           }
         }
         break;
@@ -630,6 +639,63 @@ function validateLayers(
     }
     if (type !== "geojson") checkUrl(layer.url, `${p}.url`, err);
   });
+}
+
+/**
+ * "classes": explicit value/range → color classification for a cog layer.
+ * Ranges are [from, to) with the highest "to" inclusive — validated here so a
+ * value can never fall into two classes (overlap) and boundary values are
+ * predictable without an inclusive/exclusive knob per class.
+ */
+function validateCogClasses(c: Record<string, unknown>, path: string, err: Err): void {
+  for (const key of ["scheme", "min", "max", "continuous", "reverse"]) {
+    if (c[key] !== undefined)
+      err(`${path}.${key}`, `"${key}" cannot be combined with "classes" — use a ramp or a classification, not both`);
+  }
+  const classes = c.classes;
+  if (!Array.isArray(classes) || classes.length === 0) {
+    return err(
+      `${path}.classes`,
+      'classes must be a non-empty array of { "value" | "from"+"to", "color", "label"? }',
+    );
+  }
+  const values: number[] = [];
+  const ranges: Array<{ from: number; to: number; path: string }> = [];
+  classes.forEach((cls, j) => {
+    const cp = `${path}.classes[${j}]`;
+    if (!isObject(cls)) return err(cp, "a class must be an object");
+    checkKeys(cls, COG_COLOR_CLASS_KEYS, cp, err);
+    if (typeof cls.color !== "string" || !HEX_COLOR.test(cls.color))
+      err(`${cp}.color`, 'a class needs a hex "color" like "#ef8a62" (3, 6, or 8 digits)');
+    expectString(cls.label, `${cp}.label`, err);
+    const hasValue = cls.value !== undefined;
+    const hasRange = cls.from !== undefined || cls.to !== undefined;
+    if (hasValue && hasRange) return err(cp, 'use either "value" or "from"/"to", not both');
+    if (hasValue) {
+      if (typeof cls.value !== "number" || !Number.isFinite(cls.value))
+        return err(`${cp}.value`, '"value" must be a number');
+      if (values.includes(cls.value)) return err(`${cp}.value`, `duplicate value ${cls.value}`);
+      values.push(cls.value);
+      return;
+    }
+    if (!hasRange) return err(cp, 'a class needs a "value" or a "from"/"to" range');
+    if (typeof cls.from !== "number" || !Number.isFinite(cls.from))
+      return err(`${cp}.from`, 'a range class needs a numeric "from" (inclusive)');
+    if (typeof cls.to !== "number" || !Number.isFinite(cls.to))
+      return err(`${cp}.to`, 'a range class needs a numeric "to" (exclusive; the highest "to" is inclusive)');
+    if (!(cls.from < cls.to)) return err(`${cp}.to`, '"to" must be greater than "from"');
+    ranges.push({ from: cls.from, to: cls.to, path: cp });
+  });
+  ranges.sort((a, b) => a.from - b.from);
+  for (let i = 1; i < ranges.length; i++) {
+    if (ranges[i]!.from < ranges[i - 1]!.to) {
+      err(
+        `${ranges[i]!.path}`,
+        `range ${ranges[i]!.from} – ${ranges[i]!.to} overlaps ${ranges[i - 1]!.from} – ${ranges[i - 1]!.to} — ` +
+          `classes may touch ("to" is exclusive) but not overlap`,
+      );
+    }
+  }
 }
 
 function validateLegend(legend: unknown, p: string, err: Err): void {

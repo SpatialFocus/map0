@@ -452,8 +452,7 @@
     },
     "cogColor": {
       "type": "object",
-      "description": "single-band value → color mapping; the legend derives its swatches from this ramp. Omit for RGB/grayscale imagery. Mutually exclusive with \"hillshade\".",
-      "required": ["scheme", "min", "max"],
+      "description": "single-band value → color mapping: a built-in ramp (\"scheme\"/\"min\"/\"max\") or an explicit classification (\"classes\"). The legend derives its swatches from it. Omit for RGB/grayscale imagery. Mutually exclusive with \"hillshade\".",
       "additionalProperties": false,
       "properties": {
         "scheme": {
@@ -463,8 +462,48 @@
         "min": { "type": "number", "description": "data value mapped to the first ramp color" },
         "max": { "type": "number", "description": "data value mapped to the last ramp color — must be greater than \"min\"" },
         "continuous": { "type": "boolean", "default": false, "description": "interpolate between the ramp colors instead of discrete classes" },
-        "reverse": { "type": "boolean", "default": false, "description": "reverse the ramp" }
-      }
+        "reverse": { "type": "boolean", "default": false, "description": "reverse the ramp" },
+        "classes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/cogColorClass" },
+          "description": "explicit classification instead of a ramp: exact values and/or [from, to) ranges, each with its own color. Pixels matching no class (and noData pixels) are transparent. Cannot be combined with \"scheme\"/\"min\"/\"max\"."
+        }
+      },
+      "if": { "required": ["classes"] },
+      "then": {
+        "not": {
+          "anyOf": [
+            { "required": ["scheme"] },
+            { "required": ["min"] },
+            { "required": ["max"] },
+            { "required": ["continuous"] },
+            { "required": ["reverse"] }
+          ]
+        }
+      },
+      "else": { "required": ["scheme", "min", "max"] }
+    },
+    "cogColorClass": {
+      "type": "object",
+      "description": "one class: an exact \"value\" (categorical rasters) or a \"from\"/\"to\" range. Ranges include \"from\" and exclude \"to\" — except the class with the highest \"to\", which includes it. Exact values win over ranges.",
+      "required": ["color"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": "number", "description": "exact data value (compared after the COG's scale/offset are applied)" },
+        "from": { "type": "number", "description": "range start, inclusive" },
+        "to": { "type": "number", "description": "range end, exclusive (inclusive for the class with the highest \"to\") — must be greater than \"from\"" },
+        "color": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "hex color, e.g. \"#ef8a62\" — 3, 6, or 8 digits (8 = with alpha)"
+        },
+        "label": { "type": "string", "description": "legend text; default: the value, or \"from – to\"" }
+      },
+      "oneOf": [
+        { "required": ["value"], "not": { "anyOf": [{ "required": ["from"] }, { "required": ["to"] }] } },
+        { "required": ["from", "to"], "not": { "required": ["value"] } }
+      ]
     },
     "hillshadeOptions": {
       "type": "object",

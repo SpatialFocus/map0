@@ -291,6 +291,16 @@ TileJSONs happened to carry nothing offensive, so this slept until the ICGC cont
 - The ramp legend is derived from the library's `colorScale()` — for discrete ramps the class
   count is recovered by sampling the scale (thresholds are uniform over min–max), so map0 does not
   duplicate the palette tables.
+- `color.classes` (explicit values/ranges) renders through the protocol's `setColorFunction()`,
+  which is keyed by the **plain COG URL, globally** — and overrides any `#color`/`#dem` fragment on
+  that URL. Consequences the adapter handles: registration is refcounted per URL (removing one of
+  two layers sharing a file keeps the other rendered; the function is cleared when the last
+  unmounts), and two classes-layers on the same URL with different classes log a warning (last one
+  wins for both). Not handleable: a classes layer and a ramp/hillshade layer on the *same file*
+  — the color function silently wins; documented in 04-configuration instead. In the pixel
+  function, `scale`/`offset` are applied manually (the fragment paths do this inside the library;
+  the custom path does not), noData/NaN/`Infinity` (the reader's fill value) render transparent,
+  and exact `value` matches use a relative epsilon because scale/offset arithmetic is float.
 - geotiff.js (plus lerc/pako decoders) rides in the lazy cog chunk — configs without a cog layer
   never load it. `lerc@3` ships no licence text in its tarball → fallback entry in
   `scripts/build-npm.mjs` (same mechanism as pmtiles).
