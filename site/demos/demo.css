@@ -491,11 +491,43 @@ ul.checks li::before {
 
 .playground {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
   gap: 18px;
   align-items: start;
   /* one height for editor shell and map, so the two columns line up exactly */
   --pg-h: min(60vh, 580px);
+}
+
+/* The playground is a tool, not an article, so it gets more width than the
+   rest of the site — the same break-out the landing map already makes past the
+   prose column (1180 → 1280 there, 1680 here). Only the tool widens: heading,
+   lede and the sections below stay in the site's normal column, so nothing
+   jumps when you arrive from a demo page. */
+@media (min-width: 1280px) {
+  main:has(> .playground) {
+    /* never edge to edge: the 80px keeps a visible margin outside main's own
+       padding, so the break-out still reads as centred rather than as overflow.
+       Below this width the tool is back in the site's normal 1180 container. */
+    max-width: min(1680px, 100% - 80px);
+    /* how far this wider main reaches past the site normal column */
+    --pg-inset: calc((100% - min(var(--wrap) - 48px, 100%)) / 2);
+  }
+  /* Everything except the tool keeps the column it has on every other page:
+     main is centred, so shifting those children in by the inset lands them on
+     exactly the same axis — the heading does not move when you arrive from a
+     demo page. */
+  main:has(> .playground) > :not(.playground) {
+    margin-left: var(--pg-inset);
+  }
+  .playground {
+    /* a wider frame at the same height reads squat — the viewport share is what
+       keeps the error output under the editor above the fold, so the cap only
+       lifts where there is room for it */
+    --pg-h: min(64vh, 660px);
+    /* the map is what the extra width is for; the editor keeps more than enough
+       for a long JSON line either way */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  }
 }
 /* .playground prefix: outranks the later `figure.code` margin rule */
 .playground .pg-shell {
