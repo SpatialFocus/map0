@@ -124,9 +124,9 @@
           The protocol behind this layer type is
           <a href="https://github.com/geomatico/maplibre-cog-protocol" rel="noopener">@geomatico/maplibre-cog-protocol</a>
           (pre-1.0, pinned): RGB and grayscale imagery, single-band color ramps and DEM hillshading.
-          The terrain demo uses the 25&nbsp;m BEV terrain model, warped once to EPSG:3857 and cut
-          down to its region (<code>gdalwarp -of COG</code>) — the original
-          <a href="https://data.bev.gv.at/download/DGM/" rel="noopener">open-data file</a> is
+          The terrain demo uses the 25&nbsp;m BEV terrain model, reprojected  to EPSG:3857 and cut
+          down to a smaller region (<code>gdalwarp -of COG</code>) — the original
+          <a href="https://data.bev.gv.at/geonetwork/srv/ger/catalog.search#/metadata/6a853c17-8960-44a4-81fb-18e0549a1c80" rel="noopener">open-data file</a> is
           EPSG:31287 and its server sends no CORS headers, so it cannot be read in place.
         </p>
       </section>

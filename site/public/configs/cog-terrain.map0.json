@@ -26,7 +26,7 @@
       "hillshade": { "exaggeration": 0.6 },
       "attribution": "Geländemodell © BEV, data.bev.gv.at (CC BY 4.0)",
       "metadata": {
-        "url": "https://geoportal.inspire.gv.at/metadatensuche/inspire/ger/catalog.search#/metadata/6a853c17-8960-44a4-81fb-18e0549a1c80",
+        "url": "https://data.bev.gv.at/geonetwork/srv/ger/catalog.search#/metadata/6a853c17-8960-44a4-81fb-18e0549a1c80",
         "title": "Digitales Geländehöhenmodell – Höhenraster 25m, Stichtag 31.12.2022 (BEV)"
       }
     },
