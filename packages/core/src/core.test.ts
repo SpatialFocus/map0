@@ -14,6 +14,7 @@ import {
 } from "./adapters/cog.js";
 import { expandSimpleStyle } from "./adapters/geojson.js";
 import { assertWgs84, featureCollectionFromRows, type GeoMetadata } from "./adapters/geoparquet.js";
+import { buildGetFeatureUrl, loadWfsFeatures, parseWfsResponse } from "./adapters/wfs.js";
 import { deriveFromStyleLayers, entryFromPaint } from "./adapters/legend-derive.js";
 import { escapeHtml, renderFields, renderTemplate } from "./template.js";
 import { lngLatToMercator } from "./mercator.js";
@@ -215,6 +216,120 @@ describe("cog", () => {
       { label: "0", color: "#67a9cf", shape: "square" },
       { label: "2 – 5", color: "#999999", shape: "square" },
     ]);
+  });
+});
+
+describe("wfs", () => {
+  const def = { url: "https://data.wien.gv.at/daten/geo", typeNames: "ogdwien:TRINKBRUNNENOGD" };
+
+  it("builds a 2.0.0 GetFeature URL with paging and WGS84 GeoJSON output", () => {
+    const url = buildGetFeatureUrl(def, { count: 5000, startIndex: 5000 });
+    expect(url).toContain("SERVICE=WFS");
+    expect(url).toContain("VERSION=2.0.0");
+    expect(url).toContain("REQUEST=GetFeature");
+    expect(url).toContain("TYPENAMES=ogdwien%3ATRINKBRUNNENOGD");
+    expect(url).toContain("SRSNAME=EPSG%3A4326");
+    expect(url).toContain("OUTPUTFORMAT=application%2Fjson");
+    expect(url).toContain("COUNT=5000");
+    expect(url).toContain("STARTINDEX=5000");
+  });
+
+  it("uses 1.1.0 parameter names, keeps base-url params, lets vendor params override", () => {
+    const url = buildGetFeatureUrl(
+      {
+        url: "https://example.org/cgi-bin/mapserv?map=/maps/at.map",
+        typeNames: "trees",
+        version: "1.1.0",
+        outputFormat: "geojson",
+        params: { CQL_FILTER: "BEZIRK=9", SRSNAME: "urn:ogc:def:crs:EPSG::4326" },
+      },
+      { count: 100 },
+    );
+    expect(url).toContain("map=%2Fmaps%2Fat.map");
+    expect(url).toContain("TYPENAME=trees");
+    expect(url).not.toContain("TYPENAMES=");
+    expect(url).toContain("MAXFEATURES=100");
+    expect(url).not.toContain("STARTINDEX=");
+    expect(url).toContain("OUTPUTFORMAT=geojson");
+    expect(url).toContain("CQL_FILTER=BEZIRK%3D9");
+    expect(url).toContain("SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326");
+  });
+
+  it("unwraps OWS exception XML into its message (a WFS reports errors with HTTP 200)", () => {
+    const xml =
+      '<ows:ExceptionReport xmlns:ows="http://www.opengis.net/ows/1.1"><ows:Exception>' +
+      "<ows:ExceptionText>Unknown type name: ogdwien:TYPO</ows:ExceptionText>" +
+      "</ows:Exception></ows:ExceptionReport>";
+    expect(() => parseWfsResponse(xml, "https://e.org/wfs")).toThrow(/Unknown type name/);
+    expect(() => parseWfsResponse("<html>not a wfs</html>", "https://e.org/wfs")).toThrow(/outputFormat/);
+    expect(() => parseWfsResponse('{"no":"features"}', "https://e.org/wfs")).toThrow(/"features" array/);
+  });
+
+  const feature = (id: number): Record<string, unknown> => ({
+    type: "Feature",
+    id: `f.${id}`,
+    properties: { n: id },
+    geometry: { type: "Point", coordinates: [16, 48] },
+  });
+  const page = (from: number, n: number, matched?: number): string =>
+    JSON.stringify({
+      type: "FeatureCollection",
+      numberMatched: matched,
+      features: Array.from({ length: n }, (_, i) => feature(from + i)),
+    });
+
+  it("pages with startIndex until the reported total is reached", async () => {
+    const urls: string[] = [];
+    const fc = await loadWfsFeatures({ ...def, pageSize: 2, limit: 100 }, async (url) => {
+      urls.push(url);
+      const start = Number(/STARTINDEX=(\d+)/.exec(url)?.[1] ?? 0);
+      return page(start, Math.min(2, 5 - start), 5);
+    });
+    expect(fc.features).toHaveLength(5);
+    expect(fc.features.map((f) => f.id)).toEqual(["f.0", "f.1", "f.2", "f.3", "f.4"]);
+    expect(urls).toHaveLength(3);
+    expect(urls[0]).not.toContain("STARTINDEX=");
+  });
+
+  it("continues after a silently capped page when the server names a total", async () => {
+    /* asked for 4 per page, server caps at 2 — numberMatched keeps the loop going */
+    const fc = await loadWfsFeatures({ ...def, pageSize: 4, limit: 100 }, async (url) => {
+      const start = Number(/STARTINDEX=(\d+)/.exec(url)?.[1] ?? 0);
+      return page(start, Math.min(2, 6 - start), 6);
+    });
+    expect(fc.features).toHaveLength(6);
+  });
+
+  it("stops at the limit and passes a shrunken count to the last page", async () => {
+    const counts: number[] = [];
+    const fc = await loadWfsFeatures({ ...def, pageSize: 2, limit: 3 }, async (url) => {
+      counts.push(Number(/COUNT=(\d+)/.exec(url)?.[1]));
+      const start = Number(/STARTINDEX=(\d+)/.exec(url)?.[1] ?? 0);
+      return page(start, Number(/COUNT=(\d+)/.exec(url)?.[1]), 100);
+    });
+    expect(fc.features).toHaveLength(3);
+    expect(counts).toEqual([2, 1]);
+  });
+
+  it("does not loop on a server that ignores STARTINDEX", async () => {
+    let calls = 0;
+    const fc = await loadWfsFeatures({ ...def, pageSize: 2, limit: 100 }, async () => {
+      calls++;
+      return page(0, 2, 10); // same first page forever
+    });
+    expect(calls).toBe(2); // second identical page is detected, loop ends
+    expect(fc.features).toHaveLength(2);
+  });
+
+  it("1.1.0: one maxFeatures request, no paging", async () => {
+    const urls: string[] = [];
+    const fc = await loadWfsFeatures({ ...def, version: "1.1.0", limit: 3 }, async (url) => {
+      urls.push(url);
+      return page(0, 3);
+    });
+    expect(urls).toHaveLength(1);
+    expect(urls[0]).toContain("MAXFEATURES=3");
+    expect(fc.features).toHaveLength(3);
   });
 });
 

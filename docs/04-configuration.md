@@ -216,12 +216,15 @@ Unset, the config decides as usual.
     },
     {
       "id": "districts",
-      "type": "ogcapi-features",            // also: "wfs" with typeNames/version
+      "type": "wfs",                        // GetFeature as GeoJSON, paged (count/startIndex)
       "title": "Bezirksgrenzen",
-      "url": "https://api.example.gv.at/ogc/collections/bezirke",
+      "url": "https://data.example.gv.at/geo",
+      "typeNames": "ogd:BEZIRKSGRENZEN",    // the WFS 2.0 GetFeature parameter
+      "limit": 10000,                       // stop after this many features (default 10000)
+      "pageSize": 5000,                     // features per request (default 5000)
+      "params": { "cql_filter": "STAND >= 2024" },  // vendor parameters, appended verbatim
       "style": { "line-color": "#333333", "line-width": 1.2, "line-dasharray": [2, 2] },
-      "visible": true,
-      "queryable": false
+      "visible": true
     }
   ],
 
@@ -303,10 +306,10 @@ Result: full-quality map with default controls (zoom, attribution, fullscreen), 
 | `wms` | WMS 1.1.1/1.3.0 GetMap | tiled raster source; `info` enables GetFeatureInfo; `legend:"auto"` → GetLegendGraphic |
 | `wmts` | capabilities URL + `layer` (+ optional `matrixSet`/`style`/`format`) | REST & KVP; image tiles only — picks the first WebMercator matrix set (D-02) and the first advertised image format, bounds/legend from capabilities (legend URLs are re-issued with map0's standard icon size — GeoServer bakes misleading width/height into the advertised href). Requests are clipped to the layer's `TileMatrixSetLimits` (GWC answers outside tiles with 400 TileOutOfRange, not an empty tile). For a WMTS that also serves `application/vnd.mapbox-vector-tile`, use `vector` with the service's TileJSON to style it client-side. |
 | `cog` | Cloud Optimized GeoTIFF URL | raster read straight from storage via HTTP range requests (protocol plugin, loaded on demand). RGB/grayscale by default; `color` renders a single band through a named ColorBrewer/CARTOColors ramp — `{ scheme, min, max, continuous?, reverse? }` — and the legend panel derives its swatches from it; `hillshade` renders a single-band DEM as relief shading — `true` or `{ exaggeration?, illuminationDirection?, shadowColor?, highlightColor?, accentColor? }` (mutually exclusive with `color`; a hillshade paints only shadows and highlights, so flat terrain stays transparent by design and the basemap shows through — layer opacity scales the exaggeration, hillshade has no opacity of its own). Bounds and zoom range come from the file header ("zoom to layer" needs no config). The file **must be EPSG:3857** (no client-side reprojection — the layer errors with the offending EPSG code); nodata pixels render transparent, and a file with no declared nodata treats 0 as transparent. |
+| `wfs` | WFS endpoint + `typeNames` | GetFeature as WGS84 GeoJSON, rendered through the geojson pipeline (same `style`/`cluster`/`popup`/`hover`/`promoteId`). WFS 2.0.0 (default) pages with `count`/`startIndex` — `pageSize` per request (default 5000) until the server's reported total or `limit` (default 10000) is reached; a server that silently caps a request is continued from where its answer ended. `version: "1.1.0"` = one `maxFeatures` request. `outputFormat` overrides the format name (default `application/json`; MapServer wants `geojson`); `params` appends vendor parameters (`cql_filter`, `sortBy`, …). OWS exception XML (HTTP 200) is unwrapped into the layer's error message. The service must send CORS headers. |
 | `geojson` | URL or inline | clustering, simplified style or full style layers |
 | `geoparquet` | GeoParquet file URL | fetched whole and decoded in the browser (hyparquet, loaded on demand — snappy/gzip/brotli/zstd/lz4 all work), then rendered through the geojson pipeline: same `style`/`cluster`/`popup`/`hover`/`promoteId` options. A fraction of the transfer size of the same data as GeoJSON; "zoom to layer" comes from the file's `geo` metadata bbox. Coordinates **must be WGS84** (OGC:CRS84/EPSG:4326 — the spec default; no client-side reprojection, other CRS fail with a per-layer error naming them). Plain parquet without `geo` metadata is rejected with a conversion hint. |
 | `vector` | TileJSON / `{z}/{x}/{y}` / `pmtiles://` | needs `sourceLayer` + style layers |
-| `wfs` | WFS 2.0 GetFeature → GeoJSON | **v1.x** (deferred per D-03); paging/limits; styled like `geojson` |
 | `ogcapi-features` | OGC API Features collection | **v1.x** (deferred per D-03); limit/bbox; styled like `geojson` |
 | `group` | — | nesting, collapse, exclusive option |
 

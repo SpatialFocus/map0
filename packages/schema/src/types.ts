@@ -78,6 +78,7 @@ export type LayerDef =
   | GroupLayerDef
   | WmsLayerDef
   | WmtsLayerDef
+  | WfsLayerDef
   | RasterLayerDef
   | CogLayerDef
   | GeoJsonLayerDef
@@ -164,6 +165,30 @@ export interface WmtsLayerDef extends LayerCommon {
   style?: string;
   /** preferred tile format (e.g. "image/png") */
   format?: string;
+}
+
+export interface WfsLayerDef extends LayerCommon {
+  type: "wfs";
+  /** WFS endpoint (base URL; existing query params like MapServer `map=` are kept) */
+  url: string;
+  /** feature type to load — the WFS 2.0 GetFeature parameter, e.g. "ogdwien:TRINKBRUNNENOGD" */
+  typeNames: string;
+  /** WFS protocol version; 2.0.0 (default) pages with count/startIndex, 1.1.0 issues one maxFeatures request */
+  version?: "1.1.0" | "2.0.0";
+  /** GeoJSON output format name the server expects; default "application/json" (GeoServer, deegree — MapServer wants "geojson") */
+  outputFormat?: string;
+  /** stop after this many features; default 10000 */
+  limit?: number;
+  /** features per GetFeature request (2.0.0 only); default 5000 */
+  pageSize?: number;
+  /** extra vendor parameters appended to every GetFeature (cql_filter, sortBy, …) */
+  params?: Record<string, string>;
+  style?: SimpleStyle | StyleLayerSpec[];
+  cluster?: boolean | { enabled?: boolean; radius?: number; maxZoom?: number };
+  popup?: PopupConfig | false;
+  /** short tooltip template shown on hover (F5.4) */
+  hover?: { content: string } | false;
+  promoteId?: string;
 }
 
 export interface RasterLayerDef extends LayerCommon {

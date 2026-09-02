@@ -59,6 +59,15 @@ adapter fails fast with the projection in the error). DEM **hillshade** shipped 
 Requirement/priority tables in [03-requirements.md](03-requirements.md) and the layer type matrix in
 [04-configuration.md](04-configuration.md) are updated accordingly.
 
+**Update 2026-09-02 — WFS pulled forward, GeoParquet added.** Both shipped together (feat/formats)
+because they reuse the geojson pipeline end to end — an adapter subclass plus a loader each, no new
+rendering surface. `type: "wfs"` does paged GetFeature (WGS84 GeoJSON, count/startIndex, silent-cap
+recovery, vendor params) — the formalization of the "outputFormat=json&srsName=EPSG:4326" trick the
+GeoJSON demo recommended. `type: "geoparquet"` (not in the original decision — the format matured
+around cloud-native workflows in the meantime) fetches one file and decodes it in the browser via
+hyparquet (lazy chunk; snappy built in, the extra-codec bundle loads only for files that need it),
+WGS84 only, mirroring the COG adapter's fail-fast CRS line. OGC API Features remains deferred.
+
 ## D-04 · Print scope — **DECIDED: client-side first**
 
 v1: browser print layout + high-res PNG/PDF export (title, legend, scale bar, north arrow,

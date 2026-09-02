@@ -75,6 +75,40 @@ describe("validateConfig", () => {
     expect(insecure.errors.some((e) => e.path === "$.layers[0].url")).toBe(true);
   });
 
+  it("validates wfs layers: endpoint + typeNames, paging knobs, shared feature options", () => {
+    const ok = validateConfig({
+      ...minimal,
+      layers: [
+        {
+          type: "wfs",
+          title: "Brunnen",
+          url: "https://data.wien.gv.at/daten/geo",
+          typeNames: "ogdwien:TRINKBRUNNENOGD",
+          limit: 3000,
+          pageSize: 1000,
+          params: { cql_filter: "BEZIRK=9" },
+          cluster: true,
+          popup: { title: "{{name}}" },
+        },
+      ],
+    });
+    expect(ok.valid).toBe(true);
+    expect(ok.errors).toEqual([]);
+
+    const broken = validateConfig({
+      ...minimal,
+      layers: [
+        { type: "wfs", url: "https://e.org/wfs", version: "3.0.0", limit: 0, params: { a: 1 } },
+      ],
+    });
+    expect(broken.valid).toBe(false);
+    const paths = broken.errors.map((e) => e.path);
+    expect(paths).toContain("$.layers[0].typeNames");
+    expect(paths).toContain("$.layers[0].version");
+    expect(paths).toContain("$.layers[0].limit");
+    expect(paths).toContain("$.layers[0].params.a");
+  });
+
   it("rejects a non-boolean cooperativeGestures", () => {
     const result = validateConfig({
       version: 1,
@@ -242,7 +276,7 @@ describe("validateConfig", () => {
   });
 
   it("rejects unknown layer types", () => {
-    const r = validateConfig({ ...minimal, layers: [{ type: "wfs", url: "x" }] });
+    const r = validateConfig({ ...minimal, layers: [{ type: "sensorthings", url: "x" }] });
     expect(r.errors.some((e) => e.path === "$.layers[0].type")).toBe(true);
   });
 });

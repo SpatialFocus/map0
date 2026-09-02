@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="title">WFS — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="wfs">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow" data-i18n="eyebrow">Data sources</p>
+        <h1>WFS</h1>
+        <p class="lede" data-i18n="lede">
+          Live features straight from an OGC Web Feature Service — an endpoint and a type name in
+          the config, and map0 handles the GetFeature requests, the GeoJSON negotiation and the
+          paging. Rendered exactly like a GeoJSON layer.
+        </p>
+      </div>
+
+      <map0-viewer config-src="/configs/wfs.map0.json"></map0-viewer>
+      <p class="demo-note" data-i18n="note">
+        <strong>Try it:</strong> open the network tab and reload — the 3,214 trees of Alsergrund
+        arrive in pages of 1,000 (<code>count</code>/<code>startIndex</code>), fetched until the
+        server's reported total is reached. The fountains load city-wide in one page and cluster;
+        click any feature for its live attributes.
+      </p>
+
+      <section class="doc">
+        <h2 data-i18n="config.h2">Configuration</h2>
+        <p data-i18n="config.p">
+          The GeoJSON demo used to recommend hand-building a GetFeature URL with
+          <code>outputFormat=json&amp;srsName=EPSG:4326</code>. The <code>wfs</code> type is that
+          trick, formalized: <code>url</code> + <code>typeNames</code> replace the URL assembly,
+          and everything after the fetch — styling, clustering, popups, hover — is the
+          <code>geojson</code> pipeline.
+        </p>
+        <pre data-src="/configs/wfs.map0.json" data-label="wfs.map0.json" data-emphasise="&quot;wfs&quot;,typeNames,pageSize,cql_filter"></pre>
+      </section>
+
+      <section class="doc">
+        <h2 data-i18n="what.h2">What this demo shows</h2>
+        <ul class="checks">
+          <li data-i18n="what.li1">A <code>wfs</code> layer needs <code>url</code> and <code>typeNames</code> — version, output format and CRS have working defaults</li>
+          <li data-i18n="what.li2">WFS 2.0 paging: pages of <code>pageSize</code> (default 5000) until the server's total or the <code>limit</code> (default 10000) is reached</li>
+          <li data-i18n="what.li3">A server that silently caps a request below the asked-for count is continued from where its answer actually ended</li>
+          <li data-i18n="what.li4"><code>params</code> passes vendor parameters — here <code>cql_filter</code> moves the district filter to the server</li>
+          <li data-i18n="what.li5">A WFS reports errors as XML with HTTP 200 — map0 unwraps the exception text into the layer's error state</li>
+          <li data-i18n="what.li6">Styling, clustering, popups, hover, <code>promoteId</code> — exactly the <code>geojson</code> options</li>
+        </ul>
+        <div class="callout" data-i18n="callout">
+          <strong>The service must speak GeoJSON and CORS.</strong>
+          map0 requests <code>application/json</code> in WGS84 — GeoServer and deegree take that
+          as-is, MapServer wants <code>"outputFormat": "geojson"</code>. A server offering neither
+          GeoJSON nor CORS headers cannot be read by a browser client. <code>version: "1.1.0"</code>
+          falls back to a single <code>maxFeatures</code> request (paging is WFS 2.0).
+        </div>
+      </section>
+
+      <section class="doc">
+        <h2 data-i18n="when.h2">When to reach for WFS</h2>
+        <p data-i18n="when.p1">
+          When the data changes and the map should follow: every load asks the service, so edits in
+          the source database show up on the next reload — no re-publishing a file. Server-side
+          filtering via <code>cql_filter</code> keeps the transfer to the features a map actually
+          needs. The flip side is per-request latency and untiled transfer sizes: for a static
+          snapshot the same data travels far cheaper as
+          <a href="/demos/geoparquet.html">GeoParquet</a>, and a feature type beyond the
+          <code>limit</code> ceiling belongs in vector tiles (PMTiles). The
+          <code>limit</code> default of 10,000 is deliberate — it keeps an accidental
+          <code>typeNames</code> against a country-sized table from pulling millions of features
+          into the page.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

@@ -149,6 +149,7 @@
         { "$ref": "#/definitions/groupLayer" },
         { "$ref": "#/definitions/wmsLayer" },
         { "$ref": "#/definitions/wmtsLayer" },
+        { "$ref": "#/definitions/wfsLayer" },
         { "$ref": "#/definitions/rasterLayer" },
         { "$ref": "#/definitions/cogLayer" },
         { "$ref": "#/definitions/geojsonLayer" },
@@ -229,6 +230,64 @@
         "matrixSet": { "type": "string", "description": "tile matrix set identifier — default: the first WebMercator-compatible one" },
         "style": { "type": "string", "description": "style identifier — default: the layer's default style" },
         "format": { "type": "string", "description": "preferred tile format, e.g. \"image/png\"" }
+      }
+    },
+    "wfsLayer": {
+      "type": "object",
+      "description": "OGC WFS layer: features are fetched as GeoJSON via GetFeature (WGS84), paged with count/startIndex on 2.0.0, then rendered exactly like a geojson layer — clustering, popups and hover tooltips work the same",
+      "required": ["type", "url", "typeNames"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "wfs" },
+        "id": { "$ref": "#/definitions/layerId" },
+        "title": { "$ref": "#/definitions/layerTitle" },
+        "visible": { "$ref": "#/definitions/layerVisible" },
+        "opacity": { "$ref": "#/definitions/layerOpacity" },
+        "minZoom": { "$ref": "#/definitions/layerMinZoom" },
+        "maxZoom": { "$ref": "#/definitions/layerMaxZoom" },
+        "bounds": { "$ref": "#/definitions/layerBounds" },
+        "attribution": { "$ref": "#/definitions/layerAttribution" },
+        "metadata": { "$ref": "#/definitions/metadata" },
+        "legend": { "$ref": "#/definitions/legend" },
+        "url": { "type": "string", "description": "WFS endpoint (base URL; existing query params like MapServer map= are kept)" },
+        "typeNames": { "type": "string", "description": "feature type to load — the WFS 2.0 GetFeature parameter, e.g. \"ogdwien:TRINKBRUNNENOGD\"" },
+        "version": {
+          "enum": ["1.1.0", "2.0.0"],
+          "default": "2.0.0",
+          "description": "WFS protocol version — 2.0.0 pages with count/startIndex, 1.1.0 issues one maxFeatures request"
+        },
+        "outputFormat": {
+          "type": "string",
+          "default": "application/json",
+          "description": "GeoJSON output format name the server expects — GeoServer and deegree take the default, MapServer wants \"geojson\""
+        },
+        "limit": { "type": "number", "minimum": 1, "maximum": 1000000, "default": 10000, "description": "stop after this many features" },
+        "pageSize": { "type": "number", "minimum": 1, "maximum": 50000, "default": 5000, "description": "features per GetFeature request (2.0.0 only)" },
+        "params": {
+          "type": "object",
+          "description": "extra vendor parameters appended to every GetFeature (cql_filter, sortBy, …)",
+          "additionalProperties": { "type": "string" }
+        },
+        "style": {
+          "description": "simplified style: one flat paint-property object (circle-*, line-*, fill-* — applied per geometry type) · full control: an array of MapLibre style-spec layers",
+          "oneOf": [
+            { "type": "object" },
+            { "type": "array", "items": { "$ref": "#/definitions/styleLayer" } }
+          ]
+        },
+        "cluster": {
+          "description": "cluster point features — true, or an options object",
+          "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/clusterOptions" }]
+        },
+        "popup": {
+          "description": "popup on feature click — false disables",
+          "oneOf": [{ "const": false }, { "$ref": "#/definitions/popup" }]
+        },
+        "hover": {
+          "description": "short tooltip on hover, e.g. { \"content\": \"{{name}}\" } — false disables",
+          "oneOf": [{ "const": false }, { "$ref": "#/definitions/hover" }]
+        },
+        "promoteId": { "type": "string", "description": "feature property to use as the feature id (hover/selection state)" }
       }
     },
     "rasterLayer": {

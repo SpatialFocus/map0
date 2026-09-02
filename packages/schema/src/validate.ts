@@ -32,7 +32,7 @@ export interface ValidationResult {
 type Err = (path: string, message: string, severity?: "warning") => void;
 
 export const BASEMAP_TYPES = ["style", "raster", "empty"];
-export const LAYER_TYPES = ["group", "wms", "wmts", "raster", "cog", "geojson", "geoparquet", "vector"];
+export const LAYER_TYPES = ["group", "wms", "wmts", "wfs", "raster", "cog", "geojson", "geoparquet", "vector"];
 export const POSITIONS = ["top-left", "top-right", "bottom-left", "bottom-right"];
 
 /* ---------------------------- key tables & enums ----------------------------
@@ -113,6 +113,21 @@ export const LAYER_KEYS: Record<string, string[]> = {
     "info",
   ],
   wmts: [...LAYER_COMMON_KEYS, "url", "layer", "matrixSet", "style", "format"],
+  wfs: [
+    ...LAYER_COMMON_KEYS,
+    "url",
+    "typeNames",
+    "version",
+    "outputFormat",
+    "limit",
+    "pageSize",
+    "params",
+    "style",
+    "cluster",
+    "popup",
+    "hover",
+    "promoteId",
+  ],
   raster: [...LAYER_COMMON_KEYS, "url", "tileSize"],
   cog: [...LAYER_COMMON_KEYS, "url", "color", "hillshade"],
   geojson: [...LAYER_COMMON_KEYS, "data", "style", "cluster", "popup", "hover", "promoteId"],
@@ -124,6 +139,7 @@ export const FIELD_KEYS = ["key", "label"];
 export const HOVER_KEYS = ["content"];
 export const WMS_INFO_KEYS = [...POPUP_KEYS, "format"];
 export const WMS_VERSIONS = ["1.1.1", "1.3.0"];
+export const WFS_VERSIONS = ["1.1.0", "2.0.0"];
 export const METADATA_KEYS = ["url", "title"];
 export const LEGEND_ENTRY_KEYS = ["label", "color", "shape", "image"];
 export const LEGEND_SHAPES = ["square", "line", "circle"];
@@ -552,6 +568,23 @@ function validateLayers(
         expectString(layer.matrixSet, `${p}.matrixSet`, err);
         expectString(layer.style, `${p}.style`, err);
         expectString(layer.format, `${p}.format`, err);
+        break;
+      case "wfs":
+        if (typeof layer.url !== "string")
+          err(`${p}.url`, 'a "wfs" layer needs a "url" (WFS endpoint)');
+        if (typeof layer.typeNames !== "string")
+          err(`${p}.typeNames`, 'a "wfs" layer needs "typeNames" (the feature type to load)');
+        expectEnum(layer.version, WFS_VERSIONS, `${p}.version`, err);
+        expectString(layer.outputFormat, `${p}.outputFormat`, err);
+        expectNumber(layer.limit, `${p}.limit`, err, 1, 1000000);
+        expectNumber(layer.pageSize, `${p}.pageSize`, err, 1, 50000);
+        if (layer.params !== undefined) {
+          if (!isObject(layer.params)) err(`${p}.params`, "params must be an object of vendor parameters");
+          else
+            for (const [k, v] of Object.entries(layer.params))
+              expectString(v, `${p}.params.${k}`, err);
+        }
+        validateFeatureOptions(layer, p, err);
         break;
       case "raster":
         if (typeof layer.url !== "string")

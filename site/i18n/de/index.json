@@ -16,7 +16,7 @@
 
   "stats.load": "gzip beim Seitenaufruf — bevor die Karte überhaupt ins Bild kommt",
   "stats.keys": "Config-Einträge — in einem einzigen schema-validierten JSON-Dokument",
-  "stats.sources": "Quelltypen, von WMS und WMTS bis PMTiles, COG und GeoParquet",
+  "stats.sources": "Quelltypen, von WMS, WMTS und WFS bis PMTiles, COG und GeoParquet",
   "stats.demos": "Demos mit öffentlichen Live-Daten und -Diensten",
 
   "why.kicker": "Warum map0",
@@ -51,7 +51,7 @@
   "feat.h2": "Was anderswo ein Plugin ist, ist bei map0 ein Config-Eintrag.",
   "feat.p": "Anderswo installiert, verdrahtet und pflegt man die Hälfte dieser Liste als Zusatzmodule. Hier ist jeder Punkt ein Eintrag in der Config — und der Code dahinter lädt erst, wenn ihn jemand benutzt. Jede Kachel verlinkt auf eine Demo mit Live-Diensten.",
   "feat1.h3": "🗺️ Jeder Dienst, der ohnehin schon läuft",
-  "feat1.p": "WMS mit GetFeatureInfo, WMTS direkt aus den GetCapabilities aufgelöst (auch mit toten Mirrors), Vector Tiles und PMTiles gestylt nach der MapLibre-Style-Spec, GeoJSON mit Clustering, GeoParquet im Browser dekodiert.",
+  "feat1.p": "WMS mit GetFeatureInfo, WMTS direkt aus den GetCapabilities aufgelöst (auch mit toten Mirrors), WFS mit GetFeature-Paging, Vector Tiles und PMTiles gestylt nach der MapLibre-Style-Spec, GeoJSON mit Clustering, GeoParquet im Browser dekodiert.",
   "feat1.go": "Demos: Datenquellen →",
   "feat2.h3": "🌳 Ein Layerbaum, der den Namen verdient",
   "feat2.p": "Gruppen, Sichtbarkeit, Deckkraft, Status- und Zoom-Hinweise je Layer, Zoom auf Layer, Metadaten-Links in den Katalog — und Nutzer können eigene WMS- oder WMTS-Dienste per URL ergänzen, geparst direkt im Browser.",

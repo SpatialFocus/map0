@@ -1,0 +1,59 @@
+{
+  "$schema": "https://map0.net/schema/v1.json",
+  "version": 1,
+  "meta": { "title": "WFS" },
+  "map": { "center": [16.359, 48.222], "zoom": 14 },
+  "basemaps": [
+    {
+      "id": "grau",
+      "title": "Grey",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at",
+      "default": true
+    }
+  ],
+  "layers": [
+    {
+      "id": "brunnen",
+      "type": "wfs",
+      "title": "Drinking fountains (clustered)",
+      "url": "https://data.wien.gv.at/daten/geo",
+      "typeNames": "ogdwien:TRINKBRUNNENOGD",
+      "cluster": { "enabled": true, "radius": 45 },
+      "style": {
+        "circle-color": "#0e7490",
+        "circle-radius": 6,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 1.5
+      },
+      "popup": { "title": "{{BASIS_TYP_TXT}}" },
+      "attribution": "Stadt Wien — data.wien.gv.at"
+    },
+    {
+      "id": "baeume-alsergrund",
+      "type": "wfs",
+      "title": "Tree cadastre — Alsergrund",
+      "url": "https://data.wien.gv.at/daten/geo",
+      "typeNames": "ogdwien:BAUMKATOGD",
+      "params": { "cql_filter": "BEZIRK=9" },
+      "pageSize": 1000,
+      "style": {
+        "circle-color": "#15803d",
+        "circle-radius": 4,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 1
+      },
+      "hover": { "content": "{{GATTUNG_ART}}" },
+      "popup": {
+        "title": "{{GATTUNG_ART}}",
+        "fields": [
+          { "key": "PFLANZJAHR_TXT", "label": "Planted" },
+          { "key": "BAUMHOEHE_TXT", "label": "Height" },
+          { "key": "OBJEKT_STRASSE", "label": "Location" }
+        ]
+      },
+      "attribution": "Stadt Wien — data.wien.gv.at"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "title": "WFS — map0-Demos",
+  "eyebrow": "Datenquellen",
+  "lede": "Live-Features direkt aus einem OGC Web Feature Service — ein Endpoint und ein Typname in der Config, map0 übernimmt die GetFeature-Requests, die GeoJSON-Aushandlung und das Paging. Gerendert exakt wie ein GeoJSON-Layer.",
+  "note": "<strong>Ausprobieren:</strong> Netzwerk-Tab öffnen und neu laden — die 3.214 Bäume des Alsergrunds kommen in Seiten zu 1.000 (<code>count</code>/<code>startIndex</code>), geladen bis die vom Server gemeldete Gesamtzahl erreicht ist. Die Trinkbrunnen laden stadtweit in einer Seite und clustern; ein Klick auf ein Feature zeigt seine Live-Attribute.",
+  "config.h2": "Konfiguration",
+  "config.p": "Die GeoJSON-Demo hat bisher empfohlen, die GetFeature-URL mit <code>outputFormat=json&amp;srsName=EPSG:4326</code> von Hand zu bauen. Der <code>wfs</code>-Typ ist dieser Trick, formalisiert: <code>url</code> + <code>typeNames</code> ersetzen das URL-Basteln, und alles nach dem Laden — Styling, Clustering, Popups, Hover — ist die <code>geojson</code>-Pipeline.",
+  "what.h2": "Was diese Demo zeigt",
+  "what.li1": "Ein <code>wfs</code>-Layer braucht <code>url</code> und <code>typeNames</code> — Version, Output-Format und CRS haben funktionierende Defaults",
+  "what.li2": "WFS-2.0-Paging: Seiten zu <code>pageSize</code> (Default 5000), bis die Server-Gesamtzahl oder das <code>limit</code> (Default 10000) erreicht ist",
+  "what.li3": "Ein Server, der einen Request stillschweigend unter dem angefragten Count kappt, wird dort fortgesetzt, wo seine Antwort tatsächlich endete",
+  "what.li4": "<code>params</code> reicht Vendor-Parameter durch — hier verlagert <code>cql_filter</code> den Bezirksfilter auf den Server",
+  "what.li5": "Ein WFS meldet Fehler als XML mit HTTP 200 — map0 packt den Exception-Text in den Fehlerstatus des Layers aus",
+  "what.li6": "Styling, Clustering, Popups, Hover, <code>promoteId</code> — exakt die <code>geojson</code>-Optionen",
+  "callout": "<strong>Der Dienst muss GeoJSON und CORS sprechen.</strong> map0 fragt <code>application/json</code> in WGS84 an — GeoServer und deegree nehmen das direkt, MapServer will <code>\"outputFormat\": \"geojson\"</code>. Einen Dienst ohne GeoJSON und ohne CORS-Header kann ein Browser-Client nicht lesen. <code>version: \"1.1.0\"</code> fällt auf einen einzelnen <code>maxFeatures</code>-Request zurück (Paging ist WFS 2.0).",
+  "when.h2": "Wann zu WFS greifen",
+  "when.p1": "Wenn sich die Daten ändern und die Karte folgen soll: jeder Aufruf fragt den Dienst, Änderungen in der Quelldatenbank sind beim nächsten Neuladen da — ohne eine Datei neu zu publizieren. Serverseitiges Filtern per <code>cql_filter</code> beschränkt die Übertragung auf die Features, die eine Karte wirklich braucht. Die Kehrseite sind Latenz pro Request und ungekachelte Übertragungsgrößen: für einen statischen Snapshot reisen dieselben Daten als <a href=\"/demos/geoparquet.html\">GeoParquet</a> deutlich billiger, und ein Feature-Typ jenseits der <code>limit</code>-Decke gehört in Vector Tiles (PMTiles). Das <code>limit</code>-Default von 10.000 ist Absicht — es verhindert, dass ein versehentliches <code>typeNames</code> auf eine landesgroße Tabelle Millionen Features in die Seite zieht."
+}

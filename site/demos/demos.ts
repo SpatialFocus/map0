@@ -29,6 +29,14 @@ export const DEMOS: Demo[] = [
     icon: "🧱",
   },
   {
+    id: "wfs",
+    title: "WFS",
+    blurb: "Live features from a Web Feature Service — GetFeature paging and GeoJSON handled for you.",
+    blurbDe: "Live-Features aus einem Web Feature Service — GetFeature-Paging und GeoJSON übernimmt map0.",
+    group: "Data sources",
+    icon: "🚰",
+  },
+  {
     id: "vector-tiles",
     title: "Vector tiles",
     titleDe: "Vector Tiles",

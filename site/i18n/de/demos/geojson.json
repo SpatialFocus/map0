@@ -9,7 +9,7 @@
   "what.li2": "Clustering ist ein einziger Config-Eintrag; die Gruppierung übernimmt MapLibre",
   "what.li3": "Der vereinfachte Style (<code>circle-*</code>, <code>line-*</code>, <code>fill-*</code>) wird je Geometrietyp zu vollwertigen Style-Layern expandiert",
   "what.li4": "„Auf Ebene zoomen“ berechnet die Bounding Box aus den Daten selbst",
-  "what.p": "Bei einem WFS besteht der Trick darin, einfach GeoJSON anzufordern: <code>outputFormat=json</code> und <code>srsName=EPSG:4326</code> an einen GetFeature-Request angehängt, und die Antwort ist eine Quelle, die map0 direkt verwenden kann. Ein eigener <code>wfs</code>-Layer-Typ, der Paging beherrscht, folgt in v1.x.",
+  "what.p": "Bei einem WFS besteht der Trick darin, einfach GeoJSON anzufordern: <code>outputFormat=json</code> und <code>srsName=EPSG:4326</code> an einen GetFeature-Request angehängt, und die Antwort ist eine Quelle, die map0 direkt verwenden kann. Oder man spart sich das URL-Basteln: der eigene <a href=\"/demos/wfs.html\"><code>wfs</code>-Layer-Typ</a> macht genau das, plus Paging.",
   "config.h2": "Konfiguration",
   "full.h2": "Volle Kontrolle über den Style",
   "full.p": "Wenn das flache Style-Objekt nicht reicht, tut es stattdessen ein Array von Layern nach MapLibre-Style-Spec — Expressions, Filter, alles. map0 injiziert die Quelle und behält die Layer-Reihenfolge bei:"

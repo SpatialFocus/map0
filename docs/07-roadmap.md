@@ -13,7 +13,7 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
 
 | Area | Status |
 |---|---|
-| Data sources | ✅ WMS, WMTS, vector tiles/PMTiles, GeoJSON, GeoParquet (decoded in the browser, geojson styling pipeline), COG (RGB, single-band ramps, explicit classes, hillshade), style & raster basemaps · ⬜ WFS, OGC API Features (deferred to v1.x per D-03) |
+| Data sources | ✅ WMS, WMTS, WFS (paged GetFeature → geojson pipeline), vector tiles/PMTiles, GeoJSON, GeoParquet (decoded in the browser, geojson styling pipeline), COG (RGB, single-band ramps, explicit classes, hillshade), style & raster basemaps · ⬜ OGC API Features (deferred to v1.x per D-03) |
 | Layer tree | ✅ groups, visibility, opacity, status, zoom hints, zoom-to-layer, metadata links, runtime add/remove · ⬜ drag reorder, filter box, radio groups |
 | Feature info | ✅ GetFeatureInfo + vector query, templates, field tables, multi-hit, hover, highlight, coordinates · ⬜ mobile bottom sheet |
 | Legend | ✅ service, style-derived, hand-written; in print |
@@ -80,7 +80,12 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
 
 ## M1.x — Power features
 
-- ⬜ **WFS and OGC API Features** layer types (deferred from D-03)
+- ✅ **WFS** layer type (2026-09-02) — `type: "wfs"`: paged GetFeature (count/startIndex, silent-cap
+  recovery via the server's reported total), `limit`/`pageSize`, vendor `params` (cql_filter),
+  OWS-exception unwrapping, rendered through the geojson pipeline · ⬜ **OGC API Features** (deferred from D-03)
+- ✅ **GeoParquet** layer type (2026-09-02) — `type: "geoparquet"`: whole-file fetch, decoded in the
+  browser (hyparquet, lazy chunk; extra codecs only when needed), WGS84 only, bbox from the file
+  metadata, rendered through the geojson pipeline
 - ⬜ **Drag-and-drop reorder** in the TOC (F2.6)
 - ⬜ **GeoJSON/KML/GPX by URL and file drop** (F3.2)
 - ⬜ **Terrain** (F1.8)
