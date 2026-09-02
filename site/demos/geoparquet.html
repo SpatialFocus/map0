@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="title">GeoParquet — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="geoparquet">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow" data-i18n="eyebrow">Data sources</p>
+        <h1>GeoParquet</h1>
+        <p class="lede" data-i18n="lede">
+          Vector features from a columnar file on plain storage — decoded in the browser, rendered
+          like GeoJSON. The 4,522 trees below travel as 121&nbsp;KB; the same data as GeoJSON is
+          2.6&nbsp;MB on the wire.
+        </p>
+      </div>
+
+      <map0-viewer config-src="/configs/geoparquet.map0.json"></map0-viewer>
+      <p class="demo-note" data-i18n="note">
+        <strong>Try it:</strong> open the network tab and reload — the whole tree cadastre of
+        Vienna's first district arrives as one 121&nbsp;KB file. Hover a tree for its species,
+        click for the full record, and use "zoom to layer" on the district boundaries: the extent
+        comes from the file's own metadata, no coordinate scan needed.
+      </p>
+
+      <section class="doc">
+        <h2 data-i18n="config.h2">Configuration</h2>
+        <p data-i18n="config.p">
+          A <code>geoparquet</code> layer is a <code>geojson</code> layer with a <code>url</code>
+          instead of <code>data</code> — styling, clustering, popups and hover tooltips are the
+          same options, because after decoding, the features run through the same pipeline.
+        </p>
+        <pre data-src="/configs/geoparquet.map0.json" data-label="geoparquet.map0.json" data-emphasise="&quot;geoparquet&quot;,&quot;url&quot;"></pre>
+      </section>
+
+      <section class="doc">
+        <h2 data-i18n="what.h2">What this demo shows</h2>
+        <ul class="checks">
+          <li data-i18n="what.li1">A <code>geoparquet</code> layer needs a <code>url</code> — the file is fetched once and decoded in the browser</li>
+          <li data-i18n="what.li2">Points and polygons from separate files; the simplified style and the full style-spec form both work</li>
+          <li data-i18n="what.li3">Popups, hover tooltips, clustering and <code>promoteId</code> — exactly the <code>geojson</code> options</li>
+          <li data-i18n="what.li4">"Zoom to layer" reads the extent from the GeoParquet metadata instead of scanning coordinates</li>
+          <li data-i18n="what.li5">The decoder (hyparquet, ~22 KB) loads on demand — and the extra-codec bundle (~76 KB more) only for files not compressed with snappy</li>
+        </ul>
+        <p data-i18n="what.p1">
+          The transfer story, measured on this page's tree layer: 2.6&nbsp;MB as raw GeoJSON,
+          215&nbsp;KB as gzipped GeoJSON, 121&nbsp;KB as GeoParquet. The compression lives inside
+          the file, so a plain bucket with no <code>Content-Encoding</code> configuration still
+          serves the small number — and the browser parses a compact columnar buffer instead of
+          megabytes of JSON text.
+        </p>
+        <div class="callout" data-i18n="callout">
+          <strong>WGS84 only, whole-file loading.</strong>
+          Coordinates must be OGC:CRS84/EPSG:4326 (the GeoParquet default) — a file in another CRS
+          fails with a clear per-layer error naming it; there is no client-side reprojection.
+          And like a GeoJSON URL, the whole file is downloaded and decoded: well suited up to a few
+          MB / a few hundred thousand features, not a streaming format. For city-to-country-scale
+          vector data, cut vector tiles instead (PMTiles works from the same kind of bucket).
+        </div>
+      </section>
+
+      <section class="doc">
+        <h2 data-i18n="produce.h2">Producing GeoParquet</h2>
+        <p data-i18n="produce.p1">
+          Any recent GDAL or DuckDB writes valid GeoParquet — including the WGS84 reprojection and
+          the metadata this layer type relies on:
+        </p>
+        <pre data-lang="bash" data-label="GDAL">
+          ogr2ogr -f Parquet trees.parquet trees.gpkg -t_srs EPSG:4326</pre>
+        <pre data-lang="sql" data-label="DuckDB">
+          INSTALL spatial; LOAD spatial;
+          COPY (SELECT * FROM ST_Read('trees.geojson'))
+            TO 'trees.parquet' (FORMAT PARQUET, COMPRESSION SNAPPY);</pre>
+        <p data-i18n="produce.p2">
+          The files on this page come from the City of Vienna's open-data WFS, converted with
+          DuckDB exactly like that (district boundaries simplified to ~20&nbsp;m for size). Snappy,
+          gzip, brotli, zstd and lz4 compression all decode; plain Parquet without the
+          <code>geo</code> metadata is rejected with a message saying how to convert it.
+        </p>
+      </section>
+
+      <section class="doc">
+        <h2 data-i18n="when.h2">When to reach for GeoParquet</h2>
+        <p data-i18n="when.p1">
+          It fills the gap between GeoJSON and vector tiles: the publishing simplicity of a single
+          file on any static bucket — no tile cutting, no server — at a transfer size that keeps
+          medium datasets comfortable on mobile connections. It is also what modern data pipelines
+          already speak: the file your data engineer hands you renders directly, attributes intact,
+          no export step. For datasets that outgrow it, PMTiles (vector tiles in one file, also
+          server-less) takes over.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

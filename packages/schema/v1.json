@@ -152,6 +152,7 @@
         { "$ref": "#/definitions/rasterLayer" },
         { "$ref": "#/definitions/cogLayer" },
         { "$ref": "#/definitions/geojsonLayer" },
+        { "$ref": "#/definitions/geoparquetLayer" },
         { "$ref": "#/definitions/vectorLayer" }
       ]
     },
@@ -299,6 +300,49 @@
         "data": {
           "description": "URL of a GeoJSON document, or the GeoJSON inline",
           "oneOf": [{ "type": "string" }, { "type": "object" }]
+        },
+        "style": {
+          "description": "simplified style: one flat paint-property object (circle-*, line-*, fill-* — applied per geometry type) · full control: an array of MapLibre style-spec layers",
+          "oneOf": [
+            { "type": "object" },
+            { "type": "array", "items": { "$ref": "#/definitions/styleLayer" } }
+          ]
+        },
+        "cluster": {
+          "description": "cluster point features — true, or an options object",
+          "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/clusterOptions" }]
+        },
+        "popup": {
+          "description": "popup on feature click — false disables",
+          "oneOf": [{ "const": false }, { "$ref": "#/definitions/popup" }]
+        },
+        "hover": {
+          "description": "short tooltip on hover, e.g. { \"content\": \"{{name}}\" } — false disables",
+          "oneOf": [{ "const": false }, { "$ref": "#/definitions/hover" }]
+        },
+        "promoteId": { "type": "string", "description": "feature property to use as the feature id (hover/selection state)" }
+      }
+    },
+    "geoparquetLayer": {
+      "type": "object",
+      "description": "GeoParquet overlay — the file is downloaded and decoded in the browser (a fraction of the transfer size of the same data as GeoJSON), then rendered exactly like a geojson layer: clustering, popups and hover tooltips work the same. Coordinates must be WGS84 (OGC:CRS84/EPSG:4326 — no client-side reprojection). The decoder loads on demand.",
+      "required": ["type", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "geoparquet" },
+        "id": { "$ref": "#/definitions/layerId" },
+        "title": { "$ref": "#/definitions/layerTitle" },
+        "visible": { "$ref": "#/definitions/layerVisible" },
+        "opacity": { "$ref": "#/definitions/layerOpacity" },
+        "minZoom": { "$ref": "#/definitions/layerMinZoom" },
+        "maxZoom": { "$ref": "#/definitions/layerMaxZoom" },
+        "bounds": { "$ref": "#/definitions/layerBounds" },
+        "attribution": { "$ref": "#/definitions/layerAttribution" },
+        "metadata": { "$ref": "#/definitions/metadata" },
+        "legend": { "$ref": "#/definitions/legend" },
+        "url": {
+          "type": "string",
+          "description": "GeoParquet file URL — the whole file is fetched, so the server needs CORS but no range-request support; coordinates must be WGS84 (OGC:CRS84/EPSG:4326)"
         },
         "style": {
           "description": "simplified style: one flat paint-property object (circle-*, line-*, fill-* — applied per geometry type) · full control: an array of MapLibre style-spec layers",

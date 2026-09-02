@@ -1,0 +1,56 @@
+{
+  "$schema": "https://map0.net/schema/v1.json",
+  "version": 1,
+  "meta": { "title": "GeoParquet" },
+  "map": { "center": [16.3695, 48.2095], "zoom": 14 },
+  "basemaps": [
+    {
+      "id": "grau",
+      "title": "Grey",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at",
+      "default": true
+    }
+  ],
+  "layers": [
+    {
+      "id": "baumkataster",
+      "type": "geoparquet",
+      "title": "Tree cadastre — 1st district",
+      "url": "/data/vienna-trees-1010.parquet",
+      "style": {
+        "circle-color": "#15803d",
+        "circle-radius": 4.5,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 1
+      },
+      "hover": { "content": "{{GATTUNG_ART}}" },
+      "popup": {
+        "title": "{{GATTUNG_ART}}",
+        "fields": [
+          { "key": "PFLANZJAHR_TXT", "label": "Planted" },
+          { "key": "BAUMHOEHE_TXT", "label": "Height" },
+          { "key": "STAMMUMFANG_TXT", "label": "Trunk circumference" },
+          { "key": "KRONENDURCHMESSER_TXT", "label": "Crown diameter" },
+          { "key": "OBJEKT_STRASSE", "label": "Location" }
+        ]
+      },
+      "attribution": "Stadt Wien — data.wien.gv.at"
+    },
+    {
+      "id": "bezirksgrenzen",
+      "type": "geoparquet",
+      "title": "District boundaries",
+      "url": "/data/vienna-districts.parquet",
+      "style": {
+        "fill-color": "#7c3aed",
+        "fill-opacity": 0.04,
+        "line-color": "#7c3aed",
+        "line-width": 1.5
+      },
+      "popup": { "title": "{{NAMEK}}", "fields": [{ "key": "BEZNR", "label": "District no." }] },
+      "attribution": "Stadt Wien — data.wien.gv.at"
+    }
+  ]
+}

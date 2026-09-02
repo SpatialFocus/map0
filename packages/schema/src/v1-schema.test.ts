@@ -89,6 +89,7 @@ const KEY_TABLES: Array<[definition: string, keys: readonly string[]]> = [
   ["rasterLayer", LAYER_KEYS.raster!],
   ["cogLayer", LAYER_KEYS.cog!],
   ["geojsonLayer", LAYER_KEYS.geojson!],
+  ["geoparquetLayer", LAYER_KEYS.geoparquet!],
   ["vectorLayer", LAYER_KEYS.vector!],
   ["popup", POPUP_KEYS],
   ["wmsInfo", WMS_INFO_KEYS],
@@ -192,6 +193,7 @@ describe("v1.json required keys", () => {
     ["rasterLayer", ["type", "url"]],
     ["cogLayer", ["type", "url"]],
     ["geojsonLayer", ["type", "data"]],
+    ["geoparquetLayer", ["type", "url"]],
     ["vectorLayer", ["type", "url", "style"]],
   ])("%s requires %j", (definition, required) => {
     expect(def(`${definition}.required`)).toEqual(required);

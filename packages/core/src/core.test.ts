@@ -13,6 +13,7 @@ import {
   cogLegendEntries,
 } from "./adapters/cog.js";
 import { expandSimpleStyle } from "./adapters/geojson.js";
+import { assertWgs84, featureCollectionFromRows, type GeoMetadata } from "./adapters/geoparquet.js";
 import { deriveFromStyleLayers, entryFromPaint } from "./adapters/legend-derive.js";
 import { escapeHtml, renderFields, renderTemplate } from "./template.js";
 import { lngLatToMercator } from "./mercator.js";
@@ -214,6 +215,72 @@ describe("cog", () => {
       { label: "0", color: "#67a9cf", shape: "square" },
       { label: "2 – 5", color: "#999999", shape: "square" },
     ]);
+  });
+});
+
+describe("geoparquet", () => {
+  const geo: GeoMetadata = { primary_column: "geom", columns: { geom: {} } };
+
+  it("turns rows into features, geometry column split from properties", () => {
+    const fc = featureCollectionFromRows(
+      [
+        { name: "A", count: 3n, geom: { type: "Point", coordinates: [16.37, 48.21] } },
+        { name: "B", count: 4n, geom: null },
+      ],
+      geo,
+    );
+    expect(fc.features).toHaveLength(2);
+    expect(fc.features[0]?.geometry).toEqual({ type: "Point", coordinates: [16.37, 48.21] });
+    /* BigInt is downcast: JSON.stringify (popup de-dup, share state) throws on it */
+    expect(fc.features[0]?.properties).toEqual({ name: "A", count: 3 });
+    expect(fc.features[1]?.geometry).toBeNull();
+    expect(() => JSON.stringify(fc)).not.toThrow();
+  });
+
+  it("drops non-primary geometry columns from the properties", () => {
+    const fc = featureCollectionFromRows(
+      [{ name: "A", geom: { type: "Point", coordinates: [1, 2] }, centroid: { type: "Point", coordinates: [1, 2] } }],
+      { primary_column: "geom", columns: { geom: {}, centroid: {} } },
+    );
+    expect(fc.features[0]?.properties).toEqual({ name: "A" });
+  });
+
+  it("accepts WGS84 in its spellings, rejects everything else", () => {
+    expect(() => assertWgs84("geom", geo)).not.toThrow(); // no crs = OGC:CRS84 per spec
+    expect(() =>
+      assertWgs84("geom", { columns: { geom: { crs: { id: { authority: "OGC", code: "CRS84" } } } } }),
+    ).not.toThrow();
+    expect(() =>
+      assertWgs84("geom", { columns: { geom: { crs: { id: { authority: "EPSG", code: 4326 } } } } }),
+    ).not.toThrow();
+    expect(() =>
+      assertWgs84("geom", { columns: { geom: { crs: { name: "WGS 84" } } } }),
+    ).not.toThrow();
+    expect(() =>
+      assertWgs84("geom", {
+        columns: { geom: { crs: { name: "MGI / Austria GK East", id: { authority: "EPSG", code: 31256 } } } },
+      }),
+    ).toThrow(/MGI \/ Austria GK East/);
+  });
+
+  /* the shipped demo file, read through the real decoder (node path of hyparquet) */
+  it("decodes the demo file: geometry as GeoJSON, geo metadata with bbox", async () => {
+    const { asyncBufferFromFile, parquetMetadataAsync, parquetReadObjects } = await import("hyparquet");
+    const { compressors } = await import("hyparquet-compressors");
+    const path = new URL("../../../site/public/data/vienna-trees-1010.parquet", import.meta.url);
+    const file = await asyncBufferFromFile(path.pathname.replace(/^\/(?=[a-z]:)/i, ""));
+    const metadata = await parquetMetadataAsync(file);
+    const kv = metadata.key_value_metadata?.find((e) => e.key === "geo");
+    expect(kv?.value).toBeTruthy();
+    const parsed = JSON.parse(kv!.value!) as GeoMetadata;
+    expect(parsed.primary_column).toBe("geom");
+    expect(parsed.columns?.geom?.bbox).toHaveLength(4);
+    const rows = (await parquetReadObjects({ file, metadata, compressors })) as Array<Record<string, unknown>>;
+    expect(rows.length).toBeGreaterThan(4000);
+    const fc = featureCollectionFromRows(rows, parsed);
+    expect(fc.features[0]?.geometry?.type).toBe("Point");
+    expect(typeof fc.features[0]?.properties?.GATTUNG_ART).toBe("string");
+    expect(fc.features[0]?.properties).not.toHaveProperty("geom");
   });
 });
 

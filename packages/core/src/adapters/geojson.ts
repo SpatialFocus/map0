@@ -8,7 +8,7 @@ import {
   type LegendSpec,
 } from "./types.js";
 
-type NormalizedGeoJson = GeoJsonLayerDef & NormalizedLayer & { type: "geojson" };
+export type NormalizedGeoJson = GeoJsonLayerDef & NormalizedLayer & { type: "geojson" };
 
 const OPACITY_PROPS: Record<string, string[]> = {
   fill: ["fill-opacity"],

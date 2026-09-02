@@ -1,0 +1,21 @@
+{
+  "title": "GeoParquet — map0-Demos",
+  "eyebrow": "Datenquellen",
+  "lede": "Vektordaten aus einer spaltenorientierten Datei auf einfachem Speicher — im Browser dekodiert, gerendert wie GeoJSON. Die 4.522 Bäume unten reisen als 121&nbsp;KB; dieselben Daten als GeoJSON sind 2,6&nbsp;MB auf der Leitung.",
+  "note": "<strong>Ausprobieren:</strong> Netzwerk-Tab öffnen und neu laden — der komplette Baumkataster des 1. Bezirks kommt als eine einzige 121-KB-Datei an. Über einen Baum fahren zeigt die Art, ein Klick den vollen Datensatz. Und „Auf Ebene zoomen“ bei den Bezirksgrenzen: die Ausdehnung steht in den Metadaten der Datei, kein Koordinaten-Scan nötig.",
+  "config.h2": "Konfiguration",
+  "config.p": "Ein <code>geoparquet</code>-Layer ist ein <code>geojson</code>-Layer mit <code>url</code> statt <code>data</code> — Styling, Clustering, Popups und Hover-Tooltips sind dieselben Optionen, denn nach dem Dekodieren laufen die Features durch dieselbe Pipeline.",
+  "what.h2": "Was diese Demo zeigt",
+  "what.li1": "Ein <code>geoparquet</code>-Layer braucht nur eine <code>url</code> — die Datei wird einmal geladen und im Browser dekodiert",
+  "what.li2": "Punkte und Polygone aus getrennten Dateien; der vereinfachte Style und die volle Style-Spec-Form funktionieren beide",
+  "what.li3": "Popups, Hover-Tooltips, Clustering und <code>promoteId</code> — exakt die <code>geojson</code>-Optionen",
+  "what.li4": "„Auf Ebene zoomen“ liest die Ausdehnung aus den GeoParquet-Metadaten, statt Koordinaten zu scannen",
+  "what.li5": "Der Decoder (hyparquet, ~22 KB) lädt bei Bedarf — und das Zusatz-Codec-Bundle (~76 KB mehr) nur für Dateien, die nicht mit Snappy komprimiert sind",
+  "what.p1": "Die Übertragungsbilanz, gemessen am Baum-Layer dieser Seite: 2,6&nbsp;MB als rohes GeoJSON, 215&nbsp;KB als gzipptes GeoJSON, 121&nbsp;KB als GeoParquet. Die Kompression steckt in der Datei selbst — ein einfacher Bucket ohne <code>Content-Encoding</code>-Konfiguration liefert trotzdem die kleine Zahl, und der Browser parst einen kompakten spaltenorientierten Buffer statt Megabytes JSON-Text.",
+  "callout": "<strong>Nur WGS84, komplette Datei.</strong> Koordinaten müssen OGC:CRS84/EPSG:4326 sein (der GeoParquet-Standard) — eine Datei in einem anderen CRS scheitert mit einer klaren Fehlermeldung am Layer, die es benennt; clientseitige Reprojektion gibt es nicht. Und wie bei einer GeoJSON-URL wird die ganze Datei geladen und dekodiert: gut geeignet bis ein paar MB / ein paar hunderttausend Features, kein Streaming-Format. Für Vektordaten in Stadt- bis Landesgröße besser Vector Tiles schneiden (PMTiles funktioniert vom selben Bucket).",
+  "produce.h2": "GeoParquet erzeugen",
+  "produce.p1": "Jedes aktuelle GDAL oder DuckDB schreibt valides GeoParquet — inklusive der WGS84-Reprojektion und der Metadaten, auf die sich dieser Layer-Typ verlässt:",
+  "produce.p2": "Die Dateien dieser Seite stammen aus dem Open-Data-WFS der Stadt Wien, genau so mit DuckDB konvertiert (Bezirksgrenzen auf ~20&nbsp;m vereinfacht). Snappy, gzip, brotli, zstd und lz4 werden alle dekodiert; einfaches Parquet ohne die <code>geo</code>-Metadaten wird mit einem Hinweis abgelehnt, wie man es konvertiert.",
+  "when.h2": "Wann zu GeoParquet greifen",
+  "when.p1": "Es füllt die Lücke zwischen GeoJSON und Vector Tiles: die Publishing-Einfachheit einer einzelnen Datei auf beliebigem statischem Speicher — kein Tile-Schneiden, kein Server — bei einer Übertragungsgröße, die mittlere Datensätze auch mobil komfortabel hält. Und es ist das Format, das moderne Daten-Pipelines ohnehin sprechen: die Datei vom Data Engineer rendert direkt, Attribute inklusive, ohne Export-Schritt. Für Datensätze, die darüber hinauswachsen, übernimmt PMTiles (Vector Tiles in einer Datei, ebenfalls serverlos)."
+}

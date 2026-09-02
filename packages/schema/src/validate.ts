@@ -32,7 +32,7 @@ export interface ValidationResult {
 type Err = (path: string, message: string, severity?: "warning") => void;
 
 export const BASEMAP_TYPES = ["style", "raster", "empty"];
-export const LAYER_TYPES = ["group", "wms", "wmts", "raster", "cog", "geojson", "vector"];
+export const LAYER_TYPES = ["group", "wms", "wmts", "raster", "cog", "geojson", "geoparquet", "vector"];
 export const POSITIONS = ["top-left", "top-right", "bottom-left", "bottom-right"];
 
 /* ---------------------------- key tables & enums ----------------------------
@@ -116,6 +116,7 @@ export const LAYER_KEYS: Record<string, string[]> = {
   raster: [...LAYER_COMMON_KEYS, "url", "tileSize"],
   cog: [...LAYER_COMMON_KEYS, "url", "color", "hillshade"],
   geojson: [...LAYER_COMMON_KEYS, "data", "style", "cluster", "popup", "hover", "promoteId"],
+  geoparquet: [...LAYER_COMMON_KEYS, "url", "style", "cluster", "popup", "hover", "promoteId"],
   vector: [...LAYER_COMMON_KEYS, "url", "sourceLayer", "style", "popup", "hover"],
 };
 export const POPUP_KEYS = ["title", "content", "fields", "maxWidth"];
@@ -606,23 +607,12 @@ function validateLayers(
         else if (typeof layer.data !== "string" && !isObject(layer.data))
           err(`${p}.data`, '"data" must be a URL string or a GeoJSON object');
         else checkUrl(layer.data, `${p}.data`, err);
-        if (layer.style !== undefined && !isObject(layer.style) && !Array.isArray(layer.style))
-          err(`${p}.style`, "style must be a paint object or an array of style-spec layers");
-        if (
-          layer.cluster !== undefined &&
-          typeof layer.cluster !== "boolean" &&
-          !isObject(layer.cluster)
-        )
-          err(`${p}.cluster`, "cluster must be true, false, or an options object");
-        if (isObject(layer.cluster)) {
-          checkKeys(layer.cluster, CLUSTER_KEYS, `${p}.cluster`, err);
-          expectBoolean(layer.cluster.enabled, `${p}.cluster.enabled`, err);
-          expectNumber(layer.cluster.radius, `${p}.cluster.radius`, err, 1, 1000);
-          expectNumber(layer.cluster.maxZoom, `${p}.cluster.maxZoom`, err, 0, 24);
-        }
-        expectString(layer.promoteId, `${p}.promoteId`, err);
-        validatePopup(layer.popup, `${p}.popup`, err);
-        validateHover(layer.hover, `${p}.hover`, err);
+        validateFeatureOptions(layer, p, err);
+        break;
+      case "geoparquet":
+        if (typeof layer.url !== "string")
+          err(`${p}.url`, 'a "geoparquet" layer needs a "url" (GeoParquet file with WGS84 coordinates)');
+        validateFeatureOptions(layer, p, err);
         break;
       case "vector":
         if (typeof layer.url !== "string")
@@ -641,6 +631,31 @@ function validateLayers(
     }
     if (type !== "geojson") checkUrl(layer.url, `${p}.url`, err);
   });
+}
+
+/**
+ * The feature-data styling surface shared by "geojson" and "geoparquet":
+ * style, clustering, popup, hover, promoteId — both types render through the
+ * same pipeline, so they accept exactly the same options.
+ */
+function validateFeatureOptions(layer: Record<string, unknown>, p: string, err: Err): void {
+  if (layer.style !== undefined && !isObject(layer.style) && !Array.isArray(layer.style))
+    err(`${p}.style`, "style must be a paint object or an array of style-spec layers");
+  if (
+    layer.cluster !== undefined &&
+    typeof layer.cluster !== "boolean" &&
+    !isObject(layer.cluster)
+  )
+    err(`${p}.cluster`, "cluster must be true, false, or an options object");
+  if (isObject(layer.cluster)) {
+    checkKeys(layer.cluster, CLUSTER_KEYS, `${p}.cluster`, err);
+    expectBoolean(layer.cluster.enabled, `${p}.cluster.enabled`, err);
+    expectNumber(layer.cluster.radius, `${p}.cluster.radius`, err, 1, 1000);
+    expectNumber(layer.cluster.maxZoom, `${p}.cluster.maxZoom`, err, 0, 24);
+  }
+  expectString(layer.promoteId, `${p}.promoteId`, err);
+  validatePopup(layer.popup, `${p}.popup`, err);
+  validateHover(layer.hover, `${p}.hover`, err);
 }
 
 /**

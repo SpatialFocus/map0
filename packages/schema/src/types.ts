@@ -81,6 +81,7 @@ export type LayerDef =
   | RasterLayerDef
   | CogLayerDef
   | GeoJsonLayerDef
+  | GeoParquetLayerDef
   | VectorLayerDef;
 
 export type LayerType = LayerDef["type"];
@@ -246,6 +247,23 @@ export interface GeoJsonLayerDef extends LayerCommon {
   type: "geojson";
   /** URL or inline GeoJSON */
   data: string | FeatureCollection | Feature | Geometry;
+  style?: SimpleStyle | StyleLayerSpec[];
+  cluster?: boolean | { enabled?: boolean; radius?: number; maxZoom?: number };
+  popup?: PopupConfig | false;
+  /** short tooltip template shown on hover (F5.4) */
+  hover?: { content: string } | false;
+  promoteId?: string;
+}
+
+export interface GeoParquetLayerDef extends LayerCommon {
+  type: "geoparquet";
+  /**
+   * GeoParquet file URL. The whole file is downloaded and decoded in the
+   * browser (like a geojson URL, but a fraction of the transfer size);
+   * coordinates must be WGS84 (OGC:CRS84/EPSG:4326 — no client-side
+   * reprojection).
+   */
+  url: string;
   style?: SimpleStyle | StyleLayerSpec[];
   cluster?: boolean | { enabled?: boolean; radius?: number; maxZoom?: number };
   popup?: PopupConfig | false;

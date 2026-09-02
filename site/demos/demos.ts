@@ -47,6 +47,14 @@ export const DEMOS: Demo[] = [
     icon: "💧",
   },
   {
+    id: "geoparquet",
+    title: "GeoParquet",
+    blurb: "Columnar vector features from a single file — a fraction of the transfer size of GeoJSON.",
+    blurbDe: "Spaltenorientierte Vektordaten aus einer einzigen Datei — ein Bruchteil der Übertragungsgröße von GeoJSON.",
+    group: "Data sources",
+    icon: "🗜️",
+  },
+  {
     id: "cog",
     title: "Cloud Optimized GeoTIFF",
     blurb: "Rasters read straight from static storage — imagery, terrain and classified values.",

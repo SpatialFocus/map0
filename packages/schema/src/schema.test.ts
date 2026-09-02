@@ -41,6 +41,40 @@ describe("validateConfig", () => {
     expect(paths).toContain("$.layers[0].children[0].layers");
   });
 
+  it("validates geoparquet layers like geojson, but by url", () => {
+    const ok = validateConfig({
+      ...minimal,
+      layers: [
+        {
+          type: "geoparquet",
+          title: "Bäume",
+          url: "https://e.org/trees.parquet",
+          cluster: { radius: 40 },
+          style: { "circle-color": "#0e7490" },
+          popup: { title: "{{art}}" },
+        },
+      ],
+    });
+    expect(ok.valid).toBe(true);
+    expect(ok.errors).toEqual([]);
+
+    const broken = validateConfig({
+      ...minimal,
+      layers: [{ type: "geoparquet", title: "kaputt", cluster: { radius: 0 } }],
+    });
+    expect(broken.valid).toBe(false);
+    const paths = broken.errors.map((e) => e.path);
+    expect(paths).toContain("$.layers[0].url");
+    expect(paths).toContain("$.layers[0].cluster.radius");
+
+    /* transport policy applies to the parquet URL like any other */
+    const insecure = validateConfig({
+      ...minimal,
+      layers: [{ type: "geoparquet", url: "http://e.org/trees.parquet" }],
+    });
+    expect(insecure.errors.some((e) => e.path === "$.layers[0].url")).toBe(true);
+  });
+
   it("rejects a non-boolean cooperativeGestures", () => {
     const result = validateConfig({
       version: 1,

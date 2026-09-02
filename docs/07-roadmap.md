@@ -13,7 +13,7 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
 
 | Area | Status |
 |---|---|
-| Data sources | ✅ WMS, WMTS, vector tiles/PMTiles, GeoJSON, COG (RGB, single-band ramps, explicit classes, hillshade), style & raster basemaps · ⬜ WFS, OGC API Features (deferred to v1.x per D-03) |
+| Data sources | ✅ WMS, WMTS, vector tiles/PMTiles, GeoJSON, GeoParquet (decoded in the browser, geojson styling pipeline), COG (RGB, single-band ramps, explicit classes, hillshade), style & raster basemaps · ⬜ WFS, OGC API Features (deferred to v1.x per D-03) |
 | Layer tree | ✅ groups, visibility, opacity, status, zoom hints, zoom-to-layer, metadata links, runtime add/remove · ⬜ drag reorder, filter box, radio groups |
 | Feature info | ✅ GetFeatureInfo + vector query, templates, field tables, multi-hit, hover, highlight, coordinates · ⬜ mobile bottom sheet |
 | Legend | ✅ service, style-derived, hand-written; in print |
