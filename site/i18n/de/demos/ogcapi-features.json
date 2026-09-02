@@ -1,0 +1,18 @@
+{
+  "title": "OGC API Features — map0-Demos",
+  "eyebrow": "Datenquellen",
+  "lede": "Der WFS-Nachfolger: einfache URLs, einfaches GeoJSON, Paging direkt im Protokoll. Eine Collection-URL in der Config genügt — map0 geht die Seiten entlang der <code>next</code>-Links der Antworten selbst durch.",
+  "note": "<strong>Ausprobieren:</strong> Netzwerk-Tab öffnen und neu laden — die ~2.600 Bahnhöfe Großbritanniens kommen in Seiten zu 1.000, jede nächste Seite adressiert über den Link, den die vorige Antwort mitgegeben hat. Über einen Bahnhof fahren zeigt den Namen; die Flughäfen laden in einer einzigen Seite.",
+  "config.h2": "Konfiguration",
+  "config.p": "Die <code>url</code> ist die Collection-URL — das, worauf die Landing Page einer API verlinkt; map0 hängt <code>/items</code> an und fragt GeoJSON an. Alles nach dem Laden ist die <code>geojson</code>-Pipeline, also sind <code>style</code>, <code>cluster</code>, <code>popup</code> und <code>hover</code> dieselben Optionen wie überall sonst.",
+  "what.h2": "Was diese Demo zeigt",
+  "what.li1": "Ein <code>ogcapi-features</code>-Layer braucht nichts als die Collection-URL",
+  "what.li2": "Das Paging folgt den <code>next</code>-Links der Antwort — dem Mechanismus der Spec selbst; ein Server, der <code>limit</code> kappt, erzeugt einfach mehr Seiten",
+  "what.li3": "<code>limit</code> (Default 10.000) deckelt die Gesamtzahl; <code>pageSize</code> (Default 1.000) bemisst jeden Request",
+  "what.li4": "<code>params</code> hängt Query-Parameter an — <code>bbox</code>, <code>datetime</code>, CQL2-<code>filter</code>, <code>properties</code>",
+  "what.li5": "API-Fehler sind JSON Problem Details — Titel und Beschreibung landen im Fehlerstatus des Layers",
+  "what.li6": "Styling, Clustering, Popups, Hover, <code>promoteId</code> — exakt die <code>geojson</code>-Optionen",
+  "callout": "<strong>Bewusst Link-getrieben.</strong> Die Feature-Gesamtzahl (<code>numberMatched</code>) ist in der Spec optional und fehlt bei realen Diensten — auch bei der Datenquelle dieser Seite. Der <code>next</code>-Link ist, was der Standard garantiert, also folgt map0 ihm; damit ist die Offset-Arithmetik das Problem des Servers, nicht des Clients. Features kommen in WGS84 (dem API-Default) — genau dem, was MapLibre rendert. CORS-Header sind Voraussetzung, wie bei jeder Browser-gelesenen Quelle.",
+  "when.h2": "Wann zu OGC API Features greifen",
+  "when.p1": "Derselbe Live-Daten-Tradeoff wie bei <a href=\"/demos/wfs.html\">WFS</a> — jeder Aufruf fragt den Dienst, die Karte folgt der Datenbank — aber ohne die Reibung: keine Versions-Aushandlung, kein <code>outputFormat</code>-Raten, kein Exception-XML, und Paging, das auf jeder Implementierung gleich funktioniert. Bietet ein Dienst beide Schnittstellen, ist diese die bessere Wahl. Für statische Snapshots reisen dieselben Daten als <a href=\"/demos/geoparquet.html\">GeoParquet</a> deutlich billiger; jenseits der <code>limit</code>-Decke gehören sie in Vector Tiles (PMTiles)."
+}

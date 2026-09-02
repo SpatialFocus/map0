@@ -66,7 +66,10 @@ recovery, vendor params) — the formalization of the "outputFormat=json&srsName
 GeoJSON demo recommended. `type: "geoparquet"` (not in the original decision — the format matured
 around cloud-native workflows in the meantime) fetches one file and decodes it in the browser via
 hyparquet (lazy chunk; snappy built in, the extra-codec bundle loads only for files that need it),
-WGS84 only, mirroring the COG adapter's fail-fast CRS line. OGC API Features remains deferred.
+WGS84 only, mirroring the COG adapter's fail-fast CRS line. `type: "ogcapi-features"` followed the
+same day, closing out the D-03 deferrals: items paged by following the response's `next` links —
+the spec's own mechanism, chosen over offset arithmetic because `numberMatched` is optional and
+actually missing from real services (OS Zoomstack on ldproxy, for one).
 
 ## D-04 · Print scope — **DECIDED: client-side first**
 

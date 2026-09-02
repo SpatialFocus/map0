@@ -3,6 +3,7 @@ import type { SourceAdapter } from "./types.js";
 import { CogAdapter } from "./cog.js";
 import { GeoJsonAdapter } from "./geojson.js";
 import { GeoParquetAdapter } from "./geoparquet.js";
+import { OgcApiFeaturesAdapter } from "./ogcapi-features.js";
 import { RasterAdapter } from "./raster.js";
 import { VectorAdapter } from "./vector.js";
 import { WfsAdapter } from "./wfs.js";
@@ -16,6 +17,7 @@ const factories = new Map<string, AdapterFactory>([
   ["wms", (def) => new WmsAdapter(def as never)],
   ["wmts", (def) => new WmtsAdapter(def as never)],
   ["wfs", (def) => new WfsAdapter(def as never)],
+  ["ogcapi-features", (def) => new OgcApiFeaturesAdapter(def as never)],
   ["raster", (def) => new RasterAdapter(def as never)],
   ["cog", (def) => new CogAdapter(def as never)],
   ["geojson", (def) => new GeoJsonAdapter(def as never)],

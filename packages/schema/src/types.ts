@@ -79,6 +79,7 @@ export type LayerDef =
   | WmsLayerDef
   | WmtsLayerDef
   | WfsLayerDef
+  | OgcApiFeaturesLayerDef
   | RasterLayerDef
   | CogLayerDef
   | GeoJsonLayerDef
@@ -182,6 +183,24 @@ export interface WfsLayerDef extends LayerCommon {
   /** features per GetFeature request (2.0.0 only); default 5000 */
   pageSize?: number;
   /** extra vendor parameters appended to every GetFeature (cql_filter, sortBy, …) */
+  params?: Record<string, string>;
+  style?: SimpleStyle | StyleLayerSpec[];
+  cluster?: boolean | { enabled?: boolean; radius?: number; maxZoom?: number };
+  popup?: PopupConfig | false;
+  /** short tooltip template shown on hover (F5.4) */
+  hover?: { content: string } | false;
+  promoteId?: string;
+}
+
+export interface OgcApiFeaturesLayerDef extends LayerCommon {
+  type: "ogcapi-features";
+  /** collection URL, e.g. "https://api.example.gv.at/ogc/collections/bezirke" ("/items" may be included) */
+  url: string;
+  /** stop after this many features; default 10000 */
+  limit?: number;
+  /** features per request (the "limit" query parameter); default 1000 — paging follows the response's "next" links */
+  pageSize?: number;
+  /** extra query parameters appended to the first request (bbox, datetime, filter, properties, …) */
   params?: Record<string, string>;
   style?: SimpleStyle | StyleLayerSpec[];
   cluster?: boolean | { enabled?: boolean; radius?: number; maxZoom?: number };

@@ -32,7 +32,18 @@ export interface ValidationResult {
 type Err = (path: string, message: string, severity?: "warning") => void;
 
 export const BASEMAP_TYPES = ["style", "raster", "empty"];
-export const LAYER_TYPES = ["group", "wms", "wmts", "wfs", "raster", "cog", "geojson", "geoparquet", "vector"];
+export const LAYER_TYPES = [
+  "group",
+  "wms",
+  "wmts",
+  "wfs",
+  "ogcapi-features",
+  "raster",
+  "cog",
+  "geojson",
+  "geoparquet",
+  "vector",
+];
 export const POSITIONS = ["top-left", "top-right", "bottom-left", "bottom-right"];
 
 /* ---------------------------- key tables & enums ----------------------------
@@ -119,6 +130,18 @@ export const LAYER_KEYS: Record<string, string[]> = {
     "typeNames",
     "version",
     "outputFormat",
+    "limit",
+    "pageSize",
+    "params",
+    "style",
+    "cluster",
+    "popup",
+    "hover",
+    "promoteId",
+  ],
+  "ogcapi-features": [
+    ...LAYER_COMMON_KEYS,
+    "url",
     "limit",
     "pageSize",
     "params",
@@ -580,6 +603,19 @@ function validateLayers(
         expectNumber(layer.pageSize, `${p}.pageSize`, err, 1, 50000);
         if (layer.params !== undefined) {
           if (!isObject(layer.params)) err(`${p}.params`, "params must be an object of vendor parameters");
+          else
+            for (const [k, v] of Object.entries(layer.params))
+              expectString(v, `${p}.params.${k}`, err);
+        }
+        validateFeatureOptions(layer, p, err);
+        break;
+      case "ogcapi-features":
+        if (typeof layer.url !== "string")
+          err(`${p}.url`, 'an "ogcapi-features" layer needs a "url" (collection URL, e.g. …/collections/bezirke)');
+        expectNumber(layer.limit, `${p}.limit`, err, 1, 1000000);
+        expectNumber(layer.pageSize, `${p}.pageSize`, err, 1, 50000);
+        if (layer.params !== undefined) {
+          if (!isObject(layer.params)) err(`${p}.params`, "params must be an object of query parameters");
           else
             for (const [k, v] of Object.entries(layer.params))
               expectString(v, `${p}.params.${k}`, err);

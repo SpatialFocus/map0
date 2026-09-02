@@ -37,6 +37,14 @@ export const DEMOS: Demo[] = [
     icon: "🚰",
   },
   {
+    id: "ogcapi-features",
+    title: "OGC API Features",
+    blurb: "WFS's successor — a collection URL is enough; paging follows the API's own next links.",
+    blurbDe: "Der WFS-Nachfolger — eine Collection-URL genügt; das Paging folgt den next-Links der API.",
+    group: "Data sources",
+    icon: "🛤️",
+  },
+  {
     id: "vector-tiles",
     title: "Vector tiles",
     titleDe: "Vector Tiles",

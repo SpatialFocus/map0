@@ -68,7 +68,9 @@
           needs. The flip side is per-request latency and untiled transfer sizes: for a static
           snapshot the same data travels far cheaper as
           <a href="/demos/geoparquet.html">GeoParquet</a>, and a feature type beyond the
-          <code>limit</code> ceiling belongs in vector tiles (PMTiles). The
+          <code>limit</code> ceiling belongs in vector tiles (PMTiles). A service that also offers
+          <a href="/demos/ogcapi-features.html">OGC API Features</a> is better read through that
+          interface. The
           <code>limit</code> default of 10,000 is deliberate — it keeps an accidental
           <code>typeNames</code> against a country-sized table from pulling millions of features
           into the page.

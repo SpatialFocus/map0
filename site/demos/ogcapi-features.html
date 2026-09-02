@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="title">OGC API Features — map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="ogcapi-features">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow" data-i18n="eyebrow">Data sources</p>
+        <h1>OGC API Features</h1>
+        <p class="lede" data-i18n="lede">
+          WFS's successor: plain URLs, plain GeoJSON, paging built into the protocol. A collection
+          URL in the config is all it takes — map0 walks the pages by following the response's own
+          <code>next</code> links.
+        </p>
+      </div>
+
+      <map0-viewer config-src="/configs/ogcapi-features.map0.json"></map0-viewer>
+      <p class="demo-note" data-i18n="note">
+        <strong>Try it:</strong> open the network tab and reload — the ~2,600 railway stations of
+        Great Britain arrive in pages of 1,000, each next page addressed by the link the previous
+        answer handed back. Hover a station for its name; the airports load in a single page.
+      </p>
+
+      <section class="doc">
+        <h2 data-i18n="config.h2">Configuration</h2>
+        <p data-i18n="config.p">
+          The <code>url</code> is the collection URL — the thing an API's landing page links to;
+          map0 appends <code>/items</code> and asks for GeoJSON. Everything after the fetch is the
+          <code>geojson</code> pipeline, so <code>style</code>, <code>cluster</code>,
+          <code>popup</code> and <code>hover</code> are the same options as everywhere else.
+        </p>
+        <pre data-src="/configs/ogcapi-features.map0.json" data-label="ogcapi-features.map0.json" data-emphasise="&quot;ogcapi-features&quot;,&quot;url&quot;,pageSize"></pre>
+      </section>
+
+      <section class="doc">
+        <h2 data-i18n="what.h2">What this demo shows</h2>
+        <ul class="checks">
+          <li data-i18n="what.li1">An <code>ogcapi-features</code> layer needs nothing but the collection URL</li>
+          <li data-i18n="what.li2">Paging follows the response's <code>next</code> links — the spec's own mechanism, so a server capping <code>limit</code> just produces more pages</li>
+          <li data-i18n="what.li3"><code>limit</code> (default 10,000) caps the total; <code>pageSize</code> (default 1,000) sizes each request</li>
+          <li data-i18n="what.li4"><code>params</code> appends query parameters — <code>bbox</code>, <code>datetime</code>, CQL2 <code>filter</code>, <code>properties</code></li>
+          <li data-i18n="what.li5">API errors are JSON problem details — their title and description land in the layer's error state</li>
+          <li data-i18n="what.li6">Styling, clustering, popups, hover, <code>promoteId</code> — exactly the <code>geojson</code> options</li>
+        </ul>
+        <div class="callout" data-i18n="callout">
+          <strong>Deliberately link-driven.</strong>
+          The feature count (<code>numberMatched</code>) is optional in the spec and missing from
+          real services — this page's own data source omits it. The <code>next</code> link is what
+          the standard guarantees, so that is what map0 follows; it also makes offset arithmetic
+          the server's problem, not the client's. Features arrive in WGS84 (the API default), which
+          is exactly what MapLibre renders. CORS headers are required, as for every browser-read
+          source.
+        </div>
+      </section>
+
+      <section class="doc">
+        <h2 data-i18n="when.h2">When to reach for OGC API Features</h2>
+        <p data-i18n="when.p1">
+          Same live-data trade-off as <a href="/demos/wfs.html">WFS</a> — every load asks the
+          service, so the map follows the database — but with the friction removed: no version
+          negotiation, no <code>outputFormat</code> guessing, no exception XML, and paging that
+          works the same on every implementation. If a service offers both interfaces, prefer this
+          one. For static snapshots, <a href="/demos/geoparquet.html">GeoParquet</a> transfers the
+          same data far cheaper; beyond the <code>limit</code> ceiling, cut vector tiles (PMTiles).
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

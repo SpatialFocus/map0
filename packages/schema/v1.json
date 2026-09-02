@@ -150,6 +150,7 @@
         { "$ref": "#/definitions/wmsLayer" },
         { "$ref": "#/definitions/wmtsLayer" },
         { "$ref": "#/definitions/wfsLayer" },
+        { "$ref": "#/definitions/ogcapiFeaturesLayer" },
         { "$ref": "#/definitions/rasterLayer" },
         { "$ref": "#/definitions/cogLayer" },
         { "$ref": "#/definitions/geojsonLayer" },
@@ -266,6 +267,56 @@
         "params": {
           "type": "object",
           "description": "extra vendor parameters appended to every GetFeature (cql_filter, sortBy, …)",
+          "additionalProperties": { "type": "string" }
+        },
+        "style": {
+          "description": "simplified style: one flat paint-property object (circle-*, line-*, fill-* — applied per geometry type) · full control: an array of MapLibre style-spec layers",
+          "oneOf": [
+            { "type": "object" },
+            { "type": "array", "items": { "$ref": "#/definitions/styleLayer" } }
+          ]
+        },
+        "cluster": {
+          "description": "cluster point features — true, or an options object",
+          "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/clusterOptions" }]
+        },
+        "popup": {
+          "description": "popup on feature click — false disables",
+          "oneOf": [{ "const": false }, { "$ref": "#/definitions/popup" }]
+        },
+        "hover": {
+          "description": "short tooltip on hover, e.g. { \"content\": \"{{name}}\" } — false disables",
+          "oneOf": [{ "const": false }, { "$ref": "#/definitions/hover" }]
+        },
+        "promoteId": { "type": "string", "description": "feature property to use as the feature id (hover/selection state)" }
+      }
+    },
+    "ogcapiFeaturesLayer": {
+      "type": "object",
+      "description": "OGC API Features layer: the collection's items are fetched as GeoJSON (WGS84 by default), paged by following the response's \"next\" links, then rendered exactly like a geojson layer — clustering, popups and hover tooltips work the same",
+      "required": ["type", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "ogcapi-features" },
+        "id": { "$ref": "#/definitions/layerId" },
+        "title": { "$ref": "#/definitions/layerTitle" },
+        "visible": { "$ref": "#/definitions/layerVisible" },
+        "opacity": { "$ref": "#/definitions/layerOpacity" },
+        "minZoom": { "$ref": "#/definitions/layerMinZoom" },
+        "maxZoom": { "$ref": "#/definitions/layerMaxZoom" },
+        "bounds": { "$ref": "#/definitions/layerBounds" },
+        "attribution": { "$ref": "#/definitions/layerAttribution" },
+        "metadata": { "$ref": "#/definitions/metadata" },
+        "legend": { "$ref": "#/definitions/legend" },
+        "url": {
+          "type": "string",
+          "description": "collection URL, e.g. \"https://api.example.gv.at/ogc/collections/bezirke\" — \"/items\" is appended if missing"
+        },
+        "limit": { "type": "number", "minimum": 1, "maximum": 1000000, "default": 10000, "description": "stop after this many features" },
+        "pageSize": { "type": "number", "minimum": 1, "maximum": 50000, "default": 1000, "description": "features per request (the \"limit\" query parameter); paging follows the response's \"next\" links" },
+        "params": {
+          "type": "object",
+          "description": "extra query parameters appended to the first request (bbox, datetime, filter, properties, …)",
           "additionalProperties": { "type": "string" }
         },
         "style": {

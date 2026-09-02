@@ -13,7 +13,7 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
 
 | Area | Status |
 |---|---|
-| Data sources | ✅ WMS, WMTS, WFS (paged GetFeature → geojson pipeline), vector tiles/PMTiles, GeoJSON, GeoParquet (decoded in the browser, geojson styling pipeline), COG (RGB, single-band ramps, explicit classes, hillshade), style & raster basemaps · ⬜ OGC API Features (deferred to v1.x per D-03) |
+| Data sources | ✅ WMS, WMTS, WFS (paged GetFeature → geojson pipeline), OGC API Features (next-link paging → geojson pipeline), vector tiles/PMTiles, GeoJSON, GeoParquet (decoded in the browser, geojson styling pipeline), COG (RGB, single-band ramps, explicit classes, hillshade), style & raster basemaps |
 | Layer tree | ✅ groups, visibility, opacity, status, zoom hints, zoom-to-layer, metadata links, runtime add/remove · ⬜ drag reorder, filter box, radio groups |
 | Feature info | ✅ GetFeatureInfo + vector query, templates, field tables, multi-hit, hover, highlight, coordinates · ⬜ mobile bottom sheet |
 | Legend | ✅ service, style-derived, hand-written; in print |
@@ -82,7 +82,11 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
 
 - ✅ **WFS** layer type (2026-09-02) — `type: "wfs"`: paged GetFeature (count/startIndex, silent-cap
   recovery via the server's reported total), `limit`/`pageSize`, vendor `params` (cql_filter),
-  OWS-exception unwrapping, rendered through the geojson pipeline · ⬜ **OGC API Features** (deferred from D-03)
+  OWS-exception unwrapping, rendered through the geojson pipeline
+- ✅ **OGC API Features** layer type (2026-09-02) — `type: "ogcapi-features"`: a collection URL is
+  enough; items paged by following the response's `next` links (numberMatched is optional in the
+  wild), `limit`/`pageSize`, `params` (bbox, datetime, CQL2 filter), JSON problem details as layer
+  errors, rendered through the geojson pipeline
 - ✅ **GeoParquet** layer type (2026-09-02) — `type: "geoparquet"`: whole-file fetch, decoded in the
   browser (hyparquet, lazy chunk; extra codecs only when needed), WGS84 only, bbox from the file
   metadata, rendered through the geojson pipeline

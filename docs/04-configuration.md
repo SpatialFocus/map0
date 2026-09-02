@@ -310,7 +310,7 @@ Result: full-quality map with default controls (zoom, attribution, fullscreen), 
 | `geojson` | URL or inline | clustering, simplified style or full style layers |
 | `geoparquet` | GeoParquet file URL | fetched whole and decoded in the browser (hyparquet, loaded on demand — snappy/gzip/brotli/zstd/lz4 all work), then rendered through the geojson pipeline: same `style`/`cluster`/`popup`/`hover`/`promoteId` options. A fraction of the transfer size of the same data as GeoJSON; "zoom to layer" comes from the file's `geo` metadata bbox. Coordinates **must be WGS84** (OGC:CRS84/EPSG:4326 — the spec default; no client-side reprojection, other CRS fail with a per-layer error naming them). Plain parquet without `geo` metadata is rejected with a conversion hint. |
 | `vector` | TileJSON / `{z}/{x}/{y}` / `pmtiles://` | needs `sourceLayer` + style layers |
-| `ogcapi-features` | OGC API Features collection | **v1.x** (deferred per D-03); limit/bbox; styled like `geojson` |
+| `ogcapi-features` | collection URL (…/collections/{id}) | items fetched as GeoJSON (WGS84, the API default) and rendered through the geojson pipeline (same `style`/`cluster`/`popup`/`hover`/`promoteId`). Paging follows the response's `next` links — the spec's own mechanism, chosen because `numberMatched` is optional and missing in the wild; a server capping `limit` just produces more pages. `pageSize` per request (default 1000) until `limit` (default 10000); `params` appends query parameters (`bbox`, `datetime`, CQL2 `filter`, `properties`). JSON problem details surface as the layer error. CORS required. |
 | `group` | — | nesting, collapse, exclusive option |
 
 **Simplified style:** flat paint-property object (`circle-*`, `line-*`, `fill-*`, auto-derived per

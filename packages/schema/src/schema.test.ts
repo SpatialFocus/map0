@@ -109,6 +109,36 @@ describe("validateConfig", () => {
     expect(paths).toContain("$.layers[0].params.a");
   });
 
+  it("validates ogcapi-features layers: collection url, paging knobs, shared feature options", () => {
+    const ok = validateConfig({
+      ...minimal,
+      layers: [
+        {
+          type: "ogcapi-features",
+          title: "Stations",
+          url: "https://demo.ldproxy.net/zoomstack/collections/railway_stations",
+          limit: 5000,
+          pageSize: 1000,
+          params: { bbox: "-5,50,2,56" },
+          cluster: true,
+          popup: { title: "{{name}}" },
+        },
+      ],
+    });
+    expect(ok.valid).toBe(true);
+    expect(ok.errors).toEqual([]);
+
+    const broken = validateConfig({
+      ...minimal,
+      layers: [{ type: "ogcapi-features", pageSize: 0, params: "bbox" }],
+    });
+    expect(broken.valid).toBe(false);
+    const paths = broken.errors.map((e) => e.path);
+    expect(paths).toContain("$.layers[0].url");
+    expect(paths).toContain("$.layers[0].pageSize");
+    expect(paths).toContain("$.layers[0].params");
+  });
+
   it("rejects a non-boolean cooperativeGestures", () => {
     const result = validateConfig({
       version: 1,

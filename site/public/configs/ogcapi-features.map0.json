@@ -1,0 +1,49 @@
+{
+  "$schema": "https://map0.net/schema/v1.json",
+  "version": 1,
+  "meta": { "title": "OGC API Features" },
+  "map": { "center": [-2.6, 54.0], "zoom": 5.4 },
+  "basemaps": [
+    {
+      "id": "positron",
+      "title": "OpenFreeMap Positron",
+      "type": "style",
+      "url": "https://tiles.openfreemap.org/styles/positron",
+      "default": true
+    }
+  ],
+  "layers": [
+    {
+      "id": "bahnhoefe",
+      "type": "ogcapi-features",
+      "title": "Railway stations (clustered)",
+      "url": "https://demo.ldproxy.net/zoomstack/collections/railway_stations",
+      "pageSize": 1000,
+      "cluster": { "enabled": true, "radius": 40 },
+      "style": {
+        "circle-color": "#0e7490",
+        "circle-radius": 5,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 1.5
+      },
+      "hover": { "content": "{{name}}" },
+      "popup": { "title": "{{name}}", "fields": [{ "key": "type", "label": "Type" }] },
+      "attribution": "OS Open Zoomstack — demo.ldproxy.net"
+    },
+    {
+      "id": "flughaefen",
+      "type": "ogcapi-features",
+      "title": "Airports",
+      "url": "https://demo.ldproxy.net/zoomstack/collections/airports",
+      "style": {
+        "circle-color": "#b91c1c",
+        "circle-radius": 6,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 1.5
+      },
+      "hover": { "content": "{{name}}" },
+      "popup": { "title": "{{name}}" },
+      "attribution": "OS Open Zoomstack — demo.ldproxy.net"
+    }
+  ]
+}

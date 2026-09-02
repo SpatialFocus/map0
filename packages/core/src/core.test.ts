@@ -15,6 +15,7 @@ import {
 import { expandSimpleStyle } from "./adapters/geojson.js";
 import { assertWgs84, featureCollectionFromRows, type GeoMetadata } from "./adapters/geoparquet.js";
 import { buildGetFeatureUrl, loadWfsFeatures, parseWfsResponse } from "./adapters/wfs.js";
+import { buildItemsUrl, loadOgcApiFeatures, parseItemsResponse } from "./adapters/ogcapi-features.js";
 import { deriveFromStyleLayers, entryFromPaint } from "./adapters/legend-derive.js";
 import { escapeHtml, renderFields, renderTemplate } from "./template.js";
 import { lngLatToMercator } from "./mercator.js";
@@ -330,6 +331,76 @@ describe("wfs", () => {
     expect(urls).toHaveLength(1);
     expect(urls[0]).toContain("MAXFEATURES=3");
     expect(fc.features).toHaveLength(3);
+  });
+});
+
+describe("ogcapi-features", () => {
+  const def = { url: "https://demo.ldproxy.net/zoomstack/collections/railway_stations" };
+
+  it("builds the items URL from a collection URL, params merged last", () => {
+    expect(buildItemsUrl(def, 1000)).toBe(
+      "https://demo.ldproxy.net/zoomstack/collections/railway_stations/items?f=json&limit=1000",
+    );
+    /* "/items" already present (with or without query) stays untouched */
+    expect(buildItemsUrl({ url: `${def.url}/items` }, 5)).toContain("/items?f=json&limit=5");
+    expect(
+      buildItemsUrl({ url: def.url, params: { bbox: "-5,50,2,56", f: "geojson" } }, 10),
+    ).toContain("f=geojson");
+  });
+
+  it("surfaces problem details and non-JSON answers as friendly errors", () => {
+    expect(() =>
+      parseItemsResponse('{"title":"Not Found","description":"no such collection"}', "https://e.org/x/items"),
+    ).toThrow(/Not Found — no such collection/);
+    expect(() => parseItemsResponse("<html>landing page</html>", "https://e.org/x/items")).toThrow(
+      /collections\{?/,
+    );
+  });
+
+  const page = (from: number, n: number, next?: string): string =>
+    JSON.stringify({
+      type: "FeatureCollection",
+      features: Array.from({ length: n }, (_, i) => ({
+        type: "Feature",
+        id: from + i,
+        properties: {},
+        geometry: { type: "Point", coordinates: [0, 0] },
+      })),
+      links: next ? [{ href: next, rel: "next", type: "application/geo+json" }] : [],
+    });
+
+  it("follows next links (relative ones resolved) until the last page", async () => {
+    const urls: string[] = [];
+    const fc = await loadOgcApiFeatures({ ...def, pageSize: 2 }, async (url) => {
+      urls.push(url);
+      const start = Number(new URL(url).searchParams.get("offset") ?? 0);
+      const nextStart = start + 2;
+      return page(start, Math.min(2, 5 - start), nextStart < 5 ? `items?f=json&limit=2&offset=${nextStart}` : undefined);
+    });
+    expect(fc.features).toHaveLength(5);
+    expect(urls).toHaveLength(3);
+    expect(urls[1]).toContain("offset=2"); // relative next href resolved against the page URL
+  });
+
+  it("stops at the limit even while the server keeps offering next pages", async () => {
+    let calls = 0;
+    const fc = await loadOgcApiFeatures({ ...def, pageSize: 2, limit: 3 }, async (url) => {
+      calls++;
+      const start = Number(new URL(url).searchParams.get("offset") ?? 0);
+      return page(start, 2, `${def.url}/items?f=json&limit=2&offset=${start + 2}`);
+    });
+    expect(fc.features).toHaveLength(3);
+    expect(calls).toBe(2);
+  });
+
+  it("does not loop when a next link points back at a visited page", async () => {
+    let calls = 0;
+    const fc = await loadOgcApiFeatures({ ...def, pageSize: 2 }, async (url) => {
+      calls++;
+      return page(0, 2, url); // broken server: next = self
+    });
+    expect(calls).toBe(1);
+    expect(fc.features).toHaveLength(2);
   });
 });
 
