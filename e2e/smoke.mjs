@@ -47,8 +47,18 @@ const CONFIG = {
   map: { center: [0, 0], zoom: 3 },
   basemaps: [{ type: "empty", title: "None" }],
   layers: [square("#ff0000", "top", "Top"), square("#0000ff", "bottom", "Bottom")],
+  permalink: true,
   /* C5: a key from a hypothetical newer map0 — must warn, must not refuse */
   futureKey: { something: true },
+};
+
+/** served at /data/vienna.geojson — what the add-layer dialog's GeoJSON kind fetches */
+const VIENNA_GEOJSON = {
+  type: "FeatureCollection",
+  features: [
+    { type: "Feature", properties: { name: "Stephansdom" }, geometry: { type: "Point", coordinates: [16.3738, 48.2085] } },
+    { type: "Feature", properties: { name: "Rathaus" }, geometry: { type: "Point", coordinates: [16.3573, 48.2108] } },
+  ],
 };
 
 /** served at /config.json for the `config-src` path */
@@ -57,6 +67,7 @@ const SRC_CONFIG = {
   map: { center: [0, 0], zoom: 3 },
   basemaps: [{ type: "empty", title: "None" }],
   layers: [square("#00ff00", "from-src", "From src")],
+  controls: { layerSwitcher: { allowAdd: false } },
 };
 
 const INVALID_CONFIG = { version: 1, basemaps: [{ type: "wms", url: "https://e.org/x" }] };
@@ -106,6 +117,10 @@ const server = createServer((req, res) => {
   if (path === "/config.json") {
     res.writeHead(200, { "content-type": "application/json" });
     return res.end(JSON.stringify(SRC_CONFIG));
+  }
+  if (path === "/data/vienna.geojson") {
+    res.writeHead(200, { "content-type": "application/geo+json" });
+    return res.end(JSON.stringify(VIENNA_GEOJSON));
   }
   readFile(new URL(`.${path}`, DIST))
     .then((body) => {
@@ -301,10 +316,175 @@ try {
       JSON.stringify(projected),
     );
 
+    /* F3.2 — GeoJSON by URL: the same call the dialog's GeoJSON kind makes, then
+       zoom-to-layer, which for a URL layer means fetching the file for its bounds */
+    const byUrl = await page.evaluate(async () => {
+      const el = document.querySelector("map0-viewer");
+      const id = await el.api.addLayer({ type: "geojson", title: "By URL", data: "/data/vienna.geojson" });
+      if (!id) return null;
+      const zoomed = await el.api.zoomToLayer(id);
+      if (el.api.map.isMoving()) await new Promise((r) => el.api.map.once("moveend", r));
+      const c = el.api.map.getCenter();
+      const row = el.api.layers.state.value.find((l) => l.id === id);
+      return { id, zoomed, center: [c.lng, c.lat], title: row?.title, userAdded: row?.userAdded };
+    });
+    check(
+      "a geojson layer added by URL mounts and zooms to its extent",
+      byUrl?.zoomed === true &&
+        byUrl.userAdded === true &&
+        Math.abs(byUrl.center[0] - 16.366) < 0.02 &&
+        Math.abs(byUrl.center[1] - 48.21) < 0.02,
+      JSON.stringify(byUrl),
+    );
+
+    /* F3.2 — files dropped on the viewer: a GeoJSON export in a projected CRS
+       (legacy crs member, as QGIS writes it) and a KML track with a line style.
+       Dispatched as real DragEvents on the host, which is where the zone listens. */
+    const dropped = await page.evaluate(async () => {
+      const el = document.querySelector("map0-viewer");
+      const geojson = JSON.stringify({
+        type: "FeatureCollection",
+        crs: { type: "name", properties: { name: "urn:ogc:def:crs:EPSG::3857" } },
+        features: [
+          { type: "Feature", properties: { n: 1 }, geometry: { type: "Point", coordinates: [1822000, 6141000] } },
+        ],
+      });
+      const kml =
+        '<?xml version="1.0"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>' +
+        '<Style id="s"><LineStyle><color>ff0000ff</color><width>4</width></LineStyle></Style>' +
+        '<Placemark><name>Ring</name><styleUrl>#s</styleUrl><LineString><coordinates>' +
+        "16.36,48.20,0 16.38,48.21,0</coordinates></LineString></Placemark></Document></kml>";
+      const dt = new DataTransfer();
+      dt.items.add(new File([geojson], "Vienna 3857.geojson", { type: "application/geo+json" }));
+      dt.items.add(new File([kml], "ring.kml", { type: "application/vnd.google-earth.kml+xml" }));
+      const fire = (type) =>
+        el.dispatchEvent(
+          new DragEvent(type, { dataTransfer: dt, bubbles: true, cancelable: true, composed: true }),
+        );
+      fire("dragenter");
+      const claimed = !fire("dragover"); // preventDefault() → the browser allows the drop
+      await el.updateComplete;
+      const overlay = !!el.shadowRoot.querySelector(".drop-zone");
+      fire("drop");
+      const titles = await new Promise((resolve) => {
+        const t0 = Date.now();
+        const poll = () => {
+          const now = el.api.layers.state.value.filter((l) => l.userAdded).map((l) => l.title);
+          if ((now.includes("Vienna 3857") && now.includes("ring")) || Date.now() - t0 > 20_000) resolve(now);
+          else setTimeout(poll, 50);
+        };
+        poll();
+      });
+      await el.updateComplete;
+      if (el.api.map.isMoving()) await new Promise((r) => el.api.map.once("moveend", r));
+      const adapter = (title) => el.api.layers.all.find((a) => a.def.title === title);
+      const pointSource = el.api.map.getSource(adapter("Vienna 3857")?.sourceIds[0])?.serialize?.();
+      const c = el.api.map.getCenter();
+      return {
+        claimed,
+        overlay,
+        overlayGone: !el.shadowRoot.querySelector(".drop-zone"),
+        titles,
+        point: pointSource?.data?.features?.[0]?.geometry?.coordinates,
+        kmlProps: adapter("ring")?.def.data?.features?.[0]?.properties,
+        kmlLineColor: adapter("ring")?.def.style?.["line-color"],
+        center: [c.lng, c.lat],
+        shareUrl: el.api.getShareUrl(),
+      };
+    });
+    check(
+      "a file drag over the viewer is claimed and shows the drop zone, gone after the drop",
+      dropped.claimed && dropped.overlay && dropped.overlayGone,
+      JSON.stringify({ claimed: dropped.claimed, overlay: dropped.overlay, gone: dropped.overlayGone }),
+    );
+    check(
+      "each dropped file becomes a layer named after it",
+      dropped.titles.includes("Vienna 3857") && dropped.titles.includes("ring"),
+      dropped.titles.join(", "),
+    );
+    check(
+      "a dropped GeoJSON export with a legacy crs member is reprojected to WGS84",
+      Math.abs((dropped.point?.[0] ?? 0) - 16.37) < 0.05 && Math.abs((dropped.point?.[1] ?? 0) - 48.25) < 0.05,
+      JSON.stringify(dropped.point),
+    );
+    check(
+      "a dropped KML keeps its name and line style (togeojson chunk loaded from the bundle)",
+      dropped.kmlProps?.name === "Ring" &&
+        dropped.kmlProps?.stroke === "#ff0000" &&
+        JSON.stringify(dropped.kmlLineColor) === JSON.stringify(["coalesce", ["get", "stroke"], "#0e7490"]),
+      JSON.stringify({ props: dropped.kmlProps, line: dropped.kmlLineColor }),
+    );
+    check(
+      "the map fits what was dropped",
+      Math.abs(dropped.center[0] - 16.37) < 0.05 && Math.abs(dropped.center[1] - 48.22) < 0.05,
+      JSON.stringify(dropped.center),
+    );
+    /* F3.5 — the share link carries the layer added by URL, not the dropped files */
+    const shared = (() => {
+      const raw = /map0=([^&]+)/.exec(dropped.shareUrl ?? "")?.[1];
+      if (!raw) return null;
+      const bin = atob(raw.replaceAll("-", "+").replaceAll("_", "/"));
+      return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, (ch) => ch.charCodeAt(0))));
+    })();
+    const sharedTitles = (shared?.u ?? []).map((l) => l.title);
+    check(
+      "the share link carries the URL layer but not the dropped files",
+      sharedTitles.includes("By URL") && !sharedTitles.includes("ring") && !sharedTitles.includes("Vienna 3857"),
+      sharedTitles.join(", ") || "no user layers in the share state",
+    );
+
+    /* F3.2 — the dialog itself, driven like a user would: its GeoJSON kind must
+       take a relative URL (the field is type=text on purpose — the browser's own
+       url validation would refuse "/data/…" before we ever saw it), report a URL
+       the policy refuses in place, and close once the layer is in */
+    const viaDialog = await (async () => {
+      /* the <map0-add-layer> host has no box of its own (it renders into the
+         viewer's shadow tree) — the visible thing is its .dialog */
+      await page.locator("map0-viewer .add-btn").click();
+      const dialog = page.locator("map0-viewer map0-add-layer .dialog");
+      await dialog.waitFor({ state: "visible", timeout: 20_000 });
+      await dialog.locator('[role=radio]:has-text("GeoJSON")').click();
+      const urlField = dialog.locator("input[inputmode=url]");
+      await urlField.fill("ftp://e.org/x.geojson");
+      await urlField.press("Enter");
+      const refused = (await dialog.locator(".dialog-error").textContent({ timeout: 5_000 })).trim();
+      await urlField.fill("/data/vienna.geojson");
+      await urlField.press("Enter");
+      const outcome = await page.evaluate(
+        () =>
+          new Promise((resolve) => {
+            const el = document.querySelector("map0-viewer");
+            const t0 = Date.now();
+            const poll = () => {
+              const row = el.api.layers.state.value.find((l) => l.title === "vienna");
+              const open = !!el.shadowRoot.querySelector("map0-add-layer");
+              if ((row && !open) || Date.now() - t0 > 20_000) {
+                resolve({ added: !!row, closed: !open, userAdded: row?.userAdded ?? null });
+              } else setTimeout(poll, 50);
+            };
+            poll();
+          }),
+      );
+      return { refused, ...outcome };
+    })().catch((e) => ({ refused: "", added: false, closed: false, error: String(e).slice(0, 200) }));
+    check(
+      "the dialog refuses a URL the config policy refuses, in place",
+      /unsupported URL scheme "ftp:"/.test(viaDialog.refused),
+      viaDialog.refused || viaDialog.error || "no error shown",
+    );
+    check(
+      "the dialog's GeoJSON kind adds a relative URL as a layer named after the file, then closes",
+      viaDialog.added && viaDialog.closed && viaDialog.userAdded === true,
+      JSON.stringify(viaDialog),
+    );
+
     /* R2 — remove from the DOM and put it back: the element must come back alive */
     const reconnected = await page.evaluate(async () => {
       const el = document.querySelector("map0-viewer");
       const host = document.getElementById("host");
+      /* the F3.2 checks left share state in the hash; a reconnect would restore the
+         URL-added layer from it (correctly) and this check counts configured layers */
+      history.replaceState(null, "", location.pathname + location.search);
       el.remove();
       const tornDown = el.api === undefined;
       window.__events.length = 0;
@@ -369,6 +549,31 @@ try {
     .then(() => true)
     .catch(() => false);
   check("a viewer starts from config-src", srcReady);
+  if (srcReady) {
+    /* F3.2 — allowAdd: false gates the drop zone like the dialog: no overlay, no claim, no layer */
+    const ignored = await srcPage.evaluate(async () => {
+      const el = document.querySelector("map0-viewer");
+      const before = el.api.layers.state.value.length;
+      const dt = new DataTransfer();
+      dt.items.add(new File(['{"type":"Point","coordinates":[16,48]}'], "x.geojson"));
+      const fire = (type) =>
+        el.dispatchEvent(
+          new DragEvent(type, { dataTransfer: dt, bubbles: true, cancelable: true, composed: true }),
+        );
+      fire("dragenter");
+      const claimed = !fire("dragover");
+      await el.updateComplete;
+      const overlay = !!el.shadowRoot.querySelector(".drop-zone");
+      fire("drop");
+      await new Promise((r) => setTimeout(r, 500));
+      return { claimed, overlay, added: el.api.layers.state.value.length - before };
+    });
+    check(
+      "a viewer with allowAdd: false ignores dropped files",
+      !ignored.claimed && !ignored.overlay && ignored.added === 0,
+      JSON.stringify(ignored),
+    );
+  }
   if (srcReady) {
     const swapped = await srcPage.evaluate(async () => {
       const el = document.querySelector("map0-viewer");
