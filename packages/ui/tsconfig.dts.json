@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "stripInternal": true,
+    "types": ["vite/client"],
+    "paths": {
+      "@map0/core": ["../core/src/index.ts"],
+      "@map0/schema": ["../schema/src/index.ts"]
+    }
+  },
+  "include": ["src/public.ts", "src/index.ts", "src/ssr.ts"]
+}

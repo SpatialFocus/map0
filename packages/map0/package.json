@@ -30,13 +30,23 @@
   },
   "type": "module",
   "main": "./dist/map0.js",
+  "types": "./dist/map0.d.ts",
   "module": "./dist/map0.js",
   "exports": {
     ".": {
-      "node": "./dist/map0-ssr.js",
-      "default": "./dist/map0.js"
+      "node": {
+        "types": "./dist/map0-ssr.d.ts",
+        "default": "./dist/map0-ssr.js"
+      },
+      "default": {
+        "types": "./dist/map0.d.ts",
+        "default": "./dist/map0.js"
+      }
     },
-    "./ssr": "./dist/map0-ssr.js",
+    "./ssr": {
+      "types": "./dist/map0-ssr.d.ts",
+      "default": "./dist/map0-ssr.js"
+    },
     "./dist/*": "./dist/*",
     "./package.json": "./package.json"
   },
@@ -47,6 +57,17 @@
     "LICENSE",
     "THIRD-PARTY-NOTICES.md"
   ],
+  "dependencies": {
+    "@types/geojson": "^7946.0.14"
+  },
+  "peerDependencies": {
+    "maplibre-gl": "^6.3.0"
+  },
+  "peerDependenciesMeta": {
+    "maplibre-gl": {
+      "optional": true
+    }
+  },
   "publishConfig": {
     "access": "public"
   }

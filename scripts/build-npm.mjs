@@ -3,13 +3,14 @@
  *
  * packages/ui/dist is already the deployable folder — entry, lazy chunks, and
  * MapLibre's three files copied in verbatim (see scripts/maplibre-dist.mjs). This
- * script copies it to packages/map0/dist without the sourcemaps, and regenerates
- * THIRD-PARTY-NOTICES.md from what the sourcemaps say is actually inside those
- * chunks. Since we redistribute other people's code — MapLibre verbatim, the rest
+ * script copies it to packages/map0/dist without the sourcemaps — together with
+ * the bundled type declarations scripts/build-types.mjs puts next to the entries
+ * (N11) — and regenerates THIRD-PARTY-NOTICES.md from what the sourcemaps say is
+ * actually inside those chunks. Since we redistribute other people's code — MapLibre verbatim, the rest
  * compiled in — the notices are a licence obligation, not a nicety: a package that
  * ships without them is broken, so a missing licence text fails the build.
  *
- * Usage: pnpm build:npm     (builds the bundle first, then runs this)
+ * Usage: pnpm build:npm     (builds the bundle and the declarations first, then runs this)
  */
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
@@ -51,6 +52,11 @@ if (!existsSync(join(SRC, "map0.js"))) die(`no bundle in ${SRC} — run \`pnpm b
 /* the "node" export condition points here: without it, importing the package in
    any SSR/prerender step resolves to the browser entry and dies on HTMLElement */
 if (!existsSync(join(SRC, "map0-ssr.js"))) die(`no SSR entry in ${SRC} — run \`pnpm build\` first`);
+/* package.json points "types" at these; a tarball without them type-checks as `any` */
+const TYPES = ["map0-types.d.ts", "map0.d.ts", "map0-ssr.d.ts"];
+for (const file of TYPES) {
+  if (!existsSync(join(SRC, file))) die(`no ${file} in ${SRC} — run \`pnpm build:types\` first`);
+}
 
 /* ---------------------------------------------------------------- dist copy */
 
@@ -59,9 +65,16 @@ mkdirSync(OUT, { recursive: true });
 
 const sourcemaps = [];
 const shipped = [];
+const typings = [];
 for (const file of readdirSync(SRC)) {
   if (file.endsWith(".map")) {
     sourcemaps.push(file);
+    continue;
+  }
+  /* the declarations carry no sourcemap reference and are not part of the bundle budget */
+  if (file.endsWith(".d.ts")) {
+    copyFileSync(join(SRC, file), join(OUT, file));
+    typings.push(file);
     continue;
   }
   /* sourcemaps stay out of the tarball, so the references to them must go too —
@@ -193,5 +206,6 @@ for (const file of shipped) {
   gz += gzipSync(bytes).length;
 }
 console.log(`packages/map0/dist — ${shipped.length} files, ${kb(raw)} raw, ${kb(gz)} gzip`);
+console.log(`types — ${typings.map((f) => `${f} (${kb(readFileSync(join(OUT, f)).length)})`).join(", ")}`);
 console.log(`THIRD-PARTY-NOTICES.md — ${notices.length} bundled packages: ${notices.map((n) => n.name).join(", ")}`);
 console.log(`\nnext: cd packages/map0 && npm publish   (npm login first; the version is in package.json)`);

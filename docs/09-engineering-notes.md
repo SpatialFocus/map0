@@ -14,7 +14,8 @@ pnpm test                       # Vitest (pure logic only, no DOM/network)
 pnpm build && pnpm smoke        # browser smoke test on the BUILT bundle, network-free (CI runs it)
 pnpm build && pnpm size         # library bundle + the size budget
 pnpm demo:standalone            # build + copy dist next to the standalone demo page
-pnpm build:npm                  # assemble the publishable `map0` package (§release)
+pnpm build:npm                  # assemble the publishable `map0` package, types included (§release)
+node e2e/verify-types.mjs       # type-check a fresh consumer against the packed tarball (§release)
 pnpm release                    # the whole release: version, changelog, verify, publish (§release)
 node e2e/verify-demos.mjs       # every demo page, headless, with screenshots
 node e2e/verify-demos.mjs wms   # …or one
@@ -60,8 +61,10 @@ What it does, in order — any failing step aborts before anything is public:
    new section into `CHANGELOG.md`;
 3. `scripts/bump-version-refs.mjs` moves the CDN/prose version references in both READMEs and the
    standalone demo page — reference counts are asserted, a reworded sentence fails the release;
-4. `pnpm build:npm` (bundle without sourcemaps + regenerated notices) and `npm pack`;
-5. `e2e/verify-tarball.mjs` — the folder-is-the-unit gate, see below;
+4. `pnpm build:npm` (bundle without sourcemaps, bundled declarations, regenerated notices) and
+   `npm pack`;
+5. `e2e/verify-tarball.mjs` — the folder-is-the-unit gate, see below — and `e2e/verify-types.mjs`,
+   the types gate;
 6. `npm publish` (the account has 2FA at auth-and-writes — release-it prompts for the OTP;
    npm versions are immutable, an unpublish is only possible within 72 h and burns the name for 24 h);
 7. release commit + annotated tag `v<version>`, push, and a **GitHub release** with the changelog
@@ -90,6 +93,25 @@ Two things a release has to get right, both of which fail *silently* if it does 
 Ownership: an unscoped package belongs to whoever publishes it first — the personal account that
 ran `npm publish`, not the org. Add a second owner (`npm owner add <user> map0-viewer`) so the name
 does not depend on one person's account.
+
+#### The types are bundled, not emitted
+
+`pnpm build:types` (`scripts/build-types.mjs`, part of `build:npm`) publishes three declaration files.
+`dist/map0-types.d.ts` is a dts-bundle-generator bundle of `packages/ui/src/public.ts` — the schema
+and the type-only surface both entries share — with `@map0/core` and `@map0/schema` inlined: the
+per-package trees `tsc --build` emits never leave the repo, and only what `public.ts` exports is
+exported. `dist/map0.d.ts` and `dist/map0-ssr.d.ts` are thin: TypeScript's own declaration emit of
+`index.ts` and `ssr.ts`, every import pointed at `./map0-types.js`. Shared rather than inlined twice
+because `Map0Api` reaches classes with private members, which TypeScript compares by declaration —
+an app importing both `map0-viewer` and `map0-viewer/ssr` would otherwise meet two incompatible
+`Map0Api`s and two `HTMLElementTagNameMap` entries for one tag. The element is published as an
+interface over `HTMLElement` (`packages/ui/src/element.ts`, which the Lit class `implements`), so
+`lit` stays out of the type graph; the two imports that remain, `geojson` (a dependency of the
+package) and `maplibre-gl` (an optional peer, for `api.map`), are an allowlist in the script — any
+other import fails the build. `node e2e/verify-types.mjs [tgz]` is the gate: it `npm install`s the
+packed tarball into a scratch project — once with `maplibre-gl`, once without — and runs
+`tsc --strict` on a consumer under `bundler` and `nodenext` resolution, plus a negative control that
+has to fail.
 
 #### The CDN release is the npm release
 

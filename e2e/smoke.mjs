@@ -176,10 +176,21 @@ if (!(ssr instanceof Error)) {
 const pkg = JSON.parse(
   await readFile(new URL("../packages/map0/package.json", import.meta.url), "utf8"),
 );
+const dot = pkg.exports?.["."] ?? {};
+const ssrExport = pkg.exports?.["./ssr"] ?? {};
 check(
   'the npm package resolves "node" to the SSR entry',
-  pkg.exports?.["."]?.node === "./dist/map0-ssr.js" && pkg.exports?.["./ssr"] === "./dist/map0-ssr.js",
-  JSON.stringify(pkg.exports?.["."]),
+  dot.node?.default === "./dist/map0-ssr.js" && ssrExport.default === "./dist/map0-ssr.js",
+  JSON.stringify(dot),
+);
+/* TypeScript takes the first condition that matches, so "types" has to come first
+   in every branch — listed after "default" it is never reached (N11) */
+check(
+  "every export lists its declarations first",
+  [dot.node, dot.default, ssrExport].every(
+    (c) => Object.keys(c ?? {})[0] === "types" && String(c.types).endsWith(".d.ts"),
+  ) && pkg.types === dot.default?.types,
+  JSON.stringify({ node: dot.node, default: dot.default, ssr: ssrExport, types: pkg.types }),
 );
 
 const browser = await launchBrowser();

@@ -11,7 +11,8 @@
   "scripts": {
     "dev": "vite --config site/vite.config.ts",
     "build": "pnpm --filter @map0/ui build",
-    "build:npm": "pnpm build && node scripts/build-npm.mjs",
+    "build:types": "node scripts/build-types.mjs",
+    "build:npm": "pnpm build && pnpm build:types && node scripts/build-npm.mjs",
     "build:site": "pnpm demo:standalone && vite build --config site/vite.config.ts",
     "serve": "vite preview --config site/vite.config.ts",
     "demo:standalone": "pnpm build && node -e \"const fs=require('node:fs');fs.rmSync('site/public/standalone',{recursive:true,force:true});fs.cpSync('packages/ui/dist','site/public/standalone',{recursive:true})\"",
@@ -26,6 +27,7 @@
   "devDependencies": {
     "@release-it/conventional-changelog": "^12.0.0",
     "ace-builds": "^1.44.0",
+    "dts-bundle-generator": "^9.5.1",
     "node-html-parser": "^9.0.1",
     "playwright": "^1.62.1",
     "release-it": "^21.0.2",

@@ -12,7 +12,6 @@ renders straight into the page as a web component — no iframe, no backend, no 
 > **Early preview — version 0.2.1.** The client works against real OGC services — it is what the
 > [live demos](https://map0.net/demos) run on — but the JavaScript API and the config format are
 > still drafts and will change without a deprecation path until 1.0. Pin an exact version.
-> TypeScript types are not published yet.
 >
 > The package is called **map0-viewer**: npm's name-similarity rule for short names rejects the
 > unscoped `map0`. The project, the element `<map0-viewer>` and the site
@@ -24,9 +23,9 @@ renders straight into the page as a web component — no iframe, no backend, no 
 npm install map0-viewer
 ```
 
-The package is a prebuilt ES-module bundle. MapLibre is included — there are no dependencies to
-install and nothing to configure. Copy `node_modules/map0-viewer/dist/` next to your page and load
-`map0.js` from there.
+The package is a prebuilt ES-module bundle. MapLibre is included — nothing else to install and
+nothing to configure (the one dependency, `@types/geojson`, is declarations only). Copy
+`node_modules/map0-viewer/dist/` next to your page and load `map0.js` from there.
 
 ### …or load it from a CDN
 
@@ -101,6 +100,33 @@ import { createMap } from "map0-viewer";
 
 const viewer = createMap(document.querySelector("#map"), config);
 ```
+
+### TypeScript
+
+Both entries ship their own declarations — nothing to install from `@types`:
+
+```ts
+import { defineMap0Viewer, type Map0Api, type Map0Config } from "map0-viewer";
+
+const config: Map0Config = { version: 1, basemaps: [{ type: "empty" }] };
+defineMap0Viewer();
+
+const viewer = document.querySelector("map0-viewer")!; // a Map0Viewer, via HTMLElementTagNameMap
+viewer.config = config;
+viewer.addEventListener("map0:ready", (event) => {
+  const api: Map0Api = event.detail.api;
+  console.log(api.map.getZoom());
+});
+```
+
+`Map0Config` is the config format, `Map0Viewer` the element — its attributes as properties, `api`, and
+the `map0:*` events with a typed `detail` — and `Map0Api` the handle that `api`, `map0:ready` and
+`createMap()` hand out. Two types come from outside the package: the GeoJSON shapes in the config are
+`@types/geojson`, a dependency that installs by itself; `api.map` is MapLibre's `Map`, and to type it
+you install `maplibre-gl` (6.x, the major the bundle contains) yourself — it is an optional peer
+dependency, only its declarations are used, and the bundle keeps running its own copy. Without it,
+`api.map` is `any` as long as `skipLibCheck` is on (the default of most setups); with it off,
+TypeScript asks you to install the package.
 
 ### Server-side rendering
 
