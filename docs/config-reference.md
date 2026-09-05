@@ -126,8 +126,8 @@ an exclusive background layer
 | `type` | `"style"` · `"raster"` · `"empty"` | **required** | "style": MapLibre style JSON (vector basemap) · "raster": XYZ/WMTS-REST tile template · "empty": no background |
 | `url` | `string` | required unless `type` is `"empty"` | style: MapLibre style URL · raster: tile template with {z}/{x}/{y} placeholders. https required on https pages. |
 | `tileSize` | `number` (1–4096) | `256` | raster tile size in px |
-| `minZoom` | `number` (0–24) | — |  |
-| `maxZoom` | `number` (0–24) | — |  |
+| `minZoom` | `number` (0–24) | — | raster: lowest zoom level the tile source provides (recorded, not yet applied — the client requests tiles at every zoom) |
+| `maxZoom` | `number` (0–24) | — | raster: highest zoom level the tile source provides — zooming in further scales that level instead of requesting tiles that do not exist |
 | `attribution` | `string` | — | attribution line, e.g. "© basemap.at" |
 | `thumbnail` | `string` | — | "auto" renders a mini preview, or an image URL |
 | `default` | `boolean` | — | start with this basemap (otherwise the first one) |
@@ -166,7 +166,7 @@ Keys every layer type accepts (except `group`, which is a container node). The p
 | `bounds` | `number[]` (4 items) | — | [west, south, east, north] (WGS84) — enables "zoom to layer"; auto-filled from capabilities where possible |
 | `attribution` | `string` | — | attribution shown while the layer is visible |
 | `metadata` | [`metadata`](#metadata) | — | link to the dataset's metadata record, shown in the layer menu |
-| `legend` | `false` or `string` or array of [legend entry](#legend-entry) | — | "auto" (default): WMS GetLegendGraphic / swatches derived from the style · false: no legend · string: legend image URL · array: explicit entries |
+| `legend` | `false` or `string` or array of [legend entry](#legend-entry) | `"auto"` | "auto" (default): WMS GetLegendGraphic / swatches derived from the style · false: no legend · string: legend image URL · array: explicit entries |
 
 ## `group` layer
 
@@ -174,7 +174,7 @@ a group node in the layer tree
 
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
-| `type` | `"group"` | **required** |  |
+| `type` | `"group"` | **required** | node type — a group of layers |
 | `title` | `string` | — | group label in the layer tree |
 | `collapsed` | `boolean` | `false` | start collapsed |
 | `children` | array of [layer](#layer) | **required** | nested groups and layers |
@@ -187,7 +187,7 @@ All [Common layer keys](#common-layer-keys) apply. Specific to this type:
 
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
-| `type` | `"wms"` | **required** |  |
+| `type` | `"wms"` | **required** | layer type |
 | `url` | `string` | **required** | WMS endpoint (GetMap base URL) |
 | `layers` | `string` | **required** | WMS LAYERS parameter (comma-separated) |
 | `styles` | `string` | — | WMS STYLES parameter |
@@ -206,7 +206,7 @@ All [Common layer keys](#common-layer-keys) apply. Specific to this type:
 
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
-| `type` | `"wmts"` | **required** |  |
+| `type` | `"wmts"` | **required** | layer type |
 | `url` | `string` | **required** | WMTS GetCapabilities URL (REST or KVP) |
 | `layer` | `string` | **required** | layer identifier from the capabilities |
 | `matrixSet` | `string` | — | tile matrix set identifier — default: the first WebMercator-compatible one |
@@ -221,7 +221,7 @@ All [Common layer keys](#common-layer-keys) apply. Specific to this type:
 
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
-| `type` | `"wfs"` | **required** |  |
+| `type` | `"wfs"` | **required** | layer type |
 | `url` | `string` | **required** | WFS endpoint (base URL; existing query params like MapServer map= are kept) |
 | `typeNames` | `string` | **required** | feature type to load — the WFS 2.0 GetFeature parameter, e.g. "ogdwien:TRINKBRUNNENOGD" |
 | `version` | `"1.1.0"` · `"2.0.0"` | `"2.0.0"` | WFS protocol version — 2.0.0 pages with count/startIndex, 1.1.0 issues one maxFeatures request |
@@ -243,7 +243,7 @@ All [Common layer keys](#common-layer-keys) apply. Specific to this type:
 
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
-| `type` | `"ogcapi-features"` | **required** |  |
+| `type` | `"ogcapi-features"` | **required** | layer type |
 | `url` | `string` | **required** | collection URL, e.g. "https://api.example.gv.at/ogc/collections/bezirke" — "/items" is appended if missing |
 | `limit` | `number` (1–1000000) | `10000` | stop after this many features |
 | `pageSize` | `number` (1–50000) | `1000` | features per request (the "limit" query parameter); paging follows the response's "next" links |
@@ -262,7 +262,7 @@ All [Common layer keys](#common-layer-keys) apply. Specific to this type:
 
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
-| `type` | `"raster"` | **required** |  |
+| `type` | `"raster"` | **required** | layer type |
 | `url` | `string` | **required** | tile template with {z}/{x}/{y} placeholders |
 | `tileSize` | `number` (1–4096) | `256` | tile size in px |
 
@@ -274,7 +274,7 @@ All [Common layer keys](#common-layer-keys) apply. Specific to this type:
 
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
-| `type` | `"cog"` | **required** |  |
+| `type` | `"cog"` | **required** | layer type |
 | `url` | `string` | **required** | Cloud Optimized GeoTIFF URL — the file must be in EPSG:3857 (no client-side reprojection) and the server must answer HTTP range requests |
 | `color` | [`color` (COG)](#color-cog) | — | single-band value → color mapping: a built-in ramp ("scheme"/"min"/"max") or an explicit classification ("classes"). The legend derives its swatches from it. Omit for RGB/grayscale imagery. Mutually exclusive with "hillshade". |
 | `hillshade` | `boolean` or [`hillshade` options](#hillshade-options) | — | render a single-band DEM as hillshading — true, or an options object; mutually exclusive with "color". Layer opacity scales the exaggeration. |
@@ -287,7 +287,7 @@ All [Common layer keys](#common-layer-keys) apply. Specific to this type:
 
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
-| `type` | `"geojson"` | **required** |  |
+| `type` | `"geojson"` | **required** | layer type |
 | `data` | `string` or `object` | **required** | URL of a GeoJSON document, or the GeoJSON inline |
 | `style` | `object` or array of [MapLibre style layer](#maplibre-style-layer) | — | simplified style: one flat paint-property object (circle-&#42;, line-&#42;, fill-&#42; — applied per geometry type) · full control: an array of MapLibre style-spec layers |
 | `cluster` | `boolean` or [`cluster` options](#cluster-options) | — | cluster point features — true, or an options object |
@@ -304,7 +304,7 @@ All [Common layer keys](#common-layer-keys) apply. Specific to this type:
 
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
-| `type` | `"geoparquet"` | **required** |  |
+| `type` | `"geoparquet"` | **required** | layer type |
 | `url` | `string` | **required** | GeoParquet file URL — the whole file is fetched, so the server needs CORS but no range-request support; a file whose geo metadata names a CRS other than WGS84 is reprojected on load |
 | `style` | `object` or array of [MapLibre style layer](#maplibre-style-layer) | — | simplified style: one flat paint-property object (circle-&#42;, line-&#42;, fill-&#42; — applied per geometry type) · full control: an array of MapLibre style-spec layers |
 | `cluster` | `boolean` or [`cluster` options](#cluster-options) | — | cluster point features — true, or an options object |
@@ -321,7 +321,7 @@ All [Common layer keys](#common-layer-keys) apply. Specific to this type:
 
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
-| `type` | `"vector"` | **required** |  |
+| `type` | `"vector"` | **required** | layer type |
 | `url` | `string` | **required** | TileJSON URL, {z}/{x}/{y} tile template, or pmtiles:// URL |
 | `sourceLayer` | `string` | — | name of the source layer inside the tiles |
 | `style` | array of [MapLibre style layer](#maplibre-style-layer) | **required** | MapLibre style-spec layers — "source"/"source-layer" are injected by map0 |
@@ -342,6 +342,8 @@ link to the dataset's metadata record, shown in the layer menu
 ## legend entry
 
 Used by: [Common layer keys](#common-layer-keys) `legend`
+
+one legend entry — a colored swatch or an image, with a label
 
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
@@ -381,6 +383,8 @@ GetFeatureInfo popup — templates use {{property}} placeholders and are sanitiz
 
 Used by: [`popup`](#popup) `fields` · [`info` (WMS GetFeatureInfo)](#info-wms-getfeatureinfo) `fields`
 
+one property to list in the popup table
+
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
 | `key` | `string` | **required** | feature property name |
@@ -390,6 +394,8 @@ Used by: [`popup`](#popup) `fields` · [`info` (WMS GetFeatureInfo)](#info-wms-g
 
 Used by: [`wfs` layer](#wfs-layer) `hover` · [`ogcapi-features` layer](#ogcapi-features-layer) `hover` · [`geojson` layer](#geojson-layer) `hover` · [`geoparquet` layer](#geoparquet-layer) `hover` · [`vector` layer](#vector-layer) `hover`
 
+hover tooltip — a short template rendered while the pointer rests on a feature
+
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
 | `content` | `string` | **required** | template with {{property}} placeholders |
@@ -398,11 +404,13 @@ Used by: [`wfs` layer](#wfs-layer) `hover` · [`ogcapi-features` layer](#ogcapi-
 
 Used by: [`wfs` layer](#wfs-layer) `cluster` · [`ogcapi-features` layer](#ogcapi-features-layer) `cluster` · [`geojson` layer](#geojson-layer) `cluster` · [`geoparquet` layer](#geoparquet-layer) `cluster`
 
+options for point clustering — nearby points collapse into one bubble until the user zooms in
+
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
-| `enabled` | `boolean` | `true` |  |
-| `radius` | `number` (1–1000) | — | cluster radius in px |
-| `maxZoom` | `number` (0–24) | — | stop clustering above this zoom |
+| `enabled` | `boolean` | `true` | false switches clustering off while keeping the options — same as "cluster": false |
+| `radius` | `number` (1–1000) | `50` | cluster radius in px |
+| `maxZoom` | `number` (0–24) | `14` | stop clustering above this zoom |
 
 ## MapLibre style layer
 
@@ -489,14 +497,18 @@ which UI controls exist and where — every control has a sensible default; set 
 
 Used by: [`controls`](#controls) `scale`
 
+options for the scale bar
+
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
 | `maxWidth` | `number` (20–500) | `100` | maximum bar length in px |
-| `unit` | `"metric"` · `"imperial"` | `"metric"` |  |
+| `unit` | `"metric"` · `"imperial"` | `"metric"` | metric (m / km) or imperial (ft / mi) |
 
 ## `geolocate` options
 
 Used by: [`controls`](#controls) `geolocate`
+
+options for the geolocate button
 
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
@@ -506,6 +518,8 @@ Used by: [`controls`](#controls) `geolocate`
 
 Used by: [`controls`](#controls) `attribution`
 
+options for the attribution line
+
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
 | `compact` | `true` · `false` · `"auto"` | `"auto"` | collapse to an ⓘ button — "auto" collapses on small screens |
@@ -514,9 +528,11 @@ Used by: [`controls`](#controls) `attribution`
 
 Used by: [`controls`](#controls) `layerSwitcher`
 
+options for the layer tree panel
+
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
-| `position` | `"top-left"` · `"top-right"` · `"bottom-left"` · `"bottom-right"` | `"top-right"` |  |
+| `position` | `"top-left"` · `"top-right"` · `"bottom-left"` · `"bottom-right"` | `"top-right"` | corner of the map the panel docks to |
 | `open` | `true` · `false` · `"auto"` | `"auto"` | "auto": open on desktop, collapsed on mobile |
 | `title` | `string` | — | panel heading override |
 | `allowAdd` | `boolean` | `true` | show the add-layer dialog (paste a WMS/WMTS URL) |
@@ -525,22 +541,28 @@ Used by: [`controls`](#controls) `layerSwitcher`
 
 Used by: [`controls`](#controls) `basemapSwitcher`
 
+options for the basemap picker
+
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
-| `position` | `"top-left"` · `"top-right"` · `"bottom-left"` · `"bottom-right"` | `"bottom-left"` |  |
+| `position` | `"top-left"` · `"top-right"` · `"bottom-left"` · `"bottom-right"` | `"bottom-left"` | corner of the map the picker docks to |
 
 ## `legend` options (control)
 
 Used by: [`controls`](#controls) `legend`
 
+options for the legend panel
+
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
-| `position` | `"top-left"` · `"top-right"` · `"bottom-left"` · `"bottom-right"` | `"bottom-right"` |  |
+| `position` | `"top-left"` · `"top-right"` · `"bottom-left"` · `"bottom-right"` | `"bottom-right"` | corner of the map the panel docks to |
 | `open` | `boolean` | `false` | start with the panel open |
 
 ## `coordinates` options
 
 Used by: [`controls`](#controls) `coordinates`
+
+options for the coordinate readout
 
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
@@ -618,6 +640,8 @@ language of the UI
 
 Used by: [Top level](#top-level) `permalink`
 
+options for the URL-hash permalink
+
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
 | `param` | `string` (pattern `^[A-Za-z0-9_-]+$`) | `"map0"` | hash parameter name — give each viewer on a page its own |
@@ -636,6 +660,8 @@ CRS of a feature file's coordinates, with a proj4 definition for codes the built
 ## `crs` (coordinates control)
 
 Used by: [`coordinates` options](#coordinates-options) `crs`
+
+a coordinate system offered in the coordinate readout — codes the built-in registry knows need no "def"
 
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |

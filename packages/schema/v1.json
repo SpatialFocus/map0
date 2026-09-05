@@ -136,8 +136,18 @@
           "description": "style: MapLibre style URL · raster: tile template with {z}/{x}/{y} placeholders. https required on https pages."
         },
         "tileSize": { "type": "number", "minimum": 1, "maximum": 4096, "default": 256, "description": "raster tile size in px" },
-        "minZoom": { "type": "number", "minimum": 0, "maximum": 24 },
-        "maxZoom": { "type": "number", "minimum": 0, "maximum": 24 },
+        "minZoom": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 24,
+          "description": "raster: lowest zoom level the tile source provides (recorded, not yet applied — the client requests tiles at every zoom)"
+        },
+        "maxZoom": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 24,
+          "description": "raster: highest zoom level the tile source provides — zooming in further scales that level instead of requesting tiles that do not exist"
+        },
         "attribution": { "type": "string", "description": "attribution line, e.g. \"© basemap.at\"" },
         "thumbnail": { "type": "string", "description": "\"auto\" renders a mini preview, or an image URL" },
         "default": { "type": "boolean", "description": "start with this basemap (otherwise the first one)" }
@@ -164,7 +174,7 @@
       "required": ["type", "children"],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "group" },
+        "type": { "const": "group", "description": "node type — a group of layers" },
         "title": { "type": "string", "description": "group label in the layer tree" },
         "collapsed": { "type": "boolean", "default": false, "description": "start collapsed" },
         "children": {
@@ -180,7 +190,7 @@
       "required": ["type", "url", "layers"],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "wms" },
+        "type": { "const": "wms", "description": "layer type" },
         "id": { "$ref": "#/definitions/layerId" },
         "title": { "$ref": "#/definitions/layerTitle" },
         "visible": { "$ref": "#/definitions/layerVisible" },
@@ -215,7 +225,7 @@
       "required": ["type", "url", "layer"],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "wmts" },
+        "type": { "const": "wmts", "description": "layer type" },
         "id": { "$ref": "#/definitions/layerId" },
         "title": { "$ref": "#/definitions/layerTitle" },
         "visible": { "$ref": "#/definitions/layerVisible" },
@@ -239,7 +249,7 @@
       "required": ["type", "url", "typeNames"],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "wfs" },
+        "type": { "const": "wfs", "description": "layer type" },
         "id": { "$ref": "#/definitions/layerId" },
         "title": { "$ref": "#/definitions/layerTitle" },
         "visible": { "$ref": "#/definitions/layerVisible" },
@@ -297,7 +307,7 @@
       "required": ["type", "url"],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "ogcapi-features" },
+        "type": { "const": "ogcapi-features", "description": "layer type" },
         "id": { "$ref": "#/definitions/layerId" },
         "title": { "$ref": "#/definitions/layerTitle" },
         "visible": { "$ref": "#/definitions/layerVisible" },
@@ -347,7 +357,7 @@
       "required": ["type", "url"],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "raster" },
+        "type": { "const": "raster", "description": "layer type" },
         "id": { "$ref": "#/definitions/layerId" },
         "title": { "$ref": "#/definitions/layerTitle" },
         "visible": { "$ref": "#/definitions/layerVisible" },
@@ -368,7 +378,7 @@
       "required": ["type", "url"],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "cog" },
+        "type": { "const": "cog", "description": "layer type" },
         "id": { "$ref": "#/definitions/layerId" },
         "title": { "$ref": "#/definitions/layerTitle" },
         "visible": { "$ref": "#/definitions/layerVisible" },
@@ -396,7 +406,7 @@
       "required": ["type", "data"],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "geojson" },
+        "type": { "const": "geojson", "description": "layer type" },
         "id": { "$ref": "#/definitions/layerId" },
         "title": { "$ref": "#/definitions/layerTitle" },
         "visible": { "$ref": "#/definitions/layerVisible" },
@@ -443,7 +453,7 @@
       "required": ["type", "url"],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "geoparquet" },
+        "type": { "const": "geoparquet", "description": "layer type" },
         "id": { "$ref": "#/definitions/layerId" },
         "title": { "$ref": "#/definitions/layerTitle" },
         "visible": { "$ref": "#/definitions/layerVisible" },
@@ -490,7 +500,7 @@
       "required": ["type", "url", "style"],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "vector" },
+        "type": { "const": "vector", "description": "layer type" },
         "id": { "$ref": "#/definitions/layerId" },
         "title": { "$ref": "#/definitions/layerTitle" },
         "visible": { "$ref": "#/definitions/layerVisible" },
@@ -552,6 +562,7 @@
     },
     "legend": {
       "description": "\"auto\" (default): WMS GetLegendGraphic / swatches derived from the style · false: no legend · string: legend image URL · array: explicit entries",
+      "default": "auto",
       "oneOf": [
         { "const": false },
         { "type": "string" },
@@ -560,6 +571,7 @@
     },
     "legendEntry": {
       "type": "object",
+      "description": "one legend entry — a colored swatch or an image, with a label",
       "required": ["label"],
       "additionalProperties": false,
       "properties": {
@@ -602,6 +614,7 @@
     },
     "field": {
       "type": "object",
+      "description": "one property to list in the popup table",
       "required": ["key"],
       "additionalProperties": false,
       "properties": {
@@ -611,6 +624,7 @@
     },
     "hover": {
       "type": "object",
+      "description": "hover tooltip — a short template rendered while the pointer rests on a feature",
       "required": ["content"],
       "additionalProperties": false,
       "properties": {
@@ -692,11 +706,16 @@
     },
     "clusterOptions": {
       "type": "object",
+      "description": "options for point clustering — nearby points collapse into one bubble until the user zooms in",
       "additionalProperties": false,
       "properties": {
-        "enabled": { "type": "boolean", "default": true },
-        "radius": { "type": "number", "minimum": 1, "maximum": 1000, "description": "cluster radius in px" },
-        "maxZoom": { "type": "number", "minimum": 0, "maximum": 24, "description": "stop clustering above this zoom" }
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "false switches clustering off while keeping the options — same as \"cluster\": false"
+        },
+        "radius": { "type": "number", "minimum": 1, "maximum": 1000, "default": 50, "description": "cluster radius in px" },
+        "maxZoom": { "type": "number", "minimum": 0, "maximum": 24, "default": 14, "description": "stop clustering above this zoom" }
       }
     },
     "styleLayer": {
@@ -757,14 +776,16 @@
     },
     "scaleOptions": {
       "type": "object",
+      "description": "options for the scale bar",
       "additionalProperties": false,
       "properties": {
         "maxWidth": { "type": "number", "minimum": 20, "maximum": 500, "default": 100, "description": "maximum bar length in px" },
-        "unit": { "enum": ["metric", "imperial"], "default": "metric" }
+        "unit": { "enum": ["metric", "imperial"], "default": "metric", "description": "metric (m / km) or imperial (ft / mi)" }
       }
     },
     "geolocateOptions": {
       "type": "object",
+      "description": "options for the geolocate button",
       "additionalProperties": false,
       "properties": {
         "follow": { "type": "boolean", "default": false, "description": "keep the map centered on the position" }
@@ -772,6 +793,7 @@
     },
     "attributionOptions": {
       "type": "object",
+      "description": "options for the attribution line",
       "additionalProperties": false,
       "properties": {
         "compact": {
@@ -783,9 +805,14 @@
     },
     "layerSwitcherOptions": {
       "type": "object",
+      "description": "options for the layer tree panel",
       "additionalProperties": false,
       "properties": {
-        "position": { "enum": ["top-left", "top-right", "bottom-left", "bottom-right"], "default": "top-right" },
+        "position": {
+          "enum": ["top-left", "top-right", "bottom-left", "bottom-right"],
+          "default": "top-right",
+          "description": "corner of the map the panel docks to"
+        },
         "open": {
           "enum": [true, false, "auto"],
           "default": "auto",
@@ -797,21 +824,32 @@
     },
     "basemapSwitcherOptions": {
       "type": "object",
+      "description": "options for the basemap picker",
       "additionalProperties": false,
       "properties": {
-        "position": { "enum": ["top-left", "top-right", "bottom-left", "bottom-right"], "default": "bottom-left" }
+        "position": {
+          "enum": ["top-left", "top-right", "bottom-left", "bottom-right"],
+          "default": "bottom-left",
+          "description": "corner of the map the picker docks to"
+        }
       }
     },
     "legendControlOptions": {
       "type": "object",
+      "description": "options for the legend panel",
       "additionalProperties": false,
       "properties": {
-        "position": { "enum": ["top-left", "top-right", "bottom-left", "bottom-right"], "default": "bottom-right" },
+        "position": {
+          "enum": ["top-left", "top-right", "bottom-left", "bottom-right"],
+          "default": "bottom-right",
+          "description": "corner of the map the panel docks to"
+        },
         "open": { "type": "boolean", "default": false, "description": "start with the panel open" }
       }
     },
     "coordinatesOptions": {
       "type": "object",
+      "description": "options for the coordinate readout",
       "additionalProperties": false,
       "properties": {
         "crs": {
@@ -833,6 +871,7 @@
     },
     "crs": {
       "type": "object",
+      "description": "a coordinate system offered in the coordinate readout — codes the built-in registry knows need no \"def\"",
       "required": ["code"],
       "additionalProperties": false,
       "properties": {
@@ -940,6 +979,7 @@
     },
     "permalinkOptions": {
       "type": "object",
+      "description": "options for the URL-hash permalink",
       "additionalProperties": false,
       "properties": {
         "param": {
