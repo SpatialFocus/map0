@@ -19,10 +19,12 @@
  * ```
  */
 import type { Map0Config } from "@map0/schema";
-import type { Map0Viewer } from "./map0-viewer.js";
+import type { Map0ViewerElement } from "./element.js";
 
-export * from "@map0/schema";
-export type { Map0Viewer };
+/* the schema and the type-only surface, shared with the browser entry */
+export * from "./public.js";
+/** the element type, as in the browser entry — a type only, the class lives in the browser chunk */
+export type Map0Viewer = Map0ViewerElement;
 
 /** true in a browser, false wherever custom elements do not exist */
 export function canDefineElements(): boolean {

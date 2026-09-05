@@ -1,4 +1,5 @@
-import { Map0Viewer } from "./map0-viewer.js";
+import { Map0Viewer as Map0ViewerClass } from "./map0-viewer.js";
+import type { Map0ViewerConstructor, Map0ViewerElement } from "./element.js";
 import type { Map0Config } from "@map0/schema";
 
 /**
@@ -8,7 +9,7 @@ import type { Map0Config } from "@map0/schema";
  */
 export function defineMap0Viewer(tag = "map0-viewer"): void {
   if (typeof customElements === "undefined" || customElements.get(tag)) return;
-  customElements.define(tag, Map0Viewer);
+  customElements.define(tag, Map0ViewerClass);
 }
 
 /* importing the package on a server must not throw — there are no custom
@@ -18,19 +19,20 @@ defineMap0Viewer();
 /** Imperative bootstrap for SPAs/wrappers: creates a <map0-viewer> inside `target`. */
 export function createMap(target: HTMLElement, config: Map0Config): Map0Viewer {
   defineMap0Viewer();
-  const el = document.createElement("map0-viewer") as Map0Viewer;
+  const el = document.createElement("map0-viewer");
   el.config = config;
   el.style.height = el.style.height || "100%";
   target.appendChild(el);
   return el;
 }
 
-export { Map0Viewer };
-export type { Map0Config };
-export * from "@map0/schema";
+/**
+ * The element: a value for `new Map0Viewer()` / `instanceof`, and the type of
+ * an instance. Published under its public contract (element.ts) rather than
+ * the Lit class, so the type declarations do not depend on `lit`.
+ */
+export const Map0Viewer: Map0ViewerConstructor = Map0ViewerClass;
+export type Map0Viewer = Map0ViewerElement;
 
-declare global {
-  interface HTMLElementTagNameMap {
-    "map0-viewer": Map0Viewer;
-  }
-}
+/* the schema and the type-only surface, shared with the SSR entry */
+export * from "./public.js";

@@ -15,6 +15,7 @@ import type {
   ValidationError,
 } from "@map0/core";
 import { normalizeConfig, resolveConfigExtends, validateConfig, type TocNode } from "@map0/schema";
+import type { Map0ViewerElement, Map0ViewerEventDetails } from "./element.js";
 import { componentStyles } from "./styles.js";
 import { attachDropZone } from "./file-drop.js";
 
@@ -94,7 +95,7 @@ const icons = {
  *  2. `config-src` attribute (URL)
  *  3. inline `<script type="application/json">` child
  */
-export class Map0Viewer extends LitElement {
+export class Map0Viewer extends LitElement implements Map0ViewerElement {
   static override styles = [componentStyles];
 
   @property({ attribute: false }) config?: Map0Config;
@@ -296,7 +297,8 @@ export class Map0Viewer extends LitElement {
     this._loading = false;
   }
 
-  private emit(name: string, detail: unknown): void {
+  /** typed against the public event map (element.ts), so a new event or payload has to be declared there */
+  private emit<K extends keyof Map0ViewerEventDetails>(name: K, detail: Map0ViewerEventDetails[K]): void {
     this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
   }
 
