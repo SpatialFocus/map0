@@ -16,6 +16,7 @@ import type {
 } from "@map0/core";
 import { normalizeConfig, resolveConfigExtends, validateConfig, type TocNode } from "@map0/schema";
 import { componentStyles } from "./styles.js";
+import { attachDropZone } from "./file-drop.js";
 
 /**
  * Everything the map itself needs — the engine, MapLibre and its stylesheet, the
@@ -122,6 +123,8 @@ export class Map0Viewer extends LitElement {
   @state() private _addOpen = false;
   @state() private _printOpen = false;
   @state() private _dialogLoading: "add" | "print" | null = null;
+  /** a file drag is over the viewer — the drop zone overlay is showing (F3.2) */
+  @state() private _dropActive = false;
   @state() private _groupCollapsed: Record<string, boolean> = {};
   @state() private _ready = false;
   /** true once initialisation actually starts — before that the element only reserves space */
@@ -178,6 +181,12 @@ export class Map0Viewer extends LitElement {
     const cfg = this.normalized;
     if (!cfg || cfg.controls.layerSwitcher === false) return false;
     return cfg.layers.length > 0 || this._layers.length > 0 || cfg.controls.layerSwitcher.allowAdd;
+  }
+
+  /** users may add layers — the dialog's "+" and the file drop share this gate (F3.1, F3.2) */
+  private get allowAdd(): boolean {
+    const ls = this.normalized?.controls.layerSwitcher;
+    return !!ls && ls.allowAdd;
   }
 
   protected override firstUpdated(): void {
@@ -282,6 +291,7 @@ export class Map0Viewer extends LitElement {
     this._measure = null;
     this._searchResults = [];
     this._hover = null;
+    this._dropActive = false;
     this._ready = false;
     this._loading = false;
   }
@@ -315,6 +325,19 @@ export class Map0Viewer extends LitElement {
       this.notify("error", String(e));
     } finally {
       this._dialogLoading = null;
+    }
+  }
+
+  /** dropped or picked feature files become geojson layers (F3.2); the pipeline loads on first use */
+  private async importFiles(files: File[]): Promise<void> {
+    const core = this.core;
+    if (!core) return;
+    try {
+      const { importGeoFiles } = await import("./file-import.js");
+      const { errors } = await importGeoFiles(core, files, core.t);
+      for (const message of errors) this.notify("error", message);
+    } catch (e) {
+      this.notify("error", e instanceof Error ? e.message : String(e));
     }
   }
 
@@ -587,6 +610,14 @@ export class Map0Viewer extends LitElement {
           "top-left",
         );
       }
+      /* local feature files, dropped anywhere on the viewer (F3.2) */
+      this.unsubs.push(
+        attachDropZone(this, {
+          accepts: () => this.allowAdd && !!this.core,
+          onActive: (active) => (this._dropActive = active),
+          onFiles: (files) => void this.importFiles(files),
+        }),
+      );
       /* dismiss the loading veil on the first painted frame after the style is in —
          waiting for `load` (all initial tiles) can take long on slow WMS servers */
       core.map.once("style.load", () => core.map.once("render", () => (this._ready = true)));
@@ -707,6 +738,11 @@ export class Map0Viewer extends LitElement {
               style=${`left:${this._hover.x + 12}px;top:${this._hover.y + 12}px`}
             >
               ${unsafeHTML(this._hover.html)}
+            </div>`
+          : nothing}
+        ${this._dropActive
+          ? html`<div class="drop-zone" aria-hidden="true">
+              <span>${this.core?.t("addLayer.dropHint")}</span>
             </div>`
           : nothing}
         ${this.renderSearch()} ${this.renderToc()} ${this.renderBasemaps()} ${this.renderLegend()}
@@ -932,7 +968,7 @@ export class Map0Viewer extends LitElement {
   private renderToc(): TemplateResult | typeof nothing {
     const cfg = this.normalized;
     if (!cfg || cfg.controls.layerSwitcher === false || !this.hasToc) return nothing;
-    const allowAdd = cfg.controls.layerSwitcher.allowAdd;
+    const allowAdd = this.allowAdd;
     const t = this.core?.t ?? ((k: string) => k);
     const byId = new Map(this._layers.map((l) => [l.id, l]));
     const extras = this._layers.filter((l) => l.userAdded);

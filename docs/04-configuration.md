@@ -83,7 +83,7 @@ Unset, the config decides as usual.
 | `search` | geocoder config | no |
 | `theme` | design tokens, light/dark | no |
 | `i18n` | locale, string overrides (`overrides: { "<locale>": { "<key>": "<text>" } }`) | no |
-| `permalink` | shareable state in the URL hash (F10.1): view, basemap, layer states, user-added layers; `true` or `{ "param": "map0" }` — opt-in, coexists with host hash routing. Two viewers on one page need **different** `param` values; a second viewer claiming the same one falls back to `map0-2` and says so in the console | no |
+| `permalink` | shareable state in the URL hash (F10.1): view, basemap, layer states, user-added layers; `true` or `{ "param": "map0" }` — opt-in, coexists with host hash routing. User-added layers with **inline data** (dropped files) stay out of the link — a link is a reference, and a local file has no address; layers added by URL travel. Two viewers on one page need **different** `param` values; a second viewer claiming the same one falls back to `map0-2` and says so in the console | no |
 
 ## Full annotated example
 
@@ -243,7 +243,7 @@ Unset, the config decides as usual.
     "layerSwitcher": {
       "position": "top-right",
       "open": "auto",                       // open on desktop, collapsed on mobile
-      "allowAdd": true                      // false disables the add-layer dialog (F3.1)
+      "allowAdd": true                      // false disables the add-layer dialog and file drop (F3.1, F3.2)
     },
     "legend": { "position": "bottom-right", "open": false },
     "print": true,                          // print & export dialog (F7): PNG download + print view
@@ -344,12 +344,27 @@ notes).
 
 ## Runtime layer management (F3)
 
-The add-layer dialog (TOC "+", `controls.layerSwitcher.allowAdd`) lets users paste a WMS URL;
-capabilities are parsed client-side (@camptocamp/ogc-client) and picked layers are added with
-GetFeatureInfo, legend, metadata link and a zoom range derived from the service's
-Max/MinScaleDenominator. User-added layers live in session state only — they never mutate the page
-config — and are removable (✕ in the TOC). The same operations are available programmatically:
-`api.addLayer(def)` / `api.removeLayer(id)`.
+The add-layer dialog (TOC "+", `controls.layerSwitcher.allowAdd`) has three kinds:
+
+- **WMS / WMTS** (F3.1): paste a service URL; capabilities are parsed client-side
+  (@camptocamp/ogc-client) and picked layers are added with GetFeatureInfo, legend, metadata link
+  and a zoom range derived from the service's Max/MinScaleDenominator.
+- **GeoJSON** (F3.2): paste the URL of a GeoJSON file (same URL policy as the config: https, a
+  relative URL, or http on localhost/http pages), optionally a title. The layer keeps the URL as
+  its `data`, so it travels in a share link; the dialog fetches it once to report a typo, a CORS
+  refusal or a non-GeoJSON answer in place. A legacy `crs` member in the answer becomes the layer's
+  `crs`. The same kind offers a **file picker** for GeoJSON, KML and GPX files from the device.
+- **Drag & drop**: GeoJSON (`.geojson`/`.json`), KML and GPX files dropped anywhere on the viewer
+  (a drop zone shows while dragging) become one `geojson` layer each, named after the file, with
+  inline data, default styling — or the file's own simplestyle colours (`stroke`, `fill`,
+  `marker-color`, what Google Earth styles turn into) per feature — and an automatic zoom to what
+  arrived. KML/GPX are converted in the browser (@tmcw/togeojson, loaded with the first such file);
+  a GeoJSON export in a projected CRS with a legacy `crs` member is reprojected like inline data.
+  Files never leave the browser. Unreadable files are reported per file; the others still load.
+
+`allowAdd: false` disables all of it. User-added layers live in session state only — they never
+mutate the page config — and are removable (✕ in the TOC). The same operations are available
+programmatically: `api.addLayer(def)` / `api.removeLayer(id)`.
 
 ## Templating & sanitization
 

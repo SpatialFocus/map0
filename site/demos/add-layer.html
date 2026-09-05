@@ -14,8 +14,8 @@
         <p class="eyebrow" data-i18n="eyebrow">Map features</p>
         <h1 data-i18n="h1">Add layers</h1>
         <p class="lede" data-i18n="lede">
-          This map starts empty on purpose. Users bring their own services — paste a URL, pick from
-          the capabilities, done.
+          This map starts empty on purpose. Users bring their own data — paste a service or GeoJSON
+          URL, or drop a GeoJSON, KML or GPX file straight onto the map.
         </p>
       </div>
 
@@ -24,7 +24,10 @@
         <strong>Try it:</strong> the <strong>+</strong> button in the layer panel. Paste
         <code>https://data.wien.gv.at/daten/geo</code> as WMS (375 layers, use the filter box), or
         switch to WMTS and paste
-        <code>https://mapsneu.wien.gv.at/basemap/1.0.0/WMTSCapabilities.xml</code>.
+        <code>https://mapsneu.wien.gv.at/basemap/1.0.0/WMTSCapabilities.xml</code>. Switch to
+        GeoJSON and paste <code>/data/demo-areas.geojson</code> — or skip the dialog and drag a
+        <code>.geojson</code>, <code>.kml</code> or <code>.gpx</code> file from your desktop onto
+        the map (on a phone, the GeoJSON kind has a file picker instead).
       </p>
 
       <section class="doc">
@@ -35,11 +38,15 @@
           <li data-i18n="what.li3">Layers arrive fully wired: GetFeatureInfo, legend, metadata link, and a zoom range derived from the service's scale hints</li>
           <li data-i18n="what.li4">Layers without a WebMercator offering are flagged before you add them (D-02)</li>
           <li data-i18n="what.li5">Added layers appear in their own section of the panel and can be removed again</li>
+          <li data-i18n="what.li6">GeoJSON by URL, with the URL policy of the config and errors reported in the dialog — a wrong URL never becomes a silently empty layer</li>
+          <li data-i18n="what.li7">Drag &amp; drop of local GeoJSON, KML and GPX files (several at once): one layer per file, named after it, zoomed to, styled with the file's own colours where it has them — and the data never leaves the browser</li>
         </ul>
         <p data-i18n="what.p">
           User-added layers never touch the page config. They live in session state — and, because
           this demo also enables <code>permalink</code>, they travel in the share link, so a
-          colleague opens the map with your services already loaded.
+          colleague opens the map with your services already loaded. Dropped files are the
+          exception: a link is a reference, and a file on your disk has no address, so those stay
+          out of the link.
         </p>
         <div class="callout" data-i18n="callout">
           <strong>CORS decides what works</strong>
@@ -68,6 +75,9 @@
           });
 
           api.removeLayer(id);
+
+          // a GeoJSON file by URL — what the dialog's GeoJSON kind does
+          await api.addLayer({ type: 'geojson', title: 'Areas', data: '/data/demo-areas.geojson' });
         </pre>
       </section>
     </main>

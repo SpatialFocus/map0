@@ -718,6 +718,7 @@ export const componentStyles = css`
   .dialog-error {
     color: #dc2626;
     margin: 8px 0 0;
+    white-space: pre-line; /* one line per failed file */
   }
   .service-toggle {
     display: inline-flex;
@@ -869,6 +870,25 @@ export const componentStyles = css`
     outline: 2px solid var(--map0-primary);
     outline-offset: -1px;
   }
+  .title-row {
+    margin-top: 10px;
+  }
+  .title-row > span {
+    width: auto;
+  }
+  /* "From this device" + the picker button — the phone's drop zone */
+  .file-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--map0-border);
+  }
+  .file-row .dialog-note {
+    margin: 0;
+  }
   .form-check {
     display: flex;
     align-items: center;
@@ -910,6 +930,34 @@ export const componentStyles = css`
     margin-left: 6px;
     vertical-align: middle;
     font-size: 13px;
+  }
+
+  /* ------------------------------ drop zone ----------------------------- */
+
+  /* pointer-events: none — the drop lands on whatever is beneath, all of it
+     inside the host, which is where the listeners are */
+  .drop-zone {
+    position: absolute;
+    inset: 8px;
+    z-index: 25;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    border: 2px dashed var(--map0-primary);
+    border-radius: var(--map0-radius);
+    background: color-mix(in srgb, var(--map0-primary) 12%, color-mix(in srgb, var(--map0-bg) 70%, transparent));
+    color: var(--map0-primary);
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    pointer-events: none;
+    animation: m0slide 0.15s ease;
+  }
+  .drop-zone span {
+    padding: 10px 16px;
+    border-radius: var(--map0-radius-sm);
+    background: var(--map0-bg);
+    box-shadow: var(--map0-shadow);
   }
 
   /* ------------------------------- notices ------------------------------ */

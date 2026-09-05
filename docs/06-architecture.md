@@ -132,6 +132,7 @@ Measured with `pnpm size` (gzip, current). Three tiers, paid at different moment
 | ogc-client (capabilities parsing) | ~62 KB | first add-layer dialog or WMTS layer |
 | proj4 (+ wkt-parser, mgrs) | ~47 KB | first coordinate readout |
 | PMTiles | ~8 KB | first `pmtiles://` layer |
+| file import (+ @tmcw/togeojson for KML/GPX) | ~7 KB | first dropped or picked feature file (F3.2) |
 | print / add-layer dialogs | ~5 KB | first open |
 
 **Nothing but the element loads until the map is needed.** `<map0-viewer>` observes itself with an

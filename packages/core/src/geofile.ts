@@ -12,8 +12,12 @@ import type { SimpleStyle } from "@map0/schema";
 
 export type GeoFileFormat = "geojson" | "kml" | "gpx";
 
-/** the extensions the file picker offers and the drop zone reads without sniffing */
-export const GEO_FILE_EXTENSIONS = [".geojson", ".json", ".kml", ".gpx"] as const;
+/**
+ * How much of a file's head decides its format when the extension says nothing.
+ * The importer reads only this much of an unknown file before deciding whether
+ * to read the rest at all.
+ */
+export const SNIFF_BYTES = 4096;
 
 export interface ParseGeoFileOptions {
   /** XML parser for KML/GPX — the browser's DOMParser unless given (tests pass @xmldom/xmldom) */
@@ -75,7 +79,7 @@ export async function parseGeoFile(
   text: string,
   opts: ParseGeoFileOptions = {},
 ): Promise<FeatureCollection> {
-  const format = sniffGeoFormat(name, text.slice(0, 4096));
+  const format = sniffGeoFormat(name, text.slice(0, SNIFF_BYTES));
   if (!format) throw new Error(`${name} is not a GeoJSON, KML or GPX file`);
   if (format === "geojson") return parseGeoJsonText(name, text);
 
@@ -96,7 +100,12 @@ export async function parseGeoFile(
   };
 }
 
-function parseGeoJsonText(name: string, text: string): FeatureCollection {
+/**
+ * GeoJSON text only — the add-layer dialog's URL path uses this to check what
+ * a URL answers before handing the URL itself (not the parsed copy) to the
+ * layer. `name` only labels the error messages.
+ */
+export function parseGeoJsonText(name: string, text: string): FeatureCollection {
   let doc: unknown;
   try {
     doc = JSON.parse(text.replace(/^\uFEFF/, ""));
