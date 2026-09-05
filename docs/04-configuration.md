@@ -4,6 +4,10 @@
 > shape, and a full annotated example. The published JSON Schema lives at
 > [`packages/schema/v1.json`](../packages/schema/v1.json) and is served at
 > <https://map0.net/schema/v1.json> — see [Schema & validation](#schema--validation).
+>
+> **Looking for a specific key?** The key-by-key reference generated from the schema is
+> [config-reference.md](config-reference.md): every key with its type, default and description.
+> This document explains the concept and shows a full example.
 
 ## Principles
 
@@ -363,6 +367,12 @@ cannot produce. It cannot drift from the validator: `v1-schema.test.ts` locks ev
 enum in the schema to the exported tables in `validate.ts` (both directions), and runs every demo
 config through the compiled schema. Adding a config key means touching both files, and the test
 says so.
+
+The same descriptions are rendered as a key-by-key page, [config-reference.md](config-reference.md):
+`pnpm docs:reference` (`scripts/config-reference.mjs`) generates it from the schema, and
+`config-reference.test.ts` fails while the committed page is stale — so the reference cannot drift
+from the schema any more than the schema can drift from the validator. Improve a text in the
+schema's `description`, not in the generated file.
 
 One canonical file, three places it is published:
 

@@ -148,7 +148,9 @@ templates, hover, search, measuring, coordinate readout in projected CRS, print/
 permalinks, `extends` for shared base configs, CSS-variable theming, and per-language label
 overrides. See
 [docs/04-configuration.md](https://github.com/SpatialFocus/map0/blob/main/docs/04-configuration.md)
-for the annotated reference.
+for the annotated guide, and
+[docs/config-reference.md](https://github.com/SpatialFocus/map0/blob/main/docs/config-reference.md)
+for the key-by-key reference generated from the schema.
 
 ### Autocomplete and validation
 

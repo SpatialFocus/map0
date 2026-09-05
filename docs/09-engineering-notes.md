@@ -447,6 +447,7 @@ explicit choice), and embedded maps follow through the viewer's `theme` attribut
 | Pure logic | Vitest (`packages/**/*.test.ts`) | URL building, templates, merge rules, projections, permalink codec |
 | Whole demos | `e2e/verify-demos.mjs` (Playwright) | every demo page renders, key interactions, **console must stay clean** |
 | Bundle | `scripts/check-size.mjs` | tier sizes, page-tier budget |
+| Docs | `scripts/config-reference.mjs` + `config-reference.test.ts` | `docs/config-reference.md` is generated from `v1.json` (`pnpm docs:reference`); the test fails while the committed page is stale |
 
 Notes on the E2E script:
 
@@ -472,7 +473,7 @@ packages/ui       <map0-viewer>, panels, dialogs, popup rendering, focus trap, s
 site/             landing page + /demos (one page per topic) + configs and data
 site/i18n/        German page catalogues + the build-time translation plugin (§5.1)
 e2e/              headless verification
-scripts/          build-adjacent tooling (size budget)
+scripts/          build-adjacent tooling (size budget, release, config reference generator)
 ```
 
 Adapters implement one interface (`core/src/adapters/types.ts`): mount, visibility, opacity, bounds,
