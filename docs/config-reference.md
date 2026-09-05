@@ -126,7 +126,7 @@ an exclusive background layer
 | `type` | `"style"` · `"raster"` · `"empty"` | **required** | "style": MapLibre style JSON (vector basemap) · "raster": XYZ/WMTS-REST tile template · "empty": no background |
 | `url` | `string` | required unless `type` is `"empty"` | style: MapLibre style URL · raster: tile template with {z}/{x}/{y} placeholders. https required on https pages. |
 | `tileSize` | `number` (1–4096) | `256` | raster tile size in px |
-| `minZoom` | `number` (0–24) | — | raster: lowest zoom level the tile source provides (recorded, not yet applied — the client requests tiles at every zoom) |
+| `minZoom` | `number` (0–24) | — | raster: lowest zoom level the tile source provides — zoomed out further, no tiles are requested and only the background colour shows |
 | `maxZoom` | `number` (0–24) | — | raster: highest zoom level the tile source provides — zooming in further scales that level instead of requesting tiles that do not exist |
 | `attribution` | `string` | — | attribution line, e.g. "© basemap.at" |
 | `thumbnail` | `string` | — | "auto" renders a mini preview, or an image URL |

@@ -140,7 +140,7 @@
           "type": "number",
           "minimum": 0,
           "maximum": 24,
-          "description": "raster: lowest zoom level the tile source provides (recorded, not yet applied — the client requests tiles at every zoom)"
+          "description": "raster: lowest zoom level the tile source provides — zoomed out further, no tiles are requested and only the background colour shows"
         },
         "maxZoom": {
           "type": "number",

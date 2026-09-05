@@ -141,6 +141,7 @@ export function basemapStyle(
           type: "raster",
           tiles: [bm.url!],
           tileSize: bm.tileSize ?? 256,
+          ...(bm.minZoom !== undefined ? { minzoom: bm.minZoom } : {}),
           ...(bm.maxZoom !== undefined ? { maxzoom: bm.maxZoom } : {}),
           ...(bm.attribution ? { attribution: bm.attribution } : {}),
         },
