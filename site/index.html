@@ -283,8 +283,8 @@
               <h3 data-i18n="feat2.h3">🌳 A layer tree that behaves like one</h3>
               <p data-i18n="feat2.p">
                 Groups, visibility, opacity, per-layer status and zoom hints, zoom-to-layer,
-                metadata links back to the catalog — and users adding their own WMS or WMTS by URL,
-                parsed in the browser.
+                metadata links back to the catalog — and users adding their own layers: WMS or
+                WMTS by URL, a GeoJSON link, or GeoJSON, KML and GPX files dropped onto the map.
               </p>
               <span class="go" data-i18n="feat2.go">See add layers →</span>
             </a>
@@ -608,11 +608,11 @@
             </article>
 
             <article class="next reveal">
-              <h3 data-i18n="next3.h3">📥 GeoJSON, KML and GPX</h3>
+              <h3 data-i18n="next3.h3">🔐 Protected services</h3>
               <p data-i18n="next3.p">
-                A GeoJSON export, a KML file or a GPX track dropped onto the map, or added by URL,
-                becomes a layer at runtime — the way the add-layer dialog already takes WMS and
-                WMTS.
+                A hook for tokens and headers, so WMS, WMTS and vector tiles behind a login or an
+                API key work without a proxy — every request leaves the browser with the
+                credentials your application already holds.
               </p>
             </article>
 
@@ -663,8 +663,8 @@
 
           <p class="next-note reveal" data-i18n="next.note">
             Also on the list: drawing and annotations, time-enabled layers (WMS TIME),
-            drag-reorder and a filter box in the layer tree, auth hooks for protected services and a
-            deck.gl overlay for very large datasets. The full picture lives in the
+            drag-reorder and a filter box in the layer tree, and a deck.gl overlay for very large
+            datasets. The full picture lives in the
             <a href="https://github.com/SpatialFocus/map0/blob/main/docs/07-roadmap.md">repository</a>,
             and if something you need is missing, an
             <a href="https://github.com/SpatialFocus/map0/issues">issue</a> is the fastest way to

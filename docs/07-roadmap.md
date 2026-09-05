@@ -14,14 +14,14 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
 | Area | Status |
 |---|---|
 | Data sources | ✅ WMS, WMTS, WFS (paged GetFeature → geojson pipeline), OGC API Features (next-link paging → geojson pipeline), vector tiles/PMTiles, GeoJSON, GeoParquet (decoded in the browser, geojson styling pipeline), COG (RGB, single-band ramps, explicit classes, hillshade), style & raster basemaps |
-| Layer tree | ✅ groups, visibility, opacity, status, zoom hints, zoom-to-layer, metadata links, runtime add/remove · ⬜ drag reorder, filter box, radio groups |
+| Layer tree | ✅ groups, visibility, opacity, status, zoom hints, zoom-to-layer, metadata links, runtime add/remove (WMS/WMTS from capabilities, GeoJSON by URL, GeoJSON/KML/GPX files dropped on the map) · ⬜ drag reorder, filter box, radio groups |
 | Feature info | ✅ GetFeatureInfo + vector query, templates, field tables, multi-hit, hover, highlight, coordinates · ⬜ mobile bottom sheet |
 | Legend | ✅ service, style-derived, hand-written; in print |
 | Print | ✅ PNG, PDF (real paper sizes), print view, DPI, configurable sheet · ⬜ server adapter for scale-true output |
 | Sharing | ✅ permalink incl. user-added layers · ⬜ embed-snippet helper |
 | Search | ✅ type-ahead geocoding, pluggable providers, coordinate input |
 | Measuring | ✅ distance & area, geodesic, draggable vertices |
-| Configuration | ✅ one document, validation with JSON-path errors (unknown keys, unique ids, https policy), `extends`, theming, i18n + overrides · 🟡 published JSON Schema |
+| Configuration | ✅ one document, validation with JSON-path errors (unknown keys, unique ids, https policy), `extends`, theming, i18n + overrides, published JSON Schema with a generated key-by-key reference |
 | Performance | ✅ 31 KB page tier, engine and features load on demand, CI budget |
 | Accessibility | 🟡 keyboard operation, focus trap, reduced motion · ⬜ audit, DOM-mirrored results |
 | Packaging | ✅ MIT licence, name, npm package `map0-viewer` published (prebuilt bundle + third-party notices), CDN via jsDelivr, demo site at map0.net · ⬜ TypeScript types |
@@ -65,7 +65,10 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
 - ✅ **Published JSON Schema** (C3) — hand-written `packages/schema/v1.json` (the descriptions are
   the editor documentation), served at <https://map0.net/schema/v1.json> and shipped in the npm
   tarball; key sets and enums are locked to the validator's tables by `v1-schema.test.ts`, so
-  schema and validator cannot drift · ⬜ config reference generated from the schema (N12)
+  schema and validator cannot drift · ✅ **config reference generated from the schema** (N12,
+  2026-09-05) — `docs/config-reference.md` is written from v1.json by `scripts/config-reference.mjs`
+  (`pnpm docs:reference`); `config-reference.test.ts` fails while the page is stale, so descriptions
+  are maintained once, in the schema
 - ✅ **Unknown-key warnings** (C5 — reported, never fatal), id uniqueness, nested shapes and the
   https policy in the validator (N6)
 - ⬜ **Accessibility pass** — audit, keyboard TOC review, DOM-mirrored feature results (N4)
@@ -96,7 +99,11 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
   `{ code, def }`); GeoParquet resolves the CRS from its own `geo` metadata, legacy GeoJSON `crs`
   members in inline data are honoured. Rendering stays Web Mercator (D-02)
 - ⬜ **Drag-and-drop reorder** in the TOC (F2.6)
-- ⬜ **GeoJSON/KML/GPX by URL and file drop** (F3.2)
+- ✅ **GeoJSON/KML/GPX by URL and file drop** (F3.2, 2026-09-06) — the add-layer dialog takes a
+  GeoJSON URL (same https policy as the config) and a file picker; files dropped on the map become
+  geojson layers, one per file, with auto zoom (KML/GPX via `@tmcw/togeojson`, a lazy chunk; a legacy
+  GeoJSON `crs` member is reprojected like everywhere else). Both gated by `allowAdd`; layers with
+  inline data stay out of the share link
 - ⬜ **Terrain** (F1.8)
 - ⬜ **Auth hooks** for protected services (C8)
 - ⬜ **React and Angular wrappers** (`@map0/react`, `@map0/angular`)
