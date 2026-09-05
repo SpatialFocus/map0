@@ -604,3 +604,25 @@ describe("normalizeConfig — id namespace (R3)", () => {
     expect(ids).toContain("punkte");
   });
 });
+
+describe("urlPolicyError — the URL policy for URLs typed at runtime", () => {
+  it("answers exactly what the validator would say about a config URL", async () => {
+    const { urlPolicyError } = await import("./validate.js");
+    expect(urlPolicyError("https://data.example.gv.at/trees.geojson")).toBeNull();
+    expect(urlPolicyError("/data/demo-areas.geojson")).toBeNull();
+    expect(urlPolicyError("data/local.geojson")).toBeNull();
+    expect(urlPolicyError("http://localhost:5173/x.geojson")).toBeNull();
+    expect(urlPolicyError("http://127.0.0.1:8080/x.geojson")).toBeNull();
+    expect(urlPolicyError("pmtiles://https://e.org/tiles.pmtiles")).toBeNull();
+    expect(urlPolicyError("http://data.example.gv.at/trees.geojson")).toMatch(/use https/);
+    expect(urlPolicyError("ftp://e.org/x.geojson")).toMatch(/unsupported URL scheme "ftp:"/);
+    /* and the validator itself still goes through the same policy */
+    const result = validateConfig({
+      version: 1,
+      basemaps: [{ type: "empty" }],
+      layers: [{ type: "geojson", id: "x", data: "http://data.example.gv.at/trees.geojson" }],
+    });
+    expect(result.valid).toBe(false);
+    expect(result.errors.map((e) => e.message).join(" ")).toMatch(/use https/);
+  });
+});

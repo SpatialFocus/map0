@@ -44,6 +44,9 @@ importers:
       '@map0/schema':
         specifier: workspace:*
         version: link:../schema
+      '@tmcw/togeojson':
+        specifier: ^7.1.2
+        version: 7.1.2
       hyparquet:
         specifier: ^1.29.2
         version: 1.29.2
@@ -69,6 +72,9 @@ importers:
       '@types/proj4':
         specifier: ^2.19.0
         version: 2.19.0(geotiff@3.0.5)
+      '@xmldom/xmldom':
+        specifier: ^0.9.12
+        version: 0.9.12
 
   packages/map0: {}
 
@@ -711,6 +717,9 @@ packages:
     resolution: {integrity: sha512-fCTuZK4QBa+39Oz9l4OGfJfz+GpwCp3AqO7Zch3to99xHPgstVsRFpeQ8LNd2o1Gv8raL2mCFwiaHh7bFSp5DQ==}
     engines: {node: '>=22'}
 
+  '@tmcw/togeojson@7.1.2':
+    resolution: {integrity: sha512-QKnFs9DAuqqBVj4d6c69tV1Dj2TspSBTqffivoN0YoBCVdP/JY1+WaYCJbzU49RkoU5NOSOJ3jtFHCdEUVh21A==}
+
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
 
@@ -768,6 +777,10 @@ packages:
 
   '@vitest/utils@3.2.7':
     resolution: {integrity: sha512-x6BDOd7dyo3PFLY3I9/HJ25X/6OurhGXk2/B9gOZNPF7XDVjeBK4k01lQE5uvDpbuheErh91qYuE1E2OEjK3Rw==}
+
+  '@xmldom/xmldom@0.9.12':
+    resolution: {integrity: sha512-5AXjrcMClTryPe9LgZrygpB1lj7s0S9E0+W+AHaVKAVyHanafK86iPSvG5xHVSp/jC+VH1UXu0TAEmY279xH7A==}
+    engines: {node: '>=14.6'}
 
   ace-builds@1.44.0:
     resolution: {integrity: sha512-PFNMSYqFdEUkul2Ntud0HvA09AgY+F1ag0UYdpMH60wNI/qOA8cB8tlTgoALMEwIdUPJK2CjrIQ7OnbiSS/ugQ==}
@@ -2216,6 +2229,8 @@ snapshots:
 
   '@simple-libs/stream-utils@2.0.0': {}
 
+  '@tmcw/togeojson@7.1.2': {}
+
   '@types/chai@5.2.3':
     dependencies:
       '@types/deep-eql': 4.0.2
@@ -2285,6 +2300,8 @@ snapshots:
       '@vitest/pretty-format': 3.2.7
       loupe: 3.2.1
       tinyrainbow: 2.0.0
+
+  '@xmldom/xmldom@0.9.12': {}
 
   ace-builds@1.44.0: {}
 

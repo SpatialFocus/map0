@@ -20,6 +20,7 @@ import {
   decodeShareState,
   encodeShareState,
   readShareParam,
+  shareableLayerDefs,
   writeShareParam,
   type ShareState,
 } from "./permalink.js";
@@ -78,6 +79,9 @@ export {
 export type { MeasureController, MeasureMode, MeasureState } from "./measure.js";
 /** measuring is loaded when someone activates it, not with the map */
 export const loadMeasure = (): Promise<typeof import("./measure.js")> => import("./measure.js");
+/** file parsing (GeoJSON/KML/GPX, F3.2) arrives with the first dropped or picked file */
+export const loadGeoFile = (): Promise<typeof import("./geofile.js")> => import("./geofile.js");
+export type { GeoFileFormat, ParseGeoFileOptions } from "./geofile.js";
 export {
   buildSearchUrl,
   parseCoordinates,
@@ -90,6 +94,7 @@ export {
   decodeShareState,
   encodeShareState,
   readShareParam,
+  shareableLayerDefs,
   writeShareParam,
   type ShareState,
 } from "./permalink.js";
@@ -290,7 +295,8 @@ async function buildCore(
       }
     }
     if (Object.keys(l).length > 0) state.l = l;
-    if (layers.userLayerDefs.length > 0) state.u = layers.userLayerDefs as never;
+    const shareable = shareableLayerDefs(layers.userLayerDefs);
+    if (shareable.length > 0) state.u = shareable as never;
     return state;
   };
 

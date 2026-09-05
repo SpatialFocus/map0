@@ -17,6 +17,18 @@ export interface ShareState {
   u?: LayerDef[];
 }
 
+/**
+ * The runtime-added layers a share link can carry (F3.5). A layer with inline
+ * data — a dropped file — is left out: a link is a reference, and a local file
+ * has no address the recipient could follow; even a small one would push the
+ * URL past what browsers and chat clients tolerate. Layers added by URL travel.
+ */
+export function shareableLayerDefs<T extends { type: string }>(defs: readonly T[]): T[] {
+  return defs.filter(
+    (d) => !(d.type === "geojson" && typeof (d as { data?: unknown }).data !== "string"),
+  );
+}
+
 function base64UrlEncode(s: string): string {
   const bytes = new TextEncoder().encode(s);
   let bin = "";

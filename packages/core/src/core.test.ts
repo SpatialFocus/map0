@@ -1366,3 +1366,167 @@ describe("reproject (crs on geojson/geoparquet)", () => {
     expect(sources[3]!.data).toBe("https://e.org/x.geojson");
   });
 });
+
+describe("geofile (F3.2) — GeoJSON, KML and GPX files", () => {
+  const parseXml = async () => {
+    const { DOMParser } = await import("@xmldom/xmldom");
+    return (text: string) =>
+      new DOMParser().parseFromString(text, "text/xml") as unknown as Document;
+  };
+
+  const kmlText = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"><Document>
+  <Style id="red"><LineStyle><color>ff0000ff</color><width>3</width></LineStyle></Style>
+  <Placemark><name>Stephansdom</name><description>Cathedral</description>
+    <Point><coordinates>16.3738,48.2085,0</coordinates></Point></Placemark>
+  <Placemark><name>Ring</name><styleUrl>#red</styleUrl>
+    <LineString><coordinates>16.36,48.20,0 16.37,48.21,0</coordinates></LineString></Placemark>
+  <Folder><name>empty folder</name></Folder>
+</Document></kml>`;
+
+  const gpxText = `<?xml version="1.0"?>
+<gpx version="1.1" creator="test" xmlns="http://www.topografix.com/GPX/1/1">
+  <wpt lat="48.2085" lon="16.3738"><name>Start</name></wpt>
+  <trk><name>Morning run</name><trkseg>
+    <trkpt lat="48.20" lon="16.36"><ele>170</ele></trkpt>
+    <trkpt lat="48.21" lon="16.37"><ele>172</ele></trkpt>
+  </trkseg></trk>
+</gpx>`;
+
+  const point = (coordinates: number[]) => ({ type: "Point" as const, coordinates });
+  const fcOf = (...features: Array<{ properties: Record<string, unknown> | null; geometry: object }>) => ({
+    type: "FeatureCollection" as const,
+    features: features.map((f) => ({ type: "Feature" as const, ...f })) as never[],
+  });
+
+  it("detects the format by extension, then by content", async () => {
+    const { sniffGeoFormat, formatFromFileName } = await import("./geofile.js");
+    expect(formatFromFileName("trees.GeoJSON")).toBe("geojson");
+    expect(formatFromFileName("trees.json")).toBe("geojson");
+    expect(formatFromFileName("route.kml")).toBe("kml");
+    expect(formatFromFileName("route.gpx")).toBe("gpx");
+    expect(formatFromFileName("photo.jpg")).toBeNull();
+    /* unknown extension: the first bytes decide */
+    expect(sniffGeoFormat("export.xml", kmlText)).toBe("kml");
+    expect(sniffGeoFormat("track", gpxText)).toBe("gpx");
+    expect(sniffGeoFormat("data.txt", '\uFEFF  {"type":"Point"}')).toBe("geojson");
+    expect(sniffGeoFormat("notes.txt", "hello")).toBeNull();
+    /* a known extension is not second-guessed */
+    expect(sniffGeoFormat("data.json", kmlText)).toBe("geojson");
+  });
+
+  it("names the layer after the file, without the extension", async () => {
+    const { titleFromFileName } = await import("./geofile.js");
+    expect(titleFromFileName("Radweg Donau.kml")).toBe("Radweg Donau");
+    expect(titleFromFileName("C:\\Users\\x\\trees.geojson")).toBe("trees");
+    expect(titleFromFileName("/tmp/a.b.gpx")).toBe("a.b");
+    expect(titleFromFileName("README")).toBe("README");
+    expect(titleFromFileName(".geojson")).toBe(".geojson");
+  });
+
+  it("passes a FeatureCollection through and wraps a Feature or geometry", async () => {
+    const { parseGeoFile } = await import("./geofile.js");
+    const fc = fcOf({ properties: { a: 1 }, geometry: point([16, 48]) });
+    expect(await parseGeoFile("x.geojson", JSON.stringify(fc))).toEqual(fc);
+    const feature = await parseGeoFile("f.json", JSON.stringify(fc.features[0]));
+    expect(feature.features).toEqual(fc.features);
+    const geom = await parseGeoFile(
+      "g.json",
+      '{"type":"LineString","coordinates":[[16,48],[17,48]]}',
+    );
+    expect(geom.features).toHaveLength(1);
+    expect(geom.features[0]!.geometry.type).toBe("LineString");
+    expect(geom.features[0]!.properties).toEqual({});
+  });
+
+  it("keeps a legacy crs member so the adapter can reproject the file", async () => {
+    const { parseGeoFile } = await import("./geofile.js");
+    const { declaredGeoJsonCrs } = await import("./reproject.js");
+    const crs = { type: "name", properties: { name: "urn:ogc:def:crs:EPSG::31256" } };
+    const fc = { type: "FeatureCollection", crs, features: [] };
+    expect(declaredGeoJsonCrs(await parseGeoFile("gk.geojson", JSON.stringify(fc)))).toBe(
+      "EPSG:31256",
+    );
+    /* …also when the file is a single Feature or a bare geometry (QGIS writes both) */
+    const single = { type: "Feature", crs, properties: {}, geometry: point([2500, 341000]) };
+    expect(declaredGeoJsonCrs(await parseGeoFile("gk-f.json", JSON.stringify(single)))).toBe(
+      "EPSG:31256",
+    );
+    const bare = { type: "Point", crs, coordinates: [2500, 341000] };
+    const parsed = await parseGeoFile("gk-g.json", JSON.stringify(bare));
+    expect(declaredGeoJsonCrs(parsed)).toBe("EPSG:31256");
+    expect(parsed.features[0]!.geometry).toEqual(bare);
+  });
+
+  it("converts KML placemarks, carrying names and simplestyle colours", async () => {
+    const { parseGeoFile } = await import("./geofile.js");
+    const fc = await parseGeoFile("wien.kml", kmlText, { parseXml: await parseXml() });
+    expect(fc.type).toBe("FeatureCollection");
+    /* the empty folder is not a feature */
+    expect(fc.features.map((f) => f.geometry.type)).toEqual(["Point", "LineString"]);
+    expect(fc.features[0]!.properties).toMatchObject({
+      name: "Stephansdom",
+      description: "Cathedral",
+    });
+    expect(fc.features[0]!.geometry).toEqual(point([16.3738, 48.2085, 0]));
+    /* KML aabbggrr → simplestyle #rrggbb + width */
+    expect(fc.features[1]!.properties).toMatchObject({ stroke: "#ff0000", "stroke-width": 3 });
+  });
+
+  it("converts GPX waypoints and tracks", async () => {
+    const { parseGeoFile } = await import("./geofile.js");
+    const fc = await parseGeoFile("run.gpx", gpxText, { parseXml: await parseXml() });
+    /* togeojson emits tracks, then routes, then waypoints */
+    expect(fc.features.map((f) => f.geometry.type)).toEqual(["LineString", "Point"]);
+    expect(fc.features[0]!.properties?.name).toBe("Morning run");
+    expect((fc.features[0]!.geometry as { coordinates: number[][] }).coordinates).toEqual([
+      [16.36, 48.2, 170],
+      [16.37, 48.21, 172],
+    ]);
+  });
+
+  it("refuses files that are not feature files, with a message naming the file", async () => {
+    const { parseGeoFile } = await import("./geofile.js");
+    await expect(parseGeoFile("notes.txt", "hello world")).rejects.toThrow(
+      /notes\.txt is not a GeoJSON, KML or GPX file/,
+    );
+    await expect(parseGeoFile("broken.geojson", "{not json")).rejects.toThrow(
+      /broken\.geojson is not valid JSON/,
+    );
+    await expect(parseGeoFile("config.json", '{"version":1,"basemaps":[]}')).rejects.toThrow(
+      /config\.json is not GeoJSON/,
+    );
+    await expect(parseGeoFile("list.json", "[1,2,3]")).rejects.toThrow(/is not GeoJSON/);
+  });
+
+  it("styles per feature only when the file carries simplestyle properties", async () => {
+    const { simpleStyleFor } = await import("./geofile.js");
+    const plain = fcOf({ properties: { name: "x" }, geometry: point([16, 48]) });
+    expect(simpleStyleFor(plain, "#0e7490")).toBeUndefined();
+    const styled = fcOf(
+      { properties: { name: "x" }, geometry: point([16, 48]) },
+      {
+        properties: { stroke: "#ff0000" },
+        geometry: { type: "LineString", coordinates: [[16, 48], [17, 48]] },
+      },
+    );
+    const style = simpleStyleFor(styled, "#0e7490")!;
+    expect(style["line-color"]).toEqual(["coalesce", ["get", "stroke"], "#0e7490"]);
+    expect(style["fill-color"]).toEqual(["coalesce", ["get", "fill"], "#0e7490"]);
+    expect(style["circle-radius"]).toBe(5);
+    /* null properties (GPX routes without extensions) do not count as styled */
+    const nulls = fcOf({ properties: null, geometry: point([16, 48]) });
+    expect(simpleStyleFor(nulls, "#0e7490")).toBeUndefined();
+  });
+});
+
+describe("permalink — which user-added layers travel (F3.5, F3.2)", () => {
+  it("keeps layers added by URL and drops layers with inline data", async () => {
+    const { shareableLayerDefs } = await import("./permalink.js");
+    const byUrl = { type: "geojson", id: "a", data: "https://e.org/a.geojson" };
+    const dropped = { type: "geojson", id: "b", data: { type: "FeatureCollection", features: [] } };
+    const wms = { type: "wms", id: "c", url: "https://e.org/ows", layers: "x" };
+    expect(shareableLayerDefs([dropped, byUrl, wms])).toEqual([byUrl, wms]);
+    expect(shareableLayerDefs([])).toEqual([]);
+  });
+});

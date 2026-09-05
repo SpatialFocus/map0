@@ -326,10 +326,21 @@ function pageIsInsecure(): boolean {
  */
 function checkUrl(value: unknown, path: string, err: Err): void {
   if (typeof value !== "string") return;
+  const message = urlPolicyError(value);
+  if (message) err(path, message);
+}
+
+/**
+ * The same policy as a plain question, for URLs typed at runtime: the
+ * add-layer dialog runs it on a pasted URL before fetching, so the user gets
+ * the validator's message rather than an opaque network failure. Returns the
+ * message, or null when the URL is acceptable.
+ */
+export function urlPolicyError(value: string): string | null {
   const url = value.startsWith("pmtiles://") ? value.slice("pmtiles://".length) : value;
   const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(url)?.[1]?.toLowerCase();
-  if (!scheme) return; // relative
-  if (scheme === "https" || scheme === "data" || scheme === "blob") return;
+  if (!scheme) return null; // relative
+  if (scheme === "https" || scheme === "data" || scheme === "blob") return null;
   if (scheme === "http") {
     let host = "";
     try {
@@ -337,15 +348,13 @@ function checkUrl(value: unknown, path: string, err: Err): void {
     } catch {
       /* a template with placeholders — treat as remote */
     }
-    if (LOOPBACK.test(host) || pageIsInsecure()) return;
-    err(
-      path,
+    if (LOOPBACK.test(host) || pageIsInsecure()) return null;
+    return (
       `use https: an http URL is blocked as mixed content on an https page ` +
-        `(allowed for localhost, or when the page itself is served over http)`,
+      `(allowed for localhost, or when the page itself is served over http)`
     );
-    return;
   }
-  err(path, `unsupported URL scheme "${scheme}:" — use https, a relative URL, or pmtiles://`);
+  return `unsupported URL scheme "${scheme}:" — use https, a relative URL, or pmtiles://`;
 }
 
 /* -------------------------------- validation ------------------------------- */
