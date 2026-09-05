@@ -75,6 +75,47 @@ describe("validateConfig", () => {
     expect(insecure.errors.some((e) => e.path === "$.layers[0].url")).toBe(true);
   });
 
+  it("accepts crs on geojson and geoparquet layers as a code or { code, def }", () => {
+    const ok = validateConfig({
+      ...minimal,
+      layers: [
+        { type: "geojson", data: "https://e.org/gk.geojson", crs: "EPSG:31256" },
+        {
+          type: "geoparquet",
+          url: "https://e.org/gk.parquet",
+          crs: { code: "EPSG:99999", def: "+proj=tmerc +lat_0=0 +lon_0=16.3333 +k=1 +x_0=0 +y_0=-5000000 +ellps=bessel +units=m +no_defs" },
+        },
+      ],
+    });
+    expect(ok.valid).toBe(true);
+    expect(ok.errors).toEqual([]);
+
+    const broken = validateConfig({
+      ...minimal,
+      layers: [
+        { type: "geojson", data: "https://e.org/a.geojson", crs: 31256 as never },
+        { type: "geojson", data: "https://e.org/b.geojson", crs: { def: "+proj=longlat" } as never },
+        { type: "geoparquet", url: "https://e.org/c.parquet", crs: { code: "EPSG:31256", label: "GK" } as never },
+        { type: "geojson", data: "https://e.org/d.geojson", crs: "" },
+      ],
+    });
+    expect(broken.valid).toBe(false);
+    const paths = broken.errors.map((e) => e.path);
+    expect(paths).toContain("$.layers[0].crs");
+    expect(paths).toContain("$.layers[1].crs");
+    expect(paths).toContain("$.layers[3].crs");
+    /* a stray key is a warning, like everywhere else in the validator */
+    const stray = [...broken.errors, ...broken.warnings].filter((w) => w.path.startsWith("$.layers[2].crs"));
+    expect(stray.map((w) => w.message).join(" ")).toMatch(/label/);
+
+    /* a wfs asks the server for WGS84 — crs is not one of its keys */
+    const wfs = validateConfig({
+      ...minimal,
+      layers: [{ type: "wfs", url: "https://e.org/wfs", typeNames: "a:b", crs: "EPSG:31256" } as never],
+    });
+    expect(wfs.warnings.some((w) => w.path === "$.layers[0].crs" && /unknown key "crs"/.test(w.message))).toBe(true);
+  });
+
   it("validates wfs layers: endpoint + typeNames, paging knobs, shared feature options", () => {
     const ok = validateConfig({
       ...minimal,

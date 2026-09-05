@@ -206,7 +206,7 @@ documented prominently (services must send CORS headers; no proxy in core, recip
 
 | Risk | Mitigation |
 |---|---|
-| A desired service cannot serve EPSG:3857 (D-02) | Out of scope by decision — 3857 is an inclusion criterion; add-layer dialog checks capabilities and says so; escape hatches for edge cases: raster-reprojection plugin, proxy recipe |
+| A desired service cannot serve EPSG:3857 (D-02) | Out of scope by decision — 3857 is an inclusion criterion; add-layer dialog checks capabilities and says so; escape hatches for edge cases: `crs` on geojson/geoparquet layers (client-side reprojection on load), raster-reprojection plugin, proxy recipe |
 | WMS GFI/CORS friction in the wild | preflight capabilities check, clear per-layer error UI, documented proxy recipe (core stays serverless) |
 | Print fidelity expectations (scale-true) | explicit "export what you see" wording in UI; PrintProvider interface reserved for server adapter |
 | maplibre v6 ESM-only vs. legacy CMS | docs ship a `<script type="module">` + fallback note; module scripts are fine in all evergreen browsers (N5) |

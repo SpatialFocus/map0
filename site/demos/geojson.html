@@ -14,8 +14,8 @@
         <p class="eyebrow" data-i18n="eyebrow">Data sources</p>
         <h1 data-i18n="h1">GeoJSON &amp; clustering</h1>
         <p class="lede" data-i18n="lede">
-          Three ways to get features onto the map — a remote service, a file next to the page, and
-          a feature collection written straight into the config.
+          Four ways to get features onto the map — a remote service in WGS84, one in a projected
+          CRS, a file next to the page, and a feature collection written straight into the config.
         </p>
       </div>
 
@@ -33,11 +33,13 @@
           <li data-i18n="what.li2">Clustering is one config key; MapLibre does the grouping</li>
           <li data-i18n="what.li3">The simplified style (<code>circle-*</code>, <code>line-*</code>, <code>fill-*</code>) expands into proper style layers per geometry type</li>
           <li data-i18n="what.li4">Zoom-to-layer computes the bounding box from the data itself</li>
+          <li data-i18n="what.li5"><code>crs</code> takes a document that is not WGS84 — the underground stations arrive in Gauß-Krüger M34 (EPSG:31256) and are reprojected on load</li>
         </ul>
         <p data-i18n="what.p">
           For a WFS, the trick is simply asking for GeoJSON: append
           <code>outputFormat=json</code> and <code>srsName=EPSG:4326</code> to a GetFeature request
-          and the response is a source map0 can use directly. Or skip the URL assembly: the
+          and the response is a source map0 can use directly — or keep the service's native CRS and set
+          <code>crs</code> on the layer, as the underground stations do. Or skip the URL assembly: the
           dedicated <a href="/demos/wfs.html"><code>wfs</code> layer type</a> does exactly that,
           plus paging.
         </p>
@@ -45,7 +47,7 @@
 
       <section class="doc">
         <h2 data-i18n="config.h2">Configuration</h2>
-        <pre data-src="/configs/geojson.map0.json" data-label="geojson.map0.json" data-emphasise="&quot;geojson&quot;,&quot;data&quot;,cluster,&quot;style&quot;"></pre>
+        <pre data-src="/configs/geojson.map0.json" data-label="geojson.map0.json" data-emphasise="&quot;geojson&quot;,&quot;data&quot;,&quot;crs&quot;,cluster,&quot;style&quot;"></pre>
       </section>
 
       <section class="doc">

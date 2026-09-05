@@ -280,6 +280,27 @@ try {
       `state[0]=${added.first}, panel[0]=${added.tocFirst}`,
     );
 
+    /* crs — a document in a projected CRS is reprojected to WGS84 before the source gets it */
+    const projected = await page.evaluate(async () => {
+      const el = document.querySelector("map0-viewer");
+      const id = await el.api.addLayer({
+        type: "geojson",
+        title: "Projected",
+        crs: "EPSG:3857",
+        data: { type: "Point", coordinates: [1822000, 6141000] }, // Vienna, in metres
+      });
+      if (!id) return null;
+      const adapter = el.api.layers.all.find((a) => a.def.id === id);
+      const coordinates = el.api.map.getSource(adapter.sourceIds[0])?.serialize?.().data?.coordinates;
+      return { coordinates, bounds: await adapter.bounds() };
+    });
+    const lngLat = projected?.coordinates ?? [];
+    check(
+      "a geojson layer with crs is reprojected to WGS84 on load",
+      Math.abs(lngLat[0] - 16.37) < 0.05 && Math.abs(lngLat[1] - 48.25) < 0.05,
+      JSON.stringify(projected),
+    );
+
     /* R2 — remove from the DOM and put it back: the element must come back alive */
     const reconnected = await page.evaluate(async () => {
       const el = document.querySelector("map0-viewer");

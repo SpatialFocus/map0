@@ -430,12 +430,16 @@
           "description": "short tooltip on hover, e.g. { \"content\": \"{{name}}\" } — false disables",
           "oneOf": [{ "const": false }, { "$ref": "#/definitions/hover" }]
         },
-        "promoteId": { "type": "string", "description": "feature property to use as the feature id (hover/selection state)" }
+        "promoteId": { "type": "string", "description": "feature property to use as the feature id (hover/selection state)" },
+        "crs": {
+          "description": "CRS of the coordinates when they are not WGS84 — the features are reprojected once on load (proj4). A code the built-in registry knows (EPSG:31254–31256, 31287, 3416, 25832, 25833, 3035, WGS84 UTM 326xx/327xx), or { code, def } with a proj4 definition for anything else",
+          "oneOf": [{ "type": "string" }, { "$ref": "#/definitions/layerCrs" }]
+        }
       }
     },
     "geoparquetLayer": {
       "type": "object",
-      "description": "GeoParquet overlay — the file is downloaded and decoded in the browser (a fraction of the transfer size of the same data as GeoJSON), then rendered exactly like a geojson layer: clustering, popups and hover tooltips work the same. Coordinates must be WGS84 (OGC:CRS84/EPSG:4326 — no client-side reprojection). The decoder loads on demand.",
+      "description": "GeoParquet overlay — the file is downloaded and decoded in the browser (a fraction of the transfer size of the same data as GeoJSON), then rendered exactly like a geojson layer: clustering, popups and hover tooltips work the same. Coordinates in another CRS are reprojected on load — the CRS comes from the file's own geo metadata, or from `crs`. The decoder loads on demand.",
       "required": ["type", "url"],
       "additionalProperties": false,
       "properties": {
@@ -452,7 +456,7 @@
         "legend": { "$ref": "#/definitions/legend" },
         "url": {
           "type": "string",
-          "description": "GeoParquet file URL — the whole file is fetched, so the server needs CORS but no range-request support; coordinates must be WGS84 (OGC:CRS84/EPSG:4326)"
+          "description": "GeoParquet file URL — the whole file is fetched, so the server needs CORS but no range-request support; a file whose geo metadata names a CRS other than WGS84 is reprojected on load"
         },
         "style": {
           "description": "simplified style: one flat paint-property object (circle-*, line-*, fill-* — applied per geometry type) · full control: an array of MapLibre style-spec layers",
@@ -473,7 +477,11 @@
           "description": "short tooltip on hover, e.g. { \"content\": \"{{name}}\" } — false disables",
           "oneOf": [{ "const": false }, { "$ref": "#/definitions/hover" }]
         },
-        "promoteId": { "type": "string", "description": "feature property to use as the feature id (hover/selection state)" }
+        "promoteId": { "type": "string", "description": "feature property to use as the feature id (hover/selection state)" },
+        "crs": {
+          "description": "CRS of the coordinates when they are not WGS84 — the features are reprojected once on load (proj4). A code the built-in registry knows (EPSG:31254–31256, 31287, 3416, 25832, 25833, 3035, WGS84 UTM 326xx/327xx), or { code, def } with a proj4 definition for anything else",
+          "oneOf": [{ "type": "string" }, { "$ref": "#/definitions/layerCrs" }]
+        }
       }
     },
     "vectorLayer": {
@@ -811,6 +819,16 @@
           "description": "coordinate systems to offer instead of the default list",
           "items": { "$ref": "#/definitions/crs" }
         }
+      }
+    },
+    "layerCrs": {
+      "type": "object",
+      "description": "CRS of a feature file's coordinates, with a proj4 definition for codes the built-in registry does not know",
+      "required": ["code"],
+      "additionalProperties": false,
+      "properties": {
+        "code": { "type": "string", "description": "EPSG code, e.g. \"EPSG:31256\"" },
+        "def": { "type": "string", "description": "proj4 definition — required for CRS the built-in registry does not know (and for the datum shift a file's PROJJSON may lack)" }
       }
     },
     "crs": {

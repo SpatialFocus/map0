@@ -39,6 +39,11 @@ A service failing #1/#2 is **out of scope by decision** — it does not trigger 
 re-evaluation. The add-layer dialog performs check #2 automatically and tells the user
 (specced in [06-architecture.md](06-architecture.md)).
 
+Feature *files* are the one exception to #3 (since 2026-09-03): geojson and geoparquet layers take
+a `crs` — or read it from the file's own metadata — and are reprojected once on load with proj4. That
+is a CPU pass over a finite feature array, not GPU tile reprojection, so it leaves the engine
+constraint untouched.
+
 ## D-03 · v1 source types — **DECIDED**
 
 **v1 (Must):** WMS + WMTS incl. GetFeatureInfo & GetLegendGraphic · vector tiles (MVT/TileJSON) ·

@@ -12,7 +12,7 @@
 | **WebGL2 mandatory** since v6 | Browser floor effectively evergreen; matches N5. Older kiosk devices need v5 pin (we target v6). |
 | **Globe projection + built-in `GlobeControl`** since v5; runtime-switchable, terrain works on globe | F1.4 is nearly free. |
 | **Terrain, sky/atmosphere** in core | F1.8 config key maps 1:1. |
-| Rendering is **Web Mercator only** (plus globe). Custom-CRS is an official roadmap item ([maplibre#168](https://github.com/maplibre/maplibre-gl-js/issues/168), [roadmap](https://maplibre.org/roadmap/maplibre-gl-js/non-mercator-projection/)) but **not implemented** as of mid-2026 | Confirms decision D-02: services must serve 3857 (WMS) / WebMercatorQuad (WMTS); vector data in 4326/CRS84. Design the schema so a future `crs` key can be added without breakage. |
+| Rendering is **Web Mercator only** (plus globe). Custom-CRS is an official roadmap item ([maplibre#168](https://github.com/maplibre/maplibre-gl-js/issues/168), [roadmap](https://maplibre.org/roadmap/maplibre-gl-js/non-mercator-projection/)) but **not implemented** as of mid-2026 | Confirms decision D-02: services must serve 3857 (WMS) / WebMercatorQuad (WMTS); vector data in 4326/CRS84 — or, for geojson/geoparquet *files*, reprojected on load with proj4 (`crs`, shipped 2026-09-03: a one-time CPU pass over the features, not a rendering projection). |
 | `MapOptions.locale` localizes all built-in control strings | Pipe map0's i18n dictionary through it (F11). |
 | `Hash` URL-state built in (`#map=z/lat/lon`) | F1.9, but we implement our own param to avoid clashing with host-page routing. |
 | Bundle: **~253 KB min+gzip**, BSD-3-Clause, no telemetry/API keys | Fine for public sector; our N1 budget is on top of this. |

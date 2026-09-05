@@ -191,6 +191,14 @@ Rendering is Web Mercator plus globe, full stop. The coordinate readout reprojec
 with proj4 (display only) — that is a different problem from reprojecting tiles for a GPU, and
 conflating them is how you end up promising something the engine cannot do.
 
+The one place that does reproject data is the `crs` key of geojson and geoparquet layers
+(`reproject.ts`): a feature file in a projected CRS is transformed once on load, position by
+position, with the same proj4 registry. A bounded CPU pass over a finite array — fine for the file
+sizes those layer types are for — and it leaves everything tiled (vector tiles, WMS/WMTS, COG) at
+EPSG:3857, where the GPU needs it. GeoParquet reads the CRS from its own metadata; registry codes
+use map0's definitions because GDAL's PROJJSON usually omits the datum shift (MGI is ~100 m off
+without it), unknown ones go to proj4 as PROJJSON.
+
 ## 4. Field notes: OGC services in the wild
 
 ### 4.1 Capabilities documents lie

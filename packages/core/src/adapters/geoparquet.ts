@@ -1,5 +1,13 @@
 import type { Feature, FeatureCollection, Geometry } from "geojson";
-import type { GeoParquetLayerDef, NormalizedLayer } from "@map0/schema";
+import type { GeoParquetLayerDef, LayerCrs, NormalizedLayer } from "@map0/schema";
+import {
+  isWgs84Code,
+  layerCrs,
+  normalizeCrsCode,
+  projectorToWgs84,
+  reprojectGeoJson,
+  type Projector,
+} from "../reproject.js";
 import { GeoJsonAdapter, type NormalizedGeoJson } from "./geojson.js";
 
 type NormalizedGeoParquet = GeoParquetLayerDef & NormalizedLayer & { type: "geoparquet" };
@@ -18,22 +26,42 @@ export interface GeoMetadata {
 }
 
 /**
- * GeoParquet defaults to OGC:CRS84 (lon/lat WGS84), which is also the only CRS
- * MapLibre's geojson source understands. Anything else would render in the
- * wrong place, so fail fast with the CRS name — the COG adapter draws the same
- * line for non-3857 files (map0 does no client-side reprojection).
+ * Forward transform for a geometry column, or null when its coordinates are
+ * WGS84 already (OGC:CRS84 is the spec default; MapLibre takes nothing else).
+ * A `crs` from the config wins. Otherwise the file's PROJJSON decides: a code
+ * the built-in registry knows uses the registry definition — it carries the
+ * datum shift GDAL's PROJJSON usually lacks — and anything else is handed to
+ * proj4 as PROJJSON. Throws, naming the CRS and the fix, when neither works.
  */
-export function assertWgs84(column: string, geo: GeoMetadata): void {
+export async function geoParquetProjector(
+  column: string,
+  geo: GeoMetadata,
+  configured?: LayerCrs,
+): Promise<Projector | null> {
+  const fromConfig = layerCrs(configured);
+  if (fromConfig) return projectorToWgs84(fromConfig);
   const crs = geo.columns?.[column]?.crs;
-  if (crs == null) return;
-  const code = crs.id ? `${crs.id.authority}:${crs.id.code}` : "";
-  if (code === "OGC:CRS84" || code === "EPSG:4326" || /\bWGS[ _]?84\b/i.test(crs.name ?? "")) {
-    return;
+  if (crs == null) return null;
+  const code = crs.id ? normalizeCrsCode(`${crs.id.authority}:${crs.id.code}`) : "";
+  const name = (crs.name ?? "").trim();
+  if (code ? isWgs84Code(code) : /^WGS[ _]?84(?:\s*\(CRS84\))?$/i.test(name)) return null;
+  const label = name || code || "unknown CRS";
+  try {
+    if (code) {
+      try {
+        return await projectorToWgs84({ code });
+      } catch {
+        /* not in the built-in registry — try the file's own definition */
+      }
+    }
+    return await projectorToWgs84({ code: code || `PROJJSON:${name || "unnamed"}`, def: crs });
+  } catch (e) {
+    throw new Error(
+      `coordinates are in "${label}" and its definition could not be resolved — set ` +
+        `"crs": { "code": "${code || "EPSG:…"}", "def": "+proj=…" } on the layer, or reproject ` +
+        `the file (ogr2ogr -t_srs EPSG:4326). ${e instanceof Error ? e.message : String(e)}`,
+    );
   }
-  throw new Error(
-    `coordinates are in "${crs.name || code || "unknown CRS"}" — a geoparquet layer needs ` +
-      `WGS84 (OGC:CRS84/EPSG:4326); reproject the file, e.g. ogr2ogr -t_srs EPSG:4326`,
-  );
 }
 
 /**
@@ -70,6 +98,7 @@ export function featureCollectionFromRows(
  */
 async function loadGeoParquet(
   url: string,
+  crs: LayerCrs | undefined,
 ): Promise<{ fc: FeatureCollection; bounds: [number, number, number, number] | null }> {
   const [{ parquetMetadataAsync, parquetReadObjects }, buffer] = await Promise.all([
     import("hyparquet"),
@@ -104,7 +133,7 @@ async function loadGeoParquet(
   }
   const geo = JSON.parse(geoKv.value) as GeoMetadata;
   const primary = geo.primary_column ?? "geometry";
-  assertWgs84(primary, geo);
+  const project = await geoParquetProjector(primary, geo, crs);
 
   const rows = (await parquetReadObjects({ file, metadata, compressors })) as Array<
     Record<string, unknown>
@@ -118,9 +147,14 @@ async function loadGeoParquet(
     throw new Error(`the geometry column "${primary}" of ${url} could not be decoded`);
   }
 
+  const fc = featureCollectionFromRows(rows, geo);
+  if (project) {
+    /* the metadata bbox is in the file's CRS too — bounds() scans the features instead */
+    return { fc: reprojectGeoJson(fc, project), bounds: null };
+  }
   const bbox = geo.columns?.[primary]?.bbox;
   return {
-    fc: featureCollectionFromRows(rows, geo),
+    fc,
     bounds: bbox && bbox.length === 4 ? (bbox as [number, number, number, number]) : null,
   };
 }
@@ -133,22 +167,25 @@ async function loadGeoParquet(
  */
 export class GeoParquetAdapter extends GeoJsonAdapter {
   private readonly url: string;
+  private readonly crs: LayerCrs | undefined;
 
   constructor(def: NormalizedGeoParquet) {
-    const { url, ...common } = def;
+    /* crs is resolved here against the file metadata, not by the geojson base */
+    const { url, crs, ...common } = def;
     super({
       ...common,
       type: "geojson",
       data: { type: "FeatureCollection", features: [] },
     } as NormalizedGeoJson);
     this.url = url;
+    this.crs = crs;
   }
 
   protected override async addToMap(): Promise<void> {
-    const { fc, bounds } = await loadGeoParquet(this.url);
+    const { fc, bounds } = await loadGeoParquet(this.url, this.crs);
     (this.def as { data: unknown }).data = fc;
     /* the spec-level bbox saves the coordinate scan in bounds() (F2.2) */
     if (!this.def.bounds && bounds) this.def.bounds = bounds;
-    super.addToMap();
+    await super.addToMap();
   }
 }

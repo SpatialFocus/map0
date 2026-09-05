@@ -1,6 +1,14 @@
 import type { GeoJsonLayerDef, NormalizedLayer, SimpleStyle, StyleLayerSpec } from "@map0/schema";
 import { deriveFromStyleLayers, entryFromPaint } from "./legend-derive.js";
 import {
+  declaredGeoJsonCrs,
+  isWgs84Code,
+  layerCrs,
+  projectorToWgs84,
+  reprojectGeoJson,
+  type CrsSource,
+} from "../reproject.js";
+import {
   SourceAdapter,
   type FeatureInfoQuery,
   type FeatureInfoResult,
@@ -55,8 +63,16 @@ export function expandSimpleStyle(style: SimpleStyle | undefined, accent: string
   return out;
 }
 
+async function fetchGeoJson(url: string): Promise<unknown> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`fetching ${url} failed: ${res.status} ${res.statusText}`);
+  return res.json();
+}
+
 export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
   private srcId = `m0s-${this.def.id}`;
+  /** what the source is fed: def.data, or its WGS84 copy when the document is in another CRS */
+  private data: unknown;
   private ids: string[] = [];
   private interactive: string[] = [];
   private derivedLegend: LegendEntry[] = [];
@@ -79,13 +95,31 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
     return { enabled: false, radius: 50, maxZoom: 14 };
   }
 
-  protected addToMap(): void {
+  /**
+   * `crs` on the layer — or a legacy `crs` member in inline data — says the
+   * coordinates are not WGS84: fetch the document here and reproject it once.
+   * Otherwise def.data goes to MapLibre untouched, URLs included (loaded in
+   * its worker, as before).
+   */
+  private async resolveData(): Promise<unknown> {
+    const data = this.def.data;
+    const declared = typeof data === "string" ? null : declaredGeoJsonCrs(data);
+    const crs: CrsSource | null =
+      layerCrs(this.def.crs) ?? (declared && !isWgs84Code(declared) ? { code: declared } : null);
+    if (!crs || isWgs84Code(crs.code)) return data;
+    const project = await projectorToWgs84(crs);
+    const doc = typeof data === "string" ? await fetchGeoJson(data) : data;
+    return project ? reprojectGeoJson(doc, project) : doc;
+  }
+
+  protected async addToMap(): Promise<void> {
+    this.data = await this.resolveData();
     const { map, accent } = this.ctx;
     const cluster = this.clusterOpts;
 
     map.addSource(this.srcId, {
       type: "geojson",
-      data: this.def.data as never,
+      data: this.data as never,
       ...(cluster.enabled
         ? { cluster: true, clusterRadius: cluster.radius, clusterMaxZoom: cluster.maxZoom }
         : {}),
@@ -215,15 +249,16 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
     if (this.def.bounds) return this.def.bounds;
     if (this.cachedBounds !== undefined) return this.cachedBounds;
     const { geojsonBounds } = await import("../bbox.js");
-    if (typeof this.def.data === "string") {
+    const data = this.data ?? this.def.data;
+    if (typeof data === "string") {
       try {
-        const res = await fetch(this.def.data); // usually served from HTTP cache
+        const res = await fetch(data); // usually served from HTTP cache
         this.cachedBounds = res.ok ? geojsonBounds(await res.json()) : null;
       } catch {
         this.cachedBounds = null;
       }
     } else {
-      this.cachedBounds = geojsonBounds(this.def.data);
+      this.cachedBounds = geojsonBounds(data);
     }
     return this.cachedBounds;
   }

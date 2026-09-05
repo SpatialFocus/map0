@@ -13,7 +13,7 @@ import {
   cogLegendEntries,
 } from "./adapters/cog.js";
 import { expandSimpleStyle } from "./adapters/geojson.js";
-import { assertWgs84, featureCollectionFromRows, type GeoMetadata } from "./adapters/geoparquet.js";
+import { featureCollectionFromRows, geoParquetProjector, type GeoMetadata } from "./adapters/geoparquet.js";
 import { buildGetFeatureUrl, loadWfsFeatures, parseWfsResponse } from "./adapters/wfs.js";
 import { buildItemsUrl, loadOgcApiFeatures, parseItemsResponse } from "./adapters/ogcapi-features.js";
 import { deriveFromStyleLayers, entryFromPaint } from "./adapters/legend-derive.js";
@@ -404,6 +404,46 @@ describe("ogcapi-features", () => {
   });
 });
 
+/** PROJJSON of WGS 84 / UTM zone 33N as GDAL writes it — without the id block */
+const UTM_33N_PROJJSON = {
+  type: "ProjectedCRS",
+  name: "WGS 84 / UTM zone 33N",
+  base_crs: {
+    type: "GeographicCRS",
+    name: "WGS 84",
+    datum: {
+      type: "GeodeticReferenceFrame",
+      name: "World Geodetic System 1984",
+      ellipsoid: { name: "WGS 84", semi_major_axis: 6378137, inverse_flattening: 298.257223563 },
+    },
+    coordinate_system: {
+      subtype: "ellipsoidal",
+      axis: [
+        { name: "Geodetic latitude", abbreviation: "Lat", direction: "north", unit: "degree" },
+        { name: "Geodetic longitude", abbreviation: "Lon", direction: "east", unit: "degree" },
+      ],
+    },
+  },
+  conversion: {
+    name: "UTM zone 33N",
+    method: { name: "Transverse Mercator", id: { authority: "EPSG", code: 9807 } },
+    parameters: [
+      { name: "Latitude of natural origin", value: 0, unit: "degree" },
+      { name: "Longitude of natural origin", value: 15, unit: "degree" },
+      { name: "Scale factor at natural origin", value: 0.9996, unit: "unity" },
+      { name: "False easting", value: 500000, unit: "metre" },
+      { name: "False northing", value: 0, unit: "metre" },
+    ],
+  },
+  coordinate_system: {
+    subtype: "Cartesian",
+    axis: [
+      { name: "Easting", abbreviation: "E", direction: "east", unit: "metre" },
+      { name: "Northing", abbreviation: "N", direction: "north", unit: "metre" },
+    ],
+  },
+} as unknown as NonNullable<NonNullable<GeoMetadata["columns"]>[string]["crs"]>;
+
 describe("geoparquet", () => {
   const geo: GeoMetadata = { primary_column: "geom", columns: { geom: {} } };
 
@@ -431,22 +471,46 @@ describe("geoparquet", () => {
     expect(fc.features[0]?.properties).toEqual({ name: "A" });
   });
 
-  it("accepts WGS84 in its spellings, rejects everything else", () => {
-    expect(() => assertWgs84("geom", geo)).not.toThrow(); // no crs = OGC:CRS84 per spec
-    expect(() =>
-      assertWgs84("geom", { columns: { geom: { crs: { id: { authority: "OGC", code: "CRS84" } } } } }),
-    ).not.toThrow();
-    expect(() =>
-      assertWgs84("geom", { columns: { geom: { crs: { id: { authority: "EPSG", code: 4326 } } } } }),
-    ).not.toThrow();
-    expect(() =>
-      assertWgs84("geom", { columns: { geom: { crs: { name: "WGS 84" } } } }),
-    ).not.toThrow();
-    expect(() =>
-      assertWgs84("geom", {
-        columns: { geom: { crs: { name: "MGI / Austria GK East", id: { authority: "EPSG", code: 31256 } } } },
+  it("needs no projector for WGS84 in its spellings", async () => {
+    expect(await geoParquetProjector("geom", geo)).toBeNull(); // no crs = OGC:CRS84 per spec
+    expect(
+      await geoParquetProjector("geom", { columns: { geom: { crs: { id: { authority: "OGC", code: "CRS84" } } } } }),
+    ).toBeNull();
+    expect(
+      await geoParquetProjector("geom", { columns: { geom: { crs: { id: { authority: "EPSG", code: 4326 } } } } }),
+    ).toBeNull();
+    expect(await geoParquetProjector("geom", { columns: { geom: { crs: { name: "WGS 84" } } } })).toBeNull();
+  });
+
+  it("reprojects a registry CRS named by the metadata, and a nameless one from its PROJJSON", async () => {
+    const gk = await geoParquetProjector("geom", {
+      columns: { geom: { crs: { name: "MGI / Austria GK East", id: { authority: "EPSG", code: 31256 } } } },
+    });
+    expect(gk).toBeTypeOf("function");
+    const [lng, lat] = gk!([2500, 341000]);
+    expect(lng).toBeCloseTo(16.3658, 3);
+    expect(lat).toBeCloseTo(48.2074, 3);
+
+    /* no id at all: only the PROJJSON body says what this is — and "WGS 84 / UTM"
+       in the name must not pass as plain WGS84 */
+    const utm = await geoParquetProjector("geom", { columns: { geom: { crs: UTM_33N_PROJJSON } } });
+    expect(utm).toBeTypeOf("function");
+    const [ulng, ulat] = utm!([602000, 5340000]);
+    expect(ulng).toBeCloseTo(16.3728, 3);
+    expect(ulat).toBeCloseTo(48.205, 3);
+
+    /* config wins over the metadata */
+    const forced = await geoParquetProjector("geom", { columns: { geom: { crs: UTM_33N_PROJJSON } } }, "EPSG:31256");
+    expect(forced!([2500, 341000])[0]).toBeCloseTo(16.3658, 3);
+    expect(await geoParquetProjector("geom", { columns: { geom: { crs: UTM_33N_PROJJSON } } }, "EPSG:4326")).toBeNull();
+  });
+
+  it("names a CRS nobody can resolve, and the config key that fixes it", async () => {
+    await expect(
+      geoParquetProjector("geom", {
+        columns: { geom: { crs: { name: "Nowhere Grid", id: { authority: "EPSG", code: 99999 } } } },
       }),
-    ).toThrow(/MGI \/ Austria GK East/);
+    ).rejects.toThrow(/Nowhere Grid.*"crs".*EPSG:99999/);
   });
 
   /* the shipped demo file, read through the real decoder (node path of hyparquet) */
@@ -1164,5 +1228,141 @@ describe("createCore — permalink claim rollback (R8)", () => {
     const claim = claimShareParam("map0");
     expect(claim.param).toBe("map0"); // not "map0-2": the failed attempt let go
     claim.release();
+  });
+});
+
+describe("reproject (crs on geojson/geoparquet)", () => {
+  const gkPoint: [number, number] = [2500, 341000]; // Vienna, MGI / GK M34
+  const legacyMember = { type: "name", properties: { name: "urn:ogc:def:crs:EPSG::31256" } };
+  const near = (c: unknown) => {
+    const [lng, lat] = c as [number, number];
+    expect(lng).toBeCloseTo(16.3658, 3);
+    expect(lat).toBeCloseTo(48.2074, 3);
+  };
+
+  it("folds the spellings a CRS turns up in", async () => {
+    const { normalizeCrsCode, isWgs84Code, declaredGeoJsonCrs } = await import("./reproject.js");
+    expect(normalizeCrsCode("urn:ogc:def:crs:EPSG::31256")).toBe("EPSG:31256");
+    expect(normalizeCrsCode("urn:ogc:def:crs:EPSG:6.9:31256")).toBe("EPSG:31256");
+    expect(normalizeCrsCode("http://www.opengis.net/def/crs/EPSG/0/31256")).toBe("EPSG:31256");
+    expect(normalizeCrsCode("http://www.opengis.net/gml/srs/epsg.xml#31256")).toBe("EPSG:31256");
+    expect(normalizeCrsCode("epsg:31256")).toBe("EPSG:31256");
+    expect(normalizeCrsCode(" 31256 ")).toBe("EPSG:31256");
+    expect(normalizeCrsCode("urn:ogc:def:crs:OGC:1.3:CRS84")).toBe("OGC:CRS84");
+    expect(normalizeCrsCode("CRS:84")).toBe("OGC:CRS84");
+    expect(normalizeCrsCode("http://www.opengis.net/def/crs/OGC/1.3/CRS84")).toBe("OGC:CRS84");
+    expect(isWgs84Code("EPSG:4326")).toBe(true);
+    expect(isWgs84Code("urn:ogc:def:crs:OGC:1.3:CRS84")).toBe(true);
+    expect(isWgs84Code("EPSG:4258")).toBe(true); // ETRS89 — the same numbers
+    expect(isWgs84Code("EPSG:31256")).toBe(false);
+    expect(declaredGeoJsonCrs({ type: "FeatureCollection", features: [], crs: legacyMember })).toBe("EPSG:31256");
+    expect(
+      declaredGeoJsonCrs({ type: "Point", coordinates: [0, 0], crs: { type: "EPSG", properties: { code: 4326 } } }),
+    ).toBe("EPSG:4326");
+    expect(declaredGeoJsonCrs({ type: "FeatureCollection", features: [] })).toBeNull();
+    expect(declaredGeoJsonCrs("https://e.org/x.geojson")).toBeNull();
+  });
+
+  it("copies every geometry type into WGS84 and leaves the input alone", async () => {
+    const { projectorToWgs84, reprojectGeoJson } = await import("./reproject.js");
+    const project = (await projectorToWgs84({ code: "EPSG:31256" }))!;
+    const props = { name: "A" };
+    const ring = [gkPoint, [3000, 341000], [3000, 342000], gkPoint];
+    const input = {
+      type: "FeatureCollection",
+      bbox: [0, 0, 1, 1],
+      crs: legacyMember,
+      features: [
+        { type: "Feature", properties: props, bbox: [0, 0, 1, 1], geometry: { type: "Point", coordinates: [...gkPoint, 171.5] } },
+        { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [gkPoint, [3000, 342000]] } },
+        { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [ring] } },
+        { type: "Feature", properties: {}, geometry: { type: "MultiPolygon", coordinates: [[ring]] } },
+        {
+          type: "Feature",
+          properties: {},
+          geometry: { type: "GeometryCollection", geometries: [{ type: "Point", coordinates: gkPoint }] },
+        },
+        { type: "Feature", properties: {}, geometry: null },
+      ],
+    };
+    const before = JSON.stringify(input);
+    const out = reprojectGeoJson(input, project) as typeof input & Record<string, unknown>;
+    expect(JSON.stringify(input)).toBe(before); // inline data is the config object — untouched
+    expect(out).not.toHaveProperty("bbox");
+    expect(out).not.toHaveProperty("crs");
+    expect(out.features[0]).not.toHaveProperty("bbox");
+    const g = (i: number) =>
+      out.features[i]!.geometry as { coordinates: unknown; geometries?: Array<{ coordinates: unknown }> };
+    near(g(0).coordinates);
+    expect((g(0).coordinates as number[])[2]).toBe(171.5); // z survives
+    expect(out.features[0]!.properties).toBe(props); // shared, never mutated
+    near((g(1).coordinates as unknown[])[0]);
+    near((g(2).coordinates as unknown[][])[0]![0]);
+    near((g(3).coordinates as unknown[][][])[0]![0]![0]);
+    near(g(4).geometries![0]!.coordinates);
+    expect(out.features[5]!.geometry).toBeNull();
+  });
+
+  it("knows the registry, derives UTM zones, and refuses the rest with the fix in the message", async () => {
+    const { projectorToWgs84 } = await import("./reproject.js");
+    expect(await projectorToWgs84({ code: "EPSG:4326" })).toBeNull();
+    expect(await projectorToWgs84({ code: "urn:ogc:def:crs:OGC:1.3:CRS84" })).toBeNull();
+    expect(await projectorToWgs84({ code: "EPSG:32756" })).toBeTypeOf("function");
+    const laea = (await projectorToWgs84({ code: "EPSG:3035" }))!([4790000, 2800000]);
+    expect(laea[0]).toBeCloseTo(16.4, 0);
+    expect(laea[1]).toBeCloseTo(48.2, 0);
+    await expect(projectorToWgs84({ code: "EPSG:99999" })).rejects.toThrow(/"def"/);
+    const custom = await projectorToWgs84({
+      code: "EPSG:99998",
+      def: "+proj=tmerc +lat_0=0 +lon_0=16.3333333333333 +k=1 +x_0=0 +y_0=-5000000 +ellps=bessel +units=m +no_defs",
+    });
+    expect(custom!(gkPoint)[0]).toBeCloseTo(16.37, 1);
+  });
+
+  it("GeoJsonAdapter feeds the source WGS84 — from a crs key, a legacy member, or a fetched document", async () => {
+    const { GeoJsonAdapter } = await import("./adapters/geojson.js");
+    const sources: Array<{ data: unknown }> = [];
+    const map = {
+      addSource: (_id: string, src: { data: unknown }) => sources.push(src),
+      addLayer: () => {},
+      on: () => {},
+      off: () => {},
+      getLayer: () => undefined,
+      setLayoutProperty: () => {},
+      setPaintProperty: () => {},
+    };
+    const ctx = { map, accent: "#000" } as never;
+    const base = { type: "geojson", id: "p", title: "P", visible: true, opacity: 1, groupPath: [] };
+
+    const keyed = new GeoJsonAdapter({ ...base, crs: "EPSG:31256", data: { type: "Point", coordinates: gkPoint } } as never);
+    await keyed.mount(ctx);
+    near((sources[0]!.data as { coordinates: unknown }).coordinates);
+    const bounds = (await keyed.bounds())!;
+    near([bounds[0], bounds[1]]);
+    near([bounds[2], bounds[3]]);
+
+    const legacy = new GeoJsonAdapter({
+      ...base,
+      data: {
+        type: "FeatureCollection",
+        crs: legacyMember,
+        features: [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: gkPoint } }],
+      },
+    } as never);
+    await legacy.mount(ctx);
+    const fc = sources[1]!.data as { crs?: unknown; features: Array<{ geometry: { coordinates: unknown } }> };
+    near(fc.features[0]!.geometry.coordinates);
+    expect(fc).not.toHaveProperty("crs");
+
+    vi.stubGlobal("fetch", async () => ({ ok: true, json: async () => ({ type: "Point", coordinates: gkPoint }) }));
+    const remote = new GeoJsonAdapter({ ...base, crs: { code: "EPSG:31256" }, data: "https://e.org/gk.geojson" } as never);
+    await remote.mount(ctx);
+    near((sources[2]!.data as { coordinates: unknown }).coordinates);
+    vi.unstubAllGlobals();
+
+    /* without a crs the URL stays a URL — MapLibre loads it in its worker as before */
+    const plain = new GeoJsonAdapter({ ...base, data: "https://e.org/x.geojson" } as never);
+    await plain.mount(ctx);
+    expect(sources[3]!.data).toBe("https://e.org/x.geojson");
   });
 });

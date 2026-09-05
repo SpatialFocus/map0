@@ -153,8 +153,8 @@ export const LAYER_KEYS: Record<string, string[]> = {
   ],
   raster: [...LAYER_COMMON_KEYS, "url", "tileSize"],
   cog: [...LAYER_COMMON_KEYS, "url", "color", "hillshade"],
-  geojson: [...LAYER_COMMON_KEYS, "data", "style", "cluster", "popup", "hover", "promoteId"],
-  geoparquet: [...LAYER_COMMON_KEYS, "url", "style", "cluster", "popup", "hover", "promoteId"],
+  geojson: [...LAYER_COMMON_KEYS, "data", "style", "cluster", "popup", "hover", "promoteId", "crs"],
+  geoparquet: [...LAYER_COMMON_KEYS, "url", "style", "cluster", "popup", "hover", "promoteId", "crs"],
   vector: [...LAYER_COMMON_KEYS, "url", "sourceLayer", "style", "popup", "hover"],
 };
 export const POPUP_KEYS = ["title", "content", "fields", "maxWidth"];
@@ -202,6 +202,8 @@ export const BASEMAP_SWITCHER_KEYS = ["position"];
 export const LEGEND_CONTROL_KEYS = ["position", "open"];
 export const COORDINATES_KEYS = ["crs"];
 export const CRS_KEYS = ["code", "label", "def"];
+/** layer-level crs (geojson/geoparquet): the CRS of the file's coordinates */
+export const LAYER_CRS_KEYS = ["code", "def"];
 export const SEARCH_KEYS = [
   "enabled",
   "provider",
@@ -676,11 +678,13 @@ function validateLayers(
         else if (typeof layer.data !== "string" && !isObject(layer.data))
           err(`${p}.data`, '"data" must be a URL string or a GeoJSON object');
         else checkUrl(layer.data, `${p}.data`, err);
+        validateLayerCrs(layer.crs, `${p}.crs`, err);
         validateFeatureOptions(layer, p, err);
         break;
       case "geoparquet":
         if (typeof layer.url !== "string")
-          err(`${p}.url`, 'a "geoparquet" layer needs a "url" (GeoParquet file with WGS84 coordinates)');
+          err(`${p}.url`, 'a "geoparquet" layer needs a "url" (GeoParquet file)');
+        validateLayerCrs(layer.crs, `${p}.crs`, err);
         validateFeatureOptions(layer, p, err);
         break;
       case "vector":
@@ -700,6 +704,22 @@ function validateLayers(
     }
     if (type !== "geojson") checkUrl(layer.url, `${p}.url`, err);
   });
+}
+
+/**
+ * `crs` of a feature file: a code string ("EPSG:31256"), or { code, def? }
+ * with a proj4 definition for codes the built-in registry does not know.
+ */
+function validateLayerCrs(crs: unknown, p: string, err: Err): void {
+  if (crs === undefined) return;
+  if (typeof crs === "string") {
+    if (crs.trim() === "") err(p, 'crs must name a CRS, e.g. "EPSG:31256"');
+    return;
+  }
+  if (!isObject(crs) || typeof crs.code !== "string" || crs.code.trim() === "")
+    return err(p, 'crs must be a code like "EPSG:31256" or { "code": "…", "def"?: "+proj=…" }');
+  checkKeys(crs, LAYER_CRS_KEYS, p, err);
+  expectString(crs.def, `${p}.def`, err);
 }
 
 /**

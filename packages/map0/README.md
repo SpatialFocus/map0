@@ -140,7 +140,7 @@ silently does nothing.
 
 Layer sources: WMS, WMTS, WFS (paged GetFeature), OGC API Features (next-link paging), XYZ/raster,
 vector tiles, PMTiles, GeoJSON (with clustering), GeoParquet (decoded in the browser, styled like
-GeoJSON), and COG —
+GeoJSON; both reprojected on load when their coordinates are not WGS84 — `crs`), and COG —
 Cloud Optimized GeoTIFF as RGB imagery, single-band color ramps, explicit value/range classes, or
 DEM hillshade. Plus a
 layer tree with groups, legends (`"auto"` derives them from the service), feature info with HTML

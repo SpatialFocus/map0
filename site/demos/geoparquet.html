@@ -55,9 +55,11 @@
           megabytes of JSON text.
         </p>
         <div class="callout" data-i18n="callout">
-          <strong>WGS84 only, whole-file loading.</strong>
-          Coordinates must be OGC:CRS84/EPSG:4326 (the GeoParquet default) — a file in another CRS
-          fails with a clear per-layer error naming it; there is no client-side reprojection.
+          <strong>Any CRS, whole-file loading.</strong>
+          Coordinates are read in the CRS the file's metadata declares — WGS84 goes straight
+          through, anything else is reprojected on load with proj4 (registry codes such as Austrian
+          GK or ETRS89 UTM use map0's own definitions, datum shift included; a <code>crs</code>
+          key on the layer overrides a file whose definition cannot be resolved).
           And like a GeoJSON URL, the whole file is downloaded and decoded: well suited up to a few
           MB / a few hundred thousand features, not a streaming format. For city-to-country-scale
           vector data, cut vector tiles instead (PMTiles works from the same kind of bucket).
@@ -67,8 +69,8 @@
       <section class="doc">
         <h2 data-i18n="produce.h2">Producing GeoParquet</h2>
         <p data-i18n="produce.p1">
-          Any recent GDAL or DuckDB writes valid GeoParquet — including the WGS84 reprojection and
-          the metadata this layer type relies on:
+          Any recent GDAL or DuckDB writes valid GeoParquet — including the metadata this layer
+          type relies on (the WGS84 reprojection is optional: map0 reprojects on load otherwise):
         </p>
         <pre data-lang="bash" data-label="GDAL">
           ogr2ogr -f Parquet trees.parquet trees.gpkg -t_srs EPSG:4326</pre>

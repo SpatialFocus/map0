@@ -88,8 +88,13 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
   wild), `limit`/`pageSize`, `params` (bbox, datetime, CQL2 filter), JSON problem details as layer
   errors, rendered through the geojson pipeline
 - ✅ **GeoParquet** layer type (2026-09-02) — `type: "geoparquet"`: whole-file fetch, decoded in the
-  browser (hyparquet, lazy chunk; extra codecs only when needed), WGS84 only, bbox from the file
+  browser (hyparquet, lazy chunk; extra codecs only when needed), bbox from the file
   metadata, rendered through the geojson pipeline
+- ✅ **`crs` on feature files** (2026-09-03) — geojson and geoparquet layers whose coordinates are
+  not WGS84 are reprojected once on load with proj4 (built-in registry: Austrian GK M28/M31/M34 and
+  Lambert, ETRS89 UTM 32/33N, LAEA Europe, Austria Lambert, WGS84 UTM zones; anything else via
+  `{ code, def }`); GeoParquet resolves the CRS from its own `geo` metadata, legacy GeoJSON `crs`
+  members in inline data are honoured. Rendering stays Web Mercator (D-02)
 - ⬜ **Drag-and-drop reorder** in the TOC (F2.6)
 - ⬜ **GeoJSON/KML/GPX by URL and file drop** (F3.2)
 - ⬜ **Terrain** (F1.8)

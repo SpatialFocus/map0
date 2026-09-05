@@ -287,6 +287,14 @@ export type SimpleStyle = Record<string, unknown>;
 /** full MapLibre style-spec layer objects (source/source-layer injected by map0) */
 export type StyleLayerSpec = Record<string, unknown> & { type: string };
 
+/**
+ * CRS of a feature file whose coordinates are not WGS84 — the features are
+ * reprojected once on load (proj4). A code the built-in registry knows
+ * (Austrian GK M28/M31/M34 and Lambert, ETRS89 UTM 32/33N, LAEA Europe and
+ * Austria Lambert, WGS84 UTM zones), or code + proj4 `def` for anything else.
+ */
+export type LayerCrs = string | { code: string; def?: string };
+
 export interface GeoJsonLayerDef extends LayerCommon {
   type: "geojson";
   /** URL or inline GeoJSON */
@@ -297,15 +305,20 @@ export interface GeoJsonLayerDef extends LayerCommon {
   /** short tooltip template shown on hover (F5.4) */
   hover?: { content: string } | false;
   promoteId?: string;
+  /**
+   * CRS of the document's coordinates when they are not WGS84 — reprojected
+   * on load. Inline data carrying a legacy GeoJSON `crs` member is reprojected
+   * without this key.
+   */
+  crs?: LayerCrs;
 }
 
 export interface GeoParquetLayerDef extends LayerCommon {
   type: "geoparquet";
   /**
    * GeoParquet file URL. The whole file is downloaded and decoded in the
-   * browser (like a geojson URL, but a fraction of the transfer size);
-   * coordinates must be WGS84 (OGC:CRS84/EPSG:4326 — no client-side
-   * reprojection).
+   * browser (like a geojson URL, but a fraction of the transfer size). A file
+   * whose `geo` metadata names another CRS is reprojected on load.
    */
   url: string;
   style?: SimpleStyle | StyleLayerSpec[];
@@ -314,6 +327,11 @@ export interface GeoParquetLayerDef extends LayerCommon {
   /** short tooltip template shown on hover (F5.4) */
   hover?: { content: string } | false;
   promoteId?: string;
+  /**
+   * Overrides the CRS in the file's `geo` metadata — for files whose PROJJSON
+   * has no id map0 or proj4 can resolve, or lacks the datum shift.
+   */
+  crs?: LayerCrs;
 }
 
 export interface VectorLayerDef extends LayerCommon {

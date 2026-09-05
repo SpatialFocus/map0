@@ -30,6 +30,25 @@
       "attribution": "Stadt Wien — data.wien.gv.at"
     },
     {
+      "id": "ubahn",
+      "type": "geojson",
+      "title": "Underground stations (EPSG:31256)",
+      "data": "https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:UBAHNHALTOGD&srsName=EPSG:31256&outputFormat=json",
+      "crs": "EPSG:31256",
+      "style": {
+        "circle-color": "#1d4ed8",
+        "circle-radius": 6,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 1.5
+      },
+      "popup": {
+        "title": "{{HTXT}}",
+        "fields": [{ "key": "EROEFFNUNG_JAHR", "label": "Opened" }]
+      },
+      "hover": { "content": "{{HTXT}}" },
+      "attribution": "Stadt Wien — data.wien.gv.at"
+    },
+    {
       "id": "demo-areas",
       "type": "geojson",
       "title": "Local demo file",

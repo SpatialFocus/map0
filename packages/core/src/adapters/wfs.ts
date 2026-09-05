@@ -155,6 +155,6 @@ export class WfsAdapter extends GeoJsonAdapter {
   protected override async addToMap(): Promise<void> {
     const fc = await loadWfsFeatures(this.wfs);
     (this.def as { data: unknown }).data = fc;
-    super.addToMap();
+    await super.addToMap();
   }
 }

@@ -132,6 +132,6 @@ export class OgcApiFeaturesAdapter extends GeoJsonAdapter {
   protected override async addToMap(): Promise<void> {
     const fc = await loadOgcApiFeatures(this.ogc);
     (this.def as { data: unknown }).data = fc;
-    super.addToMap();
+    await super.addToMap();
   }
 }

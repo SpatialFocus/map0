@@ -1,7 +1,8 @@
 /**
- * Coordinate readout in multiple CRS (F5.6). proj4 only knows 4326/3857 out of
- * the box — common Austrian SDI systems ship as built-in definitions, anything
- * else can be registered via config (controls.coordinates.crs[].def).
+ * proj4 registry shared by the coordinate readout (F5.6) and the on-load
+ * reprojection of feature files (geojson/geoparquet `crs`). proj4 only knows
+ * 4326/3857 out of the box — common Austrian and European SDI systems ship as
+ * built-in definitions, anything else is registered from the config (`def`).
  */
 import type Proj4 from "proj4";
 
@@ -50,6 +51,26 @@ const KNOWN: Record<string, { def: string; label: string; precision: number }> =
     precision: 2,
     def: `+proj=lcc +lat_1=49 +lat_2=46 +lat_0=47.5 +lon_0=13.3333333333333 +x_0=400000 +y_0=400000 ${MGI_TOWGS84} +units=m +no_defs`,
   },
+  "EPSG:3416": {
+    label: "ETRS89 / Austria Lambert",
+    precision: 2,
+    def: "+proj=lcc +lat_1=49 +lat_2=46 +lat_0=47.5 +lon_0=13.3333333333333 +x_0=400000 +y_0=400000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs",
+  },
+  "EPSG:25832": {
+    label: "ETRS89 / UTM 32N",
+    precision: 2,
+    def: "+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs",
+  },
+  "EPSG:25833": {
+    label: "ETRS89 / UTM 33N",
+    precision: 2,
+    def: "+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs",
+  },
+  "EPSG:3035": {
+    label: "ETRS89 / LAEA Europe",
+    precision: 2,
+    def: "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs",
+  },
   "EPSG:32632": { label: "UTM 32N", precision: 2, def: "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs" },
   "EPSG:32633": { label: "UTM 33N", precision: 2, def: "+proj=utm +zone=33 +datum=WGS84 +units=m +no_defs" },
 };
@@ -67,7 +88,12 @@ export function autoUtmCode(lng: number, lat: number): string {
   return `EPSG:${lat >= 0 ? 326 : 327}${String(zone).padStart(2, "0")}`;
 }
 
-function ensureRegistered(p: Proj4Module, code: string, def?: string): boolean {
+/**
+ * Make `code` known to proj4: already registered → fine; otherwise from the
+ * given definition (proj4 string or PROJJSON object), the built-in registry, or
+ * derived for WGS84 UTM zones. False when none of those applies.
+ */
+export function ensureCrs(p: Proj4Module, code: string, def?: string | object): boolean {
   try {
     p(code); // known already?
     return true;
@@ -78,7 +104,7 @@ function ensureRegistered(p: Proj4Module, code: string, def?: string): boolean {
         ? `+proj=utm +zone=${Number(code.slice(-2))} +south +datum=WGS84 +units=m +no_defs`
         : undefined);
     if (!known) return false;
-    p.defs(code, known);
+    p.defs(code, known as string);
     return true;
   }
 }
@@ -124,7 +150,7 @@ export function formatCoordinates(
       console.warn("[map0] proj4 is not loaded yet — use formatCoordinatesAsync()");
       continue;
     }
-    if (!ensureRegistered(p, item.code, item.def)) {
+    if (!ensureCrs(p, item.code, item.def)) {
       console.warn(`[map0] unknown CRS "${item.code}" — provide a proj4 "def" in the config`);
       continue;
     }

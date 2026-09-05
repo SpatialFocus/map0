@@ -44,8 +44,18 @@ export { buildWmtsTemplate, isMercatorCrs, type WmtsTemplateParts } from "./adap
 export { absolutizeUrl, basemapStyle, BasemapManager, fetchTileJson } from "./basemaps.js";
 export { geojsonBounds } from "./bbox.js";
 export {
+  declaredGeoJsonCrs,
+  isWgs84Code,
+  normalizeCrsCode,
+  projectorToWgs84,
+  reprojectGeoJson,
+  type CrsSource,
+  type Projector,
+} from "./reproject.js";
+export {
   autoGkCode,
   autoUtmCode,
+  ensureCrs,
   formatCoordinates,
   formatCoordinatesAsync,
   loadProj4,
