@@ -31,7 +31,8 @@
       "node ../../scripts/bump-version-refs.mjs ${latestVersion} ${version}",
       "pnpm -w run build:npm",
       "npm pack",
-      "node ../../e2e/verify-tarball.mjs map0-viewer-${version}.tgz"
+      "node ../../e2e/verify-tarball.mjs map0-viewer-${version}.tgz",
+      "node ../../e2e/verify-types.mjs map0-viewer-${version}.tgz"
     ],
     "before:git:release": [
       "node ../../scripts/normalize-changelog.mjs",
