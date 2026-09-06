@@ -24,7 +24,7 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
 | Configuration | ✅ one document, validation with JSON-path errors (unknown keys, unique ids, https policy), `extends`, theming, i18n + overrides, published JSON Schema with a generated key-by-key reference |
 | Performance | ✅ 31 KB page tier, engine and features load on demand, CI budget |
 | Accessibility | 🟡 keyboard operation, focus trap, reduced motion · ⬜ audit, DOM-mirrored results |
-| Packaging | ✅ MIT licence, name, npm package `map0-viewer` published (prebuilt bundle + third-party notices), CDN via jsDelivr, demo site at map0.net · ⬜ TypeScript types |
+| Packaging | ✅ MIT licence, name, npm package `map0-viewer` published (prebuilt bundle + third-party notices), CDN via jsDelivr, demo site at map0.net, TypeScript declarations in the tarball |
 
 ## M0 — Walking skeleton ✅
 
@@ -75,7 +75,10 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
 - ⬜ **Mobile popup as bottom sheet** below 640 px (F5.5)
 - ⬜ **TOC filter box** for configs with many layers (F2.7)
 - ✅ **npm package** `map0-viewer` published (prebuilt bundle, `pnpm build:npm`), CDN via
-  jsDelivr, install docs in the package README · ⬜ TypeScript types (N11)
+  jsDelivr, install docs in the package README · ✅ **TypeScript types** (N11, 2026-09-06) — `dist/map0.d.ts`,
+  `dist/map0-ssr.d.ts` and the shared `dist/map0-types.d.ts` (dts-bundle-generator over `public.ts`,
+  workspace packages inlined; `@types/geojson` is a dependency, `maplibre-gl` an optional peer for
+  `api.map`); `e2e/verify-types.mjs` type-checks a strict consumer against the packed tarball
 - ✅ **License (MIT) and name (map0)** decided (O-01, O-02) · ⬜ repo governance (O-07)
 - ⬜ **Visual regression** on the demo pages (N9)
 - ✅ **Deterministic browser smoke test in CI** — element lifecycle, z-order and the built bundle,

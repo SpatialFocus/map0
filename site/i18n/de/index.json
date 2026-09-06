@@ -159,7 +159,7 @@
   "next3.h3": "🔐 Geschützte Dienste",
   "next3.p": "Ein Hook für Tokens und Header, damit WMS, WMTS und Vector Tiles hinter einem Login oder API-Key ohne Proxy funktionieren — jede Anfrage verlässt den Browser mit den Zugangsdaten, die die eigene Anwendung ohnehin hat.",
   "next4.h3": "⚛️ React- und Angular-Wrapper",
-  "next4.p": "Das Custom Element funktioniert schon heute in jedem Framework. Die Wrapper bringen typisierte Properties und Events, SSR-sicheres Einbinden und TypeScript-Typen für die Config — damit es sich wie eine eigene Komponente anfühlt.",
+  "next4.p": "Das Custom Element funktioniert schon heute in jedem Framework, TypeScript-Typen liegen im Paket. Die Wrapper bringen typisierte Properties und Events sowie SSR-sicheres Einbinden — damit es sich wie eine eigene Komponente anfühlt.",
   "next5.h3": "🖨️ Maßstabstreuer Druck",
   "next5.p": "Der Druck im Browser liefert PNG und PDF auf echten A4/A3-Seiten. Ein optionaler Server-Adapter setzt dasselbe Blatt in exaktem Maßstab — 1:5.000, das auf Papier auch 1:5.000 misst.",
   "next6.h3": "🎛️ Der map0-Konfigurator",
