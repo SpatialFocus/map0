@@ -240,33 +240,74 @@ if (targets.includes("vector-tiles")) {
 
 if (targets.includes("cog")) {
   const page = await openDemo("cog");
+  /* three maps on this page, one per rendering mode — each check addresses its
+     viewer by config; the lower two load lazily, so wake them up first */
+  const viewer = async (config) => {
+    const sel = `map0-viewer[config-src*="${config}"]`;
+    await page.evaluate((s) => document.querySelector(s)?.load(), sel);
+    await page
+      .waitForFunction(
+        (s) => {
+          const v = document.querySelector(s);
+          const layers = v?.api?.layers.state.value ?? [];
+          return !!v?.api?.map?.getStyle?.() && layers.length > 0 && layers.every((l) => l.status !== "loading");
+        },
+        sel,
+        { timeout: 45_000 },
+      )
+      .catch(() => {});
+    return sel;
+  };
+
+  const imagery = await viewer("cog-imagery");
   record(
-    "cog · protocol source resolved from the file header",
-    await page.evaluate(() => {
-      const src = document.querySelector("map0-viewer").api?.map.getStyle()?.sources["m0s-kriging"];
-      return typeof src?.url === "string" && src.url.startsWith("cog://") && src.url.includes("#color:");
-    }),
+    "cog · imagery: protocol source and bounds resolved from the file header",
+    await page.evaluate((s) => {
+      const api = document.querySelector(s).api;
+      const src = api?.map.getStyle()?.sources["m0s-ortho-cog"];
+      const layer = api?.layers.state.value.find((l) => l.id === "ortho-cog");
+      return typeof src?.url === "string" && src.url.startsWith("cog://") && layer?.canZoom === true;
+    }, imagery),
   );
-  const legend = await page.evaluate(() => {
-    const layer = document
-      .querySelector("map0-viewer")
-      .api?.layers.state.value.find((l) => l.id === "kriging");
-    return { kind: layer?.legend?.kind, entries: layer?.legend?.entries?.length ?? 0, canZoom: layer?.canZoom };
-  });
-  record(
-    "cog · ramp legend derived from the color config",
-    legend.kind === "entries" && legend.entries >= 5 && legend.canZoom === true,
-    `${legend.entries} entries, canZoom: ${legend.canZoom}`,
-  );
-  const hs = await page.evaluate(() => {
-    const map = document.querySelector("map0-viewer").api?.map;
-    const src = map?.getStyle()?.sources["m0s-dgm"];
-    return { srcType: src?.type, url: src?.url, layerType: map?.getLayer("m0l-dgm")?.type };
-  });
+
+  const terrain = await viewer("cog-terrain");
+  const hs = await page.evaluate((s) => {
+    const api = document.querySelector(s).api;
+    const style = api?.map.getStyle();
+    const dem = style?.sources["m0s-dgm"];
+    const ramp = style?.sources["m0s-dgm-elevation"];
+    const legend = api?.layers.state.value.find((l) => l.id === "dgm-elevation")?.legend;
+    return {
+      srcType: dem?.type,
+      url: dem?.url,
+      layerType: api?.map.getLayer("m0l-dgm")?.type,
+      rampUrl: ramp?.url,
+      entries: legend?.kind === "entries" ? legend.entries.length : 0,
+    };
+  }, terrain);
   record(
     "cog · DEM renders as a hillshade layer on a raster-dem source",
     hs.srcType === "raster-dem" && hs.url?.endsWith("#dem") && hs.layerType === "hillshade",
     `${hs.srcType} / ${hs.layerType}`,
+  );
+  record(
+    "cog · elevation ramp: #color source and a legend derived from it",
+    typeof hs.rampUrl === "string" && hs.rampUrl.includes("#color:") && hs.entries >= 5,
+    `${hs.entries} entries`,
+  );
+
+  const classes = await viewer("cog-classes");
+  const cls = await page.evaluate((s) => {
+    const api = document.querySelector(s).api;
+    const src = api?.map.getStyle()?.sources["m0s-versiegelung"];
+    const layer = api?.layers.state.value.find((l) => l.id === "versiegelung");
+    const entries = layer?.legend?.kind === "entries" ? layer.legend.entries : [];
+    return { url: src?.url, labels: entries.map((e) => e.label) };
+  }, classes);
+  record(
+    "cog · explicit classes: one legend entry per class",
+    typeof cls.url === "string" && cls.url.startsWith("cog://") && cls.labels.length === 2,
+    cls.labels.join(" · "),
   );
   await page.close();
 }
