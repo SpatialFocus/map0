@@ -1,4 +1,5 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
+import type { Map0Layers } from "./api.js";
 import {
   normalizeSingleLayer,
   type GroupLayerDef,
@@ -55,7 +56,7 @@ export function stackOrder(
   return [...[...extra].reverse(), ...configured];
 }
 
-export class LayerManager {
+export class LayerManager implements Map0Layers {
   readonly state = new Signal<LayerUIState[]>([]);
   private readonly adapters = new Map<string, SourceAdapter>();
   private readonly runtime = new Map<string, { visible: boolean; opacity: number }>();

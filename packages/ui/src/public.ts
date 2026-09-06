@@ -15,4 +15,16 @@ export type {
   Map0ViewerEventDetails,
   Map0ViewerEventMap,
 } from "./element.js";
-export type { CoreEvents, FeatureInfoResult, LayerUIState, SearchResult } from "@map0/core";
+export type {
+  CoreEvents,
+  FeatureInfoResult,
+  LayerHandle,
+  LayerStatus,
+  LayerUIState,
+  Map0Basemaps,
+  Map0Events,
+  Map0Layers,
+  ReadonlySignal,
+  SearchResult,
+  Unsubscribe,
+} from "@map0/core";

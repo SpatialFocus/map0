@@ -2,7 +2,13 @@
 
 export type Unsubscribe = () => void;
 
-export class Signal<T> {
+/** the reading half of a Signal — what the api hands out; writing is the owner's business */
+export interface ReadonlySignal<T> {
+  readonly value: T;
+  subscribe(fn: (value: T) => void, opts?: { immediate?: boolean }): Unsubscribe;
+}
+
+export class Signal<T> implements ReadonlySignal<T> {
   #value: T;
   #subs = new Set<(v: T) => void>();
 
@@ -28,7 +34,12 @@ export class Signal<T> {
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export class Emitter<Events extends Record<string, any>> {
+/** the subscribing half of an Emitter — what the api hands out; `emit` stays inside */
+export interface EventSubscriber<Events extends Record<string, any>> {
+  on<K extends keyof Events>(event: K, fn: (payload: Events[K]) => void): Unsubscribe;
+}
+
+export class Emitter<Events extends Record<string, any>> implements EventSubscriber<Events> {
   #subs = new Map<keyof Events, Set<(payload: any) => void>>();
 
   on<K extends keyof Events>(event: K, fn: (payload: Events[K]) => void): Unsubscribe {

@@ -98,10 +98,20 @@ for (const spec of new Set(specifiers(shared))) {
   if (!ALLOWED_IMPORTS.has(spec)) problems.push(`${SHARED}: imports "${spec}" — not self-contained`);
 }
 if (/node_modules[\/]/.test(shared)) problems.push(`${SHARED}: mentions a node_modules path`);
+/* the api surface is interfaces (packages/core/src/api.ts). A class here means a
+   manager, a Signal or an adapter leaked through Map0Api — with private members
+   TypeScript compares such classes by declaration, so consumers would break on
+   every internal rename, and two copies of the types would not even be assignable */
+for (const m of stripComments(shared).matchAll(/^\s*(?:export\s+)?declare\s+(?:abstract\s+)?class\s+(\w+)/gm)) {
+  problems.push(`${SHARED}: declares class ${m[1]} — the api surface is interfaces only, see core/src/api.ts`);
+}
 check(problems, SHARED, shared, [
   ["Map0Config", /^export interface Map0Config\b/m],
   ["Map0Api", /^export type Map0Api\b/m],
   ["Map0ViewerElement", /^export interface Map0ViewerElement\b/m],
+  ["Map0Layers", /^export interface Map0Layers\b/m],
+  ["LayerHandle", /^export interface LayerHandle\b/m],
+  ["ReadonlySignal", /^export interface ReadonlySignal\b/m],
   ["validateConfig", /^export declare function validateConfig\b/m],
   ["the HTMLElementTagNameMap entry", /interface HTMLElementTagNameMap \{\s*"map0-viewer": /],
 ]);

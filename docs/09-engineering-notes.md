@@ -113,6 +113,16 @@ packed tarball into a scratch project — once with `maplibre-gl`, once without 
 `tsc --strict` on a consumer under `bundler` and `nodenext` resolution, plus a negative control that
 has to fail.
 
+The surface itself is interfaces, not the classes behind it: `packages/core/src/api.ts` declares
+`Map0Layers`, `Map0Basemaps`, `Map0Events` and `LayerHandle` (plus `ReadonlySignal` in
+signals.ts), `Map0Core` is typed with them, and `LayerManager`, `BasemapManager`, `Emitter`,
+`Signal` and `SourceAdapter` `implement` them — a member missing from the interface is a compile
+error in the class. What the interfaces leave out (`emit`, `mountAll`, the adapter registry, every
+private field) is not promised and can change without a major version. `build-types.mjs` fails on
+any `declare class` in the bundle, so a class cannot leak back in through a new `Map0Api` member; the
+negative control in `verify-types.mjs` checks that `api.events.emit` and writing `state.value` do
+not compile for a consumer.
+
 #### The CDN release is the npm release
 
 `npm publish` *is* the CDN release: jsDelivr and unpkg mirror the tarball at

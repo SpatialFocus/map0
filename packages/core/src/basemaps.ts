@@ -1,4 +1,5 @@
 import type { Map as MapLibreMap, StyleSpecification } from "maplibre-gl";
+import type { Map0Basemaps } from "./api.js";
 import type { NormalizedBasemap } from "@map0/schema";
 import { Signal } from "./signals.js";
 
@@ -172,7 +173,7 @@ export interface OverlayIds {
  * Switches basemaps without losing overlays: MapLibre's setStyle() drops runtime
  * sources/layers, so we re-inject them via transformStyle (docs/06-architecture.md).
  */
-export class BasemapManager {
+export class BasemapManager implements Map0Basemaps {
   readonly current: Signal<string>;
 
   constructor(

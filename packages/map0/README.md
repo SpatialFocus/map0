@@ -121,7 +121,11 @@ viewer.addEventListener("map0:ready", (event) => {
 
 `Map0Config` is the config format, `Map0Viewer` the element — its attributes as properties, `api`, and
 the `map0:*` events with a typed `detail` — and `Map0Api` the handle that `api`, `map0:ready` and
-`createMap()` hand out. Two types come from outside the package: the GeoJSON shapes in the config are
+`createMap()` hand out. Its parts are interfaces you can name: `Map0Layers` (`api.layers` — the
+layer `state` as a `ReadonlySignal`, one `LayerHandle` per mounted layer with its MapLibre ids and
+`bounds()`, `addLayer`/`removeLayer`, visibility, opacity, `zoomTo`), `Map0Basemaps`
+(`api.basemaps` — `current`, `all`, `switchTo`) and `Map0Events` (`api.events.on` for the
+`CoreEvents`). Anything not in those interfaces is internal and may change without notice. Two types come from outside the package: the GeoJSON shapes in the config are
 `@types/geojson`, a dependency that installs by itself; `api.map` is MapLibre's `Map`, and to type it
 you install `maplibre-gl` (6.x, the major the bundle contains) yourself — it is an optional peer
 dependency, only its declarations are used, and the bundle keeps running its own copy. Without it,

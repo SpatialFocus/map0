@@ -7,6 +7,7 @@ import {
   type NormalizedConfig,
   type ValidationError,
 } from "@map0/schema";
+import type { Map0Basemaps, Map0Events, Map0Layers } from "./api.js";
 import { BasemapManager, basemapStyle, resolveBasemapStyle, type OverlayIds } from "./basemaps.js";
 import { applyControls, geolocationAvailable, type InitialView } from "./controls.js";
 import type { CoreEvents } from "./events.js";
@@ -98,7 +99,8 @@ export {
   writeShareParam,
   type ShareState,
 } from "./permalink.js";
-export { Emitter, Signal, type Unsubscribe } from "./signals.js";
+export { Emitter, Signal, type EventSubscriber, type ReadonlySignal, type Unsubscribe } from "./signals.js";
+export type { LayerHandle, Map0Basemaps, Map0Events, Map0Layers } from "./api.js";
 export {
   collectAttributions,
   composePrint,
@@ -128,15 +130,17 @@ export interface CoreOptions {
 export interface Map0Core {
   map: MapLibreMap;
   config: NormalizedConfig;
-  layers: LayerManager;
-  basemaps: BasemapManager;
-  events: Emitter<CoreEvents>;
+  /** the layer tree: state, handles, runtime add/remove — see api.ts for the contract */
+  layers: Map0Layers;
+  basemaps: Map0Basemaps;
+  /** core events — subscribe only */
+  events: Map0Events;
   t: Translate;
   locale: string;
   setBasemap(id: string): void;
   setLayerVisibility(id: string, visible: boolean): void;
   setLayerOpacity(id: string, opacity: number): void;
-  addLayer(def: Parameters<LayerManager["addLayer"]>[0]): Promise<string | null>;
+  addLayer(def: Parameters<Map0Layers["addLayer"]>[0]): Promise<string | null>;
   removeLayer(id: string): boolean;
   zoomToLayer(id: string): Promise<boolean>;
   clearHighlight(): void;

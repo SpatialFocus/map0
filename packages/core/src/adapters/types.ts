@@ -1,5 +1,6 @@
 import type { Map as MapLibreMap, LngLat, Point } from "maplibre-gl";
 import type { LegendEntryDef, NormalizedLayer, PopupConfig } from "@map0/schema";
+import type { LayerHandle } from "../api.js";
 import { Signal } from "../signals.js";
 
 export type LayerStatus = "loading" | "ready" | "error";
@@ -40,7 +41,7 @@ export interface FeatureInfoQuery {
 }
 
 /** One config layer = one adapter instance managing its MapLibre sources/layers. */
-export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer> {
+export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer> implements LayerHandle {
   readonly status = new Signal<LayerStatus>("loading");
   protected ctx!: AdapterContext;
   /** [maplibre layer id, opacity paint property, base value] triplets for opacity control */
