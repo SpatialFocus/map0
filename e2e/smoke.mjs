@@ -25,7 +25,7 @@ const square = (color, id, title) => ({
   title,
   data: {
     type: "Feature",
-    properties: {},
+    properties: { label: `${title} square` },
     geometry: {
       type: "Polygon",
       coordinates: [
@@ -73,10 +73,11 @@ const SRC_CONFIG = {
 const INVALID_CONFIG = { version: 1, basemaps: [{ type: "wms", url: "https://e.org/x" }] };
 
 const HTML = `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>map0 smoke</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>map0 smoke</title>
 <style>
   html, body { margin: 0; height: 100%; background: #fff; }
   #host { width: 640px; height: 400px; }
+  body.mobile #host { width: 100vw; height: 100vh; }
   map0-viewer { display: block; width: 100%; height: 100%; }
 </style></head>
 <body>
@@ -90,6 +91,7 @@ const HTML = `<!doctype html>
   window.__events = [];
   window.__config = ${JSON.stringify(CONFIG)};
   const params = new URLSearchParams(location.search);
+  if (params.get("mobile")) document.body.classList.add("mobile");
   const el = document.querySelector("map0-viewer");
   for (const type of ["map0:ready", "map0:error"]) {
     el.addEventListener(type, (e) => window.__events.push({ type, detail: e.detail?.message ?? null }));
@@ -278,6 +280,38 @@ try {
       hits.length > 0 && owner(hits[0]) === "top",
       hits.join(", ") || "no features rendered",
     );
+
+    /* F5.1 — a click on the map answers with an anchored popup at this width */
+    await page.mouse.click(320, 200);
+    const popup = await page
+      .waitForFunction(
+        () => {
+          const sr = document.querySelector("map0-viewer").shadowRoot;
+          const el = sr.querySelector(".maplibregl-popup");
+          return el && /Top square/.test(el.textContent) ? { sheet: !!sr.querySelector(".sheet") } : null;
+        },
+        { timeout: 15_000 },
+      )
+      .then((h) => h.jsonValue())
+      .catch(() => null);
+    check(
+      "a click opens an anchored popup with the feature's attributes (640px wide)",
+      popup !== null && popup.sheet === false,
+      popup ? JSON.stringify(popup) : "no popup",
+    );
+    if (popup) {
+      await page.evaluate(() =>
+        document.querySelector("map0-viewer").shadowRoot.querySelector(".maplibregl-popup-close-button").click(),
+      );
+      check(
+        "closing it clears the selection highlight",
+        await page.evaluate(() => {
+          const el = document.querySelector("map0-viewer");
+          const source = el.api.map.getSource("m0s-highlight");
+          return !el.shadowRoot.querySelector(".maplibregl-popup") && source.serialize().data.features.length === 0;
+        }),
+      );
+    }
 
     /* R1 — a layer added at runtime goes on top of the map, and heads the panel */
     const added = await page.evaluate(async () => {
@@ -603,6 +637,144 @@ try {
     );
   }
   check("no console errors when the config source changes", srcNoise.length === 0, srcNoise.join(" | "));
+
+  /* ---------------------------------------- phone: feature info as a bottom sheet */
+  const phone = await browser.newContext({
+    viewport: { width: 375, height: 812 },
+    hasTouch: true,
+    isMobile: true,
+  });
+  const phoneNoise = [];
+  const phonePage = await phone.newPage();
+  watchConsole(phonePage, phoneNoise);
+  await phonePage.goto(`${BASE}/smoke.html?mobile=1`, { waitUntil: "domcontentloaded" });
+  const phoneReady = await ready(phonePage)
+    .then(() => true)
+    .catch(() => false);
+  check("the viewer starts in a 375px wide host", phoneReady);
+  if (phoneReady) {
+    /** the sheet, as the tests need to see it; null while there is none */
+    const sheetState = () =>
+      phonePage.evaluate(() => {
+        const el = document.querySelector("map0-viewer");
+        const sr = el.shadowRoot;
+        const sheet = sr.querySelector(".sheet");
+        if (!sheet) return null;
+        const host = el.getBoundingClientRect();
+        const box = sheet.getBoundingClientRect();
+        return {
+          role: sheet.getAttribute("role"),
+          label: sheet.getAttribute("aria-label"),
+          text: sheet.textContent.replace(/\s+/g, " ").trim(),
+          expanded: sheet.hasAttribute("data-expanded"),
+          share: box.height / host.height,
+          bottom: Math.round(host.bottom - box.bottom),
+          popup: !!sr.querySelector(".maplibregl-popup"),
+          focusInside: sheet.contains(sr.activeElement),
+        };
+      });
+    /** sheet present (and done sliding in) or gone */
+    const waitForSheet = (present) =>
+      phonePage
+        .waitForFunction(
+          (want) => {
+            const sheet = document.querySelector("map0-viewer").shadowRoot.querySelector(".sheet");
+            return want ? !!sheet && sheet.getAnimations().length === 0 : !sheet;
+          },
+          present,
+          { timeout: 15_000 },
+        )
+        .then(() => true)
+        .catch(() => false);
+
+    /* both squares must be on screen before the tap — the hit test is what is being asked */
+    await phonePage.evaluate(async () => {
+      const api = document.querySelector("map0-viewer").api;
+      await new Promise((r) => (api.map.loaded() ? r() : api.map.once("idle", r)));
+    });
+    await phonePage.touchscreen.tap(187, 406);
+    const sheet = (await waitForSheet(true)) ? await sheetState() : null;
+    /* on failure, say what the page did instead */
+    const why = sheet
+      ? ""
+      : JSON.stringify(
+          await phonePage.evaluate(() => {
+            const el = document.querySelector("map0-viewer");
+            const point = el.api.map.project([0, 0]);
+            return {
+              hostWidth: el.getBoundingClientRect().width,
+              narrow: el._narrow,
+              popup: !!el.shadowRoot.querySelector(".maplibregl-popup"),
+              hits: el.api.map.queryRenderedFeatures(point).length,
+              centre: [Math.round(point.x), Math.round(point.y)],
+            };
+          }),
+        );
+    check("a tap opens a bottom sheet instead of a popup (F5.5)", sheet !== null && sheet.popup === false, why);
+    if (sheet) {
+      check(
+        "it is a dialog named after the layers, showing the same feature attributes",
+        sheet.role === "dialog" &&
+          sheet.label === "Top, Bottom" &&
+          /Top square/.test(sheet.text) &&
+          /Bottom square/.test(sheet.text),
+        `role=${sheet.role} label=${sheet.label}`,
+      );
+      check(
+        "docked at the bottom, leaving most of the map free",
+        sheet.bottom === 0 && sheet.share > 0.3 && sheet.share < 0.6 && !sheet.expanded,
+        `${Math.round(sheet.share * 100)}% of the map, ${sheet.bottom}px from the bottom`,
+      );
+      check("focus moved into the sheet", sheet.focusInside);
+
+      /* the handle grows it, the map above stays visible */
+      const handle = await phonePage
+        .locator(".sheet-handle")
+        .boundingBox()
+        .catch(() => null);
+      let expanded = null;
+      if (handle) {
+        await phonePage.touchscreen.tap(handle.x + handle.width / 2, handle.y + handle.height / 2);
+        await phonePage.waitForTimeout(400);
+        expanded = await sheetState();
+      }
+      check(
+        "tapping the handle expands it to about 90%",
+        expanded?.expanded === true && expanded.share > 0.8 && expanded.share < 0.95,
+        expanded ? `${Math.round(expanded.share * 100)}%` : "no handle",
+      );
+      check(
+        "its touch targets are at least 44px",
+        handle !== null && handle.height >= 44,
+        handle ? `handle ${Math.round(handle.height)}px` : "",
+      );
+
+      await phonePage.keyboard.press("Escape");
+      const closed = await waitForSheet(false);
+      const after = closed
+        ? await phonePage.evaluate(() => {
+            const el = document.querySelector("map0-viewer");
+            return {
+              highlight: el.api.map.getSource("m0s-highlight").serialize().data.features.length,
+              focusOnMap: el.shadowRoot.activeElement === el.api.map.getCanvas(),
+            };
+          })
+        : null;
+      check(
+        "Escape closes it, clears the highlight and returns focus to the map",
+        closed && after.highlight === 0 && after.focusOnMap,
+        after ? JSON.stringify(after) : "sheet still open",
+      );
+
+      /* a tap on empty map (the squares are ~57px wide at z3) puts the next one away */
+      await phonePage.touchscreen.tap(187, 406);
+      const reopened = await waitForSheet(true);
+      await phonePage.touchscreen.tap(340, 406);
+      check("a tap beside the features closes the sheet", reopened && (await waitForSheet(false)));
+    }
+  }
+  check("no console errors on the phone", phoneNoise.length === 0, phoneNoise.join(" | "));
+  await phone.close();
 
   /* ------------------------------------------------------------ invalid config */
   const errNoise = [];
