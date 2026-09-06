@@ -9,7 +9,7 @@
  *          bundled .d.ts themselves are checked, and under `nodenext` (which takes
  *          the "node" export condition, i.e. the SSR declarations — skipLibCheck
  *          on there: maplibre-gl's own dependencies do not pass it under nodenext,
- *          which is not ours to fix); plus a negative control — a file with three
+ *          which is not ours to fix); plus a negative control — a file with five
  *          type errors has to fail, or the green above proves nothing;
  *   bare — tarball only: @types/geojson has to arrive as a dependency, maplibre-gl
  *          must NOT (an optional peer is a suggestion, not a 10 MB download), and
@@ -77,8 +77,10 @@ const CONSUMER = [
   "  createMap,",
   "  defineMap0Viewer,",
   "  validateConfig,",
+  "  type LayerHandle,",
   "  type Map0Api,",
   "  type Map0Config,",
+  "  type Map0Layers,",
   "  type Map0Viewer,",
   "  type Map0ViewerEventMap,",
   '} from "map0-viewer";',
@@ -100,6 +102,16 @@ const CONSUMER = [
   '  void api.zoomToLayer("pts");',
   "  const url: string | null = api.getShareUrl();",
   "  void url;",
+  "  /* the api surface is interfaces: layers, basemaps and events without the managers behind them */",
+  "  const titles: string[] = api.layers.state.value.map((l) => l.title);",
+  "  const first: LayerHandle | undefined = api.layers.all[0];",
+  "  const ids: readonly string[] = first?.layerIds ?? [];",
+  '  void api.layers.addLayer({ type: "geojson", title: "Dropped", data: { type: "FeatureCollection", features: [] } });',
+  "  const stop = api.basemaps.current.subscribe((id: string) => console.log(id, api.basemaps.all.length));",
+  '  api.events.on("featureclick", (e) => console.log(e.results.length));',
+  "  const layersApi: Map0Layers = api.layers;",
+  "  stop();",
+  "  void titles; void ids; void layersApi;",
   "});",
   'viewer.addEventListener("map0:error", (event) => {',
   "  const detail = event.detail;",
@@ -172,12 +184,14 @@ const BOTH = [
   "",
 ].join("\n");
 
-/** three errors, one per line 2–4 — each has to be reported */
+/** five errors, one per line 2–6 — each has to be reported; 5 and 6 guard the interface-only api surface */
 const NEGATIVE = [
   'import { type Map0Config } from "map0-viewer";',
   "const bad: Map0Config = { version: 2, basemaps: [] };",
   'const zoom: string = document.querySelector("map0-viewer")!.api!.map.getZoom();',
   'document.querySelector("map0-viewer")!.addEventListener("map0:ready", (event) => event.detail.nope);',
+  'document.querySelector("map0-viewer")!.api!.events.emit("ready", {});',
+  'document.querySelector("map0-viewer")!.api!.layers.state.value = [];',
   "void bad;",
   "void zoom;",
   "",
@@ -250,10 +264,10 @@ record("strict consumer compiles, nodenext resolution (node condition)", nodenex
 const negative = typecheck(full, "negative", ["negative.ts"], { resolution: "bundler", skipLibCheck: false });
 const errorLines = negative.output.split("\n").filter((l) => /error TS\d+/.test(l));
 const onlyNegative = errorLines.length > 0 && errorLines.every((l) => l.startsWith("negative.ts("));
-const linesHit = [2, 3, 4].filter((n) => errorLines.some((l) => l.startsWith(`negative.ts(${n},`)));
+const linesHit = [2, 3, 4, 5, 6].filter((n) => errorLines.some((l) => l.startsWith(`negative.ts(${n},`)));
 record(
-  "negative control fails on all three lines",
-  !negative.ok && onlyNegative && linesHit.length === 3,
+  "negative control fails on all five lines",
+  !negative.ok && onlyNegative && linesHit.length === 5,
   `${errorLines.length} errors, lines ${linesHit.join(",")}`,
 );
 
