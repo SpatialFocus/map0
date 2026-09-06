@@ -9,13 +9,14 @@
 **M0 (walking skeleton) is complete. M1 (MVP) is close** — the map, the layer tree, feature info,
 legends, print, search, measuring and the whole configuration mechanism work against live Austrian
 SDI services, and the package is published (`map0-viewer` on npm, usable via the jsDelivr CDN).
-What is left is mostly polish: a published JSON Schema and an accessibility pass.
+What is left is mostly polish: the accessibility pass, a filter box for large layer trees,
+visual regression on the demo pages and repo governance.
 
 | Area | Status |
 |---|---|
 | Data sources | ✅ WMS, WMTS, WFS (paged GetFeature → geojson pipeline), OGC API Features (next-link paging → geojson pipeline), vector tiles/PMTiles, GeoJSON, GeoParquet (decoded in the browser, geojson styling pipeline), COG (RGB, single-band ramps, explicit classes, hillshade), style & raster basemaps |
 | Layer tree | ✅ groups, visibility, opacity, status, zoom hints, zoom-to-layer, metadata links, runtime add/remove (WMS/WMTS from capabilities, GeoJSON by URL, GeoJSON/KML/GPX files dropped on the map) · ⬜ drag reorder, filter box, radio groups |
-| Feature info | ✅ GetFeatureInfo + vector query, templates, field tables, multi-hit, hover, highlight, coordinates · ⬜ mobile bottom sheet |
+| Feature info | ✅ GetFeatureInfo + vector query, templates, field tables, multi-hit, hover, highlight, coordinates, bottom sheet on narrow viewers |
 | Legend | ✅ service, style-derived, hand-written; in print |
 | Print | ✅ PNG, PDF (real paper sizes), print view, DPI, configurable sheet · ⬜ server adapter for scale-true output |
 | Sharing | ✅ permalink incl. user-added layers · ⬜ embed-snippet helper |
@@ -72,7 +73,11 @@ What is left is mostly polish: a published JSON Schema and an accessibility pass
 - ✅ **Unknown-key warnings** (C5 — reported, never fatal), id uniqueness, nested shapes and the
   https policy in the validator (N6)
 - ⬜ **Accessibility pass** — audit, keyboard TOC review, DOM-mirrored feature results (N4)
-- ⬜ **Mobile popup as bottom sheet** below 640 px (F5.5)
+- ✅ **Mobile popup as bottom sheet** below 640 px (F5.5, 2026-09-06) — `<map0-bottom-sheet>` in the
+  lazy popup chunk; a ResizeObserver on the host decides by the element's own width, so embedded
+  viewers behave; drag or tap the handle between 45 % and 90 %, Escape, the close button or a tap
+  beside the features slide it out and return focus to the map; the anchored popup above 640 px is
+  unchanged, no config key
 - ⬜ **TOC filter box** for configs with many layers (F2.7)
 - ✅ **npm package** `map0-viewer` published (prebuilt bundle, `pnpm build:npm`), CDN via
   jsDelivr, install docs in the package README · ✅ **TypeScript types** (N11, 2026-09-06) — `dist/map0.d.ts`,
