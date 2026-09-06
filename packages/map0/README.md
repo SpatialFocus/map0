@@ -175,7 +175,8 @@ Cloud Optimized GeoTIFF as RGB imagery, single-band color ramps, explicit value/
 DEM hillshade. Plus a
 layer tree with groups, legends (`"auto"` derives them from the service), feature info with HTML
 templates, hover, search, measuring, coordinate readout in projected CRS, print/PDF export,
-permalinks, `extends` for shared base configs, CSS-variable theming, and per-language label
+layers added by users (WMS and WMTS from their capabilities, GeoJSON by URL, GeoJSON/KML/GPX files
+dropped onto the map), permalinks, `extends` for shared base configs, CSS-variable theming, and per-language label
 overrides. See
 [docs/04-configuration.md](https://github.com/SpatialFocus/map0/blob/main/docs/04-configuration.md)
 for the annotated guide, and
