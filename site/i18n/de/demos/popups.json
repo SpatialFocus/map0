@@ -11,6 +11,7 @@
   "what.li4": "<code>hover.content</code> ergänzt einen kurzen Tooltip, der dem Mauszeiger folgt",
   "what.li5": "Die angeklickte Geometrie wird in einen Highlight-Layer gespiegelt und beim Schließen des Popups wieder entfernt",
   "what.li6": "Mehr als zehn Treffer auf einem Layer werden zu einem ausklappbaren Abschnitt zusammengefasst",
+  "what.li7": "Am Handy — bei jedem Viewer unter 640 px Breite — wird das Popup zu einem Bottom Sheet: am Griff ziehen zeigt mehr, nach unten wischen oder in die Karte tippen schließt es",
   "safe.h2": "Alles wird bereinigt",
   "safe.p1": "Templates kommen aus einem CMS-Feld, GetFeatureInfo-Antworten von einem fremden Dienst — beides gilt daher als nicht vertrauenswürdig. Attributwerte werden beim Rendern des Templates HTML-escaped, und das fertige Markup läuft durch DOMPurify, bevor es das DOM erreicht. Links werden auf <code>rel=\"noopener noreferrer\"</code> umgeschrieben.",
   "safe.p2": "Die Template-Sprache ist bewusst geschlossen: Platzhalter und sonst nichts. Keine Ausdrücke, kein <code>eval</code>, nichts, was ein Config-Autor zu ausführbarem Code machen könnte.",

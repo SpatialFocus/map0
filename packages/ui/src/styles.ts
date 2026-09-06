@@ -630,6 +630,124 @@ export const componentStyles = css`
     word-break: break-word;
   }
 
+  /* --------------------------- bottom sheet (F5.5) ---------------------- */
+
+  /* Below 640px of the viewer's own width, feature info docks here instead of
+     an anchored popup (map0-viewer.ts decides; <map0-bottom-sheet> renders).
+     The two rest heights are mirrored in bottom-sheet.ts for the drag snaps. */
+  .sheet {
+    position: absolute;
+    z-index: 16;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    box-sizing: border-box;
+    height: 45%;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    background: var(--map0-bg);
+    color: var(--map0-fg);
+    border: 1px solid var(--map0-border);
+    border-bottom: none;
+    border-radius: var(--map0-radius) var(--map0-radius) 0 0;
+    box-shadow: 0 -4px 18px rgba(15, 23, 42, 0.16);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    font-size: 14px;
+    line-height: 1.45;
+    outline: none;
+    transition:
+      height 0.22s ease,
+      transform 0.22s ease;
+    animation: m0sheet-in 0.26s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  :host([data-theme="dark"]) .sheet {
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.45);
+  }
+  .sheet[data-expanded] {
+    height: min(90%, 100% - 60px);
+  }
+  .sheet[data-dragging] {
+    transition: none;
+    user-select: none;
+  }
+  .sheet[data-closing] {
+    transform: translateY(100%);
+    pointer-events: none;
+  }
+  @keyframes m0sheet-in {
+    from {
+      transform: translateY(100%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sheet {
+      animation: none;
+      transition: none;
+    }
+  }
+  /* the whole header is the drag surface; touch-action keeps the page from
+     scrolling under a finger that is moving the sheet */
+  .sheet-header {
+    flex: none;
+    display: flex;
+    align-items: stretch;
+    touch-action: none;
+    cursor: grab;
+  }
+  .sheet[data-dragging] .sheet-header {
+    cursor: grabbing;
+  }
+  .sheet-handle {
+    all: unset;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    cursor: inherit;
+  }
+  .sheet-grip {
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--map0-fg) 28%, transparent);
+  }
+  .sheet-handle:focus-visible .sheet-grip {
+    outline: 2px solid var(--map0-primary);
+    outline-offset: 5px;
+  }
+  .sheet-close {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    margin-right: 4px;
+    font-size: 16px;
+  }
+  .sheet-body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 0 16px 16px;
+  }
+  /* the popup markup, sized for thumbs rather than a cursor */
+  .sheet-body .m0-popup h4 {
+    font-size: 14.5px;
+  }
+  .sheet-body table.m0-fields {
+    font-size: 13.5px;
+  }
+  .sheet-body table.m0-fields th,
+  .sheet-body table.m0-fields td {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+  .sheet-body .m0-popup details summary {
+    padding: 12px 0;
+    font-size: 13px;
+  }
+
   /* ---------------------------- add-layer dialog ------------------------ */
 
   .icon-btn {

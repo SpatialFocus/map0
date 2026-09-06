@@ -373,6 +373,15 @@ programmatically: `api.addLayer(def)` / `api.removeLayer(id)`.
 - All rendered HTML (templates, WMS HTML GetFeatureInfo, service abstracts) is sanitized
   (allow-list: basic formatting, links `rel="noopener"`, images) — configs come from CMS fields and
   services are third parties; XSS hygiene is non-negotiable.
+- **Placement is automatic, not configured.** On a viewer narrower than 640 px — the element's own
+  width, so a map in a narrow CMS column counts as well as a phone — feature info opens as a
+  **bottom sheet** docked to the lower edge of the map instead of an anchored popup: the same
+  content (`title`, `fields` or `content` template, the per-layer sections of a multi-hit click),
+  collapsed to about 45 % of the map height with the content scrolling inside, expandable to about
+  90 % via the grab handle or a drag. Dragging it down, its close button, Escape or a tap on empty
+  map closes it and clears the selection highlight; the map above the sheet stays usable throughout.
+  Above 640 px the anchored popup is used; a viewer that is resized across the threshold moves an
+  open answer into the other container. `popup: false` suppresses a layer's feature info in both.
 
 ## Schema & validation
 

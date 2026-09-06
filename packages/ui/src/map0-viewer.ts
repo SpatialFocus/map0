@@ -16,6 +16,7 @@ import type {
 } from "@map0/core";
 import { normalizeConfig, resolveConfigExtends, validateConfig, type TocNode } from "@map0/schema";
 import type { Map0ViewerElement, Map0ViewerEventDetails } from "./element.js";
+import type { Map0BottomSheet } from "./bottom-sheet.js"; // type only — the sheet ships with the popup chunk
 import { componentStyles } from "./styles.js";
 import { attachDropZone } from "./file-drop.js";
 
@@ -76,6 +77,13 @@ class IconButtonControl {
 
 const RADII = { none: "0px", sm: "6px", md: "10px", lg: "16px" } as const;
 const RADII_SM = { none: "0px", sm: "4px", md: "7px", lg: "10px" } as const;
+/**
+ * Below this width of the viewer itself (not the window — N3) feature info
+ * opens as a bottom sheet instead of an anchored popup (F5.5). A JS decision,
+ * not a container query: the two are different DOM (a MapLibre popup vs. our
+ * own element), so the width is observed rather than styled.
+ */
+const SHEET_BREAKPOINT = 640;
 
 const icons = {
   layers: html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>`,
@@ -139,6 +147,10 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
   @state() private _searchEmpty = false;
   @state() private _measure: MeasureState | null = null;
   @state() private _measureLoading = false;
+  /** the viewer is narrower than SHEET_BREAKPOINT — feature info docks at the bottom */
+  @state() private _narrow = false;
+  /** feature info shown as a bottom sheet (narrow viewers); null = none open */
+  @state() private _sheet: { label: string; content: HTMLElement } | null = null;
 
   private measureController?: MeasureController;
 
@@ -153,6 +165,10 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
   private core?: Map0Core;
   private normalized?: NormalizedConfig;
   private popup?: Popup;
+  @query("map0-bottom-sheet") private sheetEl?: Map0BottomSheet;
+  /** the feature info on show, in either container (re-presented on a breakpoint change) */
+  private info?: { lngLat: [number, number]; results: FeatureInfoResult[] };
+  private resizeObserver?: ResizeObserver;
   private popups?: PopupRenderer;
   private createPopup?: (options?: object) => Popup;
   private unsubs: Array<() => void> = [];
@@ -204,6 +220,25 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
   override connectedCallback(): void {
     super.connectedCallback();
     if (this.initialized && !this.initStarted) this.arm();
+    this.observeWidth();
+  }
+
+  /** popup or sheet is decided by the element's own width, tracked while connected */
+  private observeWidth(): void {
+    if (typeof ResizeObserver === "undefined") return;
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width ?? this.getBoundingClientRect().width;
+      this.setNarrow(width < SHEET_BREAKPOINT);
+    });
+    this.resizeObserver.observe(this);
+  }
+
+  private setNarrow(narrow: boolean): void {
+    if (narrow === this._narrow) return;
+    this._narrow = narrow;
+    /* an open answer moves into the other container rather than getting lost */
+    if (this.info) this.presentInfo();
   }
 
   /** start now, or wait for the element to approach the viewport */
@@ -260,6 +295,8 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
     super.disconnectedCallback();
     this.observer?.disconnect();
     this.observer = undefined;
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = undefined;
     this.teardown();
   }
 
@@ -276,8 +313,9 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
     for (const u of this.unsubs) u();
     this.unsubs = [];
     this.statusSeen.clear();
-    this.popup?.remove();
-    this.popup = undefined;
+    this.removePopup();
+    this._sheet = null;
+    this.info = undefined;
     this.core?.destroy();
     this.core = undefined;
     this.measureController = undefined; // destroyed via unsubs — never reuse it
@@ -366,7 +404,7 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
         /* the measurement must survive a basemap change like any other overlay */
         this.core.registerOverlay(() => controller.ids);
       }
-      this.popup?.remove();
+      this.dismissInfo();
       this.core.setInteractionLocked(true);
       this.measureController.start(mode);
     } catch (e) {
@@ -515,9 +553,11 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
       this.normalized = cfg;
       this.applyTheme(cfg);
 
+      const width = this.getBoundingClientRect().width;
       const ls = cfg.controls.layerSwitcher;
-      this._tocOpen =
-        ls === false ? false : ls.open === "auto" ? this.getBoundingClientRect().width >= 560 : ls.open;
+      this._tocOpen = ls === false ? false : ls.open === "auto" ? width >= 560 : ls.open;
+      /* the observer keeps this current; without one, a single measurement has to do */
+      if (!this.resizeObserver) this._narrow = width < SHEET_BREAKPOINT;
       this._legendOpen = cfg.controls.legend === false ? false : cfg.controls.legend.open;
 
       /* the engine, MapLibre and its stylesheet, and the popup renderer */
@@ -658,17 +698,83 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
     }
   }
 
+  /* ------------------------------ feature info ------------------------------ */
+
   private showPopup(e: { lngLat: [number, number]; results: FeatureInfoResult[] }): void {
     if (!this.core) return;
-    this.popup?.remove();
-    if (!this.popups || !this.createPopup) return;
-    const content = this.popups.buildPopupContent(e.results, this.core.t);
+    /* a tap that hit nothing puts the previous answer away (the anchored popup
+       already closed itself on the click; the sheet has to be told) */
+    if (e.results.length === 0) {
+      this.dismissInfo();
+      return;
+    }
+    this.info = e;
+    this.presentInfo();
+    this.emit("map0:featureclick", e);
+  }
+
+  /**
+   * Show `info` in the container the viewer's width calls for: an anchored
+   * MapLibre popup, or below SHEET_BREAKPOINT a bottom sheet (F5.5). Same
+   * sanitized markup either way — only the box differs.
+   */
+  private presentInfo(): void {
+    const info = this.info;
+    if (!info || !this.core || !this.popups || !this.createPopup) return;
+    const content = this.popups.buildPopupContent(info.results, this.core.t);
+    /* swapping containers must not read as "closed": the highlight stays */
+    this.removePopup();
+    if (this._narrow) {
+      this._sheet = { label: this.popups.describeResults(info.results), content };
+      return;
+    }
+    this._sheet = null;
     this.popup = this.createPopup({ closeButton: true, maxWidth: "340px" })
-      .setLngLat(e.lngLat)
+      .setLngLat(info.lngLat)
       .setDOMContent(content)
       .addTo(this.core.map);
-    this.popup.on("close", () => this.core?.clearHighlight());
-    this.emit("map0:featureclick", e);
+    this.popup.on("close", this.onPopupClose);
+  }
+
+  /** the anchored popup was closed by the user (its close button, or a click on the map) */
+  private onPopupClose = (): void => {
+    this.popup = undefined;
+    this.info = undefined;
+    this.core?.clearHighlight();
+  };
+
+  /** close whatever feature info is showing and drop its highlight */
+  private dismissInfo(): void {
+    this.info = undefined;
+    this.removePopup();
+    this.core?.clearHighlight();
+    /* the sheet slides out first and reports back through `close` — the same
+       exit whether the user dismissed it or a tap on the map did */
+    if (this.sheetEl) this.sheetEl.close();
+    else this._sheet = null;
+  }
+
+  /**
+   * The sheet is done sliding out — after its close button, Escape, a drag down,
+   * or `dismissInfo()`. Focus returns to the map when it was in the sheet; a
+   * control the user is on (the measure button, say) keeps it.
+   */
+  private onSheetClose(): void {
+    this.info = undefined;
+    this.core?.clearHighlight();
+    const active = this.shadowRoot?.activeElement ?? null;
+    if (active && this.sheetEl?.contains(active)) {
+      this.core?.map.getCanvas().focus({ preventScroll: true });
+    }
+    this._sheet = null;
+  }
+
+  /** remove the anchored popup without it counting as a user close */
+  private removePopup(): void {
+    if (!this.popup) return;
+    this.popup.off("close", this.onPopupClose);
+    this.popup.remove();
+    this.popup = undefined;
   }
 
   private showCoordinates(e: {
@@ -677,7 +783,7 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
   }): void {
     if (!this.core || !this.createPopup) return;
     const t = this.core.t;
-    this.popup?.remove();
+    this.dismissInfo();
     /* built entirely with textContent — nothing here comes from remote services */
     const container = document.createElement("div");
     container.className = "m0-popup m0-coords";
@@ -762,6 +868,14 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
               .t=${this.core.t}
               @close=${() => (this._printOpen = false)}
             ></map0-print>`
+          : nothing}
+        ${this._sheet && this.core
+          ? html`<map0-bottom-sheet
+              .content=${this._sheet.content}
+              .label=${this._sheet.label}
+              .t=${this.core.t}
+              @close=${() => this.onSheetClose()}
+            ></map0-bottom-sheet>`
           : nothing}
         ${this._notices.length > 0
           ? html`<div class="notices" role="status" aria-live="polite">

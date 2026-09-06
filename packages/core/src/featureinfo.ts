@@ -35,9 +35,10 @@ export function wireFeatureInfo(
       if (s.status === "rejected") console.warn("[map0] feature info failed", s.reason);
     }
     highlight.set(results.flatMap((r) => r.highlightFeatures ?? []));
-    if (results.length > 0) {
-      emitter.emit("featureclick", { lngLat: [e.lngLat.lng, e.lngLat.lat], results });
-    }
+    /* emitted on a miss as well (empty `results`): the UI has to know that a
+       tap landed on nothing so it can put away what the previous tap opened —
+       an anchored popup closes itself on any map click, a bottom sheet cannot */
+    emitter.emit("featureclick", { lngLat: [e.lngLat.lng, e.lngLat.lat], results });
   };
 
   let hoverActive = false;

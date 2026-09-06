@@ -9,6 +9,10 @@ import {
 } from "@map0/core";
 import type { PopupConfig } from "@map0/schema";
 
+/* The sheet is the popup's other container (F5.5): loading it with the renderer
+   keeps the two in one chunk and registers <map0-bottom-sheet> for the viewer. */
+export { Map0BottomSheet } from "./bottom-sheet.js";
+
 function renderFeature(popup: PopupConfig | undefined, props: Record<string, unknown>): string {
   const title = popup?.title ? `<h4>${renderTemplate(popup.title, props)}</h4>` : "";
   let body: string;
@@ -40,13 +44,19 @@ function renderResult(result: FeatureInfoResult, t: Translate): string {
   return `<section>${layerTitle}${features}</section>`;
 }
 
+/** Accessible name for a feature-info container: the layer title(s) it answers for. */
+export function describeResults(results: FeatureInfoResult[]): string {
+  return results.map((r) => r.layerTitle).join(", ");
+}
+
 /** Sanitize author- or service-provided HTML before it reaches the DOM (N6). */
 export function sanitizeHtml(html: string): string {
   return DOMPurify.sanitize(html);
 }
 
 /**
- * Render feature-info results into a sanitized DOM node for the MapLibre popup.
+ * Render feature-info results into a sanitized DOM node for the MapLibre popup
+ * — or for the bottom sheet on narrow viewers, which shows the very same node.
  * Everything passes DOMPurify — templates come from CMS configs, HTML may come
  * from third-party WMS GetFeatureInfo responses (N6 in docs/03-requirements.md).
  */

@@ -446,7 +446,12 @@ explicit choice), and embedded maps follow through the viewer's `theme` attribut
 - **Constructable stylesheets** carry MapLibre's CSS, adopted at runtime so it stays out of the entry
   chunk. Order matters: it must be *prepended*, or our component styles no longer override it.
 - **Container queries, not media queries.** A viewer can sit in a narrow CMS column on a wide screen;
-  layout decisions must come from the element's own width.
+  layout decisions must come from the element's own width. The one width decision made in JS is
+  popup vs. bottom sheet (`SHEET_BREAKPOINT` in `map0-viewer.ts`, 640 px): the two are different
+  DOM — a MapLibre popup and our own `<map0-bottom-sheet>` — so a `ResizeObserver` on the host
+  drives it; the sheet element itself is width-agnostic and only styled. For the same reason core
+  emits `featureclick` with empty `results` on a miss: an anchored popup closes itself on any map
+  click, a sheet has to be told.
 - **`IntersectionObserver` never fires for `display: none`**, which is exactly right: a map in a
   hidden tab stays unloaded until shown, avoiding MapLibre initialising into a zero-size container.
 - **Legends must not invent symbols.** A GeoJSON layer without a style gets fill + line + circle
