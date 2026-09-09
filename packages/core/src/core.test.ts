@@ -12,7 +12,7 @@ import {
   classLegendEntries,
   cogLegendEntries,
 } from "./adapters/cog.js";
-import { expandSimpleStyle } from "./adapters/geojson.js";
+import { expandSimpleStyle, GeoJsonAdapter } from "./adapters/geojson.js";
 import { featureCollectionFromRows, geoParquetProjector, type GeoMetadata } from "./adapters/geoparquet.js";
 import { buildGetFeatureUrl, loadWfsFeatures, parseWfsResponse } from "./adapters/wfs.js";
 import { buildItemsUrl, loadOgcApiFeatures, parseItemsResponse } from "./adapters/ogcapi-features.js";
@@ -1528,5 +1528,36 @@ describe("permalink — which user-added layers travel (F3.5, F3.2)", () => {
     const wms = { type: "wms", id: "c", url: "https://e.org/ows", layers: "x" };
     expect(shareableLayerDefs([dropped, byUrl, wms])).toEqual([byUrl, wms]);
     expect(shareableLayerDefs([])).toEqual([]);
+  });
+});
+
+describe("geojson adapter — click on a cluster bubble", () => {
+  function mounted() {
+    const easeTo = vi.fn();
+    const getClusterExpansionZoom = vi.fn(async () => 11.5);
+    const map = { getSource: vi.fn(() => ({ getClusterExpansionZoom })), easeTo };
+    const adapter = new GeoJsonAdapter({ id: "trees", type: "geojson", data: "x.geojson" } as never);
+    (adapter as unknown as { ctx: unknown }).ctx = { map };
+    return { adapter, map, easeTo, getClusterExpansionZoom };
+  }
+
+  it("eases to the zoom at which the cluster splits", async () => {
+    const { adapter, map, easeTo, getClusterExpansionZoom } = mounted();
+    await adapter.expandCluster({
+      properties: { cluster: true, cluster_id: 42, point_count: 7 },
+      geometry: { type: "Point", coordinates: [16.37, 48.21] },
+    } as never);
+    expect(map.getSource).toHaveBeenCalledWith("m0s-trees");
+    expect(getClusterExpansionZoom).toHaveBeenCalledWith(42);
+    expect(easeTo).toHaveBeenCalledWith({ center: [16.37, 48.21], zoom: 11.5 });
+  });
+
+  it("does nothing for a feature that is not a cluster", async () => {
+    const { adapter, easeTo } = mounted();
+    await adapter.expandCluster({
+      properties: { name: "Linde" },
+      geometry: { type: "Point", coordinates: [0, 0] },
+    } as never);
+    expect(easeTo).not.toHaveBeenCalled();
   });
 });

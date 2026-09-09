@@ -287,7 +287,7 @@
           ]
         },
         "cluster": {
-          "description": "cluster point features — true, or an options object",
+          "description": "cluster point features — true, or an options object. Hovering a cluster bubble shows its feature count, clicking it zooms in until it breaks apart",
           "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/clusterOptions" }]
         },
         "popup": {
@@ -337,7 +337,7 @@
           ]
         },
         "cluster": {
-          "description": "cluster point features — true, or an options object",
+          "description": "cluster point features — true, or an options object. Hovering a cluster bubble shows its feature count, clicking it zooms in until it breaks apart",
           "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/clusterOptions" }]
         },
         "popup": {
@@ -429,7 +429,7 @@
           ]
         },
         "cluster": {
-          "description": "cluster point features — true, or an options object",
+          "description": "cluster point features — true, or an options object. Hovering a cluster bubble shows its feature count, clicking it zooms in until it breaks apart",
           "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/clusterOptions" }]
         },
         "popup": {
@@ -476,7 +476,7 @@
           ]
         },
         "cluster": {
-          "description": "cluster point features — true, or an options object",
+          "description": "cluster point features — true, or an options object. Hovering a cluster bubble shows its feature count, clicking it zooms in until it breaks apart",
           "oneOf": [{ "type": "boolean" }, { "$ref": "#/definitions/clusterOptions" }]
         },
         "popup": {
@@ -624,7 +624,7 @@
     },
     "hover": {
       "type": "object",
-      "description": "hover tooltip — a short template rendered while the pointer rests on a feature",
+      "description": "hover tooltip — a short template rendered while the pointer rests on a feature. Over a cluster bubble the tooltip shows how many features it holds instead (a cluster has none of the features' properties)",
       "required": ["content"],
       "additionalProperties": false,
       "properties": {

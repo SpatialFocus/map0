@@ -335,7 +335,7 @@ async function buildCore(
           }
         }
       }
-      wireFeatureInfo(map, layers, events, highlight, () => interactionLocked);
+      wireFeatureInfo(map, layers, events, highlight, t, () => interactionLocked);
       if (!initialView.center && !initialView.bounds) {
         initialView.center = [map.getCenter().lng, map.getCenter().lat];
         initialView.zoom = map.getZoom();

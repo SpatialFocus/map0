@@ -1,4 +1,4 @@
-import type { Map as MapLibreMap, LngLat, Point } from "maplibre-gl";
+import type { Map as MapLibreMap, LngLat, MapGeoJSONFeature, Point } from "maplibre-gl";
 import type { LegendEntryDef, NormalizedLayer, PopupConfig } from "@map0/schema";
 import type { LayerHandle } from "../api.js";
 import { Signal } from "../signals.js";
@@ -168,4 +168,11 @@ export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer>
   }
 
   featureInfo?(query: FeatureInfoQuery): Promise<FeatureInfoResult | null>;
+
+  /**
+   * A click landed on one of this adapter's cluster bubbles: zoom in until it
+   * breaks apart. Only clustering adapters implement it — a cluster hit on an
+   * adapter without the hook falls through to the ordinary feature info query.
+   */
+  expandCluster?(feature: MapGeoJSONFeature): Promise<void>;
 }

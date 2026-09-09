@@ -1,4 +1,5 @@
 import type { GeoJsonLayerDef, NormalizedLayer, SimpleStyle, StyleLayerSpec } from "@map0/schema";
+import type { GeoJSONSource, MapGeoJSONFeature } from "maplibre-gl";
 import { deriveFromStyleLayers, entryFromPaint } from "./legend-derive.js";
 import {
   declaredGeoJsonCrs,
@@ -305,5 +306,16 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
         properties: {},
       })),
     };
+  }
+
+  /** click on a cluster bubble: ease to the zoom at which MapLibre splits it */
+  override async expandCluster(feature: MapGeoJSONFeature): Promise<void> {
+    const clusterId = feature.properties?.cluster_id;
+    if (typeof clusterId !== "number" || feature.geometry.type !== "Point") return;
+    const { map } = this.ctx;
+    const source = map.getSource<GeoJSONSource>(this.srcId);
+    if (!source) return;
+    const zoom = await source.getClusterExpansionZoom(clusterId);
+    map.easeTo({ center: feature.geometry.coordinates as [number, number], zoom });
   }
 }

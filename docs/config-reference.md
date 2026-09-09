@@ -230,7 +230,7 @@ All [Common layer keys](#common-layer-keys) apply. Specific to this type:
 | `pageSize` | `number` (1–50000) | `5000` | features per GetFeature request (2.0.0 only) |
 | `params` | `{ "…": string }` | — | extra vendor parameters appended to every GetFeature (cql_filter, sortBy, …) |
 | `style` | `object` or array of [MapLibre style layer](#maplibre-style-layer) | — | simplified style: one flat paint-property object (circle-&#42;, line-&#42;, fill-&#42; — applied per geometry type) · full control: an array of MapLibre style-spec layers |
-| `cluster` | `boolean` or [`cluster` options](#cluster-options) | — | cluster point features — true, or an options object |
+| `cluster` | `boolean` or [`cluster` options](#cluster-options) | — | cluster point features — true, or an options object. Hovering a cluster bubble shows its feature count, clicking it zooms in until it breaks apart |
 | `popup` | `false` or [`popup`](#popup) | — | popup on feature click — false disables |
 | `hover` | `false` or [`hover`](#hover) | — | short tooltip on hover, e.g. { "content": "{{name}}" } — false disables |
 | `promoteId` | `string` | — | feature property to use as the feature id (hover/selection state) |
@@ -249,7 +249,7 @@ All [Common layer keys](#common-layer-keys) apply. Specific to this type:
 | `pageSize` | `number` (1–50000) | `1000` | features per request (the "limit" query parameter); paging follows the response's "next" links |
 | `params` | `{ "…": string }` | — | extra query parameters appended to the first request (bbox, datetime, filter, properties, …) |
 | `style` | `object` or array of [MapLibre style layer](#maplibre-style-layer) | — | simplified style: one flat paint-property object (circle-&#42;, line-&#42;, fill-&#42; — applied per geometry type) · full control: an array of MapLibre style-spec layers |
-| `cluster` | `boolean` or [`cluster` options](#cluster-options) | — | cluster point features — true, or an options object |
+| `cluster` | `boolean` or [`cluster` options](#cluster-options) | — | cluster point features — true, or an options object. Hovering a cluster bubble shows its feature count, clicking it zooms in until it breaks apart |
 | `popup` | `false` or [`popup`](#popup) | — | popup on feature click — false disables |
 | `hover` | `false` or [`hover`](#hover) | — | short tooltip on hover, e.g. { "content": "{{name}}" } — false disables |
 | `promoteId` | `string` | — | feature property to use as the feature id (hover/selection state) |
@@ -290,7 +290,7 @@ All [Common layer keys](#common-layer-keys) apply. Specific to this type:
 | `type` | `"geojson"` | **required** | layer type |
 | `data` | `string` or `object` | **required** | URL of a GeoJSON document, or the GeoJSON inline |
 | `style` | `object` or array of [MapLibre style layer](#maplibre-style-layer) | — | simplified style: one flat paint-property object (circle-&#42;, line-&#42;, fill-&#42; — applied per geometry type) · full control: an array of MapLibre style-spec layers |
-| `cluster` | `boolean` or [`cluster` options](#cluster-options) | — | cluster point features — true, or an options object |
+| `cluster` | `boolean` or [`cluster` options](#cluster-options) | — | cluster point features — true, or an options object. Hovering a cluster bubble shows its feature count, clicking it zooms in until it breaks apart |
 | `popup` | `false` or [`popup`](#popup) | — | popup on feature click — false disables |
 | `hover` | `false` or [`hover`](#hover) | — | short tooltip on hover, e.g. { "content": "{{name}}" } — false disables |
 | `promoteId` | `string` | — | feature property to use as the feature id (hover/selection state) |
@@ -307,7 +307,7 @@ All [Common layer keys](#common-layer-keys) apply. Specific to this type:
 | `type` | `"geoparquet"` | **required** | layer type |
 | `url` | `string` | **required** | GeoParquet file URL — the whole file is fetched, so the server needs CORS but no range-request support; a file whose geo metadata names a CRS other than WGS84 is reprojected on load |
 | `style` | `object` or array of [MapLibre style layer](#maplibre-style-layer) | — | simplified style: one flat paint-property object (circle-&#42;, line-&#42;, fill-&#42; — applied per geometry type) · full control: an array of MapLibre style-spec layers |
-| `cluster` | `boolean` or [`cluster` options](#cluster-options) | — | cluster point features — true, or an options object |
+| `cluster` | `boolean` or [`cluster` options](#cluster-options) | — | cluster point features — true, or an options object. Hovering a cluster bubble shows its feature count, clicking it zooms in until it breaks apart |
 | `popup` | `false` or [`popup`](#popup) | — | popup on feature click — false disables |
 | `hover` | `false` or [`hover`](#hover) | — | short tooltip on hover, e.g. { "content": "{{name}}" } — false disables |
 | `promoteId` | `string` | — | feature property to use as the feature id (hover/selection state) |
@@ -394,7 +394,7 @@ one property to list in the popup table
 
 Used by: [`wfs` layer](#wfs-layer) `hover` · [`ogcapi-features` layer](#ogcapi-features-layer) `hover` · [`geojson` layer](#geojson-layer) `hover` · [`geoparquet` layer](#geoparquet-layer) `hover` · [`vector` layer](#vector-layer) `hover`
 
-hover tooltip — a short template rendered while the pointer rests on a feature
+hover tooltip — a short template rendered while the pointer rests on a feature. Over a cluster bubble the tooltip shows how many features it holds instead (a cluster has none of the features' properties)
 
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |

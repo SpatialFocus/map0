@@ -370,6 +370,9 @@ programmatically: `api.addLayer(def)` / `api.removeLayer(id)`.
 
 - Popup/tooltip templates use `{{property}}` placeholders plus a few helpers
   (`{{#if}}`, number/date formatting — final list TBD; deliberately *not* a full template language).
+- A cluster bubble has none of the features' properties, so the layer's `hover` template is not
+  applied to it: the tooltip shows the number of features in the cluster instead, and a click on
+  the bubble zooms in until the cluster breaks apart.
 - All rendered HTML (templates, WMS HTML GetFeatureInfo, service abstracts) is sanitized
   (allow-list: basic formatting, links `rel="noopener"`, images) — configs come from CMS fields and
   services are third parties; XSS hygiene is non-negotiable.
