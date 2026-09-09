@@ -6,7 +6,7 @@
   "whole.h2": "Die gesamte Integration",
   "whole.p1": "<code>map0-viewer</code> über npm installieren und anschließend den Ordner <code>node_modules/map0-viewer/dist</code> auf den Webserver kopieren.",
   "whole.p2": "Alternativ kann eine bestimmte Version vom CDN geladen werden. Die Einstiegsdatei lädt ihre Module und den MapLibre-Worker aus demselben Ordner:",
-  "whole.p3": "<code>unpkg.com/map0-viewer@0.2.1/dist/map0.js</code> liefert denselben Tarball aus. So oder so die exakte Version pinnen: Das ist ein 0.x-Release und kann sich ohne Deprecation-Pfad ändern.",
+  "whole.p3": "<code>unpkg.com/map0-viewer@0.3.0/dist/map0.js</code> liefert denselben Tarball aus. So oder so die exakte Version pinnen: Das ist ein 0.x-Release und kann sich ohne Deprecation-Pfad ändern.",
   "whole.p4": "Beim Selbst-Hosten landet Folgendes auf dem Webserver:",
   "whole.li1": "<code>map0.js</code>: die Einstiegsdatei des Viewers, die weitere Dateien bei Bedarf lädt",
   "whole.li2": "Die MapLibre-Module, darunter <code>maplibre-gl-worker.mjs</code> und <code>maplibre-gl-shared.mjs</code>, müssen neben der Einstiegsdatei bleiben",

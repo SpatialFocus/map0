@@ -4,6 +4,33 @@ Releases of the `map0-viewer` npm package. Generated from the
 [conventional commits](https://www.conventionalcommits.org) by `pnpm release` (release-it) —
 do not edit by hand.
 
+## [0.3.0](https://github.com/SpatialFocus/map0/compare/v0.2.1...v0.3.0) (2026-09-09)
+
+### Features
+
+* **core:** cluster bubbles show their count on hover and zoom in on click ([5470d0d](https://github.com/SpatialFocus/map0/commit/5470d0dbc76d96d1b38a15e37903923a291021e3))
+* **core:** parse GeoJSON, KML and GPX files into feature collections (F3.2) ([b2b2cdf](https://github.com/SpatialFocus/map0/commit/b2b2cdfa0068f48182ed5c0c4b3fb65396bcb83c))
+* crs on geojson/geoparquet layers — reprojected on load with proj4 ([6aafa4a](https://github.com/SpatialFocus/map0/commit/6aafa4aeafa3102e6eb1d2ac81afaddcc1731cfb))
+* geoparquet layer type — browser-decoded, styled like geojson ([0861ec9](https://github.com/SpatialFocus/map0/commit/0861ec9fc87ed58728d9df8029bc880e4b370916))
+* ogcapi-features layer type — next-link paging, rendered like geojson ([eca6d74](https://github.com/SpatialFocus/map0/commit/eca6d749cbf8fc0362cb02ba99c65ce7ceb2f6e0))
+* **ui:** add GeoJSON by URL and file drop (F3.2) ([9a886b0](https://github.com/SpatialFocus/map0/commit/9a886b09957a7d911d6777e11be33d40291e8f05))
+* **ui:** feature info as a bottom sheet below 640 px (F5.5) ([d3d5e56](https://github.com/SpatialFocus/map0/commit/d3d5e562bd1d9517f1f05a1e34923927873e7f7f))
+* wfs layer type — paged GetFeature, rendered like geojson ([b095e0a](https://github.com/SpatialFocus/map0/commit/b095e0ac98077dbad3053bc54edb180fbb1cce37))
+
+### Bug Fixes
+
+* BEV DTM links ([e77f8e1](https://github.com/SpatialFocus/map0/commit/e77f8e1ad7c52f232bc4e2837033c1711114a11d))
+* BEV DTM links 2 ([4b58fef](https://github.com/SpatialFocus/map0/commit/4b58fef2ddd8017650a388c3456f6de6f0f0d71b))
+* **core:** apply basemap.minZoom to raster basemap sources ([7b5b293](https://github.com/SpatialFocus/map0/commit/7b5b2931a6e8788d4557db7423284190d467afeb))
+* **core:** clean up interrupted map interactions ([d546fa4](https://github.com/SpatialFocus/map0/commit/d546fa48797d5f6e393b5b2f0811c26c81b1ab5a))
+* **core:** correct service requests, layer state and map calculations ([d6b122d](https://github.com/SpatialFocus/map0/commit/d6b122d26d0c1c78246051a43d0af845bb91ea88))
+* **core:** correct service URLs, integer precision and cluster detection ([5a2fe71](https://github.com/SpatialFocus/map0/commit/5a2fe7168ad18289c8de89d6e97dd91ef3a4f33c))
+* **site:** give the playground the width a tool needs ([d49b272](https://github.com/SpatialFocus/map0/commit/d49b2722fa65f8d5932430a981106edf7b3afaa7))
+* **site:** serve the schema uncached, and record what Cloudflare does to headers ([5eb6f76](https://github.com/SpatialFocus/map0/commit/5eb6f76a265653c41f0df60ccec6096f1d6fc91b))
+* **site:** small-screen fixes for the demo pages ([f3ee6f7](https://github.com/SpatialFocus/map0/commit/f3ee6f7c9a4747a061ab82f244836b1e73b62453))
+* **site:** stop caching the one bundle whose name never changes ([6eba7c7](https://github.com/SpatialFocus/map0/commit/6eba7c759d069b7db8568f708d3d03f9b6d5de81))
+* **ui:** ignore stale search and service responses ([f26a2e9](https://github.com/SpatialFocus/map0/commit/f26a2e94bc2b09dfa948e10cb7c8fef1f14ef1cb))
+
 ## [0.2.1](https://github.com/SpatialFocus/map0/compare/v0.2.0...v0.2.1) (2026-08-21)
 
 ### Bug Fixes

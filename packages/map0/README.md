@@ -8,7 +8,7 @@ map0 adds a configurable interface to MapLibre: basemaps, a layer tree, legends,
 search, measuring, print and globe view. Settings, colours and languages are defined in one JSON
 document, stored as a file or in a CMS field. A web component displays the map inside your page.
 
-> **Early preview, version 0.2.1.** Try the client in the
+> **Early preview, version 0.3.0.** Try the client in the
 > [live demos](https://map0.net/demos). The JavaScript API and config format may change without
 > a deprecation path until 1.0. Pin an exact version.
 >
@@ -31,11 +31,11 @@ contains TypeScript declarations only. Copy
 Point a script tag at a specific release:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/map0-viewer@0.2.1/dist/map0.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/map0-viewer@0.3.0/dist/map0.js"></script>
 ```
 
 unpkg serves the same tarball, if you prefer it:
-`https://unpkg.com/map0-viewer@0.2.1/dist/map0.js`.
+`https://unpkg.com/map0-viewer@0.3.0/dist/map0.js`.
 
 The entry resolves its modules and MapLibre's worker relative to itself, including on a CDN.
 Pin the **exact** version so that future releases do not automatically change the package used
@@ -194,7 +194,7 @@ squiggles while you write a config:
 
 `https://map0.net/schema/v1.json` follows the latest release. The npm tarball carries the same file
 as `schema/v1.json`, so a version-pinned copy is on the CDN too:
-`https://cdn.jsdelivr.net/npm/map0-viewer@0.2.1/schema/v1.json`.
+`https://cdn.jsdelivr.net/npm/map0-viewer@0.3.0/schema/v1.json`.
 
 To check a config without installing anything, paste it into the
 [online validator](https://map0.net/demos/validate.html), which runs `validateConfig` in the

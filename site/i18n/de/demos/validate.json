@@ -22,7 +22,7 @@
   "schema.h2": "Das veröffentlichte Schema",
   "schema.p1": "Dasselbe Schema ist an drei Stellen verfügbar:",
   "schema.li1": "<code>https://map0.net/schema/v1.json</code>: folgt der neuesten Version, für den <code>$schema</code>-Eintrag der Konfiguration",
-  "schema.li2": "<code>https://cdn.jsdelivr.net/npm/map0-viewer@0.2.1/schema/v1.json</code>: an eine Paketversion gebunden",
+  "schema.li2": "<code>https://cdn.jsdelivr.net/npm/map0-viewer@0.3.0/schema/v1.json</code>: an eine Paketversion gebunden",
   "schema.li3": "<code>node_modules/map0-viewer/schema/v1.json</code>: lokal mit dem installierten Paket verfügbar",
   "schema.p2": "Der Dateiname bezieht sich auf die Version des Konfigurationsformats (<code>\"version\": 1</code>). Die Beschreibungen im Schema liefern die Editor-Dokumentation. Tests vergleichen seine Schlüssel und Aufzählungswerte mit dem Laufzeit-Validator."
 }
