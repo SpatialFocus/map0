@@ -17,6 +17,22 @@
   <body class="landing">
     <!-- the shared topbar is injected by vite.config.ts on every page -->
 
+    <!-- ------------------------------ release banner ---------------------------- -->
+    <!-- Refresh or remove this with every release. The version is written out on
+         purpose: scripts/bump-version-refs.mjs stops the next release on it until
+         the banner is updated, so it can never announce a stale version. -->
+
+    <div class="release-banner">
+      <div class="wrap">
+        <p data-i18n="release.banner">
+          <b>New</b> map0-viewer 0.3.0 is out<span class="detail">: WFS, OGC API Features and
+          GeoParquet layers, GeoJSON, KML and GPX by URL or from local files, feature information
+          as a bottom sheet on phones, and a series of fixes</span>.
+          <a href="https://github.com/SpatialFocus/map0/releases/tag/v0.3.0">Release notes →</a>
+        </p>
+      </div>
+    </div>
+
     <!-- ---------------------------------- hero --------------------------------- -->
 
     <header class="hero">

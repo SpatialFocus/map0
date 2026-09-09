@@ -12,6 +12,8 @@
   "hero.zero3": "<b>0</b> <strong>Build-Schritte</strong> <span>Ein Script-Tag und ein Kartenelement ergänzen die bestehende Seite. Das Paket ist fertig gebaut.</span>",
   "hero.zero4": "<b>0</b> <strong>Tracking</strong> <span>Der Viewer enthält keine Analysefunktionen und setzt keine Cookies. Die Datenquellen werden in der Konfiguration festgelegt.</span>",
 
+  "release.banner": "<b>Neu</b> map0-viewer 0.3.0 ist da<span class=\"detail\">: WFS-, OGC-API-Features- und GeoParquet-Layer, GeoJSON, KML und GPX per URL oder aus lokalen Dateien, Objektinformationen am Smartphone als Bottom Sheet und eine Reihe von Fehlerbehebungen</span>. <a href=\"https://github.com/SpatialFocus/map0/releases/tag/v0.3.0\">Release Notes →</a>",
+
   "stage.caption": "<strong>Die Karte ausprobieren:</strong> Sie kombiniert WMS, Vektorkacheln und GeoJSON-Punkte aus einem WFS. Den Layerbaum öffnen, den Flächenwidmungsplan einblenden, auf einen Brunnen klicken, zum Luftbild wechseln, eine Adresse suchen oder eine Strecke messen. Die <a href=\"#config\">Konfiguration</a> steht weiter unten.",
 
   "stats.load": "gzip beim Seitenaufruf, bevor die Karte sichtbar wird",

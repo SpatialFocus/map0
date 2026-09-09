@@ -18,6 +18,49 @@ body.landing main {
   padding: 0 0 clamp(56px, 7vw, 88px);
 }
 
+/* ----------------------------- release banner ---------------------------- */
+
+/* One line under the topbar, landing page only. Sits above the hero's light
+   sources (they reach up behind it), otherwise plain: tint, hairline, text. */
+.release-banner {
+  position: relative;
+  z-index: 1;
+  background: var(--tint);
+  border-bottom: 1px solid var(--accent-line);
+  text-align: center;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.release-banner p {
+  margin: 0;
+  padding: 9px 0;
+  text-wrap: balance;
+}
+.release-banner b {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--surface);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+.release-banner a {
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* on a phone the highlights would take five lines — the version and the link
+   are the announcement, the rest waits behind the link */
+@media (max-width: 640px) {
+  .release-banner .detail {
+    display: none;
+  }
+}
+
 /* ---------------------------------- hero --------------------------------- */
 
 .hero {
