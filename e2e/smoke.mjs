@@ -13,6 +13,7 @@ import { chromium } from "playwright";
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
+import { reviewRegressions } from "./review-regressions.mjs";
 
 const DIST = new URL("../packages/ui/dist/", import.meta.url);
 
@@ -855,6 +856,8 @@ try {
   check("clicking a generated cluster still zooms in", expandedCluster);
   check("no console errors while displaying ordinary counts and clusters", clusterNoise.length === 0, clusterNoise.join(" | "));
   await clusterPage.close();
+
+  await reviewRegressions(context, BASE, check, watchConsole);
 
   /* ------------------------------------------------------------ invalid config */
   const errNoise = [];

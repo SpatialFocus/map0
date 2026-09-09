@@ -319,6 +319,7 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
     this.core?.destroy();
     this.core = undefined;
     this.measureController = undefined; // destroyed via unsubs — never reuse it
+    this.searchSeq++;
     clearTimeout(this.searchTimer);
     this.searchAbort?.abort();
     this.searchAbort = undefined;
@@ -329,6 +330,9 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
     this._layers = [];
     this._measure = null;
     this._searchResults = [];
+    this._searchBusy = false;
+    this._searchEmpty = false;
+    this._searchActive = -1;
     this._hover = null;
     this._dropActive = false;
     this._ready = false;
@@ -424,10 +428,12 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
 
   /** debounced query; the sequence guard keeps a slow answer from overwriting a newer one */
   private queueSearch(query: string): void {
+    const seq = ++this.searchSeq;
     clearTimeout(this.searchTimer);
     this.searchAbort?.abort();
     const config = this.normalized?.search;
-    if (!config || !this.core) return;
+    const core = this.core;
+    if (!config || !core) return;
     if (!query.trim()) {
       this._searchResults = [];
       this._searchEmpty = false;
@@ -436,16 +442,16 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
     }
     this.searchTimer = setTimeout(() => {
       void (async () => {
-        const seq = ++this.searchSeq;
         const abort = new AbortController();
         this.searchAbort = abort;
         this._searchBusy = true;
         try {
           const { search } = await loadEngine();
-          const center = this.core!.map.getCenter();
+          if (seq !== this.searchSeq) return;
+          const center = core.map.getCenter();
           const results = await search(config, query, {
             center: [center.lng, center.lat],
-            lang: this.core!.locale,
+            lang: core.locale,
             signal: abort.signal,
           });
           if (seq !== this.searchSeq) return;
@@ -455,7 +461,7 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
         } catch (e) {
           if (seq === this.searchSeq && (e as Error)?.name !== "AbortError") {
             this._searchResults = [];
-            this.notify("error", `${this.core!.t("search.failed")}: ${(e as Error).message}`);
+            this.notify("error", `${core.t("search.failed")}: ${(e as Error).message}`);
           }
         } finally {
           if (seq === this.searchSeq) this._searchBusy = false;
@@ -465,6 +471,7 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
   }
 
   private pickSearchResult(result: SearchResult): void {
+    this.cancelSearch();
     this.core?.showLocation({ center: result.center, bbox: result.bbox });
     this._searchResults = [];
     this._searchActive = -1;
@@ -485,10 +492,18 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
       if (hit) this.pickSearchResult(hit);
     } else if (event.key === "Escape") {
       event.stopPropagation();
+      this.cancelSearch();
       this._searchResults = [];
       this._searchEmpty = false;
       (event.target as HTMLInputElement).blur();
     }
+  }
+
+  private cancelSearch(): void {
+    this.searchSeq++;
+    clearTimeout(this.searchTimer);
+    this.searchAbort?.abort();
+    this._searchBusy = false;
   }
 
   /** transient notice toast (auto-dismisses; also used by copy/share actions) */

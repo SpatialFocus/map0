@@ -66,6 +66,7 @@ export class Map0AddLayerDialog extends LitElement {
   @state() private filter = "";
   @query("input[type=file]") private fileInput?: HTMLInputElement;
   private infoFormat: string | undefined;
+  private loadSeq = 0;
 
   private releaseFocus?: () => void;
 
@@ -78,43 +79,51 @@ export class Map0AddLayerDialog extends LitElement {
   }
 
   override disconnectedCallback(): void {
+    this.loadSeq++;
     super.disconnectedCallback();
     this.releaseFocus?.();
   }
 
   private close(): void {
+    this.loadSeq++;
     this.dispatchEvent(new CustomEvent("close"));
   }
 
   private async load(): Promise<void> {
     const url = this.url.trim();
     if (!url) return;
+    const service = this.service;
+    const seq = ++this.loadSeq;
     this.loading = true;
     this.error = "";
     this.candidates = [];
     try {
       const ogc = await loadOgcClient();
-      const found: Candidate[] =
-        this.service === "wms"
+      if (seq !== this.loadSeq) return;
+      const found =
+        service === "wms"
           ? await this.loadWms(ogc, url)
-          : await this.loadWmts(ogc, url);
-      this.candidates = found;
-      if (found.length === 0) this.error = this.t("addLayer.empty");
+          : { candidates: await this.loadWmts(ogc, url), infoFormat: undefined };
+      if (seq !== this.loadSeq) return;
+      this.candidates = found.candidates;
+      this.infoFormat = found.infoFormat;
+      if (found.candidates.length === 0) this.error = this.t("addLayer.empty");
     } catch (e) {
+      if (seq !== this.loadSeq) return;
       this.error = `${this.t("addLayer.failed")}: ${e instanceof Error ? e.message : e}`;
     } finally {
-      this.loading = false;
+      if (seq === this.loadSeq) this.loading = false;
     }
   }
 
   private async loadWms(
     ogc: OgcClient,
     url: string,
-  ): Promise<Candidate[]> {
+  ): Promise<{ candidates: Candidate[]; infoFormat?: string }> {
     const endpoint = new ogc.WmsEndpoint(url);
     await endpoint.isReady();
     const infoFormats = endpoint.getServiceInfo()?.infoFormats ?? [];
-    this.infoFormat = infoFormats.includes("application/json")
+    const infoFormat = infoFormats.includes("application/json")
       ? "application/json"
       : infoFormats.find((f: string) => f.includes("json") || f.includes("html"));
 
@@ -145,7 +154,7 @@ export class Map0AddLayerDialog extends LitElement {
       }
     };
     walk(endpoint.getLayers() as never);
-    return found;
+    return { candidates: found, infoFormat };
   }
 
   private async loadWmts(
@@ -182,29 +191,51 @@ export class Map0AddLayerDialog extends LitElement {
   }
 
   private async add(): Promise<void> {
-    if (!this.core) return;
-    const url = this.service === "wms" ? this.cleanedUrl() : this.url.trim();
-    for (const c of this.candidates.filter((c) => c.selected)) {
-      const common = {
-        title: c.title,
-        ...(c.minZoom !== undefined ? { minZoom: c.minZoom } : {}),
-        ...(c.bounds ? { bounds: c.bounds } : {}),
-        ...(c.metadataUrl ? { metadata: { url: c.metadataUrl } } : {}),
-        ...(c.attribution ? { attribution: c.attribution } : {}),
-      };
-      const def: LayerDef =
-        this.service === "wms"
-          ? ({
-              type: "wms",
-              url,
-              layers: c.name,
-              ...(c.queryable ? { info: { format: this.infoFormat ?? "application/json" } } : {}),
-              ...common,
-            } satisfies WmsLayerDef)
-          : ({ type: "wmts", url, layer: c.name, ...common } satisfies WmtsLayerDef);
-      await this.core.addLayer(def as Exclude<LayerDef, { type: "group" }>);
+    if (!this.core || this.loading) return;
+    this.loading = true;
+    const seq = ++this.loadSeq;
+    const core = this.core;
+    const service = this.service;
+    this.error = "";
+    try {
+      const url = this.service === "wms" ? this.cleanedUrl() : this.url.trim();
+      for (const c of this.candidates.filter((c) => c.selected)) {
+        const common = {
+          title: c.title,
+          ...(c.minZoom !== undefined ? { minZoom: c.minZoom } : {}),
+          ...(c.bounds ? { bounds: c.bounds } : {}),
+          ...(c.metadataUrl ? { metadata: { url: c.metadataUrl } } : {}),
+          ...(c.attribution ? { attribution: c.attribution } : {}),
+        };
+        const def: LayerDef =
+          service === "wms"
+            ? ({
+                type: "wms",
+                url,
+                layers: c.name,
+                ...(c.queryable ? { info: { format: this.infoFormat ?? "application/json" } } : {}),
+                ...common,
+              } satisfies WmsLayerDef)
+            : ({ type: "wmts", url, layer: c.name, ...common } satisfies WmtsLayerDef);
+        const id = await core.addLayer(def as Exclude<LayerDef, { type: "group" }>);
+        if (seq !== this.loadSeq) return;
+        if (!id) throw new Error(this.t("layers.error"));
+        c.selected = false;
+      }
+      this.close();
+    } catch (e) {
+      if (seq === this.loadSeq) this.error = `${this.t("addLayer.failed")}: ${e instanceof Error ? e.message : e}`;
+    } finally {
+      if (seq === this.loadSeq) this.loading = false;
     }
-    this.close();
+  }
+
+  private resetCandidates(): void {
+    this.loadSeq++;
+    this.candidates = [];
+    this.infoFormat = undefined;
+    this.error = "";
+    this.loading = false;
   }
 
   /* ------------------------------ GeoJSON by URL ----------------------------- */
@@ -217,7 +248,8 @@ export class Map0AddLayerDialog extends LitElement {
    * becomes the layer's `crs`, which the URL form of `data` cannot carry.
    */
   private async addGeoJsonUrl(): Promise<void> {
-    if (!this.core) return;
+    if (!this.core || this.loading) return;
+    const core = this.core;
     const url = this.url.trim();
     if (!url) return;
     const policy = urlPolicyError(url);
@@ -226,9 +258,11 @@ export class Map0AddLayerDialog extends LitElement {
       return;
     }
     this.loading = true;
+    const seq = ++this.loadSeq;
     this.error = "";
     try {
       const geo = await loadGeoFile();
+      if (seq !== this.loadSeq) return;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`.trim());
       const resolved = new URL(url, location.href);
@@ -246,20 +280,24 @@ export class Map0AddLayerDialog extends LitElement {
         throw new Error(`${this.t("addLayer.notGeoJson")} (${e instanceof Error ? e.message : e})`);
       }
       const declared = declaredGeoJsonCrs(parsed);
+      if (seq !== this.loadSeq) return;
       const def: GeoJsonLayerDef = {
         type: "geojson",
         title: this.layerTitle.trim() || geo.titleFromFileName(fileName) || resolved.hostname,
         data: url,
         ...(declared && !isWgs84Code(declared) ? { crs: declared } : {}),
       };
-      const id = await this.core.addLayer(def);
+      const id = await core.addLayer(def);
+      if (seq !== this.loadSeq) return;
       if (!id) throw new Error(this.t("layers.error"));
-      void this.core.zoomToLayer(id);
+      await core.zoomToLayer(id);
+      if (seq !== this.loadSeq) return;
       this.close();
     } catch (e) {
+      if (seq !== this.loadSeq) return;
       this.error = `${this.t("addLayer.failed")}: ${e instanceof Error ? e.message : e}`;
     } finally {
-      this.loading = false;
+      if (seq === this.loadSeq) this.loading = false;
     }
   }
 
@@ -309,8 +347,7 @@ export class Map0AddLayerDialog extends LitElement {
                     ?data-active=${this.service === kind}
                     @click=${() => {
                       this.service = kind;
-                      this.candidates = [];
-                      this.error = "";
+                      this.resetCandidates();
                     }}
                   >
                     ${KIND_LABELS[kind]}
@@ -326,7 +363,7 @@ export class Map0AddLayerDialog extends LitElement {
               ? nothing
               : html`<button
                   class="btn btn-primary"
-                  ?disabled=${selectedCount === 0}
+                  ?disabled=${selectedCount === 0 || this.loading}
                   @click=${() => void this.add()}
                 >
                   ${t("addLayer.add")}${selectedCount > 0 ? ` (${selectedCount})` : ""}
@@ -357,7 +394,10 @@ export class Map0AddLayerDialog extends LitElement {
           required
           placeholder="https://…/geoserver/ows"
           .value=${this.url}
-          @input=${(e: Event) => (this.url = (e.target as HTMLInputElement).value)}
+          @input=${(e: Event) => {
+            this.url = (e.target as HTMLInputElement).value;
+            this.resetCandidates();
+          }}
         />
         <button type="submit" ?disabled=${this.loading}>${t("addLayer.load")}</button>
       </form>
@@ -419,7 +459,10 @@ export class Map0AddLayerDialog extends LitElement {
           required
           placeholder="https://…/data.geojson"
           .value=${this.url}
-          @input=${(e: Event) => (this.url = (e.target as HTMLInputElement).value)}
+          @input=${(e: Event) => {
+            this.url = (e.target as HTMLInputElement).value;
+            this.resetCandidates();
+          }}
         />
         <button type="submit" ?disabled=${this.loading}>${t("addLayer.add")}</button>
       </form>
