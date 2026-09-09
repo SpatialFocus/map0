@@ -55,7 +55,9 @@ export async function reviewRegressions(context, base, check, watchConsole) {
   check("concurrent additions with the same title both mount", sharing.ids.every(Boolean) && new Set(sharing.ids).size === 2);
   check("share links keep the current visibility and opacity of added URL layers", sharing.shared.visible === false && sharing.shared.opacity === 0.35);
 
-  await page.evaluate(async () => { await document.querySelector("map0-viewer").openDialog("add"); });
+  /* Kick the dialog off and wait for its render below — awaiting openDialog()'s own promise
+     failed once in CI with "Resulting promise was garbage collected" (run 34331759922). */
+  await page.evaluate(() => { void document.querySelector("map0-viewer").openDialog("add"); });
   await page.waitForSelector("map0-add-layer input[type=url]");
   const staleCandidates = await page.evaluate(async () => {
     const dialog = document.querySelector("map0-viewer").shadowRoot.querySelector("map0-add-layer");
