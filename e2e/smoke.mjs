@@ -776,6 +776,86 @@ try {
   check("no console errors on the phone", phoneNoise.length === 0, phoneNoise.join(" | "));
   await phone.close();
 
+  /* Ordinary count attributes and generated clusters must remain distinct in the renderer. */
+  const clusterNoise = [];
+  const clusterPage = await context.newPage();
+  watchConsole(clusterPage, clusterNoise);
+  await clusterPage.goto(`${BASE}/smoke.html`, { waitUntil: "domcontentloaded" });
+  await clusterPage.waitForFunction(() => !!document.querySelector("map0-viewer")?.api);
+  await clusterPage.evaluate(() => {
+    const viewer = document.querySelector("map0-viewer");
+    viewer.config = {
+      version: 1,
+      map: { center: [10, 0], zoom: 3 },
+      i18n: { locale: "en" },
+      basemaps: [{ type: "empty", title: "None" }],
+      controls: { layerSwitcher: false }, search: { enabled: false }, permalink: false,
+      layers: [{
+        id: "review-counts", type: "geojson", title: "Counts", cluster: true,
+        hover: { content: "{{name}}: {{point_count}}" },
+        data: {
+          type: "FeatureCollection",
+          features: [
+            { type: "Feature", properties: { name: "Survey", point_count: 5 }, geometry: { type: "Point", coordinates: [0, 0] } },
+            { type: "Feature", properties: { name: "A" }, geometry: { type: "Point", coordinates: [20, 0] } },
+            { type: "Feature", properties: { name: "B" }, geometry: { type: "Point", coordinates: [20.001, 0] } },
+          ],
+        },
+      }],
+    };
+  });
+  await clusterPage.waitForFunction(() => {
+    const api = document.querySelector("map0-viewer")?.api;
+    return api?.config.layers[0]?.id === "review-counts" && api.map.loaded();
+  });
+  const countHits = await clusterPage.evaluate(() => {
+    const { map } = document.querySelector("map0-viewer").api;
+    const rect = map.getCanvas().getBoundingClientRect();
+    const point = coords => {
+      const p = map.project(coords);
+      return { x: rect.x + p.x, y: rect.y + p.y };
+    };
+    return {
+      plain: point([0, 0]),
+      layers: map.queryRenderedFeatures(map.project([0, 0])).map(f => f.layer.id),
+    };
+  });
+  check("a point_count attribute renders as an ordinary point even with clustering enabled",
+    countHits.layers.includes("m0l-review-counts-circle") && !countHits.layers.includes("m0l-review-counts-cluster"));
+  await clusterPage.mouse.move(countHits.plain.x, countHits.plain.y);
+  const ordinaryHover = await clusterPage.waitForFunction(() =>
+    document.querySelector("map0-viewer").shadowRoot.querySelector(".hover-tip")?.textContent.trim() === "Survey: 5",
+  ).then(() => true).catch(() => false);
+  check("ordinary count attributes use the configured hover template", ordinaryHover);
+  await clusterPage.mouse.click(countHits.plain.x, countHits.plain.y);
+  const ordinaryPopup = await clusterPage.waitForFunction(() =>
+    document.querySelector("map0-viewer").shadowRoot.querySelector(".maplibregl-popup")?.textContent.includes("Survey"),
+  ).then(() => true).catch(() => false);
+  check("ordinary count attributes remain available in feature popups", ordinaryPopup);
+  await clusterPage.evaluate(() => {
+    document.querySelector("map0-viewer").shadowRoot.querySelector(".maplibregl-popup-close-button").click();
+  });
+  await clusterPage.waitForFunction(() => !document.querySelector("map0-viewer").api.map.isMoving());
+  const clusterPoint = await clusterPage.evaluate(() => {
+    const { map } = document.querySelector("map0-viewer").api;
+    const rect = map.getCanvas().getBoundingClientRect();
+    const p = map.project([20, 0]);
+    return { x: rect.x + p.x, y: rect.y + p.y };
+  });
+  await clusterPage.mouse.move(clusterPoint.x, clusterPoint.y);
+  const clusterHover = await clusterPage.waitForFunction(() =>
+    document.querySelector("map0-viewer").shadowRoot.querySelector(".hover-tip")?.textContent.trim() === "2 features",
+  ).then(() => true).catch(() => false);
+  check("generated clusters still show their aggregate count", clusterHover,
+    await clusterPage.evaluate(() => document.querySelector("map0-viewer").shadowRoot.querySelector(".hover-tip")?.textContent.trim() ?? "no tooltip"));
+  await clusterPage.mouse.click(clusterPoint.x, clusterPoint.y);
+  const expandedCluster = await clusterPage.waitForFunction(() =>
+    document.querySelector("map0-viewer").api.map.getZoom() > 3.5,
+  ).then(() => true).catch(() => false);
+  check("clicking a generated cluster still zooms in", expandedCluster);
+  check("no console errors while displaying ordinary counts and clusters", clusterNoise.length === 0, clusterNoise.join(" | "));
+  await clusterPage.close();
+
   /* ------------------------------------------------------------ invalid config */
   const errNoise = [];
   const errPage = await context.newPage();

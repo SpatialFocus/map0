@@ -169,6 +169,11 @@ export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer>
 
   featureInfo?(query: FeatureInfoQuery): Promise<FeatureInfoResult | null>;
 
+  /** Whether a rendered hit is a generated cluster belonging to this adapter. */
+  isCluster(_feature: MapGeoJSONFeature): boolean {
+    return false;
+  }
+
   /**
    * A click landed on one of this adapter's cluster bubbles: zoom in until it
    * breaks apart. Only clustering adapters implement it — a cluster hit on an

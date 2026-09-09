@@ -223,6 +223,43 @@ describe("cog", () => {
 describe("wfs", () => {
   const def = { url: "https://data.wien.gv.at/daten/geo", typeNames: "ogdwien:TRINKBRUNNENOGD" };
 
+  it.each(["1.1.0", "2.0.0"] as const)("replaces pasted operation params for WFS %s", (version) => {
+    const url = new URL(buildGetFeatureUrl({
+      ...def,
+      version,
+      url: "https://example.org/wfs?service=WFS&Request=GetCapabilities&REQUEST=DescribeFeatureType" +
+        "&version=1.0.0&typeName=old&typeNames=older&count=2&maxFeatures=3&startIndex=50" +
+        "&srsName=EPSG:3857&outputFormat=GML&map=/maps/at.map&api_key=abc",
+    }, { count: 100 }));
+    const entries = [...url.searchParams].map(([key, value]) => [key.toUpperCase(), value]);
+    expect(entries.filter(([key]) => key === "REQUEST")).toEqual([["REQUEST", "GetFeature"]]);
+    expect(entries.filter(([key]) => key === "VERSION")).toEqual([["VERSION", version]]);
+    expect(url.searchParams.get("map")).toBe("/maps/at.map");
+    expect(url.searchParams.get("api_key")).toBe("abc");
+    expect(url.searchParams.get("SRSNAME")).toBe("EPSG:4326");
+    expect(url.searchParams.get("OUTPUTFORMAT")).toBe("application/json");
+    expect(url.searchParams.has("STARTINDEX")).toBe(false);
+    const names = entries.map(([key]) => key);
+    expect(new Set(names).size).toBe(names.length);
+    expect(url.searchParams.get(version === "2.0.0" ? "COUNT" : "MAXFEATURES")).toBe("100");
+    expect(names).not.toContain(version === "2.0.0" ? "MAXFEATURES" : "COUNT");
+    expect(names).not.toContain(version === "2.0.0" ? "TYPENAME" : "TYPENAMES");
+  });
+
+  it("applies explicit parameters last regardless of their casing", () => {
+    const url = new URL(buildGetFeatureUrl({
+      ...def,
+      url: `${def.url}?CQL_FILTER=old&api_key=abc`,
+      params: { srsName: "urn:ogc:def:crs:EPSG::4326", outputFormat: "geojson", cql_filter: "BEZIRK=9" },
+    }, { count: 10, startIndex: 20 }));
+    const entries = [...url.searchParams].map(([key, value]) => [key.toUpperCase(), value]);
+    expect(entries.filter(([key]) => key === "SRSNAME")).toEqual([["SRSNAME", "urn:ogc:def:crs:EPSG::4326"]]);
+    expect(entries.filter(([key]) => key === "OUTPUTFORMAT")).toEqual([["OUTPUTFORMAT", "geojson"]]);
+    expect(entries.filter(([key]) => key === "CQL_FILTER")).toEqual([["CQL_FILTER", "BEZIRK=9"]]);
+    expect(url.searchParams.get("STARTINDEX")).toBe("20");
+    expect(url.searchParams.get("api_key")).toBe("abc");
+  });
+
   it("builds a 2.0.0 GetFeature URL with paging and WGS84 GeoJSON output", () => {
     const url = buildGetFeatureUrl(def, { count: 5000, startIndex: 5000 });
     expect(url).toContain("SERVICE=WFS");
@@ -337,6 +374,25 @@ describe("wfs", () => {
 describe("ogcapi-features", () => {
   const def = { url: "https://demo.ldproxy.net/zoomstack/collections/railway_stations" };
 
+  it.each(["", "/", "/items", "/items/"])("preserves query and fragment with path suffix %j", (suffix) => {
+    const url = new URL(buildItemsUrl({
+      url: `${def.url}${suffix}?api_key=abc%2F123&bbox=1,2,3,4#details`,
+      params: { datetime: "2026-01-01/2026-02-01" },
+    }, 100));
+    expect(url.pathname).toBe("/zoomstack/collections/railway_stations/items");
+    expect(url.searchParams.get("api_key")).toBe("abc/123");
+    expect(url.searchParams.get("bbox")).toBe("1,2,3,4");
+    expect(url.searchParams.get("datetime")).toBe("2026-01-01/2026-02-01");
+    expect(url.searchParams.get("limit")).toBe("100");
+    expect(url.hash).toBe("#details");
+  });
+
+  it("appends items to a relative collection URL before its query", () => {
+    const url = new URL(buildItemsUrl({ url: "/collections/trees?api_key=abc" }, 10));
+    expect(url.pathname).toBe("/collections/trees/items");
+    expect(url.searchParams.get("api_key")).toBe("abc");
+  });
+
   it("builds the items URL from a collection URL, params merged last", () => {
     expect(buildItemsUrl(def, 1000)).toBe(
       "https://demo.ldproxy.net/zoomstack/collections/railway_stations/items?f=json&limit=1000",
@@ -446,6 +502,21 @@ const UTM_33N_PROJJSON = {
 
 describe("geoparquet", () => {
   const geo: GeoMetadata = { primary_column: "geom", columns: { geom: {} } };
+
+  it("preserves int64 and uint64 values without losing precision or merging adjacent IDs", () => {
+    const ids = [9007199254740992n, 9007199254740993n, -9007199254740993n,
+      -9223372036854775808n, 9223372036854775807n, 18446744073709551615n];
+    const fc = featureCollectionFromRows(ids.map(id => ({ geom: null, id })), geo);
+    const decoded = JSON.parse(JSON.stringify(fc));
+    expect(decoded.features.map((f: { properties: { id: string } }) => f.properties.id))
+      .toEqual(ids.map(String));
+  });
+
+  it("keeps safe BigInts numeric, including both safe-integer boundaries", () => {
+    const values = [0n, 42n, -42n, 9007199254740991n, -9007199254740991n];
+    const fc = featureCollectionFromRows(values.map(value => ({ geom: null, value })), geo);
+    expect(fc.features.map(f => f.properties?.value)).toEqual(values.map(Number));
+  });
 
   it("turns rows into features, geometry column split from properties", () => {
     const fc = featureCollectionFromRows(
@@ -1528,36 +1599,5 @@ describe("permalink — which user-added layers travel (F3.5, F3.2)", () => {
     const wms = { type: "wms", id: "c", url: "https://e.org/ows", layers: "x" };
     expect(shareableLayerDefs([dropped, byUrl, wms])).toEqual([byUrl, wms]);
     expect(shareableLayerDefs([])).toEqual([]);
-  });
-});
-
-describe("geojson adapter — click on a cluster bubble", () => {
-  function mounted() {
-    const easeTo = vi.fn();
-    const getClusterExpansionZoom = vi.fn(async () => 11.5);
-    const map = { getSource: vi.fn(() => ({ getClusterExpansionZoom })), easeTo };
-    const adapter = new GeoJsonAdapter({ id: "trees", type: "geojson", data: "x.geojson" } as never);
-    (adapter as unknown as { ctx: unknown }).ctx = { map };
-    return { adapter, map, easeTo, getClusterExpansionZoom };
-  }
-
-  it("eases to the zoom at which the cluster splits", async () => {
-    const { adapter, map, easeTo, getClusterExpansionZoom } = mounted();
-    await adapter.expandCluster({
-      properties: { cluster: true, cluster_id: 42, point_count: 7 },
-      geometry: { type: "Point", coordinates: [16.37, 48.21] },
-    } as never);
-    expect(map.getSource).toHaveBeenCalledWith("m0s-trees");
-    expect(getClusterExpansionZoom).toHaveBeenCalledWith(42);
-    expect(easeTo).toHaveBeenCalledWith({ center: [16.37, 48.21], zoom: 11.5 });
-  });
-
-  it("does nothing for a feature that is not a cluster", async () => {
-    const { adapter, easeTo } = mounted();
-    await adapter.expandCluster({
-      properties: { name: "Linde" },
-      geometry: { type: "Point", coordinates: [0, 0] },
-    } as never);
-    expect(easeTo).not.toHaveBeenCalled();
   });
 });

@@ -42,11 +42,8 @@ export function wireFeatureInfo(
        click opened goes away */
     const ids = interactiveIds();
     const top = ids.length > 0 ? map.queryRenderedFeatures(e.point, { layers: ids })[0] : undefined;
-    const clusterOwner =
-      top && "point_count" in (top.properties ?? {})
-        ? layers.adapterForMapLayer(top.layer.id)
-        : undefined;
-    if (top && clusterOwner?.expandCluster) {
+    const clusterOwner = top ? layers.adapterForMapLayer(top.layer.id) : undefined;
+    if (top && clusterOwner?.isCluster(top) && clusterOwner.expandCluster) {
       highlight.set([]);
       emitter.emit("featureclick", { lngLat: [e.lngLat.lng, e.lngLat.lat], results: [] });
       await clusterOwner.expandCluster(top);
@@ -93,7 +90,7 @@ export function wireFeatureInfo(
       /* a cluster bubble carries MapLibre's aggregate properties, not the author's —
          their template would render blank, so say how many features it stands for */
       const html =
-        "point_count" in props
+        adapter?.isCluster(hit)
           ? `${escapeHtml(props.point_count)} ${escapeHtml(t("popup.cluster"))}`
           : renderTemplate(hover.content, props);
       payload = { point: [e.point.x, e.point.y], html };

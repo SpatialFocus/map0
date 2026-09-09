@@ -27,6 +27,7 @@ function harness(
   const adapter = {
     def: { id: "stations", hover },
     interactiveLayerIds: ["m0l-stations-circle", "m0l-stations-cluster"],
+    isCluster: (hit: { layer: { id: string } }) => hit.layer.id === "m0l-stations-cluster",
     featureInfo: vi.fn(async () => null),
     expandCluster: clusters ? vi.fn(async () => {}) : undefined,
   };
@@ -54,6 +55,12 @@ const CLUSTER: Hit = {
 const STATION: Hit = { layer: "m0l-stations-circle", properties: { name: "Leeds" } };
 
 describe("hover tooltip", () => {
+  it("renders ordinary point_count attributes through the configured template", () => {
+    const h = harness([{ ...STATION, properties: { name: "Leeds", point_count: 5 } }],
+      { content: "{{name}}: {{point_count}}" });
+    h.move();
+    expect(h.hovers).toEqual([{ point: [10, 20], html: "Leeds: 5" }]);
+  });
   it("renders the layer's template for a plain feature", () => {
     const h = harness([STATION], { content: "{{name}}" });
     h.move();
@@ -90,6 +97,12 @@ describe("hover tooltip", () => {
 });
 
 describe("click on a cluster bubble", () => {
+  it("queries ordinary features with a point_count attribute", async () => {
+    const h = harness([{ ...STATION, properties: { name: "Leeds", point_count: 5 } }], undefined);
+    await h.click();
+    expect(h.adapter.expandCluster).not.toHaveBeenCalled();
+    expect(h.adapter.featureInfo).toHaveBeenCalledTimes(1);
+  });
   it("zooms into the cluster instead of asking for feature info", async () => {
     const h = harness([CLUSTER, STATION], undefined);
     await h.click();

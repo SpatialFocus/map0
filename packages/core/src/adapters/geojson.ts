@@ -145,7 +145,13 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
       });
     } else {
       const expanded = expandSimpleStyle(this.def.style, accent);
-      const notClustered = cluster.enabled ? ["!", ["has", "point_count"]] : null;
+      const clusterFilter = [
+        "all",
+        ["==", ["get", "cluster"], true],
+        ["==", ["typeof", ["get", "cluster_id"]], "number"],
+        ["==", ["typeof", ["get", "point_count"]], "number"],
+      ];
+      const notClustered = cluster.enabled ? ["!", clusterFilter] : null;
       /* Only summarise a style the author actually wrote. Without a `style` key we
          render fill + line + circle speculatively (the geometry is unknown until the
          data arrives), and turning that guess into legend swatches invents symbols
@@ -210,7 +216,7 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
           id,
           type: "circle",
           source: this.srcId,
-          filter: ["has", "point_count"],
+          filter: clusterFilter as never,
           paint: {
             "circle-color": accent,
             "circle-opacity": 0.75,
@@ -285,7 +291,7 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
     ];
     const hits = map
       .queryRenderedFeatures(box, { layers: this.interactive.filter((id) => map.getLayer(id)) })
-      .filter((f) => !(f.properties && "point_count" in f.properties));
+      .filter((f) => !this.isCluster(f));
     if (hits.length === 0) return null;
     /* de-duplicate (tiled sources can return a feature multiple times) */
     const seen = new Set<string>();
@@ -308,8 +314,20 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
     };
   }
 
+  override isCluster(feature: MapGeoJSONFeature): boolean {
+    const props = feature.properties;
+    return this.clusterOpts.enabled &&
+      feature.source === this.srcId &&
+      this.ids.includes(feature.layer.id) &&
+      feature.geometry.type === "Point" &&
+      props?.cluster === true &&
+      typeof props.cluster_id === "number" &&
+      typeof props.point_count === "number";
+  }
+
   /** click on a cluster bubble: ease to the zoom at which MapLibre splits it */
   override async expandCluster(feature: MapGeoJSONFeature): Promise<void> {
+    if (!this.isCluster(feature)) return;
     const clusterId = feature.properties?.cluster_id;
     if (typeof clusterId !== "number" || feature.geometry.type !== "Point") return;
     const { map } = this.ctx;

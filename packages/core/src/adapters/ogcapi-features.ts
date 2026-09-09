@@ -23,11 +23,12 @@ export interface OgcApiRequest {
  * last and can override anything, including `f`.
  */
 export function buildItemsUrl(def: OgcApiRequest, limit: number): string {
-  const base = def.url.replace(/\/+$/, "");
   const url = new URL(
-    /\/items(\?|$)/.test(base) ? base : `${base}/items`,
+    def.url,
     typeof location !== "undefined" ? location.href : "http://localhost/",
   );
+  const path = url.pathname.replace(/\/+$/, "");
+  url.pathname = path.endsWith("/items") ? path : `${path}/items`;
   const merged: Record<string, string> = {
     f: "json",
     limit: String(limit),

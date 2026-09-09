@@ -31,7 +31,15 @@ export function buildGetFeatureUrl(
   const version = def.version ?? "2.0.0";
   const url = new URL(def.url, typeof location !== "undefined" ? location.href : "http://localhost/");
   const search = new URLSearchParams(url.search);
-  const merged: Record<string, string> = {
+  // Discard operation settings from pasted URLs, including names from the other WFS version.
+  const operationKeys = new Set([
+    "SERVICE", "VERSION", "REQUEST", "TYPENAME", "TYPENAMES", "SRSNAME", "OUTPUTFORMAT",
+    "COUNT", "MAXFEATURES", "STARTINDEX",
+  ]);
+  for (const key of [...search.keys()]) {
+    if (operationKeys.has(key.toUpperCase())) search.delete(key);
+  }
+  const defaults: Record<string, string> = {
     SERVICE: "WFS",
     VERSION: version,
     REQUEST: "GetFeature",
@@ -41,9 +49,14 @@ export function buildGetFeatureUrl(
     OUTPUTFORMAT: def.outputFormat ?? "application/json",
     [version === "2.0.0" ? "COUNT" : "MAXFEATURES"]: String(opts.count),
     ...(version === "2.0.0" && opts.startIndex ? { STARTINDEX: String(opts.startIndex) } : {}),
-    ...(def.params ?? {}),
   };
-  for (const [k, v] of Object.entries(merged)) search.set(k, v);
+  // WFS parameter names are case-insensitive. Explicit params still override the defaults.
+  for (const [key, value] of [...Object.entries(defaults), ...Object.entries(def.params ?? {})]) {
+    for (const existing of [...search.keys()]) {
+      if (existing.toUpperCase() === key.toUpperCase()) search.delete(existing);
+    }
+    search.set(key, value);
+  }
   url.search = search.toString();
   return url.toString();
 }

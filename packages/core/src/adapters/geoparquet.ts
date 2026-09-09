@@ -81,9 +81,13 @@ export function featureCollectionFromRows(
     const properties: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(row)) {
       if (geometryColumns.has(key)) continue;
-      /* int64 columns can decode to BigInt — JSON.stringify (popup de-dup,
-         share state) throws on those */
-      properties[key] = typeof value === "bigint" ? Number(value) : value;
+      // Keep small integers numeric and preserve larger identifiers as exact decimal strings.
+      if (typeof value === "bigint") {
+        const number = Number(value);
+        properties[key] = Number.isSafeInteger(number) ? number : value.toString();
+      } else {
+        properties[key] = value;
+      }
     }
     return { type: "Feature", geometry: (row[primary] ?? null) as Geometry, properties };
   });
