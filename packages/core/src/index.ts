@@ -16,6 +16,7 @@ import { wireFeatureInfo } from "./featureinfo.js";
 import { HighlightManager } from "./highlight.js";
 import { makeT, maplibreLocale, resolveLocale, type Translate } from "./i18n.js";
 import { LayerManager } from "./layers.js";
+import { attachLongPress } from "./long-press.js";
 import {
   claimShareParam,
   decodeShareState,
@@ -246,6 +247,7 @@ async function buildCore(
 
   /** teardown hooks for everything that outlives a single map event */
   const cleanups: Array<() => void> = [];
+  let destroyed = false;
   const layers = new LayerManager(map, cfg);
   const highlight = new HighlightManager(map, cfg.theme.primary);
   /** set while measuring: clicks set vertices instead of querying features */
@@ -317,6 +319,7 @@ async function buildCore(
       } catch (e) {
         events.emit("error", { message: String(e) });
       }
+      if (destroyed) return;
       /* restore shared layer state + user-added layers */
       if (initialShare?.l) {
         for (const [id, [vis, op]] of Object.entries(initialShare.l)) {
@@ -326,6 +329,7 @@ async function buildCore(
       }
       if (initialShare?.u) {
         for (const def of initialShare.u) {
+          if (destroyed) return;
           if (def && typeof def === "object" && def.type !== "group") {
             try {
               await layers.addLayer(def as never);
@@ -335,7 +339,8 @@ async function buildCore(
           }
         }
       }
-      wireFeatureInfo(map, layers, events, highlight, t, () => interactionLocked);
+      if (destroyed) return;
+      cleanups.push(wireFeatureInfo(map, layers, events, highlight, t, () => interactionLocked));
       if (!initialView.center && !initialView.bounds) {
         initialView.center = [map.getCenter().lng, map.getCenter().lat];
         initialView.zoom = map.getZoom();
@@ -380,6 +385,7 @@ async function buildCore(
     const crsList = cfg.controls.coordinates.crs;
     const emitAt = (lngLat: { lng: number; lat: number }): void => {
       void formatCoordinatesAsync(lngLat.lng, lngLat.lat, crsList).then((entries) => {
+        if (destroyed) return;
         events.emit("coordinates", { lngLat: [lngLat.lng, lngLat.lat], entries });
       });
     };
@@ -387,33 +393,7 @@ async function buildCore(
       e.preventDefault();
       emitAt(e.lngLat);
     });
-    /* long-press: pointerdown that stays put for 600 ms */
-    const canvas = map.getCanvas();
-    let pressTimer: ReturnType<typeof setTimeout> | undefined;
-    let pressStart: { x: number; y: number } | null = null;
-    canvas.addEventListener("pointerdown", (e) => {
-      if (e.pointerType !== "touch") return;
-      pressStart = { x: e.clientX, y: e.clientY };
-      pressTimer = setTimeout(() => {
-        const rect = canvas.getBoundingClientRect();
-        const lngLat = map.unproject([pressStart!.x - rect.left, pressStart!.y - rect.top]);
-        emitAt(lngLat);
-      }, 600);
-    });
-    const cancelPress = (e: PointerEvent): void => {
-      if (
-        e.type === "pointermove" &&
-        pressStart &&
-        Math.hypot(e.clientX - pressStart.x, e.clientY - pressStart.y) < 8
-      ) {
-        return;
-      }
-      clearTimeout(pressTimer);
-      pressStart = null;
-    };
-    canvas.addEventListener("pointermove", cancelPress);
-    canvas.addEventListener("pointerup", cancelPress);
-    canvas.addEventListener("pointercancel", cancelPress);
+    cleanups.push(attachLongPress(map.getCanvas(), point => emitAt(map.unproject(point))));
   }
 
   return {
@@ -424,7 +404,11 @@ async function buildCore(
     events,
     t,
     locale,
-    setBasemap: (id) => void basemaps.switchTo(id),
+    setBasemap: (id) => {
+      void basemaps.switchTo(id).catch(e => {
+        if (!destroyed) events.emit("error", { message: e instanceof Error ? e.message : String(e) });
+      });
+    },
     setLayerVisibility: (id, v) => layers.setVisibility(id, v),
     setLayerOpacity: (id, o) => layers.setOpacity(id, o),
     addLayer: (def) => layers.addLayer(def),
@@ -448,7 +432,10 @@ async function buildCore(
     },
     getShareUrl,
     destroy: () => {
+      if (destroyed) return;
+      destroyed = true;
       for (const c of cleanups) c();
+      basemaps.destroy();
       /* detach adapters and their listeners while the style is still there */
       layers.destroy();
       shareClaim?.release();

@@ -56,6 +56,8 @@ export class MeasureController {
   private dragIndex: number | null = null;
   private labels: Marker[] = [];
   private listeners: Array<() => void> = [];
+  private endDrag?: () => void;
+  private restoreDoubleClickZoom = false;
 
   constructor(
     private readonly map: MapLibreMap,
@@ -81,6 +83,7 @@ export class MeasureController {
     this.active = true;
     this.ensureLayers();
     this.map.getCanvas().style.cursor = "crosshair";
+    this.restoreDoubleClickZoom = this.map.doubleClickZoom.isEnabled();
     this.map.doubleClickZoom.disable();
 
     const on = <T>(type: string, handler: (e: T) => void): void => {
@@ -135,6 +138,7 @@ export class MeasureController {
 
   /** remove the measurement and leave measure mode */
   stop(): void {
+    this.endDrag?.();
     for (const off of this.listeners) off();
     this.listeners = [];
     this.active = false;
@@ -144,7 +148,8 @@ export class MeasureController {
     this.clearLabels();
     if (this.map.getSource(SRC)) this.setData([]);
     this.map.getCanvas().style.cursor = "";
-    this.map.doubleClickZoom.enable();
+    if (this.restoreDoubleClickZoom) this.map.doubleClickZoom.enable();
+    this.restoreDoubleClickZoom = false;
     this.state.value = null;
   }
 
@@ -188,19 +193,23 @@ export class MeasureController {
 
   /** grab a vertex: suppress map panning until the pointer is released */
   private onVertexDown(e: MapMouseEvent): void {
+    if (this.dragIndex !== null) return;
     const hits = this.map.queryRenderedFeatures(e.point, { layers: [L_VERTEX] });
     const index = hits[0]?.properties?.index;
     if (typeof index !== "number") return;
     e.preventDefault();
     this.dragIndex = index;
+    const restorePan = this.map.dragPan.isEnabled();
     this.map.dragPan.disable();
     this.map.getCanvas().style.cursor = "grabbing";
     const onUp = (): void => {
       this.dragIndex = null;
-      this.map.dragPan.enable();
+      if (restorePan) this.map.dragPan.enable();
       this.map.getCanvas().style.cursor = this.finished ? "" : "crosshair";
       this.map.off("mouseup", onUp);
+      this.endDrag = undefined;
     };
+    this.endDrag = onUp;
     this.map.on("mouseup", onUp);
   }
 

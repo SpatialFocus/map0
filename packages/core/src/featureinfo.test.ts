@@ -38,14 +38,15 @@ function harness(
   emitter.on("featurehover", (p) => hovers.push(p));
   emitter.on("featureclick", (p) => clicks.push(p));
   const highlight = { set: vi.fn() };
-  wireFeatureInfo(map as never, layers as never, emitter, highlight as never, makeT(locale));
+  let locked = false;
+  const dispose = wireFeatureInfo(map as never, layers as never, emitter, highlight as never, makeT(locale), () => locked);
   const move = () => handlers.get("mousemove")!({ point: { x: 10, y: 20 } });
   const click = () =>
     handlers.get("click")!({
       point: { x: 10, y: 20 },
       lngLat: { lng: -1.5, lat: 53.8 },
     }) as Promise<void>;
-  return { move, click, hovers, clicks, adapter, highlight };
+  return { move, click, hovers, clicks, adapter, highlight, dispose, lock: () => { locked = true; } };
 }
 
 const CLUSTER: Hit = {
@@ -53,6 +54,18 @@ const CLUSTER: Hit = {
   properties: { cluster: true, cluster_id: 7, point_count: 12, point_count_abbreviated: 12 },
 };
 const STATION: Hit = { layer: "m0l-stations-circle", properties: { name: "Leeds" } };
+
+it.each(["dispose", "lock"] as const)("ignores a pending feature response after %s", async action => {
+  const h = harness([STATION], undefined);
+  let finish!: (value: null) => void;
+  h.adapter.featureInfo.mockImplementation(() => new Promise<null>(resolve => { finish = resolve; }));
+  const pending = h.click();
+  h[action]();
+  finish(null);
+  await pending;
+  expect(h.clicks).toEqual([]);
+  expect(h.highlight.set).not.toHaveBeenCalled();
+});
 
 describe("hover tooltip", () => {
   it("renders ordinary point_count attributes through the configured template", () => {

@@ -53,7 +53,7 @@ export function wireFeatureInfo(
     const settled = await Promise.allSettled(
       adapters.map((a) => a.featureInfo!({ lngLat: e.lngLat, point: e.point })),
     );
-    if (seq !== requestSeq) return; // a newer click superseded this one
+    if (seq !== requestSeq || isLocked()) return;
     const results: FeatureInfoResult[] = [];
     for (const s of settled) {
       if (s.status === "fulfilled" && s.value) results.push(s.value);
@@ -113,6 +113,7 @@ export function wireFeatureInfo(
   map.on("mousemove", onMove as never);
   map.on("mouseout", onLeave as never);
   return () => {
+    requestSeq++;
     map.off("click", onClick as never);
     map.off("mousemove", onMove as never);
     map.off("mouseout", onLeave as never);
