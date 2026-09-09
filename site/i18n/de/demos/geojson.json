@@ -1,17 +1,17 @@
 {
-  "title": "GeoJSON &amp; Clustering — map0-Demos",
+  "title": "GeoJSON &amp; Clustering | map0-Demos",
   "h1": "GeoJSON &amp; Clustering",
   "eyebrow": "Datenquellen",
-  "lede": "Vier Wege, Features auf die Karte zu bringen — ein externer Dienst in WGS84, einer in einem projizierten CRS, eine Datei neben der Seite und eine FeatureCollection, direkt in die Config geschrieben.",
-  "note": "<strong>Ausprobieren:</strong> ~2400 Trinkbrunnen kommen als ein einziges GeoJSON-Dokument an und werden auf der GPU geclustert. Hineinzoomen, bis die Cluster aufbrechen, und mit „Auf Ebene zoomen“ im Layer-Panel zur lokalen Demo-Datei springen.",
+  "lede": "Vier Möglichkeiten, Vektordaten zu laden: ein Dienst in WGS84, ein Dienst mit projiziertem Koordinatensystem, eine Datei neben der Seite und eine FeatureCollection direkt in der Konfiguration.",
+  "note": "<strong>Ausprobieren:</strong> Rund 2.400 Trinkbrunnen werden als ein GeoJSON-Dokument geladen. MapLibre fasst benachbarte Punkte zu Clustern zusammen. Hineinzoomen zeigt die einzelnen Brunnen. Mit „Auf Ebene zoomen“ im Layer-Panel lässt sich anschließend die lokale Demo-Datei anzeigen.",
   "what.h2": "Was diese Demo zeigt",
-  "what.li1": "<code>data</code> akzeptiert eine URL oder ein Inline-GeoJSON-Objekt — hier eine WFS-Antwort, eine statische Datei und ein Literal",
+  "what.li1": "<code>data</code> akzeptiert eine URL oder ein GeoJSON-Objekt, hier am Beispiel einer WFS-Antwort, einer statischen Datei und eingebetteter Daten",
   "what.li2": "Clustering ist ein einziger Config-Eintrag; die Gruppierung übernimmt MapLibre",
   "what.li3": "Der vereinfachte Style (<code>circle-*</code>, <code>line-*</code>, <code>fill-*</code>) wird je Geometrietyp zu vollwertigen Style-Layern expandiert",
   "what.li4": "„Auf Ebene zoomen“ berechnet die Bounding Box aus den Daten selbst",
-  "what.li5": "<code>crs</code> nimmt ein Dokument, das nicht in WGS84 vorliegt — die U-Bahn-Stationen kommen in Gauß-Krüger M34 (EPSG:31256) an und werden beim Laden umprojiziert",
-  "what.p": "Bei einem WFS besteht der Trick darin, einfach GeoJSON anzufordern: <code>outputFormat=json</code> und <code>srsName=EPSG:4326</code> an einen GetFeature-Request angehängt, und die Antwort ist eine Quelle, die map0 direkt verwenden kann — oder man lässt den Dienst in seinem nativen CRS und setzt <code>crs</code> am Layer, wie bei den U-Bahn-Stationen. Oder man spart sich das URL-Basteln: der eigene <a href=\"/demos/wfs.html\"><code>wfs</code>-Layer-Typ</a> macht genau das, plus Paging.",
+  "what.li5": "<code>crs</code> legt das Ausgangskoordinatensystem fest. Die U-Bahn-Stationen liegen in Gauß-Krüger M34 (EPSG:31256) vor und werden beim Laden nach WGS84 umgerechnet.",
+  "what.p": "Ein WFS mit GeoJSON-Unterstützung kann als GeoJSON-Quelle dienen. Dazu werden das unterstützte <code>outputFormat</code> und <code>srsName=EPSG:4326</code> in der GetFeature-URL angegeben. Für Daten in einem anderen Koordinatensystem wird <code>crs</code> am Layer gesetzt, wie bei den U-Bahn-Stationen. Der eigene <a href=\"/demos/wfs.html\"><code>wfs</code>-Layer-Typ</a> erstellt die Anfrage-URL und ergänzt das seitenweise Laden für WFS 2.0.",
   "config.h2": "Konfiguration",
   "full.h2": "Volle Kontrolle über den Style",
-  "full.p": "Wenn das flache Style-Objekt nicht reicht, tut es stattdessen ein Array von Layern nach MapLibre-Style-Spec — Expressions, Filter, alles. map0 injiziert die Quelle und behält die Layer-Reihenfolge bei:"
+  "full.p": "Für mehr Gestaltungsmöglichkeiten kann ein Array von MapLibre-Style-Layern mit Ausdrücken und Filtern angegeben werden. map0 weist die Datenquelle zu und behält die Layer-Reihenfolge bei:"
 }

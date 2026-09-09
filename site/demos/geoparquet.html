@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title data-i18n="title">GeoParquet — map0 demos</title>
+    <title data-i18n="title">GeoParquet | map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -14,26 +14,25 @@
         <p class="eyebrow" data-i18n="eyebrow">Data sources</p>
         <h1>GeoParquet</h1>
         <p class="lede" data-i18n="lede">
-          Vector features from a columnar file on plain storage — decoded in the browser, rendered
-          like GeoJSON. The 4,522 trees below travel as 121&nbsp;KB; the same data as GeoJSON is
-          2.6&nbsp;MB on the wire.
+          GeoParquet stores vector data in a compressed, columnar file. map0 downloads the file,
+          decodes it in the browser and displays it like GeoJSON. The 4,522 trees below occupy
+          121&nbsp;KB as GeoParquet, compared with 2.6&nbsp;MB as uncompressed GeoJSON.
         </p>
       </div>
 
       <map0-viewer config-src="/configs/geoparquet.map0.json"></map0-viewer>
       <p class="demo-note" data-i18n="note">
-        <strong>Try it:</strong> open the network tab and reload — the whole tree cadastre of
-        Vienna's first district arrives as one 121&nbsp;KB file. Hover a tree for its species,
-        click for the full record, and use "zoom to layer" on the district boundaries: the extent
-        comes from the file's own metadata, no coordinate scan needed.
+        <strong>Try it:</strong> open the network tab and reload the page. The tree dataset for
+        Vienna’s first district loads as a single 121&nbsp;KB file. Hover over a tree to see its
+        species or click for its attributes. “Zoom to layer” on the district boundaries uses the
+        extent stored in the file’s metadata.
       </p>
 
       <section class="doc">
         <h2 data-i18n="config.h2">Configuration</h2>
         <p data-i18n="config.p">
-          A <code>geoparquet</code> layer is a <code>geojson</code> layer with a <code>url</code>
-          instead of <code>data</code> — styling, clustering, popups and hover tooltips are the
-          same options, because after decoding, the features run through the same pipeline.
+          A <code>geoparquet</code> layer uses <code>url</code> to reference a file. Its styling,
+          clustering, popup and hover options match those of a <code>geojson</code> layer.
         </p>
         <pre data-src="/configs/geoparquet.map0.json" data-label="geoparquet.map0.json" data-emphasise="&quot;geoparquet&quot;,&quot;url&quot;"></pre>
       </section>
@@ -41,36 +40,48 @@
       <section class="doc">
         <h2 data-i18n="what.h2">What this demo shows</h2>
         <ul class="checks">
-          <li data-i18n="what.li1">A <code>geoparquet</code> layer needs a <code>url</code> — the file is fetched once and decoded in the browser</li>
-          <li data-i18n="what.li2">Points and polygons from separate files; the simplified style and the full style-spec form both work</li>
-          <li data-i18n="what.li3">Popups, hover tooltips, clustering and <code>promoteId</code> — exactly the <code>geojson</code> options</li>
-          <li data-i18n="what.li4">"Zoom to layer" reads the extent from the GeoParquet metadata instead of scanning coordinates</li>
-          <li data-i18n="what.li5">The decoder (hyparquet, ~22 KB) loads on demand — and the extra-codec bundle (~76 KB more) only for files not compressed with snappy</li>
+          <li data-i18n="what.li1">
+            Set <code>url</code> to a GeoParquet file; map0 downloads and decodes the complete file
+            in the browser
+          </li>
+          <li data-i18n="what.li2">
+            Points and polygons from separate files, with both simplified styles and MapLibre style
+            layers
+          </li>
+          <li data-i18n="what.li3">
+            The same popup, hover, clustering and <code>promoteId</code> options as for GeoJSON
+          </li>
+          <li data-i18n="what.li4">
+            "Zoom to layer" reads the extent from the GeoParquet metadata instead of scanning
+            coordinates
+          </li>
+          <li data-i18n="what.li5">
+            The decoder (hyparquet, ~22 KB) loads on demand. Additional codecs (~76 KB) load only
+            for compression other than Snappy; uncompressed files also use the base decoder.
+          </li>
         </ul>
         <p data-i18n="what.p1">
-          The transfer story, measured on this page's tree layer: 2.6&nbsp;MB as raw GeoJSON,
-          215&nbsp;KB as gzipped GeoJSON, 121&nbsp;KB as GeoParquet. The compression lives inside
-          the file, so a plain bucket with no <code>Content-Encoding</code> configuration still
-          serves the small number — and the browser parses a compact columnar buffer instead of
-          megabytes of JSON text.
+          For the tree dataset on this page, the sizes are 2.6&nbsp;MB as uncompressed GeoJSON,
+          215&nbsp;KB as gzipped GeoJSON and 121&nbsp;KB as GeoParquet. GeoParquet compresses data
+          within the file, so these savings also apply on static storage without HTTP compression.
         </p>
         <div class="callout" data-i18n="callout">
-          <strong>Any CRS, whole-file loading.</strong>
-          Coordinates are read in the CRS the file's metadata declares — WGS84 goes straight
-          through, anything else is reprojected on load with proj4 (registry codes such as Austrian
-          GK or ETRS89 UTM use map0's own definitions, datum shift included; a <code>crs</code>
-          key on the layer overrides a file whose definition cannot be resolved).
-          And like a GeoJSON URL, the whole file is downloaded and decoded: well suited up to a few
-          MB / a few hundred thousand features, not a streaming format. For city-to-country-scale
-          vector data, cut vector tiles instead (PMTiles works from the same kind of bucket).
+          <strong>Coordinate systems and file size.</strong> map0 reads the coordinate system from
+          the file’s metadata. It uses WGS84 directly and transforms other supported systems with
+          proj4 when loading. Built-in definitions include Austrian GK and ETRS89 UTM. You can
+          supply a <code>crs</code> setting if the file’s definition cannot be resolved. The entire
+          file is downloaded and decoded, so loading time and memory use depend on its size and
+          geometry complexity. For large datasets, vector tiles such as PMTiles allow loading by map
+          view.
         </div>
       </section>
 
       <section class="doc">
         <h2 data-i18n="produce.h2">Producing GeoParquet</h2>
         <p data-i18n="produce.p1">
-          Any recent GDAL or DuckDB writes valid GeoParquet — including the metadata this layer
-          type relies on (the WGS84 reprojection is optional: map0 reprojects on load otherwise):
+          GDAL with Parquet support and DuckDB with the spatial extension can create GeoParquet
+          files. The examples below include the geometry metadata map0 requires. Converting to WGS84
+          beforehand is optional when map0 supports the source CRS:
         </p>
         <pre data-lang="bash" data-label="GDAL">
           ogr2ogr -f Parquet trees.parquet trees.gpkg -t_srs EPSG:4326</pre>
@@ -79,22 +90,21 @@
           COPY (SELECT * FROM ST_Read('trees.geojson'))
             TO 'trees.parquet' (FORMAT PARQUET, COMPRESSION SNAPPY);</pre>
         <p data-i18n="produce.p2">
-          The files on this page come from the City of Vienna's open-data WFS, converted with
-          DuckDB exactly like that (district boundaries simplified to ~20&nbsp;m for size). Snappy,
-          gzip, brotli, zstd and lz4 compression all decode; plain Parquet without the
-          <code>geo</code> metadata is rejected with a message saying how to convert it.
+          The files on this page were converted from the City of Vienna’s open-data WFS using
+          DuckDB. District boundaries were simplified with a tolerance of about 20&nbsp;m to reduce
+          file size. map0 supports Snappy, gzip, brotli, zstd and lz4 compression. Files without
+          <code>geo</code> metadata are rejected.
         </p>
       </section>
 
       <section class="doc">
-        <h2 data-i18n="when.h2">When to reach for GeoParquet</h2>
+        <h2 data-i18n="when.h2">When to use GeoParquet</h2>
         <p data-i18n="when.p1">
-          It fills the gap between GeoJSON and vector tiles: the publishing simplicity of a single
-          file on any static bucket — no tile cutting, no server — at a transfer size that keeps
-          medium datasets comfortable on mobile connections. It is also what modern data pipelines
-          already speak: the file your data engineer hands you renders directly, attributes intact,
-          no export step. For datasets that outgrow it, PMTiles (vector tiles in one file, also
-          server-less) takes over.
+          GeoParquet is useful for publishing a complete vector dataset as one file on a web server
+          or object storage. It can reduce download size compared with GeoJSON while keeping
+          geometries and attributes together. If your data processing tools already produce
+          GeoParquet, you can use that file directly. For datasets too large to load in full,
+          consider vector tiles such as PMTiles.
         </p>
       </section>
     </main>

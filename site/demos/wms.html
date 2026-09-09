@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title data-i18n="title">WMS — map0 demos</title>
+    <title data-i18n="title">WMS | map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -21,19 +21,30 @@
 
       <map0-viewer config-src="/configs/wms.map0.json"></map0-viewer>
       <p class="demo-note" data-i18n="note">
-        <strong>Try it:</strong> click anywhere on the zoning plan to query the service, drag the
-        opacity slider in the layer panel, and switch on the tree register — it only draws from zoom
-        15, so the panel tells you why nothing appears yet.
+        <strong>Try it:</strong> click the zoning plan to query the service, adjust opacity in the
+        layer panel, then enable the tree cadastre. Trees appear from zoom level 15; the panel shows
+        when a layer is outside its zoom range.
       </p>
 
       <section class="doc">
         <h2 data-i18n="what.h2">What this demo shows</h2>
         <ul class="checks">
-          <li data-i18n="what.li1">WMS layers requested as tiles in <code>EPSG:3857</code> (a requirement of MapLibre — see decision D-02)</li>
-          <li data-i18n="what.li2"><code>info</code> turns a layer into a queryable one: clicks become GetFeatureInfo requests</li>
-          <li data-i18n="what.li3"><code>legend: "auto"</code> pulls a GetLegendGraphic image into the legend panel</li>
-          <li data-i18n="what.li4"><code>minZoom</code> keeps a heavy layer off small scales, and the layer panel explains the gap</li>
-          <li data-i18n="what.li5"><code>metadata.url</code> links the layer to its catalogue record — the SDI connection</li>
+          <li data-i18n="what.li1">
+            WMS layers requested as tiles in <code>EPSG:3857</code>, the CRS required for raster
+            rendering in map0
+          </li>
+          <li data-i18n="what.li2">
+            <code>info</code> turns a layer into a queryable one: clicks become GetFeatureInfo
+            requests
+          </li>
+          <li data-i18n="what.li3">
+            <code>legend: "auto"</code> pulls a GetLegendGraphic image into the legend panel
+          </li>
+          <li data-i18n="what.li4">
+            <code>minZoom</code> keeps a heavy layer off small scales, and the layer panel explains
+            the gap
+          </li>
+          <li data-i18n="what.li5"><code>metadata.url</code> links a layer to its catalogue entry</li>
         </ul>
         <p data-i18n="what.p">
           map0 builds the GetMap URL for you, including the axis-order-safe <code>CRS</code>
@@ -41,9 +52,8 @@
           (a MapServer <code>map=</code> path, for example).
         </p>
         <div class="callout" data-i18n="callout">
-          <strong>Browser-direct, no proxy</strong>
-          Capabilities, tiles and GetFeatureInfo are fetched straight from the service, so it has to
-          send CORS headers. The City of Vienna services used here do.
+          <strong>Direct browser access.</strong> Capabilities, tiles and GetFeatureInfo responses
+          are loaded directly from the service. Its CORS headers must allow access from the page.
         </div>
       </section>
 

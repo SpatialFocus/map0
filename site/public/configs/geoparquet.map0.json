@@ -17,7 +17,7 @@
     {
       "id": "baumkataster",
       "type": "geoparquet",
-      "title": "Tree cadastre — 1st district",
+      "title": "Tree cadastre, 1st district",
       "url": "/data/vienna-trees-1010.parquet",
       "style": {
         "circle-color": "#15803d",
@@ -36,7 +36,7 @@
           { "key": "OBJEKT_STRASSE", "label": "Location" }
         ]
       },
-      "attribution": "Stadt Wien — data.wien.gv.at"
+      "attribution": "Stadt Wien, data.wien.gv.at"
     },
     {
       "id": "bezirksgrenzen",
@@ -50,7 +50,7 @@
         "line-width": 1.5
       },
       "popup": { "title": "{{NAMEK}}", "fields": [{ "key": "BEZNR", "label": "District no." }] },
-      "attribution": "Stadt Wien — data.wien.gv.at"
+      "attribution": "Stadt Wien, data.wien.gv.at"
     }
   ]
 }

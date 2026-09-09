@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title data-i18n="title">Search — map0 demos</title>
+    <title data-i18n="title">Search | map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -14,32 +14,43 @@
         <p class="eyebrow" data-i18n="eyebrow">Map features</p>
         <h1 data-i18n="h1">Search</h1>
         <p class="lede" data-i18n="lede">
-          Type-ahead search for places and addresses. The service behind it is a config choice —
-          two are built in, and an SDI can point the same box at its own gazetteer.
+          Search for places and addresses with suggestions as you type. Choose Photon, Nominatim or
+          a custom geocoder in the config.
         </p>
       </div>
 
       <map0-viewer config-src="/configs/search.map0.json"></map0-viewer>
       <p class="demo-note" data-i18n="note">
-        <strong>Try it:</strong> type <code>stephansplatz</code>, or a district, or a mountain. Arrow
-        keys move through the list, Enter picks. Paste <code>47.2692, 11.4041</code> and it is
-        recognised as a coordinate instead of a query.
+        <strong>Try it:</strong> enter <code>stephansplatz</code>, a district or a mountain. Use the
+        arrow keys to select a result and Enter to open it. Try <code>47.2692, 11.4041</code> for a
+        coordinate search.
       </p>
 
       <section class="doc">
         <h2 data-i18n="what.h2">What this demo shows</h2>
         <ul class="checks">
-          <li data-i18n="what.li1">Debounced type-ahead — one request per pause, and a slow answer never overwrites a newer one</li>
-          <li data-i18n="what.li2">Results are biased toward the current view, so nearby matches come first</li>
-          <li data-i18n="what.li3">Keyboard operation throughout: arrows, Enter, Escape; the list is a proper <code>combobox</code>/<code>listbox</code></li>
-          <li data-i18n="what.li4">Picking a hit flies to it and marks it with the same highlight the map uses for selected features</li>
-          <li data-i18n="what.li5">Coordinate input (<code>lat, lon</code>) short-circuits the service entirely</li>
+          <li data-i18n="what.li1">
+            Search requests wait for a pause in typing; outdated responses are discarded
+          </li>
+          <li data-i18n="what.li2">
+            The current map view helps prioritise nearby results where the provider supports it
+          </li>
+          <li data-i18n="what.li3">
+            Keyboard operation throughout: arrows, Enter, Escape; the list is a proper
+            <code>combobox</code>/<code>listbox</code>
+          </li>
+          <li data-i18n="what.li4">
+            Picking a hit flies to it and marks it with the same highlight the map uses for selected
+            features
+          </li>
+          <li data-i18n="what.li5">
+            Coordinate input (<code>lat, lon</code>) short-circuits the service entirely
+          </li>
         </ul>
         <div class="callout" data-i18n="callout">
-          <strong>Photon is the default, not the commitment</strong>
-          The built-in default is Photon (OSM data, made for type-ahead). Public instances come with
-          fair-use expectations — for production, self-host it or point the config at the gazetteer
-          your organisation is required to use.
+          <strong>Choose a search provider.</strong> Photon is the default provider. Configure the
+          service URL to use your own instance or another supported geocoder. Check the operator’s
+          usage terms before using a public instance.
         </div>
       </section>
 
@@ -66,10 +77,9 @@
           }
         </pre>
         <p data-i18n="custom.p2">
-          <code>format: "geojson"</code> expects a FeatureCollection of points — the same shape
-          Photon and most OGC API Features endpoints return. <code>"nominatim"</code> handles the
-          classic array with <code>lat</code>/<code>lon</code>/<code>display_name</code>. Either way
-          the service must send CORS headers, because the browser calls it directly.
+          <code>format: "geojson"</code> expects a FeatureCollection of points.
+          <code>"nominatim"</code> expects an array with <code>lat</code>, <code>lon</code> and
+          <code>display_name</code>. The service must allow direct browser access through CORS.
         </p>
       </section>
 

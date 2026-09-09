@@ -33,7 +33,7 @@
         "url": "https://www.data.gv.at/katalog/dataset?q=Fl%C3%A4chenwidmung+Wien",
         "title": "Dataset on data.gv.at"
       },
-      "attribution": "Stadt Wien — data.wien.gv.at"
+      "attribution": "Stadt Wien, data.wien.gv.at"
     },
     {
       "id": "baumkataster",
@@ -44,7 +44,7 @@
       "visible": false,
       "minZoom": 15,
       "info": { "format": "application/json" },
-      "attribution": "Stadt Wien — data.wien.gv.at"
+      "attribution": "Stadt Wien, data.wien.gv.at"
     }
   ],
   "controls": { "legend": { "open": true } }

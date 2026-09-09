@@ -98,15 +98,15 @@ function render(): void {
   if (result.valid) {
     status.textContent =
       LANG === "de"
-        ? `Gültig — die Karte öffnet sich${warnings}`
-        : `Valid — the map opens${warnings}`;
+        ? `Gültig: die Karte öffnet sich${warnings}`
+        : `Valid: the map opens${warnings}`;
     status.classList.add("ok");
   } else {
     const e = result.errors.length;
     status.textContent =
       LANG === "de"
-        ? `${e} Fehler${warnings} — der Viewer zeigt sie statt einer Karte an`
-        : `${e} error${e === 1 ? "" : "s"}${warnings} — the viewer renders these instead of a map`;
+        ? `${e} Fehler${warnings}: der Viewer zeigt sie statt einer Karte an`
+        : `${e} error${e === 1 ? "" : "s"}${warnings}: the viewer renders these instead of a map`;
     status.classList.add("bad");
   }
   for (const e of result.errors) row(list, "error", e.path, e.message);

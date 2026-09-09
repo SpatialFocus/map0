@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title data-i18n="title">WMTS — map0 demos</title>
+    <title data-i18n="title">WMTS | map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -21,28 +21,38 @@
 
       <map0-viewer config-src="/configs/wmts.map0.json"></map0-viewer>
       <p class="demo-note" data-i18n="note">
-        <strong>Try it:</strong> two WMTS layers from basemap.at over a grey basemap — terrain
-        shading at 70&nbsp;% opacity and a label overlay on top.
+        <strong>Try it:</strong> compare two basemap.at WMTS layers over a grey basemap: hillshading
+        at 70&nbsp;% opacity and a labels overlay.
       </p>
 
       <section class="doc">
         <h2 data-i18n="what.h2">What this demo shows</h2>
         <ul class="checks">
-          <li data-i18n="what.li1">No hand-written tile template — <code>url</code> points at <code>WMTSCapabilities.xml</code></li>
-          <li data-i18n="what.li2">map0 picks the first WebMercator-compatible tile matrix set and warns when a layer offers none</li>
-          <li data-i18n="what.li3">REST and KVP services both work; matrix identifiers like <code>EPSG:900913:7</code> are mapped onto <code>{z}</code></li>
-          <li data-i18n="what.li4">Zoom range, default style, bounds and legend come from the capabilities document</li>
+          <li data-i18n="what.li1">
+            <code>url</code> points to <code>WMTSCapabilities.xml</code>; map0 reads the tile
+            template from it
+          </li>
+          <li data-i18n="what.li2">
+            map0 picks the first WebMercator-compatible tile matrix set and warns when a layer
+            offers none
+          </li>
+          <li data-i18n="what.li3">
+            REST and KVP services both work; matrix identifiers like <code>EPSG:900913:7</code> are
+            mapped onto <code>{z}</code>
+          </li>
+          <li data-i18n="what.li4">
+            Zoom range, default style, bounds and legend come from the capabilities document
+          </li>
         </ul>
         <p data-i18n="what.p">
-          Capabilities are parsed in the browser with
-          <a href="https://github.com/camptocamp/ogc-client">@camptocamp/ogc-client</a>, in a worker,
-          so a 30&nbsp;000-line XML document does not block the map.
+          <a href="https://github.com/camptocamp/ogc-client">@camptocamp/ogc-client</a> parses
+          capabilities in a browser worker so that large XML documents can be processed separately
+          from the interface.
         </p>
         <div class="callout" data-i18n="callout">
-          <strong>Field note: dead mirrors</strong>
-          basemap.at advertises five tile hosts in its capabilities, four of which no longer resolve
-          in DNS. map0 probes one real tile per candidate host and uses the first that answers — a
-          map that silently stays empty is the worst possible failure mode.
+          <strong>Multiple tile hosts.</strong> A capabilities document can list several hosts, some
+          of which may be unavailable. map0 requests a sample tile from each candidate and uses the
+          first working host.
         </div>
       </section>
 

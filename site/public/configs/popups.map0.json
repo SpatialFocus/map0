@@ -30,7 +30,7 @@
           { "key": "FLAECHE", "label": "Area (m²)" }
         ]
       },
-      "attribution": "Stadt Wien — data.wien.gv.at"
+      "attribution": "Stadt Wien, data.wien.gv.at"
     },
     {
       "id": "areas",
@@ -67,7 +67,7 @@
         "content": "<p>Object <b>{{OBJECTID}}</b> in district {{BEZIRK}}.</p><p><a href=\"https://www.wien.gv.at/\">City of Vienna</a></p>"
       },
       "hover": { "content": "{{BASIS_TYP_TXT}}" },
-      "attribution": "Stadt Wien — data.wien.gv.at"
+      "attribution": "Stadt Wien, data.wien.gv.at"
     }
   ]
 }

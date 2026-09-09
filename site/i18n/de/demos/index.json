@@ -1,4 +1,4 @@
 {
   "h1": "Ein Thema pro Demo",
-  "lede": "Jede dieser Seiten zeigt den echten Client auf Live-Diensten — überwiegend basemap.at und die Open-Data-Dienste der Stadt Wien. Jede Demo zeigt eine Karte, erklärt, worum es geht, und druckt die exakte Konfiguration ab, aus der sie entsteht."
+  "lede": "Jede Demo enthält eine interaktive Karte, eine Erklärung und ihre Konfiguration. Die meisten verwenden öffentliche Dienste von basemap.at und der Stadt Wien, andere lokale Datendateien."
 }

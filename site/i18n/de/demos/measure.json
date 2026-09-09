@@ -1,21 +1,21 @@
 {
-  "title": "Messen — map0-Demos",
+  "title": "Messen | map0-Demos",
   "eyebrow": "Kartenfunktionen",
   "h1": "Messen",
-  "lede": "Strecke und Fläche, berechnet auf der Kugel statt in Kartenpixeln — der Unterschied beträgt in österreichischen Breiten rund 50&nbsp;%, also genau die Art von Fehler, die niemandem auffällt, bis es darauf ankommt.",
+  "lede": "Strecken und Flächen in der Karte messen. Die Berechnung verwendet geografische Koordinaten auf einer Kugel und vermeidet damit die Maßstabsverzerrung von Web Mercator.",
   "note": "<strong>Ausprobieren:</strong> der Lineal-Button in der Werkzeugleiste. Klicken setzt Punkte, Ziehen verschiebt einen Punkt, Doppelklick beendet. <kbd>Backspace</kbd> entfernt den letzten Punkt, <kbd>Esc</kbd> löscht alles. Für ein Polygon samt Umfang zu <em>Fläche</em> wechseln.",
   "why.h2": "Warum sphärische Mathematik",
-  "why.p1": "MapLibre rendert Web Mercator, wo ein Pixel umso weniger Boden abdeckt, je weiter man nach Norden kommt. Wer in projizierten Koordinaten misst, überschätzt Distanzen in Österreich ungefähr um den Sekans der geografischen Breite — ein Spaziergang von 1&nbsp;km bei Wien würde als rund 1,5&nbsp;km angezeigt.",
-  "why.p2": "map0 misst Längen mit der Haversine-Formel und Flächen über den sphärischen Exzess des Polygons. Beide Ergebnisse weichen um höchstens rund ein halbes Prozent von den vollen ellipsoidischen Werten ab — weit unterhalb der Genauigkeit, mit der sich auf einer Karte überhaupt klicken lässt.",
+  "why.p1": "Der Maßstab von Web Mercator ändert sich mit der geografischen Breite. Direkt in diesen projizierten Koordinaten gemessene Strecken sind abseits des Äquators zu groß. Bei Wien würde eine Strecke von 1&nbsp;km mit etwa 1,5&nbsp;km gemessen.",
+  "why.p2": "map0 verwendet die Haversine-Formel für Längen und sphärische Polygonberechnungen für Flächen. Die Messungen beruhen auf einem kugelförmigen Erdmodell und weichen von Berechnungen auf einem Ellipsoid ab.",
   "why.li1": "Segmentbeschriftungen beim Zeichnen, plus eine laufende Summe am letzten Punkt",
   "why.li2": "Der Flächenmodus zeigt die eingeschlossene Fläche und den Umfang an",
   "why.li3": "Einheiten passen sich der Größenordnung an: m → km, m² → ha → km²; Dezimalstellen richten sich nach der UI-Locale",
   "why.li4": "Stützpunkte bleiben nach dem Abschließen verschiebbar, und die Zahlen aktualisieren sich live",
   "how.h2": "Wie gezeichnet wird",
-  "how.p": "Die Messung besteht aus gewöhnlichen MapLibre-Style-Layern — eine weiße Umrandung unter einer farbigen Linie, damit sie auf Luftbildern lesbar bleibt, gestrichelt, solange ein Segment noch dem Mauszeiger folgt, und Stützpunkte als Kreise in der Akzentfarbe des Themes. Mitten in der Messung den Hintergrund auf <em>Aerial</em> gewechselt: Die Geometrie übersteht den Style-Wechsel wie jedes andere Overlay.",
-  "callout": "<strong>Beschriftungen sind DOM-Marker, keine Text-Layer</strong> Ein Symbol-Layer bräuchte eine Glyphen-Quelle aus dem Basemap-Style, die Raster-Basemaps nicht haben — eine Messung über einem Orthofoto würde schlicht keine Zahlen zeigen. Stattdessen werden die Marker mit denselben CSS-Tokens gestylt wie der Rest der Oberfläche.",
+  "how.p": "Messlinien erhalten eine weiße Umrandung, damit sie auch auf Luftbildern sichtbar bleiben. Das Segment am Mauszeiger ist gestrichelt, Stützpunkte verwenden die Akzentfarbe. Messungen bleiben beim Wechsel der Hintergrundkarte erhalten.",
+  "callout": "<strong>Messbeschriftungen.</strong> Die Beschriftungen sind HTML-Marker und verwenden die CSS-Variablen des Viewers. Sie funktionieren mit Raster- und Vektorhintergründen und benötigen keine Glyphenquelle im Kartenstyle.",
   "config.h2": "Konfiguration",
   "config.p": "Ein einziger Eintrag. Standardmäßig eingeschaltet; <code>false</code> entfernt das Bedienelement vollständig.",
   "scope.h2": "Abgrenzung",
-  "scope.p": "Das ist Messen, nicht Zeichnen: keine Formen zum Speichern, kein Annotationsmodell, nichts, was im geteilten Link landet. Falls map0 je echte Annotationen bekommt, ist <a href=\"https://github.com/JamesLMilner/terra-draw\">Terra Draw</a> die richtige Abhängigkeit für diese Aufgabe — und dieses Modul kann exakt so bleiben, wie es ist, denn eine Strecke zu messen und eine Zeichnung zu erstellen sind verschiedene Aufgaben, die einander nur zufällig ähneln."
+  "scope.p": "Messungen sind temporär. Sie können angepasst oder gelöscht werden, werden aber nicht im geteilten Link gespeichert oder als Anmerkungen exportiert."
 }

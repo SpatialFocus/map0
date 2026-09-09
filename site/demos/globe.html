@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title data-i18n="title">Globe — map0 demos</title>
+    <title data-i18n="title">Globe | map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -14,8 +14,8 @@
         <p class="eyebrow" data-i18n="eyebrow">Map features</p>
         <h1 data-i18n="h1">Globe</h1>
         <p class="lede" data-i18n="lede">
-          A real globe projection, not a plugin and not a second rendering engine — this is the one
-          thing MapLibre gives us that no OpenLayers-based client has for free.
+          Display the map on a globe using MapLibre’s built-in projection. Enable it in the config
+          and switch views with the globe control.
         </p>
       </div>
 
@@ -30,9 +30,11 @@
         <h2 data-i18n="what.h2">What this demo shows</h2>
         <ul class="checks">
           <li data-i18n="what.li1"><code>map.projection: "globe"</code> starts the map as a globe</li>
-          <li data-i18n="what.li2">The globe control toggles projections at runtime — overlays keep rendering</li>
+          <li data-i18n="what.li2">Switch projections with the globe control while retaining the overlays</li>
           <li data-i18n="what.li3">Overlays, popups and clustering behave exactly as in the flat map</li>
-          <li data-i18n="what.li4">Dark theme via <code>theme.mode</code>, so the globe sits on a dark backdrop</li>
+          <li data-i18n="what.li4">
+            Dark theme via <code>theme.mode</code>, so the globe sits on a dark backdrop
+          </li>
         </ul>
         <p data-i18n="what.p">
           The projection survives a basemap change, because map0 carries it through the style

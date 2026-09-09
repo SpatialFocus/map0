@@ -4,9 +4,10 @@
 > [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/).
 > One script tag + one JSON config = a full-featured map on any web page.
 >
-> **[map0.net](https://map0.net)** — site and [live demos](https://map0.net/demos).
+> **[map0.net](https://map0.net)**: website and [live demos](https://map0.net/demos).
 
-**Status:** approaching the M1 milestone — layer tree, WMS/WMTS/vector tiles/GeoJSON/COG, feature
+**Status:** approaching the M1 milestone. Layer tree, WMS/WMTS/WFS/OGC API Features, vector tiles,
+GeoJSON/GeoParquet/COG, feature
 info, legends, search, measuring, print, permalink, theming and i18n all work against live services.
 Published as an early preview (`map0-viewer` 0.2.1 on npm, MIT); the API and the config format are
 still drafts and will change without a deprecation path until 1.0. See
@@ -14,11 +15,9 @@ still drafts and will change without a deprecation path until 1.0. See
 
 ## The idea in one paragraph
 
-MapLibre made cartography declarative (the style spec is JSON). map0 extends the same idea to the
-*web map client*: basemaps, overlay tree/TOC, legends, feature popups, print, globe, GPS, theming — all
-declared in a single, schema-validated JSON document that lives in a CMS field. It renders straight
-into the page (web component / script tag — no iframe, no backend) and looks like 2026: pretty,
-responsive, themable, accessible.
+map0 adds a configurable interface to MapLibre: basemaps, a layer tree, legends, feature popups,
+search, measuring, print and globe view. A JSON document defines the map, its appearance and its
+tools. Store it as a file or in a CMS field, then embed the viewer as a web component in your page.
 
 ```html
 <script type="module" src="map0.js"></script>
@@ -27,10 +26,10 @@ responsive, themable, accessible.
 
 ## Using it in a page
 
-Self-hosted — `node_modules/map0-viewer/dist/` is a folder you copy next to your page:
+For self-hosting, copy `node_modules/map0-viewer/dist/` next to your page:
 
 ```bash
-npm install map0-viewer   # prebuilt bundle, MapLibre included, no dependencies
+npm install map0-viewer   # prebuilt bundle with MapLibre included
 ```
 
 …or straight from a CDN, nothing to install:
@@ -44,7 +43,7 @@ See [packages/map0/README.md](packages/map0/README.md) for the whole integration
 
 ## Working on map0
 
-Prerequisites: Node ≥ 22 and pnpm (`corepack enable` is enough — the version is pinned via
+Prerequisites: Node ≥ 22 and pnpm (enable it with `corepack enable`; the version is pinned via
 `packageManager`).
 
 ```bash
@@ -52,16 +51,15 @@ pnpm install
 pnpm dev
 ```
 
-Then open **http://localhost:5173/demos — the demo gallery**. Twenty-one single-topic demos, each
-with a written explanation and the exact config that produced it — almost all of them a live map
-against real services:
+Then open the [demo gallery](http://localhost:5173/demos). Each demo includes an interactive map,
+an explanation and its configuration. Most use public services; others use local data files:
 
 | Group | Demos |
 |---|---|
-| Data sources | WMS · WMTS · Vector tiles · GeoJSON & clustering · Cloud Optimized GeoTIFF |
+| Data sources | WMS · WMTS · WFS · OGC API Features · Vector tiles · GeoJSON & clustering · GeoParquet · Cloud Optimized GeoTIFF |
 | Map features | Popups & hover · Legend · Search · Measure · Coordinates · Print & export · Add layers · Share & permalink · Globe |
 | Configuration | Minimal config · Theming · Languages · Config inheritance · Validate a config |
-| Integration | Script tag embed (built bundle — run `pnpm demo:standalone` first) · Lazy loading |
+| Integration | Script tag embed (built bundle; run `pnpm demo:standalone` first) · Lazy loading |
 
 More commands:
 
@@ -79,8 +77,7 @@ node e2e/verify-demos.mjs wms   # …or just one (dev server must be running)
 
 ```
 packages/schema   config types, validation (JSON-path errors), defaults, published JSON Schema (v1.json)
-packages/core     headless engine: basemap manager, source adapters (wms/wmts/raster/cog/geojson/
-                  vector), feature info, i18n — no DOM UI
+packages/core     headless engine: basemap manager, source adapters, feature info, i18n
 packages/ui       the <map0-viewer> web component (Lit) + panels, popups, theming
 site/              landing page, /demos gallery and demo pages (EN, with /de/ built from
                    per-page catalogues in site/i18n/)
@@ -89,9 +86,9 @@ e2e/              headless smoke verification (grows into the Playwright suite i
 docs/             specification
 ```
 
-Distribution note: `packages/ui/dist/` is a flat folder — `map0.js`, its chunks, and MapLibre's
+Distribution note: `packages/ui/dist/` is a flat folder containing `map0.js`, its chunks and MapLibre's
 three files shipped verbatim. Deploy the folder as a unit; the embed stays one script tag.
-A page pays **~31 KB gzip** for the element itself; the engine and MapLibre (~305 KB) load when the
+A page loads **~34 KB gzip** for the element itself; the engine and MapLibre (~316 KB) load when the
 map approaches the viewport, and capabilities parsing, proj4, PMTiles, the COG decoder, measuring
 and the dialogs only when those features are used. `pnpm size` prints the breakdown and fails when
 the page tier grows.
@@ -121,7 +118,7 @@ the page tier grows.
 
 ## Licence
 
-MIT — see [LICENSE](LICENSE). The published bundle contains third-party code (MapLibre GL JS
+MIT; see [LICENSE](LICENSE). The published bundle contains third-party code (MapLibre GL JS
 verbatim, others compiled in); their licences are reproduced in
 [packages/map0/THIRD-PARTY-NOTICES.md](packages/map0/THIRD-PARTY-NOTICES.md), regenerated on every
 `pnpm build:npm`.

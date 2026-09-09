@@ -4,14 +4,13 @@
 > [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/).
 > One script tag plus one JSON config = a full-featured map on any web page.
 
-MapLibre made cartography declarative — the style spec is JSON. map0 extends the same idea to the
-*web map client*: basemaps, layer tree, legends, feature popups, search, measuring, print, globe,
-theming and languages are all declared in a single JSON document that can live in a CMS field. It
-renders straight into the page as a web component — no iframe, no backend, no build step required.
+map0 adds a configurable interface to MapLibre: basemaps, a layer tree, legends, feature popups,
+search, measuring, print and globe view. Settings, colours and languages are defined in one JSON
+document, stored as a file or in a CMS field. A web component displays the map inside your page.
 
-> **Early preview — version 0.2.1.** The client works against real OGC services — it is what the
-> [live demos](https://map0.net/demos) run on — but the JavaScript API and the config format are
-> still drafts and will change without a deprecation path until 1.0. Pin an exact version.
+> **Early preview, version 0.2.1.** Try the client in the
+> [live demos](https://map0.net/demos). The JavaScript API and config format may change without
+> a deprecation path until 1.0. Pin an exact version.
 >
 > The package is called **map0-viewer**: npm's name-similarity rule for short names rejects the
 > unscoped `map0`. The project, the element `<map0-viewer>` and the site
@@ -23,13 +22,13 @@ renders straight into the page as a web component — no iframe, no backend, no 
 npm install map0-viewer
 ```
 
-The package is a prebuilt ES-module bundle. MapLibre is included — nothing else to install and
-nothing to configure (the one dependency, `@types/geojson`, is declarations only). Copy
+The package is a prebuilt ES-module bundle with MapLibre included. Its `@types/geojson` dependency
+contains TypeScript declarations only. Copy
 `node_modules/map0-viewer/dist/` next to your page and load `map0.js` from there.
 
 ### …or load it from a CDN
 
-Nothing to install or copy — point a script tag at a pinned version:
+Point a script tag at a specific release:
 
 ```html
 <script type="module" src="https://cdn.jsdelivr.net/npm/map0-viewer@0.2.1/dist/map0.js"></script>
@@ -38,10 +37,9 @@ Nothing to install or copy — point a script tag at a pinned version:
 unpkg serves the same tarball, if you prefer it:
 `https://unpkg.com/map0-viewer@0.2.1/dist/map0.js`.
 
-Both send `Access-Control-Allow-Origin: *`, and the entry resolves its lazy chunks and MapLibre's
-worker relative to itself — so the folder stays a unit on the CDN too, with no configuration on your
-side. Pin the **exact** version: this is a v0, and `@latest` would swap the bundle under your page on
-every release.
+The entry resolves its modules and MapLibre's worker relative to itself, including on a CDN.
+Pin the **exact** version so that future releases do not automatically change the package used
+by your page.
 
 ## Use it
 
@@ -68,18 +66,16 @@ A version and one basemap are enough; everything else is a default you can overr
 That gives you zoom, compass, fullscreen, geolocation, globe, scale bar, attribution, coordinate
 readout, print and a light/dark theme that follows the operating system.
 
-Configs usually live in their own file instead — the point of the format is that an editor can
-change the map without touching the page:
+To edit the map configuration separately from the page, store it in a JSON file:
 
 ```html
 <map0-viewer config-src="/configs/environment-map.json" style="height: 520px"></map0-viewer>
 ```
 
-The element also takes `loading="eager"` (the default `"lazy"` initialises the map when it comes
-near the viewport) and `theme="dark"` / `theme="light"` — a host-page override for the colour
-scheme that beats the config's `theme.mode` and restyles a running map when flipped, so a page
-with its own dark-mode toggle just sets the attribute. It accepts a config object via its
-`config` property, and talks to the page without imports:
+Use `loading="eager"` to start immediately; the default, `"lazy"`, waits until the map approaches
+the viewport. The `theme="dark"` and `theme="light"` attributes override the config's `theme.mode`
+and update a running map when changed. The element also accepts a config object through its
+`config` property and exposes an API and DOM events:
 
 ```js
 const viewer = document.querySelector("map0-viewer");
@@ -103,7 +99,7 @@ const viewer = createMap(document.querySelector("#map"), config);
 
 ### TypeScript
 
-Both entries ship their own declarations — nothing to install from `@types`:
+Both entries include TypeScript declarations:
 
 ```ts
 import { defineMap0Viewer, type Map0Api, type Map0Config } from "map0-viewer";
@@ -119,25 +115,26 @@ viewer.addEventListener("map0:ready", (event) => {
 });
 ```
 
-`Map0Config` is the config format, `Map0Viewer` the element — its attributes as properties, `api`, and
-the `map0:*` events with a typed `detail` — and `Map0Api` the handle that `api`, `map0:ready` and
-`createMap()` hand out. Its parts are interfaces you can name: `Map0Layers` (`api.layers` — the
-layer `state` as a `ReadonlySignal`, one `LayerHandle` per mounted layer with its MapLibre ids and
-`bounds()`, `addLayer`/`removeLayer`, visibility, opacity, `zoomTo`), `Map0Basemaps`
-(`api.basemaps` — `current`, `all`, `switchTo`) and `Map0Events` (`api.events.on` for the
-`CoreEvents`). Anything not in those interfaces is internal and may change without notice. Two types come from outside the package: the GeoJSON shapes in the config are
-`@types/geojson`, a dependency that installs by itself; `api.map` is MapLibre's `Map`, and to type it
-you install `maplibre-gl` (6.x, the major the bundle contains) yourself — it is an optional peer
-dependency, only its declarations are used, and the bundle keeps running its own copy. Without it,
-`api.map` is `any` as long as `skipLibCheck` is on (the default of most setups); with it off,
-TypeScript asks you to install the package.
+`Map0Config` describes the configuration. `Map0Viewer` describes the element's properties, API and
+DOM events. `Map0Api` describes the API available through `viewer.api` and `map0:ready`.
+
+- `Map0Layers` describes `api.layers`: layer state, handles, add/remove, visibility, opacity and zoom.
+- `LayerHandle` exposes a layer's definition, status, MapLibre IDs and `bounds()`.
+- `Map0Basemaps` describes `api.basemaps`: `current`, `all` and `switchTo`.
+- `Map0Events` describes subscriptions through `api.events.on`.
+
+Members outside these interfaces are internal. GeoJSON declarations are installed automatically
+through `@types/geojson`. To type `api.map`, install the optional peer `maplibre-gl` (6.x).
+Only its declarations are used; the bundle runs its included copy. Without the peer, `api.map`
+is `any` when `skipLibCheck` is enabled. With `skipLibCheck` disabled, TypeScript reports the
+missing package.
 
 ### Server-side rendering
 
 Defining a custom element needs `HTMLElement`, so the browser entry cannot be evaluated in Node.
 The package therefore resolves to an **SSR-safe entry** under the `node` condition, also reachable
-as `map0-viewer/ssr`: it pulls in no DOM code, carries the config schema (`validateConfig`,
-`normalizeConfig` — useful while rendering), and loads the viewer only when asked to, in a browser.
+as `map0-viewer/ssr`. It exports the config schema, `validateConfig` and `normalizeConfig`, and
+loads the viewer on request in a browser.
 
 ```js
 import { defineMap0Viewer, validateConfig } from "map0-viewer/ssr";
@@ -151,27 +148,25 @@ level of a component; the map itself still comes up on the client, from the same
 
 ### Deploying it
 
-`dist/` is a folder, not a single file, and it has to stay one:
+Deploy the complete `dist/` folder:
 
 ```bash
 cp -r node_modules/map0-viewer/dist ./public/map0   # then load /map0/map0.js
 ```
 
-`map0.js` lazy-loads its own chunks, and MapLibre builds its worker URL at **runtime** relative to
-the bundle — so `maplibre-gl.mjs`, `maplibre-gl-shared.mjs` and `maplibre-gl-worker.mjs` must sit
-next to it. Getting this wrong fails silently: raster layers still paint, vector tiles and GeoJSON
-never appear. Copying the folder as a unit is the supported route. Bundling map0 into your own
-build works, but you are then responsible for emitting those three files next to your chunks.
+`map0.js` loads additional modules as needed. MapLibre resolves its worker URL at runtime, so
+`maplibre-gl.mjs`, `maplibre-gl-shared.mjs` and `maplibre-gl-worker.mjs` must remain alongside it.
+Missing files can prevent vector tiles and GeoJSON from appearing. If you bundle map0 into your
+own build, ensure that these three files are emitted next to your chunks.
 
-`<script>` tags need `type="module"` — MapLibre v6 has no UMD build, so a copied snippet without it
-silently does nothing.
+Use `type="module"` on script tags to load the ES-module package.
 
 ## What is in the config
 
 Layer sources: WMS, WMTS, WFS (paged GetFeature), OGC API Features (next-link paging), XYZ/raster,
 vector tiles, PMTiles, GeoJSON (with clustering), GeoParquet (decoded in the browser, styled like
-GeoJSON; both reprojected on load when their coordinates are not WGS84 — `crs`), and COG —
-Cloud Optimized GeoTIFF as RGB imagery, single-band color ramps, explicit value/range classes, or
+GeoJSON; both support reprojection on load through `crs`), and COG
+(Cloud Optimized GeoTIFF) as RGB imagery, single-band color ramps, explicit value/range classes, or
 DEM hillshade. Plus a
 layer tree with groups, legends (`"auto"` derives them from the service), feature info with HTML
 templates, hover, search, measuring, coordinate readout in projected CRS, print/PDF export,
@@ -202,22 +197,21 @@ as `schema/v1.json`, so a version-pinned copy is on the CDN too:
 `https://cdn.jsdelivr.net/npm/map0-viewer@0.2.1/schema/v1.json`.
 
 To check a config without installing anything, paste it into the
-[online validator](https://map0.net/demos/validate.html) — it runs `validateConfig` right in the
-page. To validate configs outside an editor (CI, a CMS save hook):
+[online validator](https://map0.net/demos/validate.html), which runs `validateConfig` in the
+page. To validate configs in a build pipeline or CMS save hook:
 
 ```bash
 npx ajv-cli validate -s node_modules/map0-viewer/schema/v1.json -d my-map.map0.json
 ```
 
-The schema checks structure: keys, types, ranges, required fields. map0 validates further at
-runtime — https-only URLs, id uniqueness, cross-field rules — and renders those errors in place of
-the map, with JSON paths. Like everything else before 1.0, the schema is a draft: keys may still
-change from release to release.
+The schema checks keys, types, ranges and required fields. At runtime, map0 also checks URL rules,
+unique IDs and relationships between fields. Errors appear in the viewer with their JSON paths.
+Before 1.0, schema keys may change between releases.
 
 ## Weight
 
-A page pays ~31 KB gzip for the element itself. The engine, MapLibre and its stylesheet (~305 KB
-gzip) load when a map actually initialises — never for a map nobody scrolls to. Capabilities
+A page loads ~34 KB gzip for the element itself. The engine, MapLibre and its stylesheet (~316 KB
+gzip) load when a map initialises. Capabilities
 parsing, proj4, PMTiles, the COG and GeoParquet decoders, measuring and the dialogs load on first
 use.
 
@@ -231,6 +225,6 @@ use.
 
 ## Licence
 
-MIT — see [LICENSE](./LICENSE). The bundle contains third-party code (MapLibre GL JS copied in
+MIT; see [LICENSE](./LICENSE). The bundle contains third-party code (MapLibre GL JS copied in
 verbatim, others compiled in); their licences and copyright notices are reproduced in full in
 [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md).

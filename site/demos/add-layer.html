@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title data-i18n="title">Add layers — map0 demos</title>
+    <title data-i18n="title">Add layers | map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -14,51 +14,65 @@
         <p class="eyebrow" data-i18n="eyebrow">Map features</p>
         <h1 data-i18n="h1">Add layers</h1>
         <p class="lede" data-i18n="lede">
-          This map starts empty on purpose. Users bring their own data — paste a service or GeoJSON
-          URL, or drop a GeoJSON, KML or GPX file straight onto the map.
+          This map starts with an empty layer list. Add data by pasting a service or GeoJSON URL, or
+          by dropping GeoJSON, KML or GPX files onto the map.
         </p>
       </div>
 
       <map0-viewer config-src="/configs/add-layer.map0.json"></map0-viewer>
       <p class="demo-note" data-i18n="note">
-        <strong>Try it:</strong> the <strong>+</strong> button in the layer panel. Paste
-        <code>https://data.wien.gv.at/daten/geo</code> as WMS (375 layers, use the filter box), or
-        switch to WMTS and paste
-        <code>https://mapsneu.wien.gv.at/basemap/1.0.0/WMTSCapabilities.xml</code>. Switch to
-        GeoJSON and paste <code>/data/demo-areas.geojson</code> — or skip the dialog and drag a
-        <code>.geojson</code>, <code>.kml</code> or <code>.gpx</code> file from your desktop onto
-        the map (on a phone, the GeoJSON kind has a file picker instead).
+        <strong>Try it:</strong> click <strong>+</strong> in the layer panel. For WMS, paste
+        <code>https://data.wien.gv.at/daten/geo</code> and use the filter to find a layer. For WMTS,
+        paste <code>https://mapsneu.wien.gv.at/basemap/1.0.0/WMTSCapabilities.xml</code>. For
+        GeoJSON, try <code>/data/demo-areas.geojson</code>. You can also drop local files onto the
+        map or choose them from your device in the GeoJSON tab.
       </p>
 
       <section class="doc">
         <h2 data-i18n="what.h2">What this demo shows</h2>
         <ul class="checks">
-          <li data-i18n="what.li1">WMS and WMTS capabilities parsed in the browser — no server component involved</li>
-          <li data-i18n="what.li2">Filterable layer list with multi-select for services with hundreds of layers</li>
-          <li data-i18n="what.li3">Layers arrive fully wired: GetFeatureInfo, legend, metadata link, and a zoom range derived from the service's scale hints</li>
-          <li data-i18n="what.li4">Layers without a WebMercator offering are flagged before you add them (D-02)</li>
-          <li data-i18n="what.li5">Added layers appear in their own section of the panel and can be removed again</li>
-          <li data-i18n="what.li6">GeoJSON by URL, with the URL policy of the config and errors reported in the dialog — a wrong URL never becomes a silently empty layer</li>
-          <li data-i18n="what.li7">Drag &amp; drop of local GeoJSON, KML and GPX files (several at once): one layer per file, named after it, zoomed to, styled with the file's own colours where it has them — and the data never leaves the browser</li>
+          <li data-i18n="what.li1">WMS and WMTS capabilities are read in the browser</li>
+          <li data-i18n="what.li2">
+            Filterable layer list with multi-select for services with hundreds of layers
+          </li>
+          <li data-i18n="what.li3">
+            Available service metadata configures feature info, legends, metadata links and zoom
+            ranges
+          </li>
+          <li data-i18n="what.li4">
+            Layers without a WebMercator offering are flagged before you add them (D-02)
+          </li>
+          <li data-i18n="what.li5">
+            Added layers appear in their own section of the panel and can be removed again
+          </li>
+          <li data-i18n="what.li6">
+            GeoJSON URLs are checked against the config’s URL policy; loading errors appear in the
+            dialog
+          </li>
+          <li data-i18n="what.li7">
+            Import several local GeoJSON, KML or GPX files at once. Each becomes a layer named after
+            the file, using supported colours from the data. The map zooms to the imported layers,
+            and the files stay in the browser.
+          </li>
         </ul>
         <p data-i18n="what.p">
-          User-added layers never touch the page config. They live in session state — and, because
-          this demo also enables <code>permalink</code>, they travel in the share link, so a
-          colleague opens the map with your services already loaded. Dropped files are the
-          exception: a link is a reference, and a file on your disk has no address, so those stay
-          out of the link.
+          Added layers are stored for the current session. With <code>permalink</code> enabled,
+          layers added by URL are also included in share links, so recipients can load the same
+          sources. Local files are omitted from share links and must be imported separately.
         </p>
         <div class="callout" data-i18n="callout">
-          <strong>CORS decides what works</strong>
-          The browser talks to the service directly. Services without CORS headers fail here — that
-          is a property of the service, not of the client, and the dialog says so instead of hanging.
+          <strong>Browser access requires CORS.</strong> The browser requests data directly from the
+          service. For a service on another origin, its CORS headers must allow access from this
+          page. Failed requests are reported in the dialog.
         </div>
       </section>
 
       <section class="doc">
         <h2 data-i18n="config.h2">Configuration</h2>
         <pre data-src="/configs/add-layer.map0.json" data-label="add-layer.map0.json" data-emphasise="allowAdd,permalink,layers"></pre>
-        <p data-i18n="config.p">Set <code>allowAdd: false</code> for a locked-down map where only configured layers exist.</p>
+        <p data-i18n="config.p">
+          <code>allowAdd: false</code> hides the add-layer button and disables file drop.
+        </p>
       </section>
 
       <section class="doc">
@@ -76,7 +90,7 @@
 
           api.removeLayer(id);
 
-          // a GeoJSON file by URL — what the dialog's GeoJSON kind does
+          // Add a GeoJSON file by URL, as in the dialog.
           await api.addLayer({ type: 'geojson', title: 'Areas', data: '/data/demo-areas.geojson' });
         </pre>
       </section>

@@ -3,7 +3,7 @@
   "version": 1,
   "meta": {
     "title": "COG imagery",
-    "description": "An RGB orthophoto read straight from static storage — no tile server."
+    "description": "An RGB orthophoto loaded directly from static storage."
   },
   "map": { "center": [1.83369, 41.5937], "zoom": 14 },
   "basemaps": [

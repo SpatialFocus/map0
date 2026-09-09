@@ -28,12 +28,12 @@
         "circle-stroke-width": 1.5
       },
       "popup": { "title": "{{BASIS_TYP_TXT}}" },
-      "attribution": "Stadt Wien — data.wien.gv.at"
+      "attribution": "Stadt Wien, data.wien.gv.at"
     },
     {
       "id": "baeume-alsergrund",
       "type": "wfs",
-      "title": "Tree cadastre — Alsergrund",
+      "title": "Tree cadastre, Alsergrund",
       "url": "https://data.wien.gv.at/daten/geo",
       "typeNames": "ogdwien:BAUMKATOGD",
       "params": { "cql_filter": "BEZIRK=9" },
@@ -53,7 +53,7 @@
           { "key": "OBJEKT_STRASSE", "label": "Location" }
         ]
       },
-      "attribution": "Stadt Wien — data.wien.gv.at"
+      "attribution": "Stadt Wien, data.wien.gv.at"
     }
   ]
 }

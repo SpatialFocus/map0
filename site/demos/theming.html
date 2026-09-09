@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title data-i18n="title">Theming — map0 demos</title>
+    <title data-i18n="title">Theming | map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <style>
@@ -58,8 +58,8 @@
         <p class="eyebrow" data-i18n="eyebrow">Configuration</p>
         <h1>Theming</h1>
         <p class="lede" data-i18n="lede">
-          The client should look like the site it sits on — not like a GIS product. Colours, radii
-          and fonts are design tokens, settable from the config or from the host page's CSS.
+          Match the viewer to your website with configurable colours, corner radii and fonts. Set
+          them in the config or through CSS variables on the host page.
         </p>
       </div>
 
@@ -82,21 +82,15 @@
 
       <map0-viewer config-src="/configs/theming.map0.json"></map0-viewer>
       <p class="demo-note" data-i18n="note">
-        <strong>Try it:</strong> the buttons above set CSS custom properties on the element from
-        outside — no rebuild, no config reload. Note what the font buttons do <em>not</em> touch:
-        the labels drawn inside the map.
+        <strong>Try it:</strong> the buttons above update CSS custom properties on the element. The
+        interface changes immediately. Map labels use the fonts defined in the basemap style.
       </p>
 
       <section class="doc">
         <h2 data-i18n="ways.h2">Two ways in</h2>
-        <p data-i18n="ways.p1">
-          From the config, for the CMS editor who never touches CSS:
-        </p>
+        <p data-i18n="ways.p1">Set the theme in the config:</p>
         <pre data-src="/configs/theming.map0.json" data-label="theming.map0.json" data-emphasise="theme,mode,primary,radius,font"></pre>
-        <p data-i18n="ways.p2">
-          Or from the host page's stylesheet, for the integrator who wants the map to inherit the
-          site's design system:
-        </p>
+        <p data-i18n="ways.p2">Or set CSS variables in the host page’s stylesheet:</p>
         <pre data-lang="css" data-label="site.css">
           map0-viewer {
             --map0-primary: #b91c1c;
@@ -108,33 +102,29 @@
       </section>
 
       <section class="doc">
-        <h2 data-i18n="mode.h2">Light, dark, or whatever the visitor prefers</h2>
+        <h2 data-i18n="mode.h2">Light, dark or system preference</h2>
         <p data-i18n="mode.p">
-          <code>theme.mode</code> takes <code>"light"</code>, <code>"dark"</code> or
-          <code>"auto"</code> (the default), which follows the operating system and reacts when the
-          visitor changes it mid-session. Panels, popups, dialogs and the synthetic background of
-          raster basemaps all switch together.
+          <code>theme.mode</code> accepts <code>"light"</code>, <code>"dark"</code> or
+          <code>"auto"</code>. The default, <code>"auto"</code>, follows changes to the operating
+          system’s preference. Panels, popups, dialogs and the background behind raster basemaps
+          switch together.
         </p>
         <div class="callout" data-i18n="callout">
-          <strong>Shadow DOM, on purpose</strong>
-          map0 renders into a shadow root, so the host page's stylesheet cannot accidentally break
-          the map, and the map cannot leak styles into the page. Custom properties and documented
-          <code>::part()</code> names are the deliberate way through that boundary.
+          <strong>Styling through the Shadow DOM.</strong> The viewer’s Shadow DOM isolates its
+          styles from the surrounding page. Use CSS custom properties and documented
+          <code>::part()</code> names to customise it.
         </div>
       </section>
 
       <section class="doc">
-        <h2 data-i18n="font.h2">Where the font token stops</h2>
+        <h2 data-i18n="font.h2">Interface fonts and map labels</h2>
         <p data-i18n="font.p1">
-          <code>theme.font</code> styles the interface — panels, popups, dialogs, buttons. It does
-          not reach the labels drawn inside the map: those are rendered from the glyph set the
-          basemap style points at, and changing them means changing the style, not the client.
+          <code>theme.font</code> applies to panels, popups, dialogs and buttons. To change map
+          labels, update the font settings and glyph source in the basemap style.
         </p>
         <p data-i18n="font.p2">
-          That split is worth knowing before you pick a display font. A serif interface next to
-          sans-serif map labels reads as a mistake even when both are deliberate, so the safe
-          choice is a UI font close to the one the basemap uses — which is why this demo ships with
-          the system stack and leaves the dramatic options to the buttons.
+          This demo starts with the system font. Use the buttons to compare interface fonts while
+          the map labels retain their own typeface.
         </p>
       </section>
     </main>

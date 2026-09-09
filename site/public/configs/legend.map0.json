@@ -22,7 +22,7 @@
       "layers": "GENFLWIDMUNGOGD",
       "opacity": 0.5,
       "legend": "auto",
-      "attribution": "Stadt Wien — data.wien.gv.at"
+      "attribution": "Stadt Wien, data.wien.gv.at"
     },
     {
       "id": "areas",
@@ -51,7 +51,7 @@
         "circle-stroke-color": "#ffffff",
         "circle-stroke-width": 1.5
       },
-      "attribution": "Stadt Wien — data.wien.gv.at"
+      "attribution": "Stadt Wien, data.wien.gv.at"
     }
   ],
   "controls": { "legend": { "open": true, "position": "bottom-right" } }

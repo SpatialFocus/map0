@@ -27,7 +27,7 @@
         "circle-stroke-width": 1.5
       },
       "popup": { "title": "{{BASIS_TYP_TXT}}" },
-      "attribution": "Stadt Wien — data.wien.gv.at"
+      "attribution": "Stadt Wien, data.wien.gv.at"
     },
     {
       "id": "ubahn",
@@ -46,7 +46,7 @@
         "fields": [{ "key": "EROEFFNUNG_JAHR", "label": "Opened" }]
       },
       "hover": { "content": "{{HTXT}}" },
-      "attribution": "Stadt Wien — data.wien.gv.at"
+      "attribution": "Stadt Wien, data.wien.gv.at"
     },
     {
       "id": "demo-areas",

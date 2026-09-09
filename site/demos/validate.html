@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title data-i18n="title">Validate a config — map0 demos</title>
+    <title data-i18n="title">Validate a config | map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -15,19 +15,18 @@
         <p class="eyebrow" data-i18n="eyebrow">Configuration</p>
         <h1 data-i18n="h1">Validate a config</h1>
         <p class="lede" data-i18n="lede">
-          A broken config never leaves a blank map — it is validated before anything renders, and
-          the errors carry the JSON path that caused them. This page runs that same validator on
-          whatever you paste, and lists every other place a config gets checked on its way from
-          editor to page.
+          Check a config before loading the map. Validation errors identify the affected setting by
+          its JSON path. This page uses the viewer’s validator and explains where else validation
+          can run.
         </p>
       </div>
 
       <section class="doc wide">
         <h2 data-i18n="paste.h2">Paste a config</h2>
         <p data-i18n="paste.p">
-          This is map0's own <code>validateConfig</code>, compiled into this page exactly as it is
-          compiled into the viewer — not a lookalike. Errors block the map; warnings (an unknown
-          key is the classic) never do, so a config written for a newer map0 still opens.
+          This page runs map0’s <code>validateConfig</code>. Errors prevent the map from loading.
+          Warnings, such as unknown keys, allow it to load while drawing attention to settings that
+          may need checking.
         </p>
         <div class="validator">
           <div>
@@ -46,9 +45,9 @@
           <div class="results" data-validator-output aria-live="polite"></div>
         </div>
         <p class="demo-note" data-i18n="note">
-          <strong>One difference to the viewer:</strong> the viewer resolves
-          <code>extends</code> before validating, so a child config may leave
-          <code>basemaps</code> to its base — here the document is checked exactly as pasted.
+          <strong>Inheritance:</strong> the viewer resolves <code>extends</code> before validation,
+          so a child config may inherit its basemaps. This page validates the pasted document as it
+          is.
         </p>
       </section>
 
@@ -57,9 +56,9 @@
 
         <h3 data-i18n="editor.h3">In your editor, as you type</h3>
         <p data-i18n="editor.p">
-          The config format has a published JSON Schema. A <code>$schema</code> line is all it
-          takes — VS Code, JetBrains and Monaco embedded in a CMS then offer autocomplete,
-          documentation on hover and squiggles under typos while you write:
+          Add a <code>$schema</code> entry to associate the config with its JSON Schema. Editors
+          such as VS Code and JetBrains can use it for completion, hover documentation and
+          validation:
         </p>
         <pre data-lang="json" data-label="my-map.map0.json" data-emphasise="$schema">
           {
@@ -71,22 +70,20 @@
 
         <h3 data-i18n="ci.h3">In CI, before it ships</h3>
         <p data-i18n="ci.p1">
-          The same schema works with any JSON Schema tool — a check in a pipeline or a CMS save
-          hook costs one command:
+          Use a JSON Schema validator in your build pipeline or when saving a config in the CMS:
         </p>
         <pre data-lang="text" data-label="shell">
           npx ajv-cli validate -s node_modules/map0-viewer/schema/v1.json -d my-map.map0.json
         </pre>
         <p data-i18n="ci.p2">
-          <code>check-jsonschema</code> does the same on the Python side. The schema checks
-          structure — keys, types, ranges, required fields — which is exactly what an editor or a
-          pipeline should catch.
+          <code>check-jsonschema</code> provides a Python option. The schema checks keys, types,
+          value ranges and required fields.
         </p>
 
         <h3 data-i18n="code.h3">In your own code</h3>
         <p data-i18n="code.p">
-          The validator on this page is part of the npm package, reachable through the SSR-safe
-          entry — no DOM required, so a Node backend can refuse to save a broken map:
+          The npm package exports the validator through its SSR entry. It can run in Node without a
+          DOM, for example to check a config before saving it:
         </p>
         <pre data-lang="js" data-label="save-hook.js">
           import { validateConfig } from "map0-viewer/ssr";
@@ -97,10 +94,9 @@
 
         <h3 data-i18n="viewer.h3">In the viewer, always</h3>
         <p data-i18n="viewer.p">
-          Whatever slipped through still cannot produce a blank map: the viewer validates before it
-          renders and shows the errors in place. This layer also enforces what a JSON Schema cannot
-          express — the https-only URL policy, id uniqueness across basemaps and layers, and
-          cross-field rules like a color ramp's <code>min</code> below its <code>max</code>.
+          The viewer validates again before rendering and displays errors in place. Its checks
+          include URL rules, unique IDs across basemaps and layers, and relationships between
+          fields, such as a colour ramp’s <code>min</code> being less than its <code>max</code>.
         </p>
         <pre data-lang="text" data-label="error panel">
           $.basemaps          at least one basemap is required, e.g. { "type": "style", "url": "…" }
@@ -111,26 +107,25 @@
 
       <section class="doc">
         <h2 data-i18n="schema.h2">The schema, published</h2>
-        <p data-i18n="schema.p1">One file, three URLs — pick by how you want it to move:</p>
+        <p data-i18n="schema.p1">The same schema is available at three locations:</p>
         <ul class="checks">
           <li data-i18n="schema.li1">
-            <code>https://map0.net/schema/v1.json</code> — follows the latest release; the URL to
-            put in a config's <code>$schema</code> line
+            <code>https://map0.net/schema/v1.json</code>: follows the latest release, for the
+            config’s <code>$schema</code> entry
           </li>
           <li data-i18n="schema.li2">
-            <code>https://cdn.jsdelivr.net/npm/map0-viewer@0.2.1/schema/v1.json</code> — pinned to
-            one release, from the npm tarball
+            <code>https://cdn.jsdelivr.net/npm/map0-viewer@0.2.1/schema/v1.json</code>: fixed to one
+            package release
           </li>
           <li data-i18n="schema.li3">
-            <code>node_modules/map0-viewer/schema/v1.json</code> — offline, next to the bundle you
-            installed
+            <code>node_modules/map0-viewer/schema/v1.json</code>: available locally with the
+            installed package
           </li>
         </ul>
         <p data-i18n="schema.p2">
-          The file is named after the config format version (<code>"version": 1</code>), not the
-          package version. It is hand-written — the descriptions are the editor documentation —
-          and a test locks its key sets and enums to the runtime validator, so the two cannot
-          drift apart.
+          The filename refers to the config format version (<code>"version": 1</code>). Descriptions
+          in the schema provide editor documentation. Tests compare its keys and enums with the
+          runtime validator.
         </p>
       </section>
     </main>

@@ -1,14 +1,14 @@
 {
-  "title": "Legende — map0-Demos",
+  "title": "Legende | map0-Demos",
   "eyebrow": "Kartenfunktionen",
   "h1": "Legende",
-  "lede": "Drei Layer, drei Wege zu einem Legendeneintrag — und ein Panel, das nur auflistet, was gerade tatsächlich sichtbar ist.",
-  "note": "<strong>Ausprobieren:</strong> Layer aus- und wieder einschalten — die Einträge erscheinen und verschwinden mit ihnen. Auch ein Layer außerhalb seines Zoombereichs fällt aus der Legende, weil er nicht auf der Karte ist.",
+  "lede": "Drei Layer zeigen drei Möglichkeiten, Legendeneinträge festzulegen. Das Legendenpanel richtet sich nach den aktuell sichtbaren Layern.",
+  "note": "<strong>Ausprobieren:</strong> Layer aus- und einschalten. Ihre Legendeneinträge werden entsprechend ausgeblendet und wieder angezeigt. Layer außerhalb ihres Zoombereichs werden ebenfalls ausgelassen.",
   "sources.h2": "Drei Quellen, ein Panel",
   "sources.li1": "<strong>Vom Dienst:</strong> <code>legend: \"auto\"</code> auf einem WMS-Layer baut einen GetLegendGraphic-Request",
   "sources.li2": "<strong>Aus dem Style:</strong> Vektor-Layer mit literalen Farben erzeugen automatisch Farbfelder",
   "sources.li3": "<strong>Von Hand:</strong> ein Array von Einträgen mit Beschriftung, Farbe und Form (Quadrat, Linie, Kreis)",
-  "sources.p": "<code>legend: false</code> hält einen Layer ganz aus dem Panel heraus, und ein einfacher String wird als URL eines Legendenbilds interpretiert — nützlich, wenn ein Dienst eine schlechte Legende zeichnet und man eine bessere hostet.",
-  "callout": "<strong>Warum nicht immer ableiten?</strong> Ein datengetriebener Style — Farbe nach Attribut, Breite nach Zoom — hat kein einzelnes Farbfeld, das ihn ehrlich abbildet. map0 leitet ein Farbfeld nur aus literalen Farben ab — sonst zeigt es lieber gar nichts als etwas Irreführendes.",
+  "sources.p": "<code>legend: false</code> blendet einen Layer aus der Legende aus. Eine URL lädt ein eigenes Legendenbild, das beispielsweise neben der Konfiguration gespeichert ist.",
+  "callout": "<strong>Legenden für datenabhängige Styles.</strong> Ein Style kann seine Farbe nach einem Attribut oder seine Breite nach der Zoomstufe ändern. map0 leitet Farbfelder nur aus konstanten Farben ab. Für Styles mit Ausdrücken können eigene Legendeneinträge definiert werden.",
   "config.h2": "Konfiguration"
 }

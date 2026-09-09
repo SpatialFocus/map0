@@ -28,7 +28,7 @@
       },
       "hover": { "content": "{{name}}" },
       "popup": { "title": "{{name}}", "fields": [{ "key": "type", "label": "Type" }] },
-      "attribution": "OS Open Zoomstack — demo.ldproxy.net"
+      "attribution": "OS Open Zoomstack, demo.ldproxy.net"
     },
     {
       "id": "flughaefen",
@@ -43,7 +43,7 @@
       },
       "hover": { "content": "{{name}}" },
       "popup": { "title": "{{name}}" },
-      "attribution": "OS Open Zoomstack — demo.ldproxy.net"
+      "attribution": "OS Open Zoomstack, demo.ldproxy.net"
     }
   ]
 }

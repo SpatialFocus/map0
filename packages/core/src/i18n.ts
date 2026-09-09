@@ -16,7 +16,7 @@ const dictionaries: Record<string, Record<string, string>> = {
     "addLayer.intro":
       "Paste a service URL. The service is queried directly in the browser (it must allow CORS).",
     "addLayer.introFile":
-      "Paste the URL of a GeoJSON file (its server must allow CORS), or pick GeoJSON, KML or GPX files from this device — they stay in the browser and become one layer each.",
+      "Paste a GeoJSON URL or choose GeoJSON, KML or GPX files from this device. Each local file becomes a layer and stays in the browser. Remote servers must allow CORS.",
     "addLayer.titleLabel": "Title (optional)",
     "addLayer.fromDevice": "From this device",
     "addLayer.chooseFiles": "Choose files…",
@@ -32,7 +32,7 @@ const dictionaries: Record<string, Record<string, string>> = {
     "addLayer.cancel": "Cancel",
     "addLayer.empty": "No layers found",
     "addLayer.failed": "Could not load the service",
-    "addLayer.no3857": "no Web Mercator (EPSG:3857) declared — may not display",
+    "addLayer.no3857": "Web Mercator (EPSG:3857) not declared; display may be unavailable",
     "print.title": "Print & export",
     "print.titleLabel": "Title",
     "print.size": "Size",
@@ -76,7 +76,7 @@ const dictionaries: Record<string, Record<string, string>> = {
     "error.title": "map0 configuration error",
     "error.intro": "The map could not start. Please fix the configuration:",
     "control.home": "Initial view",
-    "geolocate.failed": "Could not determine your location — check the location permission",
+    "geolocate.failed": "Could not determine your location. Check the location permission.",
   },
   de: {
     "layers.title": "Kartenebenen",
@@ -93,7 +93,7 @@ const dictionaries: Record<string, Record<string, string>> = {
     "addLayer.intro":
       "Dienst-URL einfügen. Der Dienst wird direkt im Browser abgefragt (muss CORS erlauben).",
     "addLayer.introFile":
-      "URL einer GeoJSON-Datei einfügen (der Server muss CORS erlauben) oder GeoJSON-, KML- oder GPX-Dateien von diesem Gerät wählen — sie bleiben im Browser und werden je ein Layer.",
+      "Eine GeoJSON-URL einfügen oder GeoJSON-, KML- oder GPX-Dateien vom Gerät auswählen. Jede lokale Datei wird zu einem Layer und bleibt im Browser. Externe Server müssen CORS erlauben.",
     "addLayer.titleLabel": "Titel (optional)",
     "addLayer.fromDevice": "Von diesem Gerät",
     "addLayer.chooseFiles": "Dateien wählen…",
@@ -109,7 +109,7 @@ const dictionaries: Record<string, Record<string, string>> = {
     "addLayer.cancel": "Abbrechen",
     "addLayer.empty": "Keine Layer gefunden",
     "addLayer.failed": "Dienst konnte nicht geladen werden",
-    "addLayer.no3857": "kein Web Mercator (EPSG:3857) deklariert — Anzeige evtl. nicht möglich",
+    "addLayer.no3857": "Web Mercator (EPSG:3857) nicht angegeben; Anzeige möglicherweise nicht verfügbar",
     "print.title": "Drucken & Export",
     "print.titleLabel": "Titel",
     "print.size": "Größe",
@@ -153,7 +153,7 @@ const dictionaries: Record<string, Record<string, string>> = {
     "error.title": "map0-Konfigurationsfehler",
     "error.intro": "Die Karte konnte nicht starten. Bitte Konfiguration korrigieren:",
     "control.home": "Ausgangsansicht",
-    "geolocate.failed": "Standort konnte nicht ermittelt werden — Standortfreigabe prüfen",
+    "geolocate.failed": "Standort konnte nicht ermittelt werden. Bitte die Standortfreigabe prüfen.",
   },
 };
 

@@ -1,17 +1,17 @@
 {
-  "title": "Config-Vererbung — map0-Demos",
+  "title": "Config-Vererbung | map0-Demos",
   "eyebrow": "Konfiguration",
   "h1": "Config-Vererbung",
-  "lede": "Fünfzig Karten in einer Organisation sollten nicht fünfzigmal dieselben drei Basemaps wiederholen. Eine gemeinsame Basis-Config definiert den Hausstandard; jede Karte hält nur fest, was bei ihr anders ist.",
+  "lede": "Gemeinsame Einstellungen mehrerer Karten lassen sich in einer Basiskonfiguration verwalten. Jede Karte kann die abweichenden Einstellungen überschreiben.",
   "note": "<strong>Was hier zu sehen ist:</strong> Drei Basemaps, der Home-Button, die Position der Legende und der Share-Link kommen alle aus der Basisdatei der Organisation. Diese Karte selbst deklariert nur einen Layer, eine Ansicht und ihre eigene Akzentfarbe.",
   "config.h2": "Die Karten-Config",
   "config.p": "Kurz, weil sie erbt:",
   "config.h3": "Die gemeinsame Basis",
   "config.p2": "Einmal zentral gepflegt und von jeder Karte der Organisation wiederverwendet:",
   "merge.h2": "Merge-Regeln",
-  "merge.li1": "Objekte werden rekursiv gemergt — das <code>theme.primary</code> des Kindes gewinnt, das <code>theme.radius</code> der Basis bleibt erhalten",
-  "merge.li2": "Arrays werden als Ganzes ersetzt — eine Layer-Liste ist eine bewusste Reihenfolge, keine Menge zum Mergen",
+  "merge.li1": "Objekte werden rekursiv zusammengeführt: <code>theme.primary</code> der abgeleiteten Konfiguration überschreibt den Basiswert, während <code>theme.radius</code> aus der Basis erhalten bleibt",
+  "merge.li2": "Arrays werden vollständig ersetzt; maßgeblich ist die Reihenfolge in der abgeleiteten Konfiguration",
   "merge.li3": "Ketten bis zu drei Ebenen tief (global → Abteilung → Karte), mit Zykluserkennung",
   "merge.li4": "Relative <code>extends</code>-URLs werden relativ zu der Config-Datei aufgelöst, die sie deklariert",
-  "merge.callout": "<strong>Warum Arrays ersetzt werden</strong> Layer-Arrays zu mergen klingt bequem — bis man einen geerbten Layer entfernt, zwei davon umsortiert oder einem Redakteur erklären will, warum Layer drei aus dem Nichts aufgetaucht ist. Ersetzen ist vorhersehbar; und wo sich Wiederverwendung lohnt — Basemaps, Theming, Control-Defaults — ist es ohnehin genau das, was man will."
+  "merge.callout": "<strong>Arrays ersetzen.</strong> Um eine geerbte Layer-Liste zu ändern, wird die vollständige Liste in der abgeleiteten Konfiguration angegeben. So ist eindeutig festgelegt, welche Layer in welcher Reihenfolge erscheinen. Nicht überschriebene Einstellungen werden weiterhin aus der Basis übernommen."
 }

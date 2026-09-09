@@ -54,20 +54,20 @@ const STR =
     ? {
         empty: "Config einfügen, um sie zu prüfen.",
         notJson: "Noch kein JSON",
-        valid: (w: string) => `Gültig — Übernehmen lädt die Karte${w}`,
-        applied: (w: string) => `Gültig — die Karte zeigt diese Config${w}`,
+        valid: (w: string) => `Gültig: Übernehmen lädt die Karte${w}`,
+        applied: (w: string) => `Gültig: die Karte zeigt diese Config${w}`,
         invalid: (e: number, w: string) =>
-          `${e} Fehler${w} — die Karte bleibt auf dem letzten gültigen Stand`,
+          `${e} Fehler${w}: die Karte bleibt auf dem letzten gültigen Stand`,
         warnings: (n: number) => ` (${n} Warnung${n === 1 ? "" : "en"})`,
         loadFailed: (src: string) => `${src} konnte nicht geladen werden`,
       }
     : {
         empty: "Paste a config to check it.",
         notJson: "Not JSON yet",
-        valid: (w: string) => `Valid — Apply loads the map${w}`,
-        applied: (w: string) => `Valid — the map shows this config${w}`,
+        valid: (w: string) => `Valid: Apply loads the map${w}`,
+        applied: (w: string) => `Valid: the map shows this config${w}`,
         invalid: (e: number, w: string) =>
-          `${e} error${e === 1 ? "" : "s"}${w} — the map keeps the last valid state`,
+          `${e} error${e === 1 ? "" : "s"}${w}: the map keeps the last valid state`,
         warnings: (n: number) => ` (${n} warning${n === 1 ? "" : "s"})`,
         loadFailed: (src: string) => `could not load ${src}`,
       };

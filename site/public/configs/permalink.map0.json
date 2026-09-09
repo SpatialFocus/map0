@@ -31,7 +31,7 @@
       "layers": "GENFLWIDMUNGOGD",
       "opacity": 0.55,
       "info": { "format": "application/json" },
-      "attribution": "Stadt Wien — data.wien.gv.at"
+      "attribution": "Stadt Wien, data.wien.gv.at"
     },
     {
       "id": "areas",

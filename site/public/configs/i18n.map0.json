@@ -40,7 +40,7 @@
       "opacity": 0.5,
       "legend": "auto",
       "info": { "format": "application/json" },
-      "attribution": "Stadt Wien — data.wien.gv.at"
+      "attribution": "Stadt Wien, data.wien.gv.at"
     }
   ],
   "controls": { "layerSwitcher": { "open": true }, "legend": { "open": true } }

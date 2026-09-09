@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title data-i18n="title">Popups &amp; hover — map0 demos</title>
+    <title data-i18n="title">Popups &amp; hover | map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -14,42 +14,52 @@
         <p class="eyebrow" data-i18n="eyebrow">Map features</p>
         <h1 data-i18n="h1">Popups &amp; hover</h1>
         <p class="lede" data-i18n="lede">
-          What happens when someone clicks the map: three layers answer at once, each formatting
-          its attributes differently.
+          Click the map to view attributes from three layers, each with its own popup format.
         </p>
       </div>
 
       <map0-viewer config-src="/configs/popups.map0.json"></map0-viewer>
       <p class="demo-note" data-i18n="note">
-        <strong>Try it:</strong> hover a fountain or a demo zone for a tooltip. Click one and the
-        geometry is highlighted while the popup is open. Click where the zoning layer, a demo zone
-        and a fountain overlap — the popup groups the answers per layer.
+        <strong>Try it:</strong> hover over a fountain or demo area to see a tooltip. Click to
+        highlight its geometry while the popup is open. Where several layers overlap, the popup
+        groups the results by layer.
       </p>
 
       <section class="doc">
         <h2 data-i18n="what.h2">What this demo shows</h2>
         <ul class="checks">
-          <li data-i18n="what.li1">Vector layers are queried in the browser, WMS layers via GetFeatureInfo — in parallel, one popup</li>
-          <li data-i18n="what.li2"><code>popup.content</code> renders an HTML template with <code>{{property}}</code> placeholders</li>
-          <li data-i18n="what.li3"><code>popup.fields</code> renders a labelled attribute table instead — no HTML needed</li>
+          <li data-i18n="what.li1">
+            Vector layers are queried in the browser and WMS layers through GetFeatureInfo, with
+            results combined in one popup
+          </li>
+          <li data-i18n="what.li2">
+            <code>popup.content</code> renders an HTML template with <code>{{property}}</code>
+            placeholders
+          </li>
+          <li data-i18n="what.li3"><code>popup.fields</code> displays a labelled attribute table</li>
           <li data-i18n="what.li4"><code>hover.content</code> adds a short tooltip that follows the cursor</li>
-          <li data-i18n="what.li5">The clicked geometry is mirrored into a highlight layer and cleared when the popup closes</li>
+          <li data-i18n="what.li5">
+            The clicked geometry is mirrored into a highlight layer and cleared when the popup
+            closes
+          </li>
           <li data-i18n="what.li6">More than ten hits on one layer collapse into an expandable section</li>
-          <li data-i18n="what.li7">On a phone — any viewer narrower than 640 px — the popup becomes a bottom sheet: drag the handle to see more, swipe it down or tap the map to close it</li>
+          <li data-i18n="what.li7">
+            In viewers narrower than 640 px, results open in a panel at the bottom of the map. Drag
+            its handle to resize it, swipe down to close it, or tap an empty part of the map.
+          </li>
         </ul>
       </section>
 
       <section class="doc">
         <h2 data-i18n="safe.h2">Everything is sanitised</h2>
         <p data-i18n="safe.p1">
-          Templates come from a CMS field and GetFeatureInfo responses come from a third-party
-          service — so both are treated as untrusted. Property values are HTML-escaped when the
-          template is rendered, and the finished markup passes through DOMPurify before it reaches
-          the DOM. Links are rewritten to <code>rel="noopener noreferrer"</code>.
+          Popup templates and service responses may contain HTML. Attribute values are escaped when
+          inserted into templates, and DOMPurify sanitises the resulting markup before display.
+          Links receive <code>rel="noopener noreferrer"</code>.
         </p>
         <p data-i18n="safe.p2">
-          The template language is deliberately closed: placeholders and nothing else. No
-          expressions, no <code>eval</code>, nothing a config author could turn into script.
+          Templates support attribute placeholders. JavaScript expressions and <code>eval</code> are
+          not supported.
         </p>
       </section>
 
@@ -60,7 +70,9 @@
 
       <section class="doc">
         <h2 data-i18n="host.h2">Reacting from the host page</h2>
-        <p data-i18n="host.p">Every click is also a DOM event, so the surrounding page can react to it:</p>
+        <p data-i18n="host.p">
+          A click that returns feature information also emits a DOM event for the surrounding page:
+        </p>
         <pre data-lang="js" data-label="host-page.js">
           const viewer = document.querySelector('map0-viewer');
 

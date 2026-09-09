@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title data-i18n="title">Print &amp; export — map0 demos</title>
+    <title data-i18n="title">Print &amp; export | map0 demos</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/demos/demo.css" />
     <script type="module" src="/demos/demo.ts"></script>
@@ -14,43 +14,43 @@
         <p class="eyebrow" data-i18n="eyebrow">Map features</p>
         <h1 data-i18n="h1">Print &amp; export</h1>
         <p class="lede" data-i18n="lede">
-          A composed map sheet — title, legend, scale bar, attribution, date — rendered entirely in
-          the browser at up to 300&nbsp;dpi.
+          Create a map sheet with a title, legend, scale bar, attribution and date. The browser
+          renders the output at up to 300&nbsp;dpi.
         </p>
       </div>
 
       <map0-viewer config-src="/configs/print.map0.json"></map0-viewer>
       <p class="demo-note" data-i18n="note">
-        <strong>Try it:</strong> the printer button in the top-left control stack. Pick A4 landscape
-        and 300&nbsp;dpi, then take the PDF, the PNG, or send it to the browser's print dialog.
+        <strong>Try it:</strong> click the printer button at the top left. Choose A4 landscape and
+        300&nbsp;dpi, then download a PDF or PNG, or open the browser’s print dialog.
       </p>
 
       <section class="doc">
         <h2 data-i18n="how.h2">How it works</h2>
         <p data-i18n="how.p1">
-          A hidden clone of the map is created at the target paper size and pixel ratio, sharing the
-          live style — including every overlay you have switched on. Once it reports idle, its
-          canvas is composed onto a layout canvas together with the legend, a rounded scale bar and
-          the attribution collected from all active sources.
+          The viewer creates a hidden copy of the map at the chosen size and resolution, using the
+          current style and visible overlays. Once rendered, it combines the map image with the
+          legend, scale bar and attribution in the page layout.
         </p>
         <ul class="checks">
           <li data-i18n="how.li1">Paper: current view, A4 or A3, landscape or portrait</li>
-          <li data-i18n="how.li2">Resolution: 96, 150 or 300&nbsp;dpi — everything in the layout scales with it</li>
+          <li data-i18n="how.li2">Resolution: 96, 150 or 300&nbsp;dpi, applied to the whole layout</li>
           <li data-i18n="how.li3">Legend images and swatches are drawn into the sheet, not screenshotted</li>
-          <li data-i18n="how.li4">PDF pages are real paper sizes: an A4 export measures 297 × 210 mm and prints without "fit to page"</li>
-          <li data-i18n="how.li5">No server, no upload — the map never leaves the browser</li>
+          <li data-i18n="how.li4">
+            PDF pages are real paper sizes: an A4 export measures 297 × 210 mm and prints without
+            "fit to page"
+          </li>
+          <li data-i18n="how.li5">The browser creates the export locally</li>
         </ul>
         <p data-i18n="how.p2">
-          The PDF is the composed sheet placed on the page, centred inside 10&nbsp;mm margins. It is
-          embedded as PNG rather than JPEG: a map is fine lines and small text, exactly what JPEG
-          artefacts ruin. <a href="https://github.com/parallax/jsPDF">jsPDF</a> only loads when
-          someone actually asks for a PDF — it is the heaviest module in the client.
+          The PDF centres the map sheet with a 10&nbsp;mm margin. It embeds the sheet as a PNG to
+          preserve fine lines and small text. <a href="https://github.com/parallax/jsPDF">jsPDF</a>
+          loads when PDF output is first requested.
         </p>
         <div class="callout" data-i18n="callout">
-          <strong>Export what you see, not survey-grade</strong>
-          The scale bar is computed for the exported extent, but this is not a true-to-scale plot:
-          label sizes and symbols scale with the pixel ratio. A server-side renderer for scale-true
-          PDF can be added behind the same dialog later — the interface is reserved for it.
+          <strong>Map view export.</strong> The scale bar is calculated for the exported view. The
+          output does not guarantee a specified print scale; labels and symbols scale with pixel
+          density. Printing at an exact map scale is planned separately.
         </div>
       </section>
 
@@ -63,8 +63,8 @@
         <pre data-src="/configs/print.map0.json" data-label="print.map0.json" data-emphasise="meta,legend,print"></pre>
         <h3 data-i18n="config.h3">Narrowing the choices</h3>
         <p data-i18n="config.p2">
-          A top-level <code>print</code> block decides what the dialog offers — useful when an
-          organisation wants one format on one paper size and no discussion:
+          A top-level <code>print</code> block controls the formats, paper sizes and resolutions
+          available in the dialog:
         </p>
         <pre data-lang="json" data-label="excerpt">
           "print": {
@@ -75,10 +75,9 @@
           }
         </pre>
         <p data-i18n="config.p3">
-          Everything is optional; the defaults are PNG and PDF, current view plus A4 in both
-          orientations, 96/150/300&nbsp;dpi, and all sheet elements. Dropping an entry from
-          <code>elements</code> removes it from the composed sheet — a map without a title block, or
-          without the date, is one key away.
+          All settings are optional. Defaults include PNG and PDF, the current view and A4 in both
+          orientations, 96/150/300&nbsp;dpi and all sheet elements. Remove an entry from
+          <code>elements</code> to omit it from the output.
         </p>
       </section>
     </main>
