@@ -88,7 +88,8 @@ export class VectorAdapter extends SourceAdapter<NormalizedVector> {
       if (spec.type !== "symbol") this.interactive.push(id);
       const paint = specObj.paint as Record<string, unknown> | undefined;
       for (const prop of OPACITY_PROPS[spec.type] ?? []) {
-        const base = typeof paint?.[prop] === "number" ? (paint[prop] as number) : 1;
+        const value = paint?.[prop];
+        const base = typeof value === "number" || Array.isArray(value) ? value : 1;
         this.opacityEntries.push([id, prop, base]);
       }
     });

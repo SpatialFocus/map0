@@ -164,7 +164,7 @@ export function buildSearchUrl(
   }
 
   const base = config.url ?? DEFAULT_URLS[config.provider];
-  const url = new URL(base);
+  const url = new URL(base, typeof location !== "undefined" ? location.href : "http://localhost/");
   if (config.provider === "photon") {
     url.searchParams.set("q", query);
     url.searchParams.set("limit", limit);

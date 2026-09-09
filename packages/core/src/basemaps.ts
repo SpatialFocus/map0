@@ -191,12 +191,19 @@ export class BasemapManager implements Map0Basemaps {
   }
 
   private switchSeq = 0;
+  private destroyed = false;
+
+  destroy(): void {
+    this.destroyed = true;
+    this.switchSeq++;
+  }
 
   async switchTo(id: string): Promise<void> {
-    if (id === this.current.value) return;
+    if (this.destroyed) return;
     const bm = this.basemaps.find((b) => b.id === id);
     if (!bm) return;
     const seq = ++this.switchSeq;
+    if (id === this.current.value) return;
     const style = await resolveBasemapStyle(bm, this.background);
     if (seq !== this.switchSeq) return; // a newer switch superseded this one
     const overlays = this.getOverlays();

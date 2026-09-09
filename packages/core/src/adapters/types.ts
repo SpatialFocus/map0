@@ -45,7 +45,7 @@ export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer>
   readonly status = new Signal<LayerStatus>("loading");
   protected ctx!: AdapterContext;
   /** [maplibre layer id, opacity paint property, base value] triplets for opacity control */
-  protected opacityEntries: Array<[string, string, number]> = [];
+  protected opacityEntries: Array<[string, string, number | unknown[]]> = [];
   /** everything registered on the map, undone by unmount() */
   private disposers: Array<() => void> = [];
   private unmounted = false;
@@ -109,7 +109,8 @@ export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer>
     const { map } = this.ctx;
     for (const [layerId, prop, base] of this.opacityEntries) {
       if (map.getLayer(layerId)) {
-        map.setPaintProperty(layerId, prop as never, (base * opacity) as never);
+        const value = opacity === 1 ? base : typeof base === "number" ? base * opacity : ["*", base, opacity];
+        map.setPaintProperty(layerId, prop as never, value as never);
       }
     }
   }

@@ -1,5 +1,6 @@
 import type { NormalizedLayer, WmsLayerDef } from "@map0/schema";
 import { lngLatToMercator } from "../mercator.js";
+import { setOgcParams } from "./ogc-params.js";
 import {
   SourceAdapter,
   type FeatureInfoQuery,
@@ -25,13 +26,20 @@ function baseAndParams(def: WmsParams, extra: Record<string, string>): string {
   const url = new URL(def.url, typeof location !== "undefined" ? location.href : "http://localhost/");
   const search = new URLSearchParams(url.search);
   const version = def.version ?? "1.3.0";
-  const merged: Record<string, string> = {
+  const operationKeys = new Set([
+    "SERVICE", "VERSION", "REQUEST", "LAYERS", "LAYER", "QUERY_LAYERS", "STYLES", "STYLE",
+    "FORMAT", "TRANSPARENT", "WIDTH", "HEIGHT", "CRS", "SRS", "BBOX", "I", "J", "X", "Y",
+    "INFO_FORMAT", "FEATURE_COUNT", "SLD_VERSION",
+  ]);
+  for (const key of [...search.keys()]) {
+    if (operationKeys.has(key.toUpperCase())) search.delete(key);
+  }
+  setOgcParams(search, {
     SERVICE: "WMS",
     VERSION: version,
     ...extra,
-    ...(def.params ?? {}),
-  };
-  for (const [k, v] of Object.entries(merged)) search.set(k, v);
+  });
+  setOgcParams(search, def.params ?? {});
   url.search = search.toString();
   return url.toString();
 }
@@ -49,9 +57,10 @@ export function buildWmsTileUrl(def: WmsParams): string {
     WIDTH: size,
     HEIGHT: size,
     [version === "1.3.0" ? "CRS" : "SRS"]: "EPSG:3857",
+    BBOX: "{bbox-epsg-3857}",
   });
   // BBOX must remain un-encoded so MapLibre substitutes it per tile.
-  return `${url}&BBOX={bbox-epsg-3857}`;
+  return url.replace(/%7Bbbox-epsg-3857%7D/gi, "{bbox-epsg-3857}");
 }
 
 /** GetFeatureInfo URL for a click, using a window of `size` px centered on the click. */

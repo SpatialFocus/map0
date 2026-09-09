@@ -65,6 +65,8 @@ export class LayerManager implements Map0Layers {
   /** layers added at runtime (F3) — above the configured tree, top-most on the map */
   private readonly extra: NormalizedLayer[] = [];
   private ctx?: AdapterContext;
+  private pendingIds = new Set<string>();
+  private destroyed = false;
   private readonly onZoom: () => void;
 
   constructor(
@@ -106,12 +108,12 @@ export class LayerManager implements Map0Layers {
   }
 
   get all(): SourceAdapter[] {
-    return [...this.adapters.values()];
+    return this.allDefs.map(def => this.adapters.get(def.id)).filter((a): a is SourceAdapter => !!a);
   }
 
   /** runtime-added layer definitions (for share/permalink state, F3.5) */
   get userLayerDefs(): NormalizedLayer[] {
-    return [...this.extra];
+    return this.extra.map(def => ({ ...def, ...this.runtime.get(def.id) }));
   }
 
   /** adapter owning a given MapLibre layer id (for hit → layer-config lookups) */
@@ -137,7 +139,8 @@ export class LayerManager implements Map0Layers {
       .map((def) => this.adapters.get(def.id))
       .filter(
         (a): a is SourceAdapter =>
-          !!a?.featureInfo && (this.runtime.get(a.def.id)?.visible ?? a.def.visible),
+          !!a?.featureInfo && this.inZoomRange(a.def) &&
+          (this.runtime.get(a.def.id)?.visible ?? a.def.visible),
       );
   }
 
@@ -151,11 +154,18 @@ export class LayerManager implements Map0Layers {
     if (needsPmtiles) await ensurePmtilesProtocol();
 
     for (const def of defs) {
+      if (this.destroyed) return;
       const adapter = createAdapter(def);
       if (!adapter) continue; // validator prevents unknown types; belt & braces
       try {
         await adapter.mount(ctx); // sequential keeps the stack deterministic
+        if (this.destroyed) {
+          adapter.unmount();
+          return;
+        }
       } catch (e) {
+        adapter.unmount();
+        if (this.destroyed) return;
         adapter.status.value = "error";
         console.error(`[map0] failed to mount layer "${def.id}"`, e);
       }
@@ -171,17 +181,35 @@ export class LayerManager implements Map0Layers {
 
   /** Add a (non-group) layer at runtime; returns its id or null on failure (F3.1). */
   async addLayer(def: Exclude<LayerDef, GroupLayerDef>): Promise<string | null> {
-    if (!this.ctx) return null;
-    const norm = normalizeSingleLayer(def, this.adapters.keys());
+    if (!this.ctx || this.destroyed) return null;
+    const norm = normalizeSingleLayer(def, [...this.adapters.keys(), ...this.pendingIds]);
+    this.pendingIds.add(norm.id);
+    try {
+      return await this.mountAddedLayer(norm);
+    } finally {
+      this.pendingIds.delete(norm.id);
+    }
+  }
+
+  private async mountAddedLayer(norm: NormalizedLayer): Promise<string | null> {
+    const ctx = this.ctx;
+    if (!ctx || this.destroyed) return null;
     if (norm.type === "vector" && norm.url.startsWith("pmtiles://")) {
       const { ensurePmtilesProtocol: ensure } = await import("./adapters/vector.js");
       await ensure();
     }
+    if (this.destroyed) return null;
     const adapter = createAdapter(norm);
     if (!adapter) return null;
     try {
-      await adapter.mount(this.ctx);
+      await adapter.mount(ctx);
+      if (this.destroyed) {
+        adapter.unmount();
+        return null;
+      }
     } catch (e) {
+      adapter.unmount();
+      if (this.destroyed) return null;
       console.error(`[map0] failed to add layer "${norm.id}"`, e);
       return null;
     }
@@ -213,11 +241,15 @@ export class LayerManager implements Map0Layers {
 
   /** detach everything this manager registered on the map (the map itself may outlive it) */
   destroy(): void {
+    this.destroyed = true;
+    this.ctx = undefined;
     this.map.off("zoom", this.onZoom);
     for (const unsub of this.statusSubs.values()) unsub();
     this.statusSubs.clear();
     for (const adapter of this.adapters.values()) adapter.unmount();
     this.adapters.clear();
+    this.extra.length = 0;
+    this.runtime.clear();
   }
 
   setVisibility(id: string, visible: boolean): void {

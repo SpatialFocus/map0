@@ -276,7 +276,8 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
     paint: Record<string, unknown> | undefined,
   ): void {
     for (const prop of OPACITY_PROPS[type] ?? []) {
-      const base = typeof paint?.[prop] === "number" ? (paint[prop] as number) : 1;
+      const value = paint?.[prop];
+      const base = typeof value === "number" || Array.isArray(value) ? value : 1;
       this.opacityEntries.push([layerId, prop, base]);
     }
   }

@@ -2,6 +2,7 @@ import type { NormalizedLayer, WmtsLayerDef } from "@map0/schema";
 import { mercatorToLngLat } from "../mercator.js";
 import { loadOgcClient } from "../ogc.js";
 import { normalizeLegendUrl } from "./wms.js";
+import { setOgcParams } from "./ogc-params.js";
 import { SourceAdapter, type LegendSpec } from "./types.js";
 
 interface ResourceLinkLike {
@@ -214,8 +215,8 @@ export function buildWmtsTemplate(parts: WmtsTemplateParts): string {
   }
 
   /* KVP GetTile template */
-  const sep = parts.resourceUrl.includes("?") ? "&" : "?";
-  const params = new URLSearchParams({
+  const url = new URL(parts.resourceUrl, typeof location !== "undefined" ? location.href : "http://localhost/");
+  setOgcParams(url.searchParams, {
     SERVICE: "WMTS",
     REQUEST: "GetTile",
     VERSION: "1.0.0",
@@ -223,8 +224,11 @@ export function buildWmtsTemplate(parts: WmtsTemplateParts): string {
     STYLE: parts.style,
     TILEMATRIXSET: parts.matrixSet,
     FORMAT: parts.format,
+    TILEMATRIX: matrixToken,
+    TILEROW: "{y}",
+    TILECOL: "{x}",
   });
-  return `${parts.resourceUrl}${sep}${params.toString()}&TILEMATRIX=${matrixToken}&TILEROW={y}&TILECOL={x}`;
+  return url.toString().replace(/%7B([zxy])%7D/gi, "{$1}");
 }
 
 export class WmtsAdapter extends SourceAdapter<NormalizedWmts> {

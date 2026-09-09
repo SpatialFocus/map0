@@ -10,6 +10,7 @@
 
 const R = 6371008.8; // IUGG mean Earth radius, metres
 const RAD = Math.PI / 180;
+const longitudeDelta = (from: number, to: number): number => ((to - from + 180) % 360 + 360) % 360 - 180;
 
 export type Position = [number, number]; // [lng, lat]
 
@@ -42,7 +43,9 @@ export function ringArea(points: Position[]): number {
   for (let i = 0; i < points.length; i++) {
     const p1 = points[i]!;
     const p2 = points[(i + 1) % points.length]!;
-    total += (p2[0] - p1[0]) * RAD * (2 + Math.sin(p1[1] * RAD) + Math.sin(p2[1] * RAD));
+    // Follow the short crossing at the date line, including wrapped map coordinates.
+    const deltaLng = longitudeDelta(p1[0], p2[0]);
+    total += deltaLng * RAD * (2 + Math.sin(p1[1] * RAD) + Math.sin(p2[1] * RAD));
   }
   return Math.abs((total * R * R) / 2);
 }
@@ -70,7 +73,7 @@ export function formatArea(squareMetres: number, locale = "en"): string {
 
 /** Midpoint of a segment, good enough for placing a label. */
 export function midpoint(a: Position, b: Position): Position {
-  return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  return [a[0] + longitudeDelta(a[0], b[0]) / 2, (a[1] + b[1]) / 2];
 }
 
 /** Centroid of a ring, for placing the area label. */
@@ -78,7 +81,7 @@ export function centroid(points: Position[]): Position {
   let x = 0;
   let y = 0;
   for (const p of points) {
-    x += p[0];
+    x += points[0]![0] + longitudeDelta(points[0]![0], p[0]);
     y += p[1];
   }
   return [x / points.length, y / points.length];

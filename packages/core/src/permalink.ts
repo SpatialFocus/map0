@@ -49,7 +49,21 @@ export function encodeShareState(state: ShareState): string {
 export function decodeShareState(encoded: string): ShareState | null {
   try {
     const parsed = JSON.parse(base64UrlDecode(encoded)) as ShareState;
-    return Array.isArray(parsed.v) && parsed.v.length >= 3 ? parsed : null;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    if (!Array.isArray(parsed.v) || parsed.v.length < 3 || parsed.v.length > 5 ||
+      !parsed.v.every(v => typeof v === "number" && Number.isFinite(v)) ||
+      Math.abs(parsed.v[1]!) > 90 || parsed.v[2]! < 0 || parsed.v[2]! > 24 ||
+      (parsed.v[4] !== undefined && (parsed.v[4] < 0 || parsed.v[4] > 85))) return null;
+    if (parsed.b !== undefined && typeof parsed.b !== "string") return null;
+    if (parsed.l !== undefined) {
+      if (!parsed.l || typeof parsed.l !== "object" || Array.isArray(parsed.l)) return null;
+      for (const value of Object.values(parsed.l)) {
+        if (!Array.isArray(value) || value.length !== 2 || (value[0] !== 0 && value[0] !== 1) ||
+          typeof value[1] !== "number" || !Number.isFinite(value[1]) || value[1] < 0 || value[1] > 100) return null;
+      }
+    }
+    if (parsed.u !== undefined && !Array.isArray(parsed.u)) return null;
+    return parsed;
   } catch {
     return null;
   }
