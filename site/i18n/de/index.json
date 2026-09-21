@@ -165,7 +165,7 @@
   "next5.h3": "🖨️ Maßstabstreuer Druck",
   "next5.p": "Der Browser exportiert PNG und PDF-Seiten. Ein geplanter Server-Adapter soll den Druck in einem festgelegten Kartenmaßstab ermöglichen, etwa 1:5.000.",
   "next6.h3": "🎛️ Der map0-Konfigurator",
-  "next6.p": "Ein visueller Editor zur Auswahl von Diensten, zum Anordnen der Layer und zum Einstellen von Popups, Legenden und Gestaltung. Eine Kartenvorschau zeigt das Ergebnis; das erzeugte JSON kann ins CMS kopiert werden.",
+  "next6.p": "Ein visueller Editor zur Auswahl von Diensten, zum Anordnen der Layer und zum Einstellen von Popups, Legenden und Gestaltung. Eine Kartenvorschau zeigt das Ergebnis; das erzeugte JSON kann ins CMS kopiert werden. <a href=\"/configurator/\">Eine erste Version ist online.</a>",
   "next7.h3": "🧩 Plugin-API",
   "next7.p": "Eine dokumentierte API für eigene Layer-Adapter, Werkzeuge und Panels.",
   "next8.h3": "🗂️ Katalogsuche",
