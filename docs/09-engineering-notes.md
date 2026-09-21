@@ -19,6 +19,7 @@ node e2e/verify-types.mjs       # type-check a fresh consumer against the packed
 pnpm release                    # the whole release: version, changelog, verify, publish (§release)
 node e2e/verify-demos.mjs       # every demo page, headless, with screenshots
 node e2e/verify-demos.mjs wms   # …or one
+node e2e/verify-configurator.mjs  # the configurator page, driven through its element API (docs/12)
 ```
 
 The loop that catches the most: change something → `pnpm typecheck` → look at it in the browser →

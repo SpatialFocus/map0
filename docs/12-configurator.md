@@ -1,6 +1,6 @@
 # 12 — The configurator
 
-> Status: first version, 2026-09-21. Roadmap item "Visual config editor" (M2); announced on the
+> Status: first version, 2026-09-21 (drag-and-drop, style presets, catalog search and the smoke check added the same day). Roadmap item "Visual config editor" (M2); announced on the
 > start page as "the map0 configurator".
 
 ## What it is
@@ -24,9 +24,8 @@ editable in place for the keys the forms do not offer.
 - **Integrator** — uses it to bootstrap a config from an organisation's services, then hand-edits
   in the playground (the two link to each other; `?config=` and `?c=` work on both).
 
-Out of scope for the first version: drag-and-drop in the tree (up/down/in/out buttons instead),
-editing inline GeoJSON geometry (the raw JSON editor covers it), catalog search (M2 module), and
-saving anywhere but the browser (drafts in localStorage; there is no backend, by design).
+Out of scope for the first version: editing inline GeoJSON geometry (the raw JSON editor covers
+it) and saving anywhere but the browser (drafts in localStorage; there is no backend, by design).
 
 ## How it is built
 
@@ -39,6 +38,8 @@ packages/configurator/src
 ├── fields.ts          form fields as Lit template functions (one shell, one CSS)
 ├── state.ts           pure config operations: tree edits by index path, cleaning, serialising
 ├── services.ts        capabilities → layer candidates (WMS, WMTS, WFS, OGC API Features)
+├── catalog.ts         CSW 2.0.2 / OGC API Records search → records with service links
+├── style-presets.ts   simple presets; categorised/graduated styles + legend from sampled features
 ├── i18n.ts            UI strings en/de — the help texts are the field documentation
 └── styles.ts          host-overridable tokens (--map0c-*), container-query layout
 ```
@@ -61,6 +62,20 @@ Design points:
   server needs one; collections → `ogcapi-features` layers pointing at the items URL).
 - **"Use the preview's view"** reads center, zoom, bearing and pitch from `viewer.api.map` — the
   natural way to set an initial view is to pan the map to it.
+- **The preview is also the data source for styling.** "Colour by attribute" samples the layer's
+  features through `api.layers.all[i].sourceIds` and `map.querySourceFeatures` (deduplicated by
+  properties — a GeoJSON source without ids reports id 0 for every feature), so no second fetch
+  and no format-specific reader; the catch is that only features in loaded tiles are seen. Up to
+  twelve distinct values become a `match` expression, numeric ranges five equal intervals as a
+  `step` expression, both with a generated legend.
+- **Drag-and-drop in the tree** is HTML5 DnD on the rows; `moveLayerTo` corrects the target for
+  the node's own removal and refuses to drop a group into itself. Up/down/in/out buttons remain for
+  keyboard users.
+- **Catalog search** posts a GetRecords with an `ogc:PropertyIsLike` on `csw:AnyText` (KVP+CQL
+  fails on GeoNetwork and pycsw in different ways) or queries an OGC API Records collection with
+  `q`. Records show their WMS/WMTS/WFS/OGC API links; a link that names a layer is added directly,
+  a bare service URL opens the capabilities picker. Many catalogs send no CORS headers — that is
+  reported as such.
 - **Drafts** live in localStorage under one key; a linked config (`?config=`, `?c=`) is a starting
   point and the URL is cleaned so a refresh does not overwrite edits with it.
 - **The site page is thin**: it mounts the element, passes the pinned CDN URL for the embed
@@ -74,7 +89,7 @@ Design points:
 |---|---|
 | General | `meta.*`, `map.*` (center/zoom, bounds, min/max zoom, maxBounds, bearing, pitch, projection, cooperativeGestures), `permalink` |
 | Basemaps | list with presets (basemap.at vector/raster, OpenFreeMap, OSM, empty) and custom entries; every `basemap` key |
-| Layers | tree edits; add from WMS/WMTS/WFS/OGC API capabilities or a data URL (GeoJSON, GeoParquet, COG, vector tiles, XYZ); common keys, type-specific keys, `popup`/`info`/`hover`, simple style or style-spec JSON, `cluster`, `legend` (auto/none/image/entries), raw layer JSON |
+| Layers | tree edits incl. drag-and-drop; add from WMS/WMTS/WFS/OGC API capabilities, a data URL (GeoJSON, GeoParquet, COG, vector tiles, XYZ) or a catalog (CSW, OGC API Records); common keys, type-specific keys, `popup`/`info`/`hover`, style presets, colour by attribute, simple style or style-spec JSON, `cluster`, `legend` (auto/none/image/entries), raw layer JSON |
 | Controls | every `controls.*` key incl. positions, `open`, `allowAdd`, scale unit, coordinate CRS list |
 | Search | `search.*` incl. custom geocoder |
 | Print | `controls.print`, `print.*` (defaults shown, only deviations written) |
@@ -86,8 +101,13 @@ entry details beyond the JSON textarea, WMS `params` beyond key=value.
 
 ## Verification
 
-- `pnpm test` — `state.test.ts`: tree operations, id slugs, cleaning/ordering, embed snippet,
-  and that the German dictionary covers every English key.
+- `pnpm test` — `state.test.ts` (tree operations incl. drops, id slugs, cleaning/ordering, embed
+  snippet, German covers every English key), `style-presets.test.ts` (sampling, match/step
+  expressions, legends), `catalog.test.ts` (link classification, requests, Records parsing).
+- `node e2e/verify-configurator.mjs` (dev server up) — the browser smoke check: loads
+  `/configurator/` with a same-origin config, samples features, colours by attribute, drops a layer
+  into a group, checks export and undo, waits for the preview to re-apply, requires a clean
+  console, then the German page. Screenshot in `e2e/shots/configurator.png`.
 - `pnpm typecheck` — the package is a project reference like the others.
 - In the browser: `/configurator/` and `/de/configurator/` with the dev server — the example
   renders, adding a WMS layer from `https://data.wien.gv.at/daten/geo` works end to end, the
@@ -98,9 +118,8 @@ entry details beyond the JSON textarea, WMS `params` beyond key=value.
 - **Publishing**: the package is private for now. Publishing `@map0/configurator` (or shipping it
   in `map0-viewer`) would let map0-publisher and CMS admin UIs embed it — decide once the UI has
   settled.
-- **Drag-and-drop** in the tree (also open for the viewer's TOC, F2.6) — same mechanism could serve
-  both.
-- **Style presets** for vector layers (categorised/graduated, like map0-publisher's style cards)
-  — the simple style covers uniform symbology only.
-- **Catalog search** as a layer source (CSW / OGC API Records) — the M2 catalog module belongs
-  here as a third "add" panel.
+- **Drag-and-drop in the viewer's TOC** (F2.6) stays open; the configurator's tree has it.
+- **Catalog defaults**: no catalog URL is preset. A curated list (data.gv.at, INSPIRE AT, …) would
+  help CMS editors, but most of those endpoints send no CORS headers today.
+- **Sampling beyond the view**: colour by attribute sees only loaded features; a "fetch all" path
+  for GeoJSON URLs would make the classes complete.

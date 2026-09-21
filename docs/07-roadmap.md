@@ -129,9 +129,11 @@ visual regression on the demo pages and repo governance.
 - ⬜ **Server-side print adapter** for scale-true PDF (D-04, F7.4)
 - 🟡 **Visual config editor** — the CMS killer feature · first version 2026-09-21: `<map0-configurator>`
   (`packages/configurator`) at <https://map0.net/configurator/> — sections for view, basemaps, layer
-  tree with add-from-capabilities (WMS/WMTS/WFS/OGC API) and data URLs, controls, search, print,
-  theme/i18n, live `<map0-viewer>` preview, JSON/embed export, import, browser drafts; see
-  [12-configurator.md](12-configurator.md) · ⬜ drag-and-drop, style presets, catalog source, publishing the package
+  tree with drag-and-drop, add-from-capabilities (WMS/WMTS/WFS/OGC API), data URLs and catalog
+  search (CSW, OGC API Records), style presets and colour-by-attribute with generated legends,
+  controls, search, print, theme/i18n, live `<map0-viewer>` preview, JSON/embed export, import,
+  browser drafts, browser smoke check (`e2e/verify-configurator.mjs`); see
+  [12-configurator.md](12-configurator.md) · ⬜ publishing the package, curated catalog list
 - ⬜ **Drawing / annotations** (F9.2)
 - ⬜ **Time-enabled layers** (WMS TIME)
 - ⬜ **Optional deck.gl overlay adapter** for very large datasets
