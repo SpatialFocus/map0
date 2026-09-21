@@ -377,7 +377,8 @@ export class Map0Configurator extends LitElement implements Host {
    * The preview mounts the config's non-group layers in tree order, top-most
    * first — the order `flattenLayers` yields — so the handle is found by
    * position and checked by type. Features come from the source's loaded
-   * tiles, deduplicated; cluster bubbles are skipped.
+   * tiles (the current view, in effect), deduplicated; cluster bubbles are
+   * skipped.
    */
   sampleFeatures(path: LayerPath): SampleFeature[] | null {
     const api = this.viewer?.api;
@@ -394,7 +395,9 @@ export class Map0Configurator extends LitElement implements Host {
     for (const f of api.map.querySourceFeatures(sourceId)) {
       const properties = (f.properties ?? {}) as Record<string, unknown>;
       if ("point_count" in properties) continue;
-      const key = f.id !== undefined ? String(f.id) : JSON.stringify(properties);
+      /* feature ids are not reliable here (a GeoJSON source without ids reports 0 for
+         every feature), so tiles' duplicates are folded by their properties */
+      const key = JSON.stringify(properties);
       if (seen.has(key)) continue;
       seen.add(key);
       out.push({ properties, geometry: { type: f.geometry?.type } });

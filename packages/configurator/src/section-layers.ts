@@ -43,6 +43,9 @@ import {
 
 type Rec = Record<string, unknown>;
 
+/** layer types rendered through the geojson pipeline: styled, clustered and queried by map0 itself */
+const VECTOR_DATA: ReadonlySet<string> = new Set(["geojson", "geoparquet", "wfs", "ogcapi-features"]);
+
 const SERVICE_PLACEHOLDERS: Record<ServiceKind, string> = {
   wms: "https://data.wien.gv.at/daten/geo",
   wmts: "https://…/WMTSCapabilities.xml",
@@ -404,9 +407,9 @@ function renderLayerForm(h: Host, path: LayerPath, def: LayerDef): TemplateResul
         ${textFieldLazy({ label: t("common.id"), value: def.id, help: t("common.idHelp"), onCommit: (v) => set("id", v.trim()) })}
       `,
     )}
-    ${"popup" in def || def.type === "wms" ? renderFeatureInfo(h, def, set) : nothing}
-    ${"style" in def && def.type !== "vector" ? renderStyle(h, path, rec, set) : nothing}
-    ${"cluster" in def ? renderCluster(h, rec, set) : nothing}
+    ${VECTOR_DATA.has(def.type) || def.type === "vector" || def.type === "wms" ? renderFeatureInfo(h, def, set) : nothing}
+    ${VECTOR_DATA.has(def.type) ? renderStyle(h, path, rec, set) : nothing}
+    ${VECTOR_DATA.has(def.type) ? renderCluster(h, rec, set) : nothing}
     ${section(t("layer.advanced"), rawJson(h, def, upd), t("layer.advancedHelp"))}
   `;
 }
@@ -647,7 +650,7 @@ function renderFeatureInfo(h: Host, def: LayerDef, set: Setter): TemplateResult 
   const enabled = isWms ? value !== undefined && value !== false : value !== false;
   const obj = typeof value === "object" ? value : {};
   const setP = (k: string, v: unknown): void => set(key, setKey(obj, k, v));
-  const hover = "hover" in def ? def.hover : undefined;
+  const hover = rec["hover"] as { content: string } | false | undefined;
 
   return section(
     isWms ? t("popup.infoTitle") : t("popup.title"),
@@ -687,7 +690,7 @@ function renderFeatureInfo(h: Host, def: LayerDef, set: Setter): TemplateResult 
             </div>
           `
         : nothing}
-      ${"hover" in def
+      ${!isWms
         ? textFieldLazy({
             label: t("popup.hover"),
             value: typeof hover === "object" && hover ? hover.content : "",
