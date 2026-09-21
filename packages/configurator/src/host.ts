@@ -7,6 +7,7 @@
 import type { Map0Config } from "@map0/schema";
 import type { ServiceKind, ServiceProbe, UrlLayerType } from "./services.js";
 import type { LayerPath } from "./state.js";
+import type { SampleFeature } from "./style-presets.js";
 
 export type Lang = "en" | "de";
 
@@ -53,6 +54,17 @@ export interface AddUrlState {
   error: string;
 }
 
+export type DropPosition = "before" | "after" | "into";
+
+/** the tree's drag-and-drop in flight: what is dragged, and where it would land */
+export interface DragState {
+  from: LayerPath | null;
+  over: LayerPath | null;
+  position: DropPosition | null;
+}
+
+export const NO_DRAG: DragState = { from: null, over: null, position: null };
+
 export interface View {
   center: [number, number];
   zoom: number;
@@ -85,6 +97,12 @@ export interface Host {
   setAddUrl(patch: Partial<AddUrlState>): void;
   addUrlLayer(): void;
   addGroup(): void;
+  readonly drag: DragState;
+  setDrag(state: DragState): void;
+  /** drop the dragged node at `index` of the list `parent` addresses */
+  dropLayer(parent: LayerPath, index: number): void;
+  /** features of a layer as the preview has them loaded — null while the map is not ready */
+  sampleFeatures(path: LayerPath): SampleFeature[] | null;
 
   /* basemaps */
   readonly selectedBasemap: number | null;

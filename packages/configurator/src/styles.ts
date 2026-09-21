@@ -400,6 +400,26 @@ export const configuratorStyles = css`
   .node.selected {
     background: color-mix(in srgb, var(--map0c-accent) 12%, transparent);
   }
+  .node .grip {
+    flex: none;
+    color: var(--map0c-muted);
+    cursor: grab;
+    font-size: 13px;
+    letter-spacing: -2px;
+    user-select: none;
+  }
+  .node[data-dragging] {
+    opacity: 0.45;
+  }
+  .node[data-drop="before"] {
+    box-shadow: inset 0 3px 0 var(--map0c-accent);
+  }
+  .node[data-drop="after"] {
+    box-shadow: inset 0 -3px 0 var(--map0c-accent);
+  }
+  .node[data-drop="into"] {
+    background: color-mix(in srgb, var(--map0c-accent) 24%, transparent);
+  }
   .node .name {
     flex: 1;
     min-width: 0;

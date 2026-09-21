@@ -19,8 +19,9 @@ import {
   textFieldLazy,
   textareaField,
 } from "./fields.js";
-import type { Host } from "./host.js";
+import { NO_DRAG, type DropPosition, type Host } from "./host.js";
 import { SERVICE_KINDS, URL_LAYER_TYPES, type ServiceKind, type UrlLayerType } from "./services.js";
+import { MAX_CATEGORIES, SIMPLE_PRESETS, dataDrivenStyle, propertyNames, simplePreset } from "./style-presets.js";
 import {
   duplicateLayer,
   flattenLayers,
@@ -78,27 +79,80 @@ export function renderLayers(h: Host): TemplateResult {
         ${h.addPanel === "service" ? renderAddService(h) : h.addPanel === "url" ? renderAddUrl(h) : nothing}
         ${rows.length === 0
           ? html`<p class="empty">${t("layers.empty")}</p>`
-          : html`<ul class="tree" role="listbox" aria-label=${t("layers.title")}>
+          : html`<ul
+              class="tree"
+              role="listbox"
+              aria-label=${t("layers.title")}
+              @dragleave=${(e: DragEvent) => {
+                /* leaving the list altogether clears the hint; moving between rows does not */
+                if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node | null))
+                  h.setDrag({ ...h.drag, over: null, position: null });
+              }}
+            >
               ${rows.map(
                 (r) => html`<li
                   class="node ${samePath(r.path, sel) ? "selected" : ""}"
                   role="option"
                   aria-selected=${samePath(r.path, sel) ? "true" : "false"}
                   style="--depth:${r.depth}"
+                  draggable="true"
+                  ?data-dragging=${samePath(h.drag.from, r.path)}
+                  data-drop=${samePath(h.drag.over, r.path) ? (h.drag.position ?? nothing) : nothing}
                   @click=${() => h.selectLayer(r.path)}
+                  @dragstart=${(e: DragEvent) => {
+                    e.dataTransfer?.setData("text/plain", JSON.stringify(r.path));
+                    if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+                    h.setDrag({ from: r.path, over: null, position: null });
+                  }}
+                  @dragover=${(e: DragEvent) => {
+                    if (!h.drag.from) return;
+                    e.preventDefault();
+                    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+                    const position = dropPosition(e, isGroup(r.def));
+                    if (!samePath(h.drag.over, r.path) || h.drag.position !== position)
+                      h.setDrag({ ...h.drag, over: r.path, position });
+                  }}
+                  @drop=${(e: DragEvent) => {
+                    e.preventDefault();
+                    const { from, position } = h.drag;
+                    if (!from || !position) return;
+                    const target = dropTarget(h, r.path, position);
+                    h.dropLayer(target.parent, target.index);
+                  }}
+                  @dragend=${() => h.setDrag(NO_DRAG)}
                 >
+                  <span class="grip" aria-hidden="true">⋮⋮</span>
                   <span class="badge">${isGroup(r.def) ? t("layers.groupBadge") : layerTypeLabel(r.def.type)}</span>
                   <span class="name">${r.def.title || ("id" in r.def && r.def.id) || t("layers.untitled")}</span>
                   ${"visible" in r.def && r.def.visible === false ? html`<span class="tag">${t("layers.hidden")}</span>` : nothing}
                 </li>`,
               )}
             </ul>`}
+        ${rows.length > 1 ? html`<p class="note">${t("layers.dragHint")}</p>` : nothing}
         ${sel && selDef ? renderTreeToolbar(h, sel) : nothing}
       `,
       t("layers.intro"),
     )}
     ${sel && selDef ? renderLayerForm(h, sel, selDef) : nothing}
   `;
+}
+
+/** where over a row the pointer is: the middle third of a group row means "into it" */
+function dropPosition(e: DragEvent, group: boolean): DropPosition {
+  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+  const y = rect.height > 0 ? (e.clientY - rect.top) / rect.height : 0.5;
+  if (group && y > 0.3 && y < 0.7) return "into";
+  return y < 0.5 ? "before" : "after";
+}
+
+/** the list and index a drop on `path` at `position` means */
+function dropTarget(h: Host, path: LayerPath, position: DropPosition): { parent: LayerPath; index: number } {
+  const index = path[path.length - 1]!;
+  if (position === "into") {
+    const group = getLayer(h.cfg, path);
+    return { parent: path, index: isGroup(group) ? group.children.length : 0 };
+  }
+  return { parent: path.slice(0, -1), index: position === "before" ? index : index + 1 };
 }
 
 function renderTreeToolbar(h: Host, sel: LayerPath): TemplateResult {
@@ -351,7 +405,7 @@ function renderLayerForm(h: Host, path: LayerPath, def: LayerDef): TemplateResul
       `,
     )}
     ${"popup" in def || def.type === "wms" ? renderFeatureInfo(h, def, set) : nothing}
-    ${"style" in def && def.type !== "vector" ? renderStyle(h, rec, set) : nothing}
+    ${"style" in def && def.type !== "vector" ? renderStyle(h, path, rec, set) : nothing}
     ${"cluster" in def ? renderCluster(h, rec, set) : nothing}
     ${section(t("layer.advanced"), rawJson(h, def, upd), t("layer.advancedHelp"))}
   `;
@@ -649,13 +703,60 @@ function renderFeatureInfo(h: Host, def: LayerDef, set: Setter): TemplateResult 
 
 /* ---------------------------------- style ---------------------------------- */
 
-function renderStyle(h: Host, rec: Rec, set: Setter): TemplateResult {
+/**
+ * One-click styles: simple presets from the layer's current base colour, and
+ * data-driven colouring by a property of the features the preview has loaded
+ * (categorised for few distinct values, graduated for numeric ranges), with a
+ * legend to match.
+ */
+function renderPresets(h: Host, path: LayerPath, s: Rec, set: Setter): TemplateResult {
+  const { t } = h;
+  const base = ((s["fill-color"] ?? s["line-color"] ?? s["circle-color"]) as string | undefined) ?? "#0e7490";
+  const sample = h.sampleFeatures(path);
+  const props = sample ? propertyNames(sample) : [];
+  const applyData = (prop: string): void => {
+    if (!prop || !sample) return;
+    const result = dataDrivenStyle(sample, prop);
+    if (!result) {
+      h.notify(t("style.tooManyValues", { n: MAX_CATEGORIES }));
+      return;
+    }
+    h.commit(
+      updateLayer(h.cfg, path, (d) => ({ ...d, style: result.style, legend: result.legend }) as unknown as LayerDef),
+    );
+  };
+  return html`
+    <div class="field">
+      <span class="label">${t("style.presets")}</span>
+      <div class="chips">
+        ${SIMPLE_PRESETS.map(
+          (id) => html`<button class="btn small" type="button" @click=${() => set("style", simplePreset(id, base))}>
+            ${t(`style.preset.${id}`)}
+          </button>`,
+        )}
+      </div>
+    </div>
+    ${selectField({
+      label: t("style.byAttribute"),
+      value: "",
+      emptyLabel: sample === null ? t("style.noSample") : props.length === 0 ? t("style.noProperties") : t("style.chooseProperty"),
+      options: props.map((p) => ({ value: p, label: p })),
+      disabled: !sample || props.length === 0,
+      help: t("style.byAttributeHelp", { n: MAX_CATEGORIES }),
+      onChange: applyData,
+    })}
+  `;
+}
+
+function renderStyle(h: Host, path: LayerPath, rec: Rec, set: Setter): TemplateResult {
   const { t } = h;
   const style = rec["style"];
+  const presets = renderPresets(h, path, (Array.isArray(style) ? {} : (style ?? {})) as Rec, set);
   if (Array.isArray(style)) {
     return section(
       t("style.title"),
       html`
+        ${presets}
         <p class="note">${t("style.advancedNote")}</p>
         ${jsonField(h, t("layer.styleLayers"), style, (parsed) => Array.isArray(parsed) && set("style", parsed), 10)}
         <div class="toolbar">
@@ -671,6 +772,7 @@ function renderStyle(h: Host, rec: Rec, set: Setter): TemplateResult {
   return section(
     t("style.title"),
     html`
+      ${presets}
       <div class="row2">
         ${colorField({ label: t("style.fillColor"), value: s["fill-color"] as string | undefined, onInput: (v) => setS("fill-color", v) })}
         ${num("fill-opacity", t("style.fillOpacity"), 0, 1, 0.05)}

@@ -240,6 +240,39 @@ export function outdentLayer(cfg: Map0Config, path: LayerPath): { config: Map0Co
   return { config, path: [...groupPath.slice(0, -1), groupIndex + 1] };
 }
 
+const startsWith = (path: LayerPath, prefix: LayerPath): boolean =>
+  prefix.length <= path.length && prefix.every((v, i) => v === path[i]);
+
+/**
+ * Drag-and-drop: move a node to `index` of the list `parent` addresses. The
+ * removal shifts indices in the source list, so a target in that list (or
+ * below a later sibling) is corrected before inserting. A group cannot be
+ * dropped into itself. Returns the new path of the moved node.
+ */
+export function moveLayerTo(
+  cfg: Map0Config,
+  from: LayerPath,
+  parent: LayerPath,
+  index: number,
+): { config: Map0Config; path: LayerPath } | null {
+  const def = getLayer(cfg, from);
+  if (!def || startsWith(parent, from)) return null;
+  const fromParent = from.slice(0, -1);
+  const fromIndex = from[from.length - 1]!;
+  const targetParent = [...parent];
+  let targetIndex = index;
+  if (startsWith(targetParent, fromParent) && targetParent.length > fromParent.length) {
+    /* the target list hangs below a later sibling of the moved node — that sibling moves up */
+    if (targetParent[fromParent.length]! > fromIndex) targetParent[fromParent.length]! -= 1;
+  } else if (samePath(targetParent, fromParent) && targetIndex > fromIndex) {
+    targetIndex -= 1;
+  }
+  const config = insertLayer(removeLayer(cfg, from), targetParent, def, targetIndex);
+  const siblings = getSiblings(config, [...targetParent, 0]);
+  const at = Math.min(targetIndex, Math.max(0, (siblings?.length ?? 1) - 1));
+  return { config, path: [...targetParent, at] };
+}
+
 export function duplicateLayer(cfg: Map0Config, path: LayerPath): Map0Config {
   const def = getLayer(cfg, path);
   const index = path[path.length - 1];

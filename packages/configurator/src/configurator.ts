@@ -23,16 +23,19 @@ import {
 } from "@map0/schema";
 import { checkField, textareaField } from "./fields.js";
 import {
+  NO_DRAG,
   SECTIONS,
   type AddPanel,
   type AddServiceState,
   type AddUrlState,
+  type DragState,
   type Host,
   type Lang,
   type SectionId,
   type T,
   type View,
 } from "./host.js";
+import type { SampleFeature } from "./style-presets.js";
 import { makeT } from "./i18n.js";
 import { renderLayers } from "./section-layers.js";
 import { renderBasemaps, renderControls, renderGeneral, renderPrint, renderSearch, renderTheme } from "./section-misc.js";
@@ -43,8 +46,11 @@ import {
   cleanConfig,
   embedSnippet,
   flattenLayers,
+  getLayer,
   insertLayer,
+  moveLayerTo,
   playgroundUrl,
+  samePath,
   serializeConfig,
   setKey,
   type LayerPath,
@@ -89,6 +95,7 @@ export class Map0Configurator extends LitElement implements Host {
     filter: "",
   };
   @state() addUrl: AddUrlState = { type: "geojson", url: "", title: "", error: "" };
+  @state() drag: DragState = NO_DRAG;
   @state() private validation: ValidationResult = OK;
   @state() private autoApply = true;
   @state() private applied = "";
@@ -350,6 +357,50 @@ export class Map0Configurator extends LitElement implements Host {
 
   addGroup(): void {
     this.insertAtTop([{ type: "group", title: this.t("layers.newGroup"), children: [] }]);
+  }
+
+  setDrag(state: DragState): void {
+    this.drag = state;
+  }
+
+  dropLayer(parent: LayerPath, index: number): void {
+    const from = this.drag.from;
+    this.drag = NO_DRAG;
+    if (!from) return;
+    const moved = moveLayerTo(this.cfg, from, parent, index);
+    if (!moved) return;
+    this.commit(moved.config);
+    this.selectedPath = moved.path;
+  }
+
+  /**
+   * The preview mounts the config's non-group layers in tree order, top-most
+   * first — the order `flattenLayers` yields — so the handle is found by
+   * position and checked by type. Features come from the source's loaded
+   * tiles, deduplicated; cluster bubbles are skipped.
+   */
+  sampleFeatures(path: LayerPath): SampleFeature[] | null {
+    const api = this.viewer?.api;
+    const def = getLayer(this.cfg, path);
+    if (!api || !this.previewReady || !def || def.type === "group") return null;
+    const index = flattenLayers(this.cfg)
+      .filter((r) => r.def.type !== "group")
+      .findIndex((r) => samePath(r.path, path));
+    const handle = api.layers.all[index];
+    const sourceId = handle?.sourceIds[0];
+    if (!handle || handle.def.type !== def.type || !sourceId || !api.map.getSource(sourceId)) return null;
+    const seen = new Set<string>();
+    const out: SampleFeature[] = [];
+    for (const f of api.map.querySourceFeatures(sourceId)) {
+      const properties = (f.properties ?? {}) as Record<string, unknown>;
+      if ("point_count" in properties) continue;
+      const key = f.id !== undefined ? String(f.id) : JSON.stringify(properties);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ properties, geometry: { type: f.geometry?.type } });
+      if (out.length >= 5000) break;
+    }
+    return out;
   }
 
   selectBasemap(index: number | null): void {

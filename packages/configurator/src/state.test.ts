@@ -14,6 +14,7 @@ import {
   indentLayer,
   insertLayer,
   moveLayer,
+  moveLayerTo,
   outdentLayer,
   paramsToText,
   removeLayer,
@@ -98,6 +99,24 @@ describe("tree operations", () => {
     expect(ids(outdented!.config)).toEqual(["a", "[G]", "c", "b", "d"]);
     expect(outdented!.path).toEqual([2]);
     expect(outdentLayer(tree, [0])).toBeNull();
+  });
+
+  it("drops a node at a target list and index, correcting for its own removal", () => {
+    /* down within the root list: target index counted before removal */
+    const down = moveLayerTo(tree, [0], [], 2)!;
+    expect(ids(down.config)).toEqual(["[G]", "b", "c", "a", "d"]);
+    expect(down.path).toEqual([1]);
+    /* into the group, which sits after the moved node — its index shifts */
+    const into = moveLayerTo(tree, [0], [1], 0)!;
+    expect(ids(into.config)).toEqual(["[G]", "a", "b", "c", "d"]);
+    expect(into.path).toEqual([0, 0]);
+    /* out of the group to the very top */
+    const out = moveLayerTo(tree, [1, 1], [], 0)!;
+    expect(ids(out.config)).toEqual(["c", "a", "[G]", "b", "d"]);
+    expect(out.path).toEqual([0]);
+    /* a group cannot be dropped into itself; a no-op move is fine */
+    expect(moveLayerTo(tree, [1], [1], 0)).toBeNull();
+    expect(ids(moveLayerTo(tree, [2], [], 2)!.config)).toEqual(ids(tree));
   });
 
   it("duplicates with a fresh id", () => {
