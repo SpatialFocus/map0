@@ -5,6 +5,7 @@
  * and the class cannot leak internals into them by accident.
  */
 import type { Map0Config } from "@map0/schema";
+import type { CatalogKind, CatalogLink, CatalogRecord } from "./catalog.js";
 import type { ServiceKind, ServiceProbe, UrlLayerType } from "./services.js";
 import type { LayerPath } from "./state.js";
 import type { SampleFeature } from "./style-presets.js";
@@ -34,7 +35,17 @@ export const SECTIONS: SectionId[] = [
   "export",
 ];
 
-export type AddPanel = "service" | "url" | null;
+export type AddPanel = "service" | "url" | "catalog" | null;
+
+export interface AddCatalogState {
+  kind: CatalogKind;
+  url: string;
+  query: string;
+  loading: boolean;
+  error: string;
+  /** null until a search ran */
+  records: CatalogRecord[] | null;
+}
 
 export interface AddServiceState {
   kind: ServiceKind;
@@ -97,6 +108,11 @@ export interface Host {
   setAddUrl(patch: Partial<AddUrlState>): void;
   addUrlLayer(): void;
   addGroup(): void;
+  readonly addCatalog: AddCatalogState;
+  setAddCatalog(patch: Partial<AddCatalogState>): void;
+  searchCatalog(): void;
+  /** a record link: a named layer is added directly, a bare service opens the capabilities picker */
+  addFromCatalog(record: CatalogRecord, link: CatalogLink): void;
   readonly drag: DragState;
   setDrag(state: DragState): void;
   /** drop the dragged node at `index` of the list `parent` addresses */

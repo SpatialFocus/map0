@@ -479,6 +479,14 @@ export const configuratorStyles = css`
     font-size: 11.5px;
     color: var(--map0c-muted);
   }
+  .candidates .record {
+    display: grid;
+    gap: 4px;
+    padding: 8px 10px;
+  }
+  .candidates .record .sub {
+    grid-column: auto;
+  }
 
   .panel {
     border: 1px solid var(--map0c-border);

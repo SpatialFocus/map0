@@ -19,7 +19,8 @@ import {
   textFieldLazy,
   textareaField,
 } from "./fields.js";
-import { NO_DRAG, type DropPosition, type Host } from "./host.js";
+import type { CatalogKind } from "./catalog.js";
+import { NO_DRAG, type AddPanel, type DropPosition, type Host } from "./host.js";
 import { SERVICE_KINDS, URL_LAYER_TYPES, type ServiceKind, type UrlLayerType } from "./services.js";
 import { MAX_CATEGORIES, SIMPLE_PRESETS, dataDrivenStyle, propertyNames, simplePreset } from "./style-presets.js";
 import {
@@ -68,7 +69,7 @@ export function renderLayers(h: Host): TemplateResult {
   const rows = flattenLayers(cfg);
   const sel = h.selectedPath;
   const selDef = sel ? getLayer(cfg, sel) : undefined;
-  const panel = (which: "service" | "url"): void => h.setAddPanel(h.addPanel === which ? null : which);
+  const panel = (which: Exclude<AddPanel, null>): void => h.setAddPanel(h.addPanel === which ? null : which);
 
   return html`
     ${section(
@@ -77,9 +78,16 @@ export function renderLayers(h: Host): TemplateResult {
         <div class="toolbar">
           <button class="btn primary" type="button" @click=${() => panel("service")}>+ ${t("layers.addService")}</button>
           <button class="btn" type="button" @click=${() => panel("url")}>+ ${t("layers.addUrl")}</button>
+          <button class="btn" type="button" @click=${() => panel("catalog")}>+ ${t("layers.addCatalog")}</button>
           <button class="btn" type="button" @click=${() => h.addGroup()}>+ ${t("layers.addGroup")}</button>
         </div>
-        ${h.addPanel === "service" ? renderAddService(h) : h.addPanel === "url" ? renderAddUrl(h) : nothing}
+        ${h.addPanel === "service"
+          ? renderAddService(h)
+          : h.addPanel === "url"
+            ? renderAddUrl(h)
+            : h.addPanel === "catalog"
+              ? renderAddCatalog(h)
+              : nothing}
         ${rows.length === 0
           ? html`<p class="empty">${t("layers.empty")}</p>`
           : html`<ul
@@ -280,6 +288,83 @@ function renderAddService(h: Host): TemplateResult {
             </div>
           `
         : nothing}
+    </div>
+  `;
+}
+
+const CATALOG_PLACEHOLDERS: Record<CatalogKind, string> = {
+  csw: "https://…/geonetwork/srv/eng/csw",
+  records: "https://…/collections/metadata",
+};
+
+function renderAddCatalog(h: Host): TemplateResult {
+  const { t } = h;
+  const a = h.addCatalog;
+  return html`
+    <div class="panel">
+      ${segmented({
+        label: t("catalog.kind"),
+        value: a.kind,
+        options: [
+          { value: "csw", label: "CSW 2.0.2" },
+          { value: "records", label: "OGC API Records" },
+        ],
+        onChange: (v) => h.setAddCatalog({ kind: v as CatalogKind, records: null, error: "" }),
+      })}
+      <form
+        @submit=${(e: Event) => {
+          e.preventDefault();
+          h.searchCatalog();
+        }}
+      >
+        <input
+          type="url"
+          required
+          aria-label="URL"
+          placeholder=${CATALOG_PLACEHOLDERS[a.kind]}
+          .value=${a.url}
+          @input=${(e: Event) => h.setAddCatalog({ url: (e.target as HTMLInputElement).value })}
+        />
+        <span></span>
+        <input
+          type="search"
+          required
+          aria-label=${t("catalog.query")}
+          placeholder=${t("catalog.query")}
+          .value=${a.query}
+          @input=${(e: Event) => h.setAddCatalog({ query: (e.target as HTMLInputElement).value })}
+        />
+        <button class="btn primary" type="submit" ?disabled=${a.loading}>${t("catalog.search")}</button>
+      </form>
+      <p class="note">${t(`catalog.hint.${a.kind}`)}</p>
+      ${a.loading ? html`<p class="note">${t("catalog.loading")}</p>` : nothing}
+      ${a.error ? html`<p class="error" role="alert">${a.error}</p>` : nothing}
+      ${a.records && a.records.length > 0
+        ? html`
+            <p class="note">${t("catalog.found", { n: a.records.length })}</p>
+            <ul class="candidates">
+              ${a.records.map(
+                (r) => html`<li class="record">
+                  <strong>${r.title}</strong>
+                  ${r.abstract ? html`<span class="sub">${r.abstract.length > 180 ? `${r.abstract.slice(0, 180)}…` : r.abstract}</span>` : nothing}
+                  ${r.links.length === 0
+                    ? html`<span class="sub">${t("catalog.noLinks")}</span>`
+                    : html`<span class="chips">
+                        ${r.links.map(
+                          (l) => html`<button class="btn small" type="button" title=${l.url} @click=${() => h.addFromCatalog(r, l)}>
+                            + ${layerTypeLabel(l.kind)}${l.name ? `: ${l.name}` : ` (${t("catalog.pick")})`}
+                          </button>`,
+                        )}
+                      </span>`}
+                </li>`,
+              )}
+            </ul>
+          `
+        : nothing}
+      <div class="toolbar">
+        <span class="spacer"></span>
+        <button class="btn" type="button" @click=${() => h.setAddPanel(null)}>${t("common.cancel")}</button>
+      </div>
     </div>
   `;
 }

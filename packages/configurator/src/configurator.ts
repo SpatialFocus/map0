@@ -22,9 +22,11 @@ import {
   type ValidationResult,
 } from "@map0/schema";
 import { checkField, textareaField } from "./fields.js";
+import { layerFromLink, searchCatalog, type CatalogLink, type CatalogRecord } from "./catalog.js";
 import {
   NO_DRAG,
   SECTIONS,
+  type AddCatalogState,
   type AddPanel,
   type AddServiceState,
   type AddUrlState,
@@ -96,6 +98,7 @@ export class Map0Configurator extends LitElement implements Host {
   };
   @state() addUrl: AddUrlState = { type: "geojson", url: "", title: "", error: "" };
   @state() drag: DragState = NO_DRAG;
+  @state() addCatalog: AddCatalogState = { kind: "csw", url: "", query: "", loading: false, error: "", records: null };
   @state() private validation: ValidationResult = OK;
   @state() private autoApply = true;
   @state() private applied = "";
@@ -134,7 +137,9 @@ export class Map0Configurator extends LitElement implements Host {
   }
 
   protected override firstUpdated(): void {
-    this.apply();
+    /* not synchronously: apply() sets state, and Lit (dev build) flags state set
+       from inside an update hook as a wasted second render */
+    this.applyTimer = setTimeout(() => this.apply(), 0);
   }
 
   override disconnectedCallback(): void {
@@ -357,6 +362,50 @@ export class Map0Configurator extends LitElement implements Host {
 
   addGroup(): void {
     this.insertAtTop([{ type: "group", title: this.t("layers.newGroup"), children: [] }]);
+  }
+
+  setAddCatalog(patch: Partial<AddCatalogState>): void {
+    this.addCatalog = { ...this.addCatalog, ...patch };
+  }
+
+  searchCatalog(): void {
+    void this.doSearchCatalog();
+  }
+
+  private async doSearchCatalog(): Promise<void> {
+    const { kind, url, query } = this.addCatalog;
+    if (!url.trim() || !query.trim()) return;
+    const policy = urlPolicyError(url.trim());
+    if (policy) {
+      this.setAddCatalog({ error: policy });
+      return;
+    }
+    const seq = ++this.loadSeq;
+    this.setAddCatalog({ loading: true, error: "", records: null });
+    try {
+      const records = await searchCatalog(kind, url.trim(), query.trim());
+      if (seq !== this.loadSeq) return;
+      this.setAddCatalog({ loading: false, records, error: records.length === 0 ? this.t("catalog.empty") : "" });
+    } catch (e) {
+      if (seq !== this.loadSeq) return;
+      /* a TypeError from fetch is the browser refusing the request — almost always
+         a catalog without CORS headers, which no amount of retrying fixes */
+      const reason = e instanceof TypeError ? this.t("catalog.unreachable") : e instanceof Error ? e.message : String(e);
+      this.setAddCatalog({ loading: false, error: `${this.t("catalog.failed")}: ${reason}` });
+    }
+  }
+
+  addFromCatalog(record: CatalogRecord, link: CatalogLink): void {
+    const def = layerFromLink(record, link);
+    if (def) {
+      this.insertAtTop([def]);
+      this.notify(this.t("add.added", { n: 1 }));
+      return;
+    }
+    /* only the service is known — hand it to the capabilities picker */
+    this.setAddService({ kind: link.kind, url: link.url, probe: null, error: "", selected: new Set(), filter: "" });
+    this.addPanel = "service";
+    this.loadService();
   }
 
   setDrag(state: DragState): void {
