@@ -73,10 +73,12 @@ interface FullNode {
   children?: FullNode[];
 }
 
-const asBbox = (b: unknown): Bbox | undefined =>
-  Array.isArray(b) && b.length === 4 && b.every((n) => typeof n === "number" && Number.isFinite(n))
-    ? (b as Bbox)
-    : undefined;
+/** ogc-client hands WMS bounding boxes over as attribute strings, WFS ones as numbers */
+const asBbox = (b: unknown): Bbox | undefined => {
+  if (!Array.isArray(b) || b.length !== 4) return undefined;
+  const nums = b.map((n) => (typeof n === "number" ? n : Number(n)));
+  return nums.every((n) => Number.isFinite(n)) ? (nums as Bbox) : undefined;
+};
 
 async function probeWms(ogc: OgcClient, url: string): Promise<ServiceProbe> {
   const endpoint = new ogc.WmsEndpoint(url);
