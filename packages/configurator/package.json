@@ -1,0 +1,18 @@
+{
+  "name": "@map0/configurator",
+  "version": "0.0.0",
+  "private": true,
+  "description": "map0 configurator: <map0-configurator>, a visual editor for map0 configs with a live preview",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@map0/core": "workspace:*",
+    "@map0/schema": "workspace:*",
+    "@map0/ui": "workspace:*",
+    "lit": "^3.2.0"
+  }
+}

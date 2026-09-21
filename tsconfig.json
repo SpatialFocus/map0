@@ -3,6 +3,7 @@
   "references": [
     { "path": "packages/schema" },
     { "path": "packages/core" },
-    { "path": "packages/ui" }
+    { "path": "packages/ui" },
+    { "path": "packages/configurator" }
   ]
 }

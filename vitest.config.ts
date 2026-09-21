@@ -6,6 +6,8 @@ export default defineConfig({
     alias: {
       "@map0/schema": fileURLToPath(new URL("./packages/schema/src/index.ts", import.meta.url)),
       "@map0/core": fileURLToPath(new URL("./packages/core/src/index.ts", import.meta.url)),
+      "@map0/ui": fileURLToPath(new URL("./packages/ui/src/index.ts", import.meta.url)),
+      "@map0/configurator": fileURLToPath(new URL("./packages/configurator/src/index.ts", import.meta.url)),
     },
   },
   test: {
