@@ -128,6 +128,7 @@ function sharedChrome(): Plugin {
               `<a href="/#next" data-i18n="chrome.nav.next">What's next</a>` +
               `<a href="/demos/"${ctx.path.includes("demos/") ? ' aria-current="page"' : ""} data-i18n="chrome.nav.demos">Demos</a>` +
               `<a href="/playground/"${ctx.path.includes("playground") ? ' aria-current="page"' : ""} data-i18n="chrome.nav.playground">Playground</a>` +
+              `<a href="/configurator/"${ctx.path.includes("configurator") ? ' aria-current="page"' : ""} data-i18n="chrome.nav.configurator">Configurator</a>` +
               `<a class="gh" href="https://github.com/SpatialFocus/map0" aria-label="map0 on GitHub" data-i18n-attrs="aria-label:chrome.nav.github">${GITHUB_ICON}<span class="gh-label">GitHub</span></a>` +
               `</nav>` +
               `<button class="theme-toggle" type="button" aria-label="Toggle dark mode" data-i18n-attrs="aria-label:chrome.theme" onclick="__map0.theme()">${SUN_ICON}${MOON_ICON}</button>` +
@@ -205,7 +206,7 @@ export default defineConfig({
     outDir: r("../dist-site"),
     emptyOutDir: true,
     rollupOptions: {
-      input: { ...pagesIn("."), ...pagesIn("demos"), ...pagesIn("playground") },
+      input: { ...pagesIn("."), ...pagesIn("demos"), ...pagesIn("playground"), ...pagesIn("configurator") },
       external: maplibreExternal.external,
       output: { paths: maplibreExternal.paths },
     },
@@ -215,6 +216,7 @@ export default defineConfig({
       "@map0/schema": r("../packages/schema/src/index.ts"),
       "@map0/core": r("../packages/core/src/index.ts"),
       "@map0/ui": r("../packages/ui/src/index.ts"),
+      "@map0/configurator": r("../packages/configurator/src/index.ts"),
       /* the site compiles those sources itself, so it needs the same stubs the
          library build uses — see scripts/stub-aliases.mjs */
       ...optionalPeerStubs,

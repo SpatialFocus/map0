@@ -1,0 +1,13 @@
+{
+  "title": "Konfigurator | map0",
+  "meta.description": "map0-Configs visuell erstellen: Dienste auswählen, Layer anordnen, Popups, Legenden und Darstellung festlegen und das JSON ins CMS kopieren.",
+  "eyebrow": "Kein JSON von Hand",
+  "h1": "Konfigurator",
+  "lede": "Eine Karte zusammenstellen, ohne JSON zu schreiben: Layer aus WMS-, WMTS-, WFS- oder OGC-API-Diensten hinzufügen, anordnen, Popups, Legenden und Darstellung festlegen; die Karte zeigt jede Änderung. Das Ergebnis ist dieselbe Config, die der Viewer liest: in ein CMS-Feld kopieren oder herunterladen.",
+  "how.h2": "So funktioniert es",
+  "how.li1": "Die Vorschau rechts ist der echte <code>&lt;map0-viewer&gt;</code>; was zu sehen ist, erzeugt die Config auch.",
+  "how.li2": "<strong>Layer → Aus einem Dienst</strong> liest die Capabilities eines WMS, WMTS, WFS oder einer OGC API; die gewünschten Layer werden angehakt. Feature-Info, Ausdehnung und Metadaten-Links kommen mit.",
+  "how.li3": "<strong>JSON &amp; Export</strong> enthält die Config, ein fertiges Embed-Snippet und den Import: JSON einfügen, Datei oder URL laden. <code>?config=/configs/wms.map0.json</code> und die <code>?c=</code>-Links der Demos funktionieren hier wie im Playground.",
+  "how.li4": "Der Arbeitsstand bleibt als Entwurf in diesem Browser, bis er verworfen wird. Es wird nichts übertragen.",
+  "how.p": "Jeder Key, den die Formulare setzen, ist in der <a href=\"https://github.com/SpatialFocus/map0/blob/main/docs/config-reference.md\">Config-Referenz</a> dokumentiert; für das Bearbeiten des JSON von Hand mit Live-Prüfung ist der <a href=\"/playground/\">Playground</a> da."
+}
