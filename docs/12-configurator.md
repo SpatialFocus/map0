@@ -56,10 +56,12 @@ Design points:
 - **Preview updates are debounced (700 ms) and gated on validity.** The viewer reloads the whole
   map on a new config object; the status line says whether the preview is current, behind, or
   held back by errors. Auto-apply can be switched off for slow services.
-- **Capabilities parsing goes through the core's `loadOgcClient`**, so the configurator, the
-  viewer's add-layer dialog and the WMTS adapter share one chunk. WFS and OGC API Features are
-  parsed here for the first time (feature types → `wfs` layers with a JSON output format when the
-  server needs one; collections → `ogcapi-features` layers pointing at the items URL).
+- **WMS and WMTS capabilities are read by the core** (`packages/core/src/capabilities.ts`), shared
+  with the viewer's add-layer dialog, so both offer the same layers and build the same definitions;
+  that module also corrects ogc-client's CRS inheritance (see 09 §4.3). WFS and OGC API Features are
+  parsed in `services.ts` through the same ogc-client instance (feature types → `wfs` layers with a
+  JSON output format when the server needs one; collections → `ogcapi-features` layers pointing at
+  the items URL).
 - **"Use the preview's view"** reads center, zoom, bearing and pitch from `viewer.api.map` — the
   natural way to set an initial view is to pan the map to it.
 - **The preview is also the data source for styling.** "Colour by attribute" samples the layer's

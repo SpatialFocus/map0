@@ -303,9 +303,15 @@ parser for this stack, and it works well — but:
   library's default worker is base64-inlined and bundler-safe.
 - Its optional `ol` / `proj4` peers are only needed by `getOpenLayersTileGrid()`, which map0 never
   calls. They are aliased to `src/stubs/ol-stub.ts` so the build does not pull in OpenLayers.
-- CRS inheritance is not resolved for nested layers, so a child layer can appear to offer no
-  EPSG:3857 when its parent declares it. The add-layer dialog therefore warns instead of blocking,
-  and treats an empty CRS list as "probably fine".
+- **CRS lists are replaced, not inherited.** WMS says a child layer supports its own CRS plus every
+  ancestor's; ogc-client keeps only the child's own list when it declares one. GeoServer puts its
+  ~6000 CRS (EPSG:3857 among them) on the unnamed root and only the native CRS on each leaf, so
+  every leaf looked non-Mercator and the add-layer dialog once flagged all of Vienna's 375 layers.
+  `core/capabilities.ts` walks the parsed tree (`endpoint._layers`, which still holds the root)
+  and unions the lists top-down; an empty list everywhere stays "probably fine". Both consumers —
+  the dialog and the configurator — go through that module (2026-09-22).
+- **WMS bounding boxes come back as strings** (the attribute values as parsed); `asBbox` in the same
+  module coerces them, WFS/WMTS boxes are already numbers.
 - In Vite dev it belongs in `optimizeDeps.include`; otherwise the first dialog open triggers dep
   discovery and reloads the page mid-flow.
 

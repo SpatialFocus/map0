@@ -70,6 +70,23 @@ export { makeT, resolveLocale, type Translate } from "./i18n.js";
 export { LayerManager, type LayerUIState } from "./layers.js";
 export { loadOgcClient, type OgcClient } from "./ogc.js";
 export {
+  asBbox,
+  cleanServiceUrl,
+  pickInfoFormat,
+  readWmsCapabilities,
+  readWmtsCapabilities,
+  scaleDenominatorToZoom,
+  wmsCandidates,
+  wmsLayerFromCandidate,
+  wmtsLayerFromCandidate,
+  type Bbox,
+  type ServiceLayerCandidate,
+  type WmsCapabilities,
+  type WmsLayerDetails,
+  type WmsTreeNode,
+  type WmtsCapabilities,
+} from "./capabilities.js";
+export {
   centroid,
   formatArea,
   formatLength,

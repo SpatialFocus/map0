@@ -5,8 +5,9 @@
  * becomes a layer definition directly; one that only names a service opens
  * the capabilities picker.
  */
+import { cleanServiceUrl } from "@map0/core";
 import type { LayerDef } from "@map0/schema";
-import { cleanServiceUrl, type ServiceKind } from "./services.js";
+import type { ServiceKind } from "./services.js";
 
 export type CatalogKind = "csw" | "records";
 
