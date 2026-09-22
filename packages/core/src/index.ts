@@ -44,6 +44,9 @@ export { registerAdapter } from "./adapters/registry.js";
 export { expandSimpleStyle } from "./adapters/geojson.js";
 export { buildGetFeatureInfoUrl, buildLegendUrl, buildWmsTileUrl } from "./adapters/wms.js";
 export { buildWmtsTemplate, isMercatorCrs, type WmtsTemplateParts } from "./adapters/wmts.js";
+/* the feature adapters' request shapes, so a tool probing a service sends exactly what map0 sends */
+export { buildGetFeatureUrl, parseWfsResponse, type WfsRequest } from "./adapters/wfs.js";
+export { buildItemsUrl, parseItemsResponse, type OgcApiRequest } from "./adapters/ogcapi-features.js";
 export { absolutizeUrl, basemapStyle, BasemapManager, fetchTileJson } from "./basemaps.js";
 export { geojsonBounds } from "./bbox.js";
 export {

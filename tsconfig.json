@@ -4,6 +4,7 @@
     { "path": "packages/schema" },
     { "path": "packages/core" },
     { "path": "packages/ui" },
-    { "path": "packages/configurator" }
+    { "path": "packages/configurator" },
+    { "path": "packages/check" }
   ]
 }

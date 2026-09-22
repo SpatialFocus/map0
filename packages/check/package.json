@@ -1,0 +1,56 @@
+{
+  "name": "map0-check",
+  "version": "0.3.0",
+  "description": "Can map0 show this OGC service? Probes a WMS, WMTS, WFS or OGC API Features endpoint with the requests map0 sends and prints the verdict plus the layer definition",
+  "keywords": [
+    "map0",
+    "ogc",
+    "wms",
+    "wmts",
+    "wfs",
+    "ogc-api-features",
+    "capabilities",
+    "cors",
+    "gis",
+    "cli"
+  ],
+  "license": "MIT",
+  "author": "Christoph Perger <christoph.perger@spatial-focus.net>",
+  "homepage": "https://map0.net",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SpatialFocus/map0.git",
+    "directory": "packages/check"
+  },
+  "bugs": {
+    "url": "https://github.com/SpatialFocus/map0/issues"
+  },
+  "type": "module",
+  "bin": {
+    "map0-check": "./bin/map0-check.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "vite build",
+    "check": "node bin/map0-check.js"
+  },
+  "dependencies": {
+    "@camptocamp/ogc-client": "^1.3.0"
+  },
+  "devDependencies": {
+    "@map0/core": "workspace:*",
+    "@map0/schema": "workspace:*",
+    "@types/node": "^22.15.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

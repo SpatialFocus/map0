@@ -15,6 +15,8 @@ pnpm build && pnpm smoke        # browser smoke test on the BUILT bundle, networ
 pnpm build && pnpm size         # library bundle + the size budget
 pnpm demo:standalone            # build + copy dist next to the standalone demo page
 pnpm build:npm                  # assemble the publishable `map0` package, types included (§release)
+pnpm build:check                # bundle the map0-check CLI (packages/check/dist) — then:
+node packages/check/bin/map0-check.js <service url> --layer <name>   # probe a live OGC service as map0 would
 node e2e/verify-types.mjs       # type-check a fresh consumer against the packed tarball (§release)
 pnpm release                    # the whole release: version, changelog, verify, publish (§release)
 node e2e/verify-demos.mjs       # every demo page, headless, with screenshots
@@ -36,14 +38,22 @@ service adapter, check **both** paths: the dev server (`/demos/*`) and the built
 
 ### Release — the `map0` npm package
 
-`packages/map0` is the only publishable package: **`map0-viewer`** on npm, containing the prebuilt
-bundle (no dependencies, MapLibre included). The folder keeps the product name, the package cannot:
+`packages/map0` is the publishable viewer package: **`map0-viewer`** on npm, containing the prebuilt
+bundle (no dependencies, MapLibre included). The second publishable package is **`map0-check`**
+(`packages/check`), the service-checking CLI: one Node bundle built by `pnpm build:check`
+(Vite SSR build of `src/cli.ts` with `@map0/core` and `@map0/schema` compiled in, tree-shaken with
+`moduleSideEffects: false` so MapLibre and the other browser-only dependencies of core fall out;
+ogc-client is its single runtime dependency). It is versioned in lockstep with the viewer —
+`bump-version-refs.mjs` moves its `package.json` version, the release builds it and checks that the
+bundle loads (`--version`); publishing it is still a manual `pnpm --filter map0-check publish` after
+the viewer's release. The folder keeps the product name, the package cannot:
 npm's typosquatting heuristic rejects the unscoped `map0` as too similar to `mcp1`, `hapi`, `tap`
 and `tape` — short names are normalised (`0` reads as *o*) and compared by edit distance, and the
 check is server-side only, so `npm pack`/`--dry-run` will not warn you. The name is unregistered but
 unavailable; only npm support can release it. Scoped names skip the check entirely, which is why the
 `map0` org is reserved for the day `@map0/core` and `@map0/react` become separate installs. The
-workspace packages stay `private` until then, so a stray `pnpm publish -r` cannot leak them.
+`@map0/*` workspace packages stay `private` until then, so a stray `pnpm publish -r` cannot leak
+them (`map0-check` is deliberately not private — it is meant to be installed).
 
 The release is one command, run from a clean `main` (release-it + `@release-it/conventional-changelog`,
 configured in `packages/map0/.release-it.json`; `scripts/release.mjs` runs it in `packages/map0` —
@@ -514,6 +524,8 @@ packages/core     the engine: map creation, basemap manager, source adapters, fe
                   → imports MapLibre; never imports the UI
 packages/ui       <map0-viewer>, panels, dialogs, popup rendering, focus trap, styles
                   → imports core lazily (see invariant 1)
+packages/check    map0-check, the service-checking CLI (Node): detection, live probes, report
+                  → bundles core's capabilities reading, request builders and parsers (§release)
 site/             landing page + /demos (one page per topic) + configs and data
 site/i18n/        German page catalogues + the build-time translation plugin (§5.1)
 e2e/              headless verification

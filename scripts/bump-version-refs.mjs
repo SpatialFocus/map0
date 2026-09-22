@@ -30,6 +30,7 @@ const FILES = {
   "site/demos/validate.html": 1, //               pinned schema URL
   "site/i18n/de/demos/standalone.json": 1, //     the German unpkg sentence
   "site/i18n/de/demos/validate.json": 1, //       the German schema URL
+  "packages/check/package.json": 1, //            map0-check is versioned in lockstep with map0-viewer
 };
 
 /** Out of scope for the sweep below: the changelog is a history, the lockfile

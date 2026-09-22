@@ -134,6 +134,12 @@ visual regression on the demo pages and repo governance.
   controls, search, print, theme/i18n, live `<map0-viewer>` preview, JSON/embed export, import,
   browser drafts, browser smoke check (`e2e/verify-configurator.mjs`); see
   [12-configurator.md](12-configurator.md) · ⬜ publishing the package, curated catalog list
+- 🟡 **Service checker** — `map0-check` (`packages/check`, 2026-09-22): a Node CLI that probes a
+  WMS/WMTS/WFS/OGC API Features URL with the requests map0 sends (core's capabilities reading,
+  request builders and parsers, bundled) and reports https, CORS, Web Mercator, image formats,
+  GeoJSON, paging, feature counts and axis order per layer, with a verdict, exit code, JSON report
+  and the ready-to-paste layer definition (`--config` wraps it into a validated config); README in
+  the package · ⬜ first npm publish, a mention on the validator page
 - ⬜ **Drawing / annotations** (F9.2)
 - ⬜ **Time-enabled layers** (WMS TIME)
 - ⬜ **Optional deck.gl overlay adapter** for very large datasets

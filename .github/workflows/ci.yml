@@ -19,6 +19,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - run: pnpm build:check && node packages/check/bin/map0-check.js --help > /dev/null # the CLI bundle loads in plain Node
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm smoke # component lifecycle + z-order in a real browser, on the BUILT bundle
       - run: pnpm size # fails when the eager bundle outgrows its budget (N1)
