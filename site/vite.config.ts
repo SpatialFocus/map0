@@ -147,8 +147,8 @@ function sharedChrome(): Plugin {
               `<a class="footmark" href="/">map<span>0</span></a>` +
               `<span data-i18n="chrome.tagline">The web map client you configure, not code.</span>` +
               `<nav class="footnav">` +
-              `<a href="/imprint.html" data-i18n="chrome.imprint">Imprint</a>` +
-              `<a href="/privacy.html" data-i18n="chrome.privacy">Privacy</a>` +
+              `<a href="/imprint" data-i18n="chrome.imprint">Imprint</a>` +
+              `<a href="/privacy" data-i18n="chrome.privacy">Privacy</a>` +
               `<span data-i18n="chrome.madeby">Made with ❤️ by <a href="https://www.spatial-focus.net">Spatial Focus</a></span>` +
               `</nav>` +
               `</div>`,

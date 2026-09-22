@@ -10,7 +10,7 @@
   "what.li3": "Der vereinfachte Style (<code>circle-*</code>, <code>line-*</code>, <code>fill-*</code>) wird je Geometrietyp zu vollwertigen Style-Layern expandiert",
   "what.li4": "„Auf Ebene zoomen“ berechnet die Bounding Box aus den Daten selbst",
   "what.li5": "<code>crs</code> legt das Ausgangskoordinatensystem fest. Die U-Bahn-Stationen liegen in Gauß-Krüger M34 (EPSG:31256) vor und werden beim Laden nach WGS84 umgerechnet.",
-  "what.p": "Ein WFS mit GeoJSON-Unterstützung kann als GeoJSON-Quelle dienen. Dazu werden das unterstützte <code>outputFormat</code> und <code>srsName=EPSG:4326</code> in der GetFeature-URL angegeben. Für Daten in einem anderen Koordinatensystem wird <code>crs</code> am Layer gesetzt, wie bei den U-Bahn-Stationen. Der eigene <a href=\"/demos/wfs.html\"><code>wfs</code>-Layer-Typ</a> erstellt die Anfrage-URL und ergänzt das seitenweise Laden für WFS 2.0.",
+  "what.p": "Ein WFS mit GeoJSON-Unterstützung kann als GeoJSON-Quelle dienen. Dazu werden das unterstützte <code>outputFormat</code> und <code>srsName=EPSG:4326</code> in der GetFeature-URL angegeben. Für Daten in einem anderen Koordinatensystem wird <code>crs</code> am Layer gesetzt, wie bei den U-Bahn-Stationen. Der eigene <a href=\"/demos/wfs\"><code>wfs</code>-Layer-Typ</a> erstellt die Anfrage-URL und ergänzt das seitenweise Laden für WFS 2.0.",
   "config.h2": "Konfiguration",
   "full.h2": "Volle Kontrolle über den Style",
   "full.p": "Für mehr Gestaltungsmöglichkeiten kann ein Array von MapLibre-Style-Layern mit Ausdrücken und Filtern angegeben werden. map0 weist die Datenquelle zu und behält die Layer-Reihenfolge bei:"

@@ -69,6 +69,7 @@ pnpm typecheck                  # strict TypeScript project build
 pnpm build                      # library bundle → packages/ui/dist/
 pnpm demo:standalone            # build + copy the bundle for the standalone demo page
 pnpm release                    # version, changelog, npm publish, GitHub release (docs/09 §release)
+pnpm og                         # social preview image (site/public/og.jpg), a Playwright screenshot
 node e2e/verify-demos.mjs       # headless smoke run over every demo, with screenshots
 node e2e/verify-demos.mjs wms   # …or just one (dev server must be running)
 ```

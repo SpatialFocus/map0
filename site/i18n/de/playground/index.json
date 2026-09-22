@@ -12,5 +12,6 @@
   "how.li1": "„Im Playground öffnen“ unter einer Demo-Karte lädt deren Konfiguration hier",
   "how.li2": "<code>?config=/configs/wms.map0.json</code> lädt jede Config-Datei dieser Site in den Editor.",
   "how.li3": "Die Karte lädt neu, sobald eine gültige Konfiguration übernommen wird. Während der Bearbeitung bleibt der vorige Stand erhalten und wird unscharf angezeigt, solange die Änderungen noch nicht übernommen wurden.",
-  "how.p": "Weitere Prüfungen im Editor, in Build-Pipelines und im Viewer zeigt <a href=\"/demos/validate.html\">Config validieren</a>."
+  "how.p": "Weitere Prüfungen im Editor, in Build-Pipelines und im Viewer zeigt <a href=\"/demos/validate\">Config validieren</a>.",
+  "meta.description": "Eine map0-Konfiguration im Browser bearbeiten, die Karte folgt sofort. Ausgangspunkt ist das Beispiel oder eine Demo-Config; Fehler meldet derselbe Validator, der jede eingebettete Karte prüft."
 }

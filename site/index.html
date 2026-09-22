@@ -270,7 +270,7 @@
           </div>
 
           <div class="feature-grid">
-            <a class="feature reveal" href="/demos/wms.html">
+            <a class="feature reveal" href="/demos/wms">
               <h3 data-i18n="feat1.h3">🗺️ Map services and data files</h3>
               <p data-i18n="feat1.p">
                 WMS with feature information, WMTS configured from capabilities, WFS and OGC API
@@ -280,7 +280,7 @@
               <span class="go" data-i18n="feat1.go">See the data source demos →</span>
             </a>
 
-            <a class="feature reveal" href="/demos/add-layer.html">
+            <a class="feature reveal" href="/demos/add-layer">
               <h3 data-i18n="feat2.h3">🌳 Layer tree</h3>
               <p data-i18n="feat2.p">
                 Group layers, adjust visibility and opacity, view status and zoom limits, zoom to a
@@ -290,7 +290,7 @@
               <span class="go" data-i18n="feat2.go">See add layers →</span>
             </a>
 
-            <a class="feature reveal" href="/demos/popups.html">
+            <a class="feature reveal" href="/demos/popups">
               <h3 data-i18n="feat3.h3">💬 Feature information</h3>
               <p data-i18n="feat3.p">
                 Display attributes in templates with <code>{{placeholders}}</code> or in tables. Add
@@ -300,7 +300,7 @@
               <span class="go" data-i18n="feat3.go">See popups &amp; hover →</span>
             </a>
 
-            <a class="feature reveal" href="/demos/legend.html">
+            <a class="feature reveal" href="/demos/legend">
               <h3 data-i18n="feat4.h3">📊 Legends, on screen and on paper</h3>
               <p data-i18n="feat4.p">
                 Service legends via GetLegendGraphic, swatches derived from the style itself, or
@@ -309,7 +309,7 @@
               <span class="go" data-i18n="feat4.go">See legends →</span>
             </a>
 
-            <a class="feature reveal" href="/demos/print.html">
+            <a class="feature reveal" href="/demos/print">
               <h3 data-i18n="feat5.h3">🖨️ Print &amp; export</h3>
               <p data-i18n="feat5.p">
                 Export high-resolution PNG images or PDF pages in A4 and A3. Configure the title,
@@ -318,7 +318,7 @@
               <span class="go" data-i18n="feat5.go">See print &amp; export →</span>
             </a>
 
-            <a class="feature reveal" href="/demos/search.html">
+            <a class="feature reveal" href="/demos/search">
               <h3 data-i18n="feat6.h3">🔍 Place and address search</h3>
               <p data-i18n="feat6.p">
                 Search with suggestions using Photon or Nominatim, hosted publicly or on your own
@@ -328,7 +328,7 @@
               <span class="go" data-i18n="feat6.go">See search →</span>
             </a>
 
-            <a class="feature reveal" href="/demos/measure.html">
+            <a class="feature reveal" href="/demos/measure">
               <h3 data-i18n="feat7.h3">📏 Measuring and coordinates</h3>
               <p data-i18n="feat7.p">
                 Measure distances and areas with movable vertices. Right-click to display and copy
@@ -337,7 +337,7 @@
               <span class="go" data-i18n="feat7.go">See measuring →</span>
             </a>
 
-            <a class="feature reveal" href="/demos/permalink.html">
+            <a class="feature reveal" href="/demos/permalink">
               <h3 data-i18n="feat8.h3">🔗 Share links and globe view</h3>
               <p data-i18n="feat8.p">
                 Share the view, basemap, layer settings and services added by URL through a link.
@@ -394,7 +394,7 @@
                 Capabilities parsing, proj4, PMTiles, the print composer and the add-layer dialog
                 are separate files. A map without measuring never downloads the measuring code.
               </p>
-              <p><a class="go" href="/demos/lazy.html" data-i18n="perf.link">See it in the network panel →</a></p>
+              <p><a class="go" href="/demos/lazy" data-i18n="perf.link">See it in the network panel →</a></p>
             </div>
           </div>
 
@@ -483,9 +483,9 @@
                 string can be overridden per locale.
               </p>
               <p data-i18n="cfg.links">
-                <a class="go" href="/demos/theming.html">Theming →</a>
-                &nbsp;<a class="go" href="/demos/i18n.html">Languages →</a>
-                &nbsp;<a class="go" href="/demos/extends.html">Inheritance →</a>
+                <a class="go" href="/demos/theming">Theming →</a>
+                &nbsp;<a class="go" href="/demos/i18n">Languages →</a>
+                &nbsp;<a class="go" href="/demos/extends">Inheritance →</a>
               </p>
             </div>
           </div>
@@ -659,6 +659,111 @@
             <a href="https://github.com/SpatialFocus/map0/issues">issue</a> is the fastest way to
             influence the order.
           </p>
+        </div>
+      </section>
+
+      <!-- ----------------------------------- faq ---------------------------------- -->
+      <!-- Plain text in the HTML on purpose: an answer a search engine or a language
+           model can quote must not depend on a script. The FAQPage JSON-LD in the
+           head is generated from these <details> at build time (site/seo/head.ts). -->
+
+      <section class="section tinted" id="faq">
+        <div class="wrap">
+          <div class="sec-head center reveal">
+            <p class="kicker" data-i18n="faq.kicker">Questions and answers</p>
+            <h2 data-i18n="faq.h2">The short version.</h2>
+            <p data-i18n="faq.p">
+              What people ask before they embed their first map. The details live in the demos and
+              in the README.
+            </p>
+          </div>
+
+          <div class="faq reveal">
+            <details>
+              <summary data-i18n="faq1.q">What is map0?</summary>
+              <p data-i18n="faq1.a">
+                map0 is an open-source web map client released under the MIT license. It is a web
+                component built on MapLibre GL JS: one script tag and one JSON document put a
+                complete map with basemaps, layer tree, legends, feature info, search, measuring and
+                print on any web page. There is no iframe, no backend and no build step.
+              </p>
+            </details>
+            <details>
+              <summary data-i18n="faq2.q">Which services and data formats can a map show?</summary>
+              <p data-i18n="faq2.a">
+                WMS, WMTS, WFS and OGC API Features, vector tiles as MVT or PMTiles, GeoJSON,
+                GeoParquet and Cloud Optimized GeoTIFF. Basemaps are MapLibre style URLs or raster
+                tile services. Visitors can add WMS and WMTS services by URL and bring GeoJSON, KML
+                and GPX along as a URL or a local file.
+              </p>
+            </details>
+            <details>
+              <summary data-i18n="faq3.q">How do I embed a map in my website or CMS?</summary>
+              <p data-i18n="faq3.a">
+                Load the <code>map0-viewer</code> package with one module script tag, from a CDN such
+                as jsDelivr or from your own server after <code>npm install map0-viewer</code>, and
+                place a <code>&lt;map0-viewer&gt;</code> element where the map should appear. The
+                configuration is an inline JSON script, a <code>config-src</code> attribute pointing
+                at a JSON file, or a JavaScript property. Because it is a standard custom element it
+                works in plain HTML, in any CMS field that accepts HTML, and in every framework.
+              </p>
+            </details>
+            <details>
+              <summary data-i18n="faq4.q">Do I need a server, a database or a build step?</summary>
+              <p data-i18n="faq4.a">
+                No. Static hosting is enough. The map renders in the browser and talks directly to
+                your map services, which therefore have to send CORS headers. map0 itself sends
+                nothing anywhere: no analytics, no cookies, no tracking.
+              </p>
+            </details>
+            <details>
+              <summary data-i18n="faq5.q">How is a map configured?</summary>
+              <p data-i18n="faq5.a">
+                In a single JSON document, validated against the published JSON Schema at
+                <code>map0.net/schema/v1.json</code>. Basemaps, layers, popups, legends, search,
+                measuring, print, theme and languages are all keys in that document, and a map can
+                inherit from a shared base config with <code>extends</code>. A broken config is
+                reported before anything renders, with the JSON path of each error. The playground
+                lets you edit a config and watch the map follow.
+              </p>
+            </details>
+            <details>
+              <summary data-i18n="faq6.q">How does map0 relate to MapLibre GL JS?</summary>
+              <p data-i18n="faq6.a">
+                MapLibre is the rendering engine inside map0. map0 adds the application around it:
+                layer tree, legends, popups, search, measuring, print, permalinks and theming, all
+                driven by the config instead of code. MapLibre style URLs work as basemaps as they
+                are, and vector layers are styled with the MapLibre style specification.
+              </p>
+            </details>
+            <details>
+              <summary data-i18n="faq7.q">Is map0 free, also for commercial use?</summary>
+              <p data-i18n="faq7.a">
+                Yes. map0 is released under the MIT license and can be used, modified and
+                redistributed free of charge, in commercial and public-sector projects alike. The
+                source code is on GitHub. map0 is developed by Spatial Focus GmbH in Vienna, Austria.
+              </p>
+            </details>
+            <details>
+              <summary data-i18n="faq8.q">Is map0 ready for production?</summary>
+              <p data-i18n="faq8.a">
+                map0 is a 0.x release. Everything on this page works against live services and the
+                demos on this site run on it, but the JavaScript API and the config format are still
+                drafts and may change without a deprecation path until 1.0. Pin an exact version and
+                read the changelog when you upgrade.
+              </p>
+            </details>
+            <details>
+              <summary data-i18n="faq9.q">Which languages, screens and themes are supported?</summary>
+              <p data-i18n="faq9.a">
+                The UI ships in English and German, and every string can be overridden per locale
+                from the config. The component is responsive from a 320 px phone to a 4K display,
+                shows feature info as a bottom sheet on small screens, and follows the operating
+                system's light or dark mode. Primary colour, corner radius and font come from the
+                config or from your page's CSS custom properties.
+              </p>
+            </details>
+          </div>
         </div>
       </section>
 

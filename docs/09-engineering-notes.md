@@ -449,6 +449,43 @@ the same way at the other end: an inline chrome script applies the stored choice
 paint, CSS carries the dark tokens twice (`@media` for the OS default, `:root.dark` for the
 explicit choice), and embedded maps follow through the viewer's `theme` attribute.
 
+### 5.2 Site SEO: what the build does for crawlers
+
+Everything a crawler needs is in the emitted HTML — for search engines and for AI systems
+(GPTBot, ClaudeBot, PerplexityBot …) alike, and the latter do not run JavaScript. `site/seo/` does
+it; the i18n plugin calls `finishPage` for the English and the German variant of every page
+(build: on the emitted files in `closeBundle`, after Vite has hashed the assets; dev: on the fly in
+`transformIndexHtml`), so every step in there is idempotent:
+
+- **render.ts** — the demo gallery, the prev/next pager, the quick-start snippet (generated from
+  the inline JSON of `#quickstart`) and every `<pre data-src>` / `<pre data-lang>` code figure are
+  rendered at build time. A `data-src` that points at nothing fails the build. The browser
+  (`site/code.ts`) only binds the Copy buttons.
+- **head.ts** — `rel=canonical`, Open Graph, Twitter card and schema.org JSON-LD: Organization
+  (from the imprint), WebSite, WebPage, SoftwareApplication on the start page (version from
+  `packages/map0/package.json`), BreadcrumbList on subpages, FAQPage generated from the
+  `<details>` of `#faq`. Demo pages get their description from the registry (`blurb`/`blurbDe`).
+- **sitemap.ts / llms.ts** — `sitemap.xml` (both languages, `xhtml:link` alternates, no lastmod:
+  the deploy is a shallow checkout), `robots.txt` (allow all, Content Signals, Sitemap line),
+  `llms.txt` and `llms-full.txt` (llmstxt.org: a Markdown map of the site, and the full text of
+  FAQ, README and every demo with its config, converted from the finished pages).
+
+URLs carry no `.html`: Azure Static Web Apps redirects `/demos/wms.html` to `/demos/wms` anyway, so
+links, hreflang, canonical and sitemap all use the short form (`prettyPath`, and `pageForPath` for
+the way back). Vite's dev server and `vite preview` resolve `/demos/wms` to the file as well.
+`staticwebapp.config.json` redirects the one odd normalisation, `/index` → `/`.
+
+The social image `site/public/og.jpg` (2400×1260, a 1200×630 card at 2×) is a Playwright screenshot
+of `site/og/card.html`: the landing basemap with the water bodies, the layer panel and the wordmark over it — `pnpm og` regenerates it after a change to the landing
+config or the card. The PNG is committed, so the deploy needs neither a browser nor the live
+services; the build references it only if the file exists.
+
+Outside the repo: map0.net sits behind Cloudflare. Its *Managed robots.txt* prepends the Content
+Signals Policy text to ours, *AI Crawl Control* decides which AI crawlers get through at all, and
+*Markdown for Agents* (Pro plan and up) serves pages as Markdown to clients that send
+`Accept: text/markdown`. Check there before trusting a crawler test from the outside — a spoofed
+user agent is not a verified bot and tells you nothing about the block list.
+
 ## 6. Field notes: component and browser
 
 - **Focus lives in the shadow root.** `document.activeElement` returns the host element, never what
@@ -509,6 +546,9 @@ packages/ui       <map0-viewer>, panels, dialogs, popup rendering, focus trap, s
                   → imports core lazily (see invariant 1)
 site/             landing page + /demos (one page per topic) + configs and data
 site/i18n/        German page catalogues + the build-time translation plugin (§5.1)
+site/seo/         what the build does for crawlers: canonical/OG/JSON-LD, static gallery and code
+                  figures, sitemap, robots, llms.txt (§5.2)
+site/og/          the social card page, photographed into site/public/og.jpg by `pnpm og`
 e2e/              headless verification
 scripts/          build-adjacent tooling (size budget, release, config reference generator)
 ```

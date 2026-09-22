@@ -24,10 +24,30 @@ export function sitePages(): Set<string> {
   return pages;
 }
 
-/** "index.html" → "/", "demos/index.html" → "/demos/", "demos/wms.html" → "/demos/wms.html" */
+/**
+ * The public URL path of a page — without the `.html`, which is how the host
+ * serves it anyway (Azure Static Web Apps redirects `/demos/wms.html` to
+ * `/demos/wms`): "index.html" → "/", "demos/index.html" → "/demos/",
+ * "demos/wms.html" → "/demos/wms", "imprint.html" → "/imprint".
+ */
 export function prettyPath(page: string): string {
   const p = `/${page}`;
-  return p.endsWith("/index.html") ? p.slice(0, -"index.html".length) : p === "/index.html" ? "/" : p;
+  if (p === "/index.html") return "/";
+  if (p.endsWith("/index.html")) return p.slice(0, -"index.html".length);
+  return p.endsWith(".html") ? p.slice(0, -".html".length) : p;
+}
+
+/**
+ * The inverse of prettyPath for a root-relative URL path (no query, no hash):
+ * "/" → "index.html", "/demos/" → "demos/index.html", "/demos/wms" and
+ * "/demos/wms.html" → "demos/wms.html". Whether the page exists is the
+ * caller's question (sitePages()).
+ */
+export function pageForPath(path: string): string | undefined {
+  if (!path.startsWith("/")) return undefined;
+  if (path.endsWith("/")) return `${path.slice(1)}index.html`;
+  const p = path.slice(1);
+  return p.endsWith(".html") ? p : `${p}.html`;
 }
 
 /** merged catalogue for a page: chrome keys (every page) + the page's own file */
@@ -43,13 +63,13 @@ export function catalogFor(page: string): { catalog: Record<string, string>; fou
   return { catalog, found };
 }
 
-/** root-relative page links get the /de prefix; assets and external URLs do not */
+/** root-relative page links get the /de prefix (query and hash kept); assets and external URLs do not */
 function localizeHref(href: string, pages: Set<string>): string | undefined {
-  if (!href.startsWith("/") || href.startsWith("/de/")) return undefined;
-  const [path, hash] = href.split("#", 2) as [string, string?];
-  const page = path.endsWith("/") ? `${path.slice(1)}index.html` : path.slice(1);
-  if (!pages.has(page === "" ? "index.html" : page)) return undefined;
-  return `/de${path}${hash !== undefined ? `#${hash}` : ""}`;
+  if (!href.startsWith("/") || href === "/de" || href.startsWith("/de/")) return undefined;
+  const [, path, rest] = /^([^?#]*)(.*)$/.exec(href) as unknown as [string, string, string];
+  const page = pageForPath(path);
+  if (!page || !pages.has(page)) return undefined;
+  return `/de${path}${rest}`;
 }
 
 export interface TranslateResult {

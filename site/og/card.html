@@ -1,0 +1,91 @@
+<!doctype html>
+<!--
+  The social preview card (Open Graph / Twitter, 1200×630 CSS px, photographed
+  at 2×): a real map with the wordmark over it. Not a page of the site — it is
+  outside the folders the build scans, served by the dev server only, and
+  photographed by scripts/og-image.mjs (`pnpm og`) into site/public/og.jpg.
+  `?config=/og/card-vector.map0.json` swaps the map for a variant.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <title>map0 social card</title>
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module">
+      import "@map0/ui";
+    </script>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: #e9edf1;
+      }
+      /* the shared chrome is injected on every page the dev server serves — not here */
+      .topbar,
+      footer.site {
+        display: none !important;
+      }
+      map0-viewer {
+        position: absolute;
+        inset: 0;
+        height: 630px;
+      }
+      .badge {
+        position: absolute;
+        left: 48px;
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 30px 38px 32px;
+        border-radius: 24px;
+        background: rgba(15, 23, 42, 0.92);
+        color: #e2e8f0;
+        box-shadow: 0 18px 50px rgba(15, 23, 42, 0.35);
+        font-family: var(--font);
+      }
+      .badge .mark {
+        font-size: 108px;
+        line-height: 0.95;
+        letter-spacing: -0.055em;
+        font-weight: 800;
+        color: #fff;
+      }
+      .badge .mark span {
+        color: #22b8cf;
+      }
+      .badge .tag {
+        margin-top: 16px;
+        max-width: 520px;
+        font-size: 31px;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        font-weight: 600;
+        text-wrap: balance;
+      }
+      .badge .sub {
+        margin-top: 18px;
+        font-size: 19px;
+        letter-spacing: 0.01em;
+        color: #9aa4b1;
+      }
+    </style>
+  </head>
+  <body>
+    <map0-viewer id="card" loading="eager" theme="light"></map0-viewer>
+    <script>
+      /* the config comes from the query string so one page serves every variant;
+         set before the element upgrades (the module above loads deferred) */
+      document
+        .getElementById("card")
+        .setAttribute("config-src", new URLSearchParams(location.search).get("config") || "/og/card.map0.json");
+    </script>
+    <div class="badge">
+      <div class="mark">map<span>0</span></div>
+      <div class="tag">The web map client you configure, not code.</div>
+      <div class="sub">Open source · MapLibre GL JS · web component</div>
+    </div>
+  </body>
+</html>

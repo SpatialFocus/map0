@@ -1,60 +1,12 @@
 /**
  * Landing page. The map is the product, so it loads eagerly and everything else
- * is built around it: the quick-start snippet is generated FROM the element
- * running next to it, and the demo grid comes from the demo registry — neither
- * can go stale by being edited in the wrong place.
+ * is built around it. The quick-start snippet next to it is generated FROM the
+ * element at build time (site/seo/render.ts), so the two can never drift; what
+ * runs here is only motion — the countdown, the scroll reveal, the scroll spy —
+ * and the Copy buttons.
  */
 import "@map0/ui";
-import { codeFigure, dedent, enhanceCode } from "./code.js";
-import pkg from "../packages/map0/package.json";
-
-/* ------------------------------- quick start ------------------------------ */
-
-/** The published bundle, pinned — read from the package so it cannot drift. */
-const CDN_URL = `https://cdn.jsdelivr.net/npm/${pkg.name}@${pkg.version}/dist/map0.js`;
-
-function quickStart(): void {
-  const host = document.querySelector<HTMLElement>("[data-quickstart]");
-  const inline = document.querySelector<HTMLScriptElement>(
-    '#quickstart > script[type="application/json"]',
-  );
-  if (!host || !inline) return;
-
-  const config = dedent(inline.textContent ?? "")
-    .split("\n")
-    .map((line) => `    ${line}`)
-    .join("\n");
-
-  /* One snippet, one Copy button, a page that runs: the CDN line belongs in it.
-     Self-hosting only swaps this src for your own folder — that is a developer
-     concern and lives in the README, not on the landing page. */
-  const snippet = [
-    `<script type="module"`,
-    `        src="${CDN_URL}">`,
-    `</script>`,
-    ``,
-    `<map0-viewer style="height:520px">`,
-    `  <script type="application/json">`,
-    config,
-    `  </script>`,
-    `</map0-viewer>`,
-  ].join("\n");
-
-  const figure = codeFigure("index.html", snippet, "html");
-  figure.classList.add("full"); // a quick start nobody can read is not one
-  host.replaceWith(figure);
-
-  /* the button below the snippet hands this same config to the playground */
-  const link = document.querySelector<HTMLAnchorElement>("[data-playground-link]");
-  if (link) {
-    try {
-      const json = JSON.stringify(JSON.parse(inline.textContent ?? ""));
-      link.href = `${link.getAttribute("href")}?c=${encodeURIComponent(json)}`;
-    } catch {
-      /* keep the plain playground link */
-    }
-  }
-}
+import { bindCopyButtons } from "./code.js";
 
 /* ------------------------------- countdown ------------------------------- */
 
@@ -154,8 +106,7 @@ function scrollSpy(): void {
 
 /* ---------------------------------- boot ---------------------------------- */
 
-quickStart();
 countdown();
 reveal();
 scrollSpy();
-void enhanceCode();
+bindCopyButtons();
