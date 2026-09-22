@@ -40,6 +40,7 @@
   },
   "scripts": {
     "build": "vite build",
+    "prepublishOnly": "vite build",
     "check": "node bin/map0-check.js"
   },
   "dependencies": {

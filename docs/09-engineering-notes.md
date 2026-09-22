@@ -17,6 +17,7 @@ pnpm demo:standalone            # build + copy dist next to the standalone demo 
 pnpm build:npm                  # assemble the publishable `map0` package, types included (§release)
 pnpm build:check                # bundle the map0-check CLI (packages/check/dist) — then:
 node packages/check/bin/map0-check.js <service url> --layer <name>   # probe a live OGC service as map0 would
+node e2e/verify-check-tarball.mjs packages/check/map0-check-<v>.tgz  # the packed CLI: install, run, probe a fixture WMS (§release)
 node e2e/verify-types.mjs       # type-check a fresh consumer against the packed tarball (§release)
 pnpm release                    # the whole release: version, changelog, verify, publish (§release)
 node e2e/verify-demos.mjs       # every demo page, headless, with screenshots
@@ -44,9 +45,12 @@ bundle (no dependencies, MapLibre included). The second publishable package is *
 (Vite SSR build of `src/cli.ts` with `@map0/core` and `@map0/schema` compiled in, tree-shaken with
 `moduleSideEffects: false` so MapLibre and the other browser-only dependencies of core fall out;
 ogc-client is its single runtime dependency). It is versioned in lockstep with the viewer —
-`bump-version-refs.mjs` moves its `package.json` version, the release builds it and checks that the
-bundle loads (`--version`); publishing it is still a manual `pnpm --filter map0-check publish` after
-the viewer's release. The folder keeps the product name, the package cannot:
+`bump-version-refs.mjs` moves its `package.json` version, and the release builds it, packs it and
+runs `e2e/verify-check-tarball.mjs` on the tarball (npm-installs it into a scratch project, runs
+`--version`, `--help` and a full probe against a WMS served from the script, offline; CI does the
+same). Publishing it is still a manual step after the viewer's release:
+`npm publish packages/check/map0-check-<version>.tgz --access public` — the verified tarball, not a
+fresh pack. The folder keeps the product name, the package cannot:
 npm's typosquatting heuristic rejects the unscoped `map0` as too similar to `mcp1`, `hapi`, `tap`
 and `tape` — short names are normalised (`0` reads as *o*) and compared by edit distance, and the
 check is server-side only, so `npm pack`/`--dry-run` will not warn you. The name is unregistered but
