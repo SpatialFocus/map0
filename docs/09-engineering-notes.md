@@ -84,6 +84,9 @@ Two things a release has to get right, both of which fail *silently* if it does 
   then exercises exactly the files a consumer gets) and asserts rendered **vector-tile** features —
   a missing worker file still paints raster layers — plus the COG config, because the COG decoder
   is a lazy chunk and lazy-chunk resolution is what regresses between dev server and bundle.
+  The script hands the archive to `tar` on stdin and runs it inside the target folder: Git for
+  Windows puts MSYS's GNU tar first on PATH, which reads `C:` as a remote host and mangles a
+  relative path's backslashes, so no path may reach tar at all.
 - **Third-party notices are an obligation.** `scripts/build-npm.mjs` reads the build's sourcemaps to
   find every package compiled into the bundle and reproduces each licence in full. A new bundled
   dependency whose npm tarball ships no licence text (pmtiles, today) **fails the build** until its
@@ -390,6 +393,17 @@ it, or drop it when a real dependency arrives.
   build Rollup emitted the re-export but dropped the corresponding import, so the chunk referenced an
   undefined name (`Popup is not defined`, only in the bundle). Wrap it in a function that *uses* the
   binding instead — `createPopup()` — and the import survives.
+- **Lit's `css` literals are not minified by anybody.** esbuild minifies the code around a
+  template literal, never the string inside, so every comment and indent in `styles.ts` shipped in
+  the page tier — ~3 KB gzip. `scripts/minify-css-literals.mjs` (a pre-transform in the package
+  and the site build) strips comments, collapses white space and drops the spaces around `{ } ; , >`;
+  it leaves the spaces around `:` alone (`.a :hover` is not `.a:hover`) and fails the build on
+  an interpolation. Comment the CSS freely — it costs nothing now.
+- **`scripts/maplibre-dist.mjs` resolves `maplibre-gl` through pnpm's `NODE_PATH`.** The root
+  package does not depend on MapLibre; under `pnpm run` the hoisted `node_modules/.pnpm/node_modules`
+  is on `NODE_PATH` and `require.resolve` finds it there. Calling `vite build --config
+  site/vite.config.ts` directly fails with "Cannot find module 'maplibre-gl/dist/maplibre-gl.mjs'"
+  unless `NODE_PATH` is set the same way.
 
 ### 5.0b The one file on map0.net whose name never changes
 
@@ -513,6 +527,14 @@ user agent is not a verified bot and tells you nothing about the block list.
 - **Window-level keyboard handlers need `composedPath()`.** Inside a shadow root `event.target` is
   retargeted to the host, so a handler cannot tell whether the user is typing in the search box.
   Without that check, Backspace while searching deletes a measurement vertex.
+- **Panels dock in flex columns, and three details make that work.** (1) The legend's
+  `max-height: 45%` silently became 45% of a 40px wrapper when the bottom-corner panels sat in
+  one — they live in the dock itself now, the first carrying `margin-top: auto`. (2) A panel's
+  `min-height: auto` includes its scrolling body's full content, so an open panel needs
+  `min-height: 0` to give way, while closed panels and headers get `flex-shrink: 0` or they are
+  squashed. (3) Two columns plus the search field need ~688px; below that the viewer renders one
+  column (`COMPACT_MAX` in the element, `max-width: 687px` in the styles — keep them in step).
+  A corner-pair overlap matrix found each of them; it now runs in the smoke test.
 
 ## 7. Testing and verification
 
@@ -520,6 +542,8 @@ user agent is not a verified bot and tells you nothing about the block list.
 |---|---|---|
 | Pure logic | Vitest (`packages/**/*.test.ts`) | URL building, templates, merge rules, projections, permalink codec |
 | Whole demos | `e2e/verify-demos.mjs` (Playwright) | every demo page renders, key interactions, **console must stay clean** |
+| Built bundle | `e2e/smoke.mjs` (`pnpm smoke`, CI) | element lifecycle, z-order, layer tree, bottom sheet, panel layout for every corner pair — network-free |
+| Pixels | `e2e/visual.mjs` (`pnpm visual`, CI) | ten UI states against committed screenshots per platform (N9) |
 | Bundle | `scripts/check-size.mjs` | tier sizes, page-tier budget |
 | Docs | `scripts/config-reference.mjs` + `config-reference.test.ts` | `docs/config-reference.md` is generated from `v1.json` (`pnpm docs:reference`); the test fails while the committed page is stale |
 
@@ -530,9 +554,35 @@ Notes on the E2E script:
   look like "the map never finishes loading".
 - Console errors fail a demo. Known-broken services get an explicit allow-list (`IGNORED_CONSOLE`),
   so accepting noise is a visible decision rather than a habit.
-- Screenshots land in `e2e/shots/` (git-ignored). They are for looking at, not yet compared
-  automatically — visual regression is still open (N9).
+- Screenshots land in `e2e/shots/` (git-ignored). They are for looking at; the pixel comparison
+  lives in `e2e/visual.mjs`, see below.
 - The demos run against live services, so a failing run is worth repeating once before believing it.
+
+Notes on the visual regression (`e2e/visual.mjs`):
+
+- **Scenes, not demo pages.** The demos draw live tiles, which change whenever a server re-renders.
+  The scenes rebuild the demos' UI states from inline GeoJSON on an `empty` basemap; any request
+  to another host fails the scene, so it can only go red because map0 changed.
+- **One platform, one set of pictures.** Text and anti-aliasing differ between Windows and Linux,
+  so baselines live in `e2e/visual/<process.platform>/`. CI compares `linux`;
+  `pnpm visual:linux` produces those in Microsoft's Playwright image, tagged with the installed
+  playwright version so the browser build is CI's. Only the bundled Chromium is used — a system
+  Chrome renders different pixels.
+- **Every glyph from a webfont.** `theme.font` covers map0's own text, but MapLibre's controls and
+  the code in the error panel carry their own font stacks and would fall back to whatever the CI
+  image has installed. The script forces Inter on every shadow root before the screenshot.
+- **Stable means idle.** Reduced motion, `animations: "disabled"`, then `map.once("idle")` after a
+  `triggerRepaint()` and two animation frames. A scene whose state waits on a panel also waits until
+  its `getAnimations()` are done.
+- **Docker gotchas.** pnpm's Windows junctions do not resolve inside Linux, so the container masks
+  `/work/node_modules` with an empty volume and installs the script's four dependencies elsewhere,
+  linked in as `/node_modules`. `npm install --prefix /` itself fails ("Tracker idealTree already
+  exists").
+- **A failed CI run uploads `e2e/visual/.out/`** (actual and diff images) as the `visual-diffs`
+  artifact. Accepting a change is `--update` on both platforms and a look at every rewritten PNG.
+- **Simple-style `line-*` keys draw LineStrings only.** The geojson pipeline filters its line layer
+  by geometry type, so a polygon fixture styled `{ "line-color", "fill-opacity": 0 }` shows nothing.
+  Outlines need a style layer: `[{ "type": "line", "paint": { … } }]`.
 
 ## 8. Where things live
 
