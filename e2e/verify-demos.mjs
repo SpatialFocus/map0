@@ -22,6 +22,7 @@ const DEMOS = [
   "wfs",
   "ogcapi-features",
   "cog",
+  "layer-tree",
   "popups",
   "legend",
   "search",

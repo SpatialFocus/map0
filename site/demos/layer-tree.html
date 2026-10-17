@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="title">Layer tree | map0 demos</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/demos/demo.ts"></script>
+  </head>
+  <body data-demo="layer-tree">
+    <main>
+      <div class="page-head">
+        <p class="eyebrow" data-i18n="eyebrow">Map features</p>
+        <h1 data-i18n="h1">Layer tree</h1>
+        <p class="lede" data-i18n="lede">
+          Fourteen layers of Vienna open data, sorted into groups. A filter box narrows the tree,
+          each group switches as a whole, and a radio group shows one imagery layer at a time.
+        </p>
+      </div>
+
+      <map0-viewer config-src="/configs/layer-tree.map0.json"></map0-viewer>
+      <p class="demo-note" data-i18n="note">
+        <strong>Try it:</strong> type <code>cycl</code> into the filter box, switch "Mobility" on
+        and off with the box in its header, and pick another imagery layer.
+      </p>
+
+      <section class="doc">
+        <h2 data-i18n="groups.h2">Groups</h2>
+        <ul class="checks">
+          <li data-i18n="groups.li1">
+            <strong>Nesting:</strong> a <code>group</code> holds layers and other groups; the order
+            in the config is the order on the map, top of the list on top
+          </li>
+          <li data-i18n="groups.li2">
+            <strong>Collapsed:</strong> <code>collapsed: true</code> starts a group closed, like
+            "Education" above
+          </li>
+          <li data-i18n="groups.li3">
+            <strong>All on, all off:</strong> the box in a group's header switches every layer in
+            it; a dash means some of them are on
+          </li>
+        </ul>
+      </section>
+
+      <section class="doc">
+        <h2 data-i18n="radio.h2">Radio groups</h2>
+        <p data-i18n="radio.p1">
+          <code>exclusive: true</code> turns a group into a radio group: one child is visible at a
+          time. That suits alternatives that would only cover each other, such as imagery from
+          different years or analyses of the same area. A child group counts as one option and
+          switches as a whole.
+        </p>
+        <p data-i18n="radio.p2">
+          The first child configured visible starts on, the others start hidden. The rule also
+          holds for <code>api.layers.setVisibility()</code> and for share links. The box in the
+          group's header switches the group off entirely, and on again with the option that was
+          on or the first one.
+        </p>
+      </section>
+
+      <section class="doc">
+        <h2 data-i18n="filter.h2">Filter box</h2>
+        <p data-i18n="filter.p1">
+          The filter box appears from ten layers on. <code>controls.layerSwitcher.filter</code>
+          shows it always (<code>true</code>) or never (<code>false</code>); the default is
+          <code>"auto"</code>.
+        </p>
+        <ul class="checks">
+          <li data-i18n="filter.li1">
+            <strong>Forgiving:</strong> case and accents do not matter, <code>strasse</code> finds
+            "Straße"
+          </li>
+          <li data-i18n="filter.li2">
+            <strong>Groups count:</strong> a word that matches a group title keeps all of the
+            group's layers, several words must all match; a group's box then switches only the
+            layers on show
+          </li>
+          <li data-i18n="filter.li3">
+            <strong>Quick to undo:</strong> <kbd>Esc</kbd> clears the filter, collapsed groups
+            open while it is active
+          </li>
+        </ul>
+      </section>
+
+      <section class="doc">
+        <h2 data-i18n="config.h2">Configuration</h2>
+        <pre data-src="/configs/layer-tree.map0.json" data-label="layer-tree.map0.json" data-emphasise="exclusive"></pre>
+      </section>
+    </main>
+  </body>
+</html>

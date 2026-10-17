@@ -1,0 +1,20 @@
+{
+  "title": "Layerbaum | map0-Demos",
+  "eyebrow": "Kartenfunktionen",
+  "h1": "Layerbaum",
+  "lede": "Vierzehn Layer aus Wiener Open Data, in Gruppen geordnet. Ein Filterfeld grenzt den Baum ein, jede Gruppe lässt sich als Ganzes schalten, und eine Radiogruppe zeigt jeweils ein Luftbild.",
+  "note": "<strong>Ausprobieren:</strong> <code>cycl</code> ins Filterfeld tippen, „Mobility“ mit dem Kästchen im Gruppenkopf ein- und wieder ausschalten und ein anderes Luftbild wählen.",
+  "groups.h2": "Gruppen",
+  "groups.li1": "<strong>Verschachtelung:</strong> eine <code>group</code> enthält Layer und weitere Gruppen; die Reihenfolge in der Konfiguration ist die Reihenfolge auf der Karte, oben in der Liste liegt oben",
+  "groups.li2": "<strong>Eingeklappt:</strong> <code>collapsed: true</code> startet eine Gruppe geschlossen, wie oben „Education“",
+  "groups.li3": "<strong>Alle an, alle aus:</strong> das Kästchen im Gruppenkopf schaltet alle Layer der Gruppe; ein Strich bedeutet, dass ein Teil davon an ist",
+  "radio.h2": "Radiogruppen",
+  "radio.p1": "<code>exclusive: true</code> macht eine Gruppe zur Radiogruppe: Es ist jeweils ein Kind sichtbar. Das passt für Alternativen, die einander nur verdecken würden, etwa Luftbilder verschiedener Jahre oder Auswertungen desselben Gebiets. Eine Untergruppe zählt als eine Option und schaltet als Ganzes.",
+  "radio.p2": "Das erste als sichtbar konfigurierte Kind startet eingeschaltet, die übrigen ausgeblendet. Die Regel gilt auch für <code>api.layers.setVisibility()</code> und für geteilte Links. Das Kästchen im Gruppenkopf schaltet die Gruppe ganz aus und wieder ein, mit der zuvor gewählten oder der ersten Option.",
+  "filter.h2": "Filterfeld",
+  "filter.p1": "Das Filterfeld erscheint ab zehn Layern. <code>controls.layerSwitcher.filter</code> zeigt es immer (<code>true</code>) oder nie (<code>false</code>); Standard ist <code>\"auto\"</code>.",
+  "filter.li1": "<strong>Nachsichtig:</strong> Groß- und Kleinschreibung und Akzente spielen keine Rolle, <code>strasse</code> findet „Straße“",
+  "filter.li2": "<strong>Gruppen zählen mit:</strong> ein Wort, das einen Gruppentitel trifft, behält alle Layer der Gruppe, mehrere Wörter müssen alle passen; das Kästchen einer Gruppe schaltet dann nur die angezeigten Layer",
+  "filter.li3": "<strong>Schnell zurückgesetzt:</strong> <kbd>Esc</kbd> leert den Filter, eingeklappte Gruppen öffnen sich, solange er aktiv ist",
+  "config.h2": "Konfiguration"
+}

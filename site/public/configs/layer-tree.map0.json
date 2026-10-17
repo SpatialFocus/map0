@@ -1,0 +1,194 @@
+{
+  "$schema": "https://map0.net/schema/v1.json",
+  "version": 1,
+  "meta": { "title": "Vienna open data in a layer tree" },
+  "map": { "center": [16.405, 48.218], "zoom": 12.3, "minZoom": 8 },
+  "basemaps": [
+    {
+      "id": "grau",
+      "title": "Grey",
+      "type": "raster",
+      "url": "https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/{z}/{y}/{x}.png",
+      "attribution": "© basemap.at",
+      "default": true
+    }
+  ],
+  "layers": [
+    {
+      "type": "group",
+      "title": "Leisure",
+      "children": [
+        {
+          "id": "badestellen",
+          "type": "geojson",
+          "title": "Bathing spots",
+          "data": "https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:BADESTELLENOGD&srsName=EPSG:4326&outputFormat=json",
+          "style": {
+            "circle-color": "#0284c7",
+            "circle-radius": 6,
+            "circle-stroke-color": "#ffffff",
+            "circle-stroke-width": 1.5
+          },
+          "popup": {
+            "title": "{{BEZEICHNUNG}}",
+            "fields": [
+              { "key": "WASSERTEMPERATUR", "label": "Water temperature (°C)" },
+              { "key": "UNTERSUCHUNGSDATUM", "label": "Sampled" }
+            ]
+          },
+          "attribution": "Stadt Wien, data.wien.gv.at"
+        },
+        {
+          "id": "spielplaetze",
+          "type": "geojson",
+          "title": "Playgrounds",
+          "data": "https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:SPIELPLATZPUNKTOGD&srsName=EPSG:4326&outputFormat=json",
+          "style": {
+            "circle-color": "#16a34a",
+            "circle-radius": 3.5,
+            "circle-stroke-color": "#ffffff",
+            "circle-stroke-width": 1
+          },
+          "popup": {
+            "title": "{{ANL_NAME}}",
+            "fields": [
+              { "key": "TYP_DETAIL", "label": "Type" },
+              { "key": "SPIELPLATZ_DETAIL", "label": "Facilities" }
+            ]
+          },
+          "attribution": "Stadt Wien, data.wien.gv.at"
+        },
+        {
+          "id": "trinkbrunnen",
+          "type": "wms",
+          "title": "Drinking fountains",
+          "url": "https://data.wien.gv.at/daten/geo",
+          "layers": "TRINKBRUNNENOGD",
+          "visible": false,
+          "minZoom": 14,
+          "attribution": "Stadt Wien, data.wien.gv.at"
+        },
+        {
+          "id": "hundezonen",
+          "type": "wms",
+          "title": "Dog zones",
+          "url": "https://data.wien.gv.at/daten/geo",
+          "layers": "HUNDEZONEFLOGD",
+          "visible": false,
+          "opacity": 0.6,
+          "attribution": "Stadt Wien, data.wien.gv.at"
+        },
+        {
+          "id": "baeume",
+          "type": "wms",
+          "title": "Tree register",
+          "url": "https://data.wien.gv.at/daten/geo",
+          "layers": "BAUMKATOGD",
+          "visible": false,
+          "minZoom": 16,
+          "attribution": "Stadt Wien, data.wien.gv.at"
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "title": "Mobility",
+      "children": [
+        {
+          "id": "radwege",
+          "type": "wms",
+          "title": "Cycle paths",
+          "url": "https://data.wien.gv.at/daten/geo",
+          "layers": "RADWEGEOGD",
+          "visible": false,
+          "opacity": 0.8,
+          "attribution": "Stadt Wien, data.wien.gv.at"
+        },
+        {
+          "id": "radnetz",
+          "type": "wms",
+          "title": "Cycling network",
+          "url": "https://data.wien.gv.at/daten/geo",
+          "layers": "RADNETZOGD",
+          "visible": false,
+          "attribution": "Stadt Wien, data.wien.gv.at"
+        },
+        {
+          "id": "ubahn",
+          "type": "wms",
+          "title": "Underground network",
+          "url": "https://data.wien.gv.at/daten/geo",
+          "layers": "UBAHNOGD",
+          "visible": false,
+          "attribution": "Stadt Wien, data.wien.gv.at"
+        },
+        {
+          "id": "haltestellen",
+          "type": "wms",
+          "title": "Public transport stops",
+          "url": "https://data.wien.gv.at/daten/geo",
+          "layers": "OEFFHALTESTOGD",
+          "visible": false,
+          "minZoom": 15,
+          "attribution": "Stadt Wien, data.wien.gv.at"
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "title": "Education",
+      "collapsed": true,
+      "children": [
+        {
+          "id": "schulen",
+          "type": "wms",
+          "title": "Schools",
+          "url": "https://data.wien.gv.at/daten/geo",
+          "layers": "SCHULEOGD",
+          "visible": false,
+          "attribution": "Stadt Wien, data.wien.gv.at"
+        },
+        {
+          "id": "kindergaerten",
+          "type": "wms",
+          "title": "Kindergartens",
+          "url": "https://data.wien.gv.at/daten/geo",
+          "layers": "KINDERGARTENOGD",
+          "visible": false,
+          "attribution": "Stadt Wien, data.wien.gv.at"
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "title": "Imagery",
+      "exclusive": true,
+      "children": [
+        {
+          "id": "oberflaeche",
+          "type": "raster",
+          "title": "Surface model, shaded",
+          "url": "https://mapsneu.wien.gv.at/basemap/bmapoberflaeche/grau/google3857/{z}/{y}/{x}.jpeg",
+          "opacity": 0.35,
+          "attribution": "© basemap.at"
+        },
+        {
+          "id": "gelaende",
+          "type": "raster",
+          "title": "Terrain model, shaded",
+          "url": "https://mapsneu.wien.gv.at/basemap/bmapgelaende/grau/google3857/{z}/{y}/{x}.jpeg",
+          "opacity": 0.35,
+          "attribution": "© basemap.at"
+        },
+        {
+          "id": "orthofoto",
+          "type": "raster",
+          "title": "Orthophoto",
+          "url": "https://mapsneu.wien.gv.at/basemap/bmaporthofoto30cm/normal/google3857/{z}/{y}/{x}.jpeg",
+          "attribution": "© basemap.at"
+        }
+      ]
+    }
+  ],
+  "controls": { "layerSwitcher": { "open": true }, "legend": false }
+}
