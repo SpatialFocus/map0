@@ -958,82 +958,88 @@ try {
 
   /* ------------------------------------- panel layout, every corner pair */
   /* The layer panel and the legend dock to the corner their `position`
-     names, the measure bar keeps clear of both. Every pair of corners, at a
-     desktop, a tablet and a phone width: nothing may cover anything else. */
+     names, the measure bar keeps clear of both. Every pair of corners, at
+     four widths: nothing may cover anything else. */
   const layoutNoise = [];
   const layoutPage = await context.newPage();
   watchConsole(layoutPage, layoutNoise);
   await layoutPage.goto(`${BASE}/smoke.html`, { waitUntil: "domcontentloaded" });
   await layoutPage.waitForFunction(() => !!document.querySelector("map0-viewer")?.api);
-  const layout = async (width, height, opens) =>
-    layoutPage.evaluate(
-      async ({ width, height, opens }) => {
-        const host = document.querySelector("#host");
-        host.style.width = `${width}px`;
-        host.style.height = `${height}px`;
+  const CORNERS = ["top-left", "top-right", "bottom-left", "bottom-right"];
+  /* twelve layers with legend entries — enough to fill both panels */
+  const layoutLayers = Array.from({ length: 12 }, (_, i) => ({
+    ...square("#888888", `l${i}`, `Layer ${i + 1}`),
+    legend: [{ label: `Layer ${i + 1}`, color: "#888888" }],
+  }));
+  /** what covers what — panels, measure bar, map chrome — for one pair of corners */
+  const layoutOverlaps = async (toc, legend, open) => {
+    await layoutPage.evaluate((config) => void (document.querySelector("map0-viewer").config = config), {
+      version: 1,
+      i18n: { locale: "en" },
+      map: { center: [10, 2], zoom: 4 },
+      basemaps: [{ type: "empty", id: "a", title: "Plain" }, { type: "empty", id: "b", title: "Blank" }],
+      search: { provider: "photon" },
+      permalink: false,
+      controls: { geolocate: false, fullscreen: false, layerSwitcher: { position: toc, open }, legend: { position: legend, open } },
+      layers: layoutLayers,
+    });
+    /* the old viewer stays in the DOM until the new config has mounted */
+    await layoutPage.waitForFunction(
+      ({ toc, legend }) => {
         const el = document.querySelector("map0-viewer");
-        const square = (id, title, w) => ({
-          id,
-          title,
-          type: "geojson",
-          data: { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [[[w, 0], [w + 5, 0], [w + 5, 5], [w, 5], [w, 0]]] } },
-          legend: [{ label: title, color: "#888" }],
-        });
-        const corners = ["top-left", "top-right", "bottom-left", "bottom-right"];
-        const box = (n) => n && n.getBoundingClientRect();
-        const hit = (a, b) => a && b && a.width > 0 && b.width > 0 &&
-          a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5;
-        const failures = [];
-        for (const open of opens) for (const toc of corners) for (const legend of corners) {
-          el.config = {
-            version: 1,
-            i18n: { locale: "en" },
-            map: { center: [10, 2], zoom: 4 },
-            basemaps: [{ type: "empty", id: "a", title: "Plain" }, { type: "empty", id: "b", title: "Blank" }],
-            search: { provider: "photon" },
-            permalink: false,
-            controls: { geolocate: false, fullscreen: false, layerSwitcher: { position: toc, open }, legend: { position: legend, open } },
-            layers: Array.from({ length: 12 }, (_, i) => square(`l${i}`, `Layer ${i + 1}`, i)),
-          };
-          const deadline = Date.now() + 20_000;
-          /* the old viewer stays in the DOM until the new config has mounted */
-          const mounted = () => {
-            const c = el.api?.config.controls;
-            return c?.layerSwitcher && c.layerSwitcher.position === toc && c.legend && c.legend.position === legend &&
-              el.api.layers.state.value.length === 12 && !!el.shadowRoot.querySelector(".toc") && !!el.shadowRoot.querySelector(".legend");
-          };
-          while (!mounted()) {
-            if (Date.now() > deadline) break;
-            await new Promise((r) => setTimeout(r, 50));
-          }
-          const sr = el.shadowRoot;
-          sr.querySelector('button[aria-label="Measure"]')?.click();
-          while (!sr.querySelector(".measure-bar") && Date.now() < deadline) await new Promise((r) => setTimeout(r, 50));
-          await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-          const q = (sel) => box(sr.querySelector(sel));
-          const r = {
-            toc: q(".toc"), legend: q(".legend"), bar: q(".measure-bar"), search: q(".search"),
-            basemaps: q(".basemaps"), controls: q(".maplibregl-ctrl-top-left"), scale: q(".maplibregl-ctrl-scale"),
-            attribution: q(".maplibregl-ctrl-attrib"),
-          };
-          const bad = [];
-          for (const [a, against] of [
-            ["toc", ["legend", "bar", "search", "basemaps", "controls", "scale", "attribution"]],
-            ["legend", ["bar", "search", "basemaps", "controls", "scale", "attribution"]],
-            ["bar", ["basemaps", "scale", "attribution"]],
-          ]) {
-            if (!r[a]) bad.push(`no ${a}`);
-            for (const b of against) if (hit(r[a], r[b])) bad.push(`${a}×${b}`);
-          }
-          if (bad.length > 0) failures.push(`${open ? "open" : "closed"} toc ${toc}, legend ${legend}: ${bad.join(" ")}`);
-        }
-        return failures;
+        const c = el.api?.config.controls;
+        return (
+          c?.layerSwitcher && c.layerSwitcher.position === toc && c.legend && c.legend.position === legend &&
+          el.api.layers.state.value.length === 12 &&
+          !!el.shadowRoot.querySelector(".toc") && !!el.shadowRoot.querySelector(".legend")
+        );
       },
-      { width, height, opens },
+      { toc, legend },
+      { timeout: 20_000 },
     );
+    await layoutPage.evaluate(() =>
+      document.querySelector("map0-viewer").shadowRoot.querySelector('button[aria-label="Measure"]').click(),
+    );
+    await layoutPage.waitForFunction(
+      () => !!document.querySelector("map0-viewer").shadowRoot.querySelector(".measure-bar"),
+      undefined,
+      { timeout: 20_000 },
+    );
+    return layoutPage.evaluate(async () => {
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const sr = document.querySelector("map0-viewer").shadowRoot;
+      const box = (sel) => sr.querySelector(sel)?.getBoundingClientRect() ?? null;
+      const hit = (a, b) => a && b && a.width > 0 && b.width > 0 &&
+        a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5;
+      const r = {
+        toc: box(".toc"), legend: box(".legend"), bar: box(".measure-bar"), search: box(".search"),
+        basemaps: box(".basemaps"), controls: box(".maplibregl-ctrl-top-left"), scale: box(".maplibregl-ctrl-scale"),
+        attribution: box(".maplibregl-ctrl-attrib"),
+      };
+      const bad = [];
+      for (const [a, against] of [
+        ["toc", ["legend", "bar", "search", "basemaps", "controls", "scale", "attribution"]],
+        ["legend", ["bar", "search", "basemaps", "controls", "scale", "attribution"]],
+        ["bar", ["basemaps", "scale", "attribution"]],
+      ]) {
+        if (!r[a]) bad.push(`no ${a}`);
+        for (const b of against) if (hit(r[a], r[b])) bad.push(`${a}×${b}`);
+      }
+      return bad;
+    });
+  };
   /* 680px: the search field and a 300px legend docked top-right once overlapped there */
   for (const [width, height, opens] of [[900, 560, [true]], [680, 520, [true]], [600, 500, [true]], [375, 667, [true, false]]]) {
-    const failures = await layout(width, height, opens);
+    await layoutPage.evaluate(([w, h]) => {
+      const host = document.querySelector("#host");
+      host.style.width = `${w}px`;
+      host.style.height = `${h}px`;
+    }, [width, height]);
+    const failures = [];
+    for (const open of opens) for (const toc of CORNERS) for (const legend of CORNERS) {
+      const bad = await layoutOverlaps(toc, legend, open).catch((e) => [String(e.message ?? e).split("\n")[0]]);
+      if (bad.length > 0) failures.push(`${open ? "open" : "closed"} toc ${toc}, legend ${legend}: ${bad.join(" ")}`);
+    }
     check(
       `at ${width}px, no panel covers another for any pair of corners, measuring included`,
       failures.length === 0,

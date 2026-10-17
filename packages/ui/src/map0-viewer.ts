@@ -97,13 +97,23 @@ const COMPACT_MAX = 687;
 /** layers from which the panel offers a filter box when `filter` is "auto" (F2.7) */
 const TOC_FILTER_AUTO = 10;
 
+/** a panel's corner, split the way the layout reads it: the edge it docks to, and which end */
+interface Corner {
+  edge: "left" | "right";
+  end: "top" | "bottom";
+}
+const EDGES = ["left", "right"] as const;
+const corner = (position: string): Corner => ({
+  edge: position.endsWith("left") ? "left" : "right",
+  end: position.startsWith("bottom") ? "bottom" : "top",
+});
+
 /** the edges with a dock column, as `data-dock` lists them — compact viewers have the right one only */
-const dockSides = (corners: string[], compact: boolean): string =>
-  compact
-    ? corners.length > 0
-      ? "right"
-      : ""
-    : (["left", "right"] as const).filter((side) => corners.some((c) => c.endsWith(side))).join(" ");
+const dockSides = (corners: Corner[], compact: boolean): string => {
+  if (corners.length === 0) return "";
+  if (compact) return "right";
+  return EDGES.filter((edge) => corners.some((c) => c.edge === edge)).join(" ");
+};
 
 /** a title with the filter's hits marked */
 const highlight = (text: string, terms: string[]): unknown =>
@@ -238,21 +248,21 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
   }
 
   /** corner the layer panel docks to, null while there is none */
-  private get tocPosition(): string | null {
+  private get tocCorner(): Corner | null {
     const ls = this.normalized?.controls.layerSwitcher;
-    return ls && this.hasToc ? ls.position : null;
+    return ls && this.hasToc ? corner(ls.position) : null;
   }
 
   /** corner the legend docks to, null while it has nothing to show */
-  private get legendPosition(): string | null {
+  private get legendCorner(): Corner | null {
     const legend = this.normalized?.controls.legend;
     if (!legend) return null;
-    return this._layers.some((l) => l.visible && l.inZoomRange && l.legend) ? legend.position : null;
+    return this._layers.some((l) => l.visible && l.inZoomRange && l.legend) ? corner(legend.position) : null;
   }
 
   /** the corners in use — the top row and the measure bar make room for them */
-  private get dockedCorners(): string[] {
-    return [this.tocPosition, this.legendPosition].filter((p): p is string => p !== null);
+  private get dockedCorners(): Corner[] {
+    return [this.tocCorner, this.legendCorner].filter((c): c is Corner => c !== null);
   }
 
   /** users may add layers — the dialog's "+" and the file drop share this gate (F3.1, F3.2) */
@@ -908,7 +918,7 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
         class="stage"
         ?data-busy=${this._dialogLoading !== null}
         ?data-search=${this.hasSearch}
-        ?data-top-right=${this.dockedCorners.some((c) => c === "top-right" || (this._compact && c.startsWith("top")))}
+        ?data-top-right=${this.dockedCorners.some((c) => c.end === "top" && (c.edge === "right" || this._compact))}
         data-dock=${dockSides(this.dockedCorners, this._compact) || nothing}
         ?data-measuring=${this._measure !== null}
       >
@@ -1100,7 +1110,7 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
         part="legend"
         ?data-open=${this._legendOpen}
         ?data-end=${end}
-        ?data-left=${this.legendPosition?.endsWith("left")}
+        ?data-left=${this.legendCorner?.edge === "left"}
       >
         <button
           class="panel-header"
@@ -1172,15 +1182,15 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
    */
   private renderDocks(): unknown[] {
     const panels = [
-      { corner: this.tocPosition, render: (end: boolean) => this.renderToc(end) },
-      { corner: this.legendPosition, render: (end: boolean) => this.renderLegend(end) },
+      { corner: this.tocCorner, render: (end: boolean) => this.renderToc(end) },
+      { corner: this.legendCorner, render: (end: boolean) => this.renderLegend(end) },
     ];
-    const sides = this._compact ? (["right"] as const) : (["left", "right"] as const);
+    const sides = this._compact ? (["right"] as const) : EDGES;
     return sides.map((side) => {
-      const here = panels.filter((p) => p.corner && (this._compact || p.corner.endsWith(side)));
+      const here = panels.filter((p) => p.corner && (this._compact || p.corner.edge === side));
       if (here.length === 0) return nothing;
-      const top = here.filter((p) => p.corner!.startsWith("top")).map((p) => p.render(false));
-      const bottom = here.filter((p) => p.corner!.startsWith("bottom")).map((p) => p.render(true));
+      const top = here.filter((p) => p.corner!.end === "top").map((p) => p.render(false));
+      const bottom = here.filter((p) => p.corner!.end === "bottom").map((p) => p.render(true));
       return html`<div class="dock" part=${`dock dock-${side}`} data-side=${side}>${top}${bottom}</div>`;
     });
   }
@@ -1194,8 +1204,12 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
     const byId = new Map(this._layers.map((l) => [l.id, l]));
     const terms = this.hasTocFilter ? filterTerms(this._tocFilter) : [];
     const extras = this._layers.filter((l) => l.userAdded && matchesAll(l.title, terms));
-    const noMatch =
-      terms.length > 0 && extras.length === 0 && !cfg.toc.some((n) => this.pruneToc(n, byId, terms));
+    /* pruned once: what renders is what the group boxes act on */
+    const toc =
+      terms.length > 0
+        ? cfg.toc.map((n) => this.pruneToc(n, byId, terms)).filter((n): n is TocNode => n !== null)
+        : cfg.toc;
+    const noMatch = terms.length > 0 && extras.length === 0 && toc.length === 0;
     const title = cfg.controls.layerSwitcher.title ?? t("layers.title");
     return html`
       <div
@@ -1203,7 +1217,7 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
         part="toc"
         ?data-open=${this._tocOpen}
         ?data-end=${end}
-        ?data-left=${this.tocPosition?.endsWith("left")}
+        ?data-left=${this.tocCorner?.edge === "left"}
       >
         <button
           class="panel-header"
@@ -1243,7 +1257,7 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
                     ${extras.map((l) => this.renderLayerRow(l, terms))}
                   </div>`
                 : nothing}
-              ${this.renderNodes(cfg.toc, byId, "", terms, terms)}
+              ${this.renderNodes(toc, byId, "", terms)}
               ${noMatch ? html`<div class="toc-empty" role="status">${t("layers.noMatch")}</div>` : nothing}
               ${cfg.layers.length === 0 && this._layers.length === 0
                 ? html`<div class="toc-empty">${t("layers.empty")}</div>`
@@ -1298,15 +1312,14 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
   }
 
   /**
-   * `terms` highlight, `rest` decides — the filter terms no group above has
-   * matched yet. `radio` names the exclusive group these nodes are options of.
+   * The tree as the filter left it (pruneToc). `terms` highlight the hits;
+   * `radio` names the exclusive group these nodes are the options of.
    */
   private renderNodes(
     nodes: TocNode[],
     byId: Map<string, LayerUIState>,
     path: string,
     terms: string[],
-    rest: string[],
     radio?: string,
   ): unknown[] {
     const t = this.core?.t ?? ((k: string) => k);
@@ -1314,13 +1327,12 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
     return nodes.map((n, i) => {
       if (n.kind === "group") {
         const key = `${path}/${i}:${n.title}`;
-        /* filtered, the group's box sees and switches only the layers on show */
-        const scope = rest.length > 0 ? this.pruneToc(n, byId, rest) : n;
-        if (!scope) return nothing;
-        const childRest = unmatchedTerms(n.title, rest);
-        /* a filtered tree shows its hits, collapsed or not */
-        const collapsed = terms.length > 0 ? false : (this._groupCollapsed[key] ?? n.collapsed);
-        const state = tocVisibility(scope, isVisible);
+        /* a filtered tree shows its hits, collapsed or not — and takes no
+           collapse clicks, so the keys (indices of the pruned list) stay out
+           of _groupCollapsed */
+        const filtered = terms.length > 0;
+        const collapsed = filtered ? false : (this._groupCollapsed[key] ?? n.collapsed);
+        const state = tocVisibility(n, isVisible);
         return html`
           <div class="group" ?data-collapsed=${collapsed}>
             <div class="group-header">
@@ -1330,10 +1342,11 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
                 .checked=${live(radio ? state !== "off" : state === "on")}
                 .indeterminate=${live(!radio && state === "mixed")}
                 aria-label=${`${t(radio ? "layers.showGroup" : "layers.toggleGroup")}: ${n.title}`}
-                @change=${(e: Event) => this.toggleGroup(scope, (e.target as HTMLInputElement).checked)}
+                @change=${(e: Event) => this.toggleGroup(n, (e.target as HTMLInputElement).checked)}
               />
               <button
                 class="group-toggle"
+                ?disabled=${filtered}
                 @click=${() =>
                   (this._groupCollapsed = { ...this._groupCollapsed, [key]: !collapsed })}
                 aria-expanded=${collapsed ? "false" : "true"}
@@ -1346,14 +1359,13 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
               role=${n.exclusive ? "radiogroup" : nothing}
               aria-label=${n.exclusive ? n.title : nothing}
             >
-              ${this.renderNodes(n.children, byId, key, terms, childRest, n.exclusive ? key : undefined)}
+              ${this.renderNodes(n.children, byId, key, terms, n.exclusive ? key : undefined)}
             </div>
           </div>
         `;
       }
       const l = byId.get(n.layerId);
-      if (!l || !matchesAll(l.title, rest)) return nothing;
-      return this.renderLayerRow(l, terms, radio);
+      return l ? this.renderLayerRow(l, terms, radio) : nothing;
     });
   }
 

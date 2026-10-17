@@ -200,6 +200,10 @@ export const componentStyles = css`
     outline: 2px solid var(--map0-primary);
     border-radius: 4px;
   }
+  /* filtered, every group is open — the chevron has nothing to do */
+  .group-toggle:disabled {
+    cursor: default;
+  }
   .group-header .chevron {
     flex: none;
     margin-left: auto;

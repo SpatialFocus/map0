@@ -292,7 +292,7 @@ const SCENES = {
   /* a click on a park: popup with title and field table, feature highlighted */
   popup: {
     config: { ...TREE, controls: { geolocate: false, fullscreen: false, layerSwitcher: { open: false } } },
-    act: async ({ clickAt }) => {
+    act: async ({ clickAt, waitIn }) => {
       await clickAt(16.41, 48.2);
       await waitIn("popup", ".maplibregl-popup-content");
     },
@@ -300,7 +300,7 @@ const SCENES = {
   /* measuring: three vertices of a distance line, the bar with the result */
   measure: {
     config: { ...TREE, controls: { geolocate: false, fullscreen: false, layerSwitcher: { open: false } } },
-    act: async ({ clickAt, clickButton }) => {
+    act: async ({ clickAt, clickButton, waitIn }) => {
       await clickButton("Measure");
       await waitIn("measure", ".measure-bar");
       await clickAt(16.3725, 48.2056);
@@ -310,7 +310,7 @@ const SCENES = {
   },
   "add-layer": {
     config: TREE,
-    act: async ({ page }) => {
+    act: async ({ page, waitIn }) => {
       await page.evaluate(() =>
         document.querySelector("map0-viewer").shadowRoot.querySelector(".add-btn").click(),
       );
@@ -319,7 +319,7 @@ const SCENES = {
   },
   print: {
     config: TREE,
-    act: async ({ clickButton }) => {
+    act: async ({ clickButton, waitIn }) => {
       await clickButton("Print & export");
       await waitIn("print", "map0-print", ".dialog");
     },
@@ -430,10 +430,9 @@ const browser = await chromium
     throw e;
   });
 
-/** wait until a selector resolves — `path` steps through nested shadow roots */
-let currentPage;
-async function waitIn(what, ...path) {
-  await currentPage
+/** wait until a selector resolves in `page` — `path` steps through nested shadow roots */
+async function waitIn(page, what, ...path) {
+  await page
     .waitForFunction(
       (selectors) => {
         let root = document.querySelector("map0-viewer").shadowRoot;
@@ -478,7 +477,6 @@ async function shoot(name, scene) {
     ...(scene.phone ? { hasTouch: true, isMobile: true } : {}),
   });
   const page = await context.newPage();
-  currentPage = page;
   const problems = [];
   await page.route("**/*", (route) => {
     const url = route.request().url();
@@ -536,7 +534,7 @@ async function shoot(name, scene) {
       }, label);
 
     if (scene.act) {
-      await scene.act({ page, project, clickAt, clickButton });
+      await scene.act({ page, project, clickAt, clickButton, waitIn: (what, ...path) => waitIn(page, what, ...path) });
       await settle(page);
     }
 
