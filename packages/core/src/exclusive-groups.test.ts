@@ -1,19 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { normalizeConfig, type LayerDef } from "@map0/schema";
 import { LayerManager } from "./layers.js";
-
-function fakeMap() {
-  const sources = new Map();
-  const specs = new Map();
-  return {
-    on: vi.fn(), off: vi.fn(), getZoom: () => 5,
-    addSource: (id: string, source: unknown) => sources.set(id, source),
-    getSource: (id: string) => sources.get(id), removeSource: (id: string) => sources.delete(id),
-    addLayer: (spec: { id: string }) => specs.set(spec.id, spec),
-    getLayer: (id: string) => specs.get(id), removeLayer: (id: string) => specs.delete(id),
-    setLayoutProperty: vi.fn(), setPaintProperty: vi.fn(),
-  };
-}
+import { fakeMap } from "./testing/fake-map.js";
 
 const layer = (id: string): LayerDef => ({ id, type: "geojson", data: { type: "FeatureCollection", features: [] } });
 

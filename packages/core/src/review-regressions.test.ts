@@ -11,6 +11,7 @@ import { GeoJsonAdapter } from "./adapters/geojson.js";
 import { VectorAdapter } from "./adapters/vector.js";
 import { SourceAdapter } from "./adapters/types.js";
 import { registerAdapter } from "./adapters/registry.js";
+import { fakeMap } from "./testing/fake-map.js";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -72,19 +73,6 @@ it.each(["reselect", "destroy"])("cancels a pending basemap switch on %s", async
   expect(manager.current.value).toBe("empty");
   expect(map.setStyle).not.toHaveBeenCalled();
 });
-
-function fakeMap() {
-  const sources = new Map();
-  const specs = new Map();
-  return {
-    on: vi.fn(), off: vi.fn(), getZoom: () => 5,
-    addSource: (id: string, source: unknown) => { if (sources.has(id)) throw new Error("duplicate source"); sources.set(id, source); },
-    getSource: (id: string) => sources.get(id), removeSource: (id: string) => sources.delete(id),
-    addLayer: (spec: { id: string }) => specs.set(spec.id, spec),
-    getLayer: (id: string) => specs.get(id), removeLayer: (id: string) => specs.delete(id),
-    setLayoutProperty: vi.fn(), setPaintProperty: vi.fn(),
-  };
-}
 
 describe("runtime layers", () => {
   it("cleans up partially mounted sources when adding a layer fails", async () => {

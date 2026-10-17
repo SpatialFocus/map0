@@ -1031,7 +1031,8 @@ try {
       },
       { width, height, opens },
     );
-  for (const [width, height, opens] of [[900, 560, [true]], [600, 500, [true]], [375, 667, [true, false]]]) {
+  /* 680px: the search field and a 300px legend docked top-right once overlapped there */
+  for (const [width, height, opens] of [[900, 560, [true]], [680, 520, [true]], [600, 500, [true]], [375, 667, [true, false]]]) {
     const failures = await layout(width, height, opens);
     check(
       `at ${width}px, no panel covers another for any pair of corners, measuring included`,

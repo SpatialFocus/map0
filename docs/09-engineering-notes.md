@@ -587,7 +587,9 @@ Notes on the visual regression (`e2e/visual.mjs`):
 ## 8. Where things live
 
 ```
-packages/schema   types, validation (JSON-path errors), defaults, extends merging
+packages/schema   types, validation (JSON-path errors), defaults, extends merging;
+                  toc.ts — layer-tree helpers for core and ui over the workspace-only
+                  subpath @map0/schema/toc, kept out of the published declarations
                   → no dependencies, no DOM, no MapLibre
 packages/core     the engine: map creation, basemap manager, source adapters, feature info,
                   highlight, print composition, permalink codec, coordinates, i18n

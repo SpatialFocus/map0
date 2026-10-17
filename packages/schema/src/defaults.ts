@@ -28,15 +28,6 @@ export type NormalizedLayer = Exclude<LayerDef, GroupLayerDef> & {
   groupPath: string[];
 };
 
-export interface NormalizedGroup {
-  type: "group";
-  title: string;
-  collapsed: boolean;
-  exclusive: boolean;
-  /** ids in tree order (leaves only) */
-  children: TocNode[];
-}
-
 export type TocNode =
   | { kind: "layer"; layerId: string }
   | { kind: "group"; title: string; collapsed: boolean; exclusive: boolean; children: TocNode[] };

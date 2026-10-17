@@ -1,6 +1,13 @@
 /**
  * Layer-tree helpers shared by normalization, the core and the layer panel:
  * which layers a node holds, and what an exclusive (radio) group implies (F2.3).
+ *
+ * They live in the schema package because it is the one module both the core
+ * and the element may import values from (docs/09 §2, invariant 1) — but they
+ * are panel semantics, not config schema, so they stay out of the package's
+ * index and the published declarations: `@map0/schema/toc` is a workspace-only
+ * subpath (package.json "exports", plus the aliases in vitest.config.ts and
+ * site/vite.config.ts).
  */
 import type { TocNode } from "./defaults.js";
 

@@ -1,13 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  exclusiveRivals,
-  normalizeConfig,
-  tocShowIds,
-  tocVisibility,
-  validateConfig,
-  type LayerDef,
-  type TocNode,
-} from "./index.js";
+import { normalizeConfig, validateConfig, type LayerDef, type TocNode } from "./index.js";
+import { exclusiveRivals, tocShowIds, tocVisibility } from "./toc.js";
 
 const layer = (id: string, visible?: boolean): LayerDef => ({
   id,

@@ -1,13 +1,13 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
 import type { Map0Layers } from "./api.js";
 import {
-  exclusiveRivals,
   normalizeSingleLayer,
   type GroupLayerDef,
   type LayerDef,
   type NormalizedConfig,
   type NormalizedLayer,
 } from "@map0/schema";
+import { exclusiveRivals } from "@map0/schema/toc";
 import type { OverlayIds } from "./basemaps.js";
 import { createAdapter } from "./adapters/registry.js";
 import { ensurePmtilesProtocol } from "./adapters/vector.js";

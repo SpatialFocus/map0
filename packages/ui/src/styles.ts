@@ -1328,11 +1328,12 @@ export const componentStyles = css`
   /* ------------------------- responsive (container) --------------------- */
 
   /* The top row is shared: map controls (10–48px), the search, and a panel
-     docked top-right — all three fit from 668px up (56 + 320 + 10 + 272 + 10).
-     Below that the search collapses to its icon and expands over the map on
-     focus, so the panel keeps the row and the search keeps the corner. With no
-     panel to share with, the search stays a field at every width. */
-  @container map0 (max-width: 667px) {
+     docked top-right — all three fit from 696px up (56 + 320 + 10 + 300 + 10;
+     the legend is the wider panel). Below that the search collapses to its
+     icon and expands over the map on focus, so the panel keeps the row and the
+     search keeps the corner. With no panel to share with, the search stays a
+     field at every width. */
+  @container map0 (max-width: 695px) {
     .stage[data-top-right] .search {
       width: 38px;
     }

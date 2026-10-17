@@ -15,15 +15,8 @@ import type {
   SearchResult,
   ValidationError,
 } from "@map0/core";
-import {
-  normalizeConfig,
-  resolveConfigExtends,
-  tocLeafIds,
-  tocShowIds,
-  tocVisibility,
-  validateConfig,
-  type TocNode,
-} from "@map0/schema";
+import { normalizeConfig, resolveConfigExtends, validateConfig, type TocNode } from "@map0/schema";
+import { tocLeafIds, tocShowIds, tocVisibility } from "@map0/schema/toc";
 import type { Map0ViewerElement, Map0ViewerEventDetails } from "./element.js";
 import type { Map0BottomSheet } from "./bottom-sheet.js"; // type only — the sheet ships with the popup chunk
 import { componentStyles } from "./styles.js";
@@ -1188,7 +1181,7 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
       if (here.length === 0) return nothing;
       const top = here.filter((p) => p.corner!.startsWith("top")).map((p) => p.render(false));
       const bottom = here.filter((p) => p.corner!.startsWith("bottom")).map((p) => p.render(true));
-      return html`<div class="dock" data-side=${side}>${top}${bottom}</div>`;
+      return html`<div class="dock" part=${`dock dock-${side}`} data-side=${side}>${top}${bottom}</div>`;
     });
   }
 

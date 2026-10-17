@@ -213,6 +213,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      /* the subpath first: a string alias also matches "<key>/…" */
+      "@map0/schema/toc": r("../packages/schema/src/toc.ts"),
       "@map0/schema": r("../packages/schema/src/index.ts"),
       "@map0/core": r("../packages/core/src/index.ts"),
       "@map0/ui": r("../packages/ui/src/index.ts"),
