@@ -20,6 +20,7 @@ packages/map0/schema/
 
 # E2E screenshot artifacts
 e2e/shots/
+e2e/visual/.out/
 
 # Test & coverage
 coverage/
