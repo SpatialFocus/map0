@@ -13,8 +13,8 @@
  * it again. Usage: node e2e/verify-tarball.mjs <path-to-tgz>
  */
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync } from "node:fs";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
@@ -33,20 +33,16 @@ if (!process.argv[2] || !existsSync(tarball)) {
 const standalone = join(root, "site", "public", "standalone");
 rmSync(standalone, { recursive: true, force: true });
 mkdirSync(standalone, { recursive: true });
-/* relative paths only: a drive-letter argument makes GNU tar (MSYS) read
-   "C:" as a remote host ("Cannot connect to C") */
-const tar = spawnSync(
-  "tar",
-  [
-    "-xzf",
-    basename(tarball),
-    "-C",
-    relative(dirname(tarball), standalone) || ".",
-    "--strip-components=2",
-    "package/dist",
-  ],
-  { cwd: dirname(tarball), stdio: "inherit" },
-);
+/* no path reaches tar: the archive goes in on stdin and tar runs inside the
+   target folder. Git for Windows puts MSYS's GNU tar first on PATH, which reads
+   "C:" as a remote host ("Cannot connect to C") and mangles a relative path's
+   backslashes ("..\\..\\…: Cannot open") — Windows' own bsdtar would not. */
+const archive = readFileSync(tarball);
+const tar = spawnSync("tar", ["-xzf", "-", "--strip-components=2", "package/dist"], {
+  cwd: standalone,
+  input: archive,
+  stdio: ["pipe", "inherit", "inherit"],
+});
 if (tar.status !== 0) process.exit(tar.status ?? 1);
 if (!existsSync(join(standalone, "maplibre-gl-worker.mjs"))) {
   console.error("✗ tarball has no dist/maplibre-gl-worker.mjs — refusing to continue");
@@ -55,10 +51,7 @@ if (!existsSync(join(standalone, "maplibre-gl-worker.mjs"))) {
 
 /* the published JSON Schema (C3) rides along as schema/v1.json — its jsDelivr
    URL is documented, so a tarball without it is broken */
-const listing = spawnSync("tar", ["-tzf", basename(tarball)], {
-  cwd: dirname(tarball),
-  encoding: "utf8",
-});
+const listing = spawnSync("tar", ["-tzf", "-"], { input: archive, encoding: "utf8" });
 if (!listing.stdout?.includes("package/schema/v1.json")) {
   console.error("✗ tarball has no schema/v1.json — run `pnpm build:npm` before packing");
   process.exit(1);
