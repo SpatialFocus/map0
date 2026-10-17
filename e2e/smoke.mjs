@@ -857,6 +857,191 @@ try {
   check("no console errors while displaying ordinary counts and clusters", clusterNoise.length === 0, clusterNoise.join(" | "));
   await clusterPage.close();
 
+  /* ------------------------------------------- layer tree (F2.3, F2.7) */
+  const tocNoise = [];
+  const tocPage = await context.newPage();
+  watchConsole(tocPage, tocNoise);
+  await tocPage.goto(`${BASE}/smoke.html`, { waitUntil: "domcontentloaded" });
+  await tocPage.waitForFunction(() => !!document.querySelector("map0-viewer")?.api);
+  await tocPage.evaluate(() => {
+    const layer = (id, title) => ({ id, title, type: "geojson", data: { type: "FeatureCollection", features: [] } });
+    document.querySelector("map0-viewer").config = {
+      version: 1,
+      map: { center: [0, 0], zoom: 3 },
+      i18n: { locale: "en" },
+      basemaps: [{ type: "empty", title: "None" }],
+      permalink: false,
+      controls: { layerSwitcher: { open: true, filter: true } },
+      layers: [
+        { type: "group", title: "Imagery", exclusive: true, children: [layer("ortho", "Orthophoto"), layer("relief", "Relief"), layer("hist", "Historic map")] },
+        { type: "group", title: "Environment", children: [layer("parks", "Parks"), layer("noise", "Straßenlärm")] },
+      ],
+    };
+  });
+  const tocReady = await tocPage
+    .waitForFunction(() => document.querySelector("map0-viewer")?.api?.layers.state.value.length === 5, undefined, { timeout: 30_000 })
+    .then(() => true)
+    .catch(() => false);
+  check("a viewer with groups and a radio group starts", tocReady);
+  if (tocReady) {
+    const on = () =>
+      tocPage.evaluate(() =>
+        document.querySelector("map0-viewer").api.layers.state.value.filter((l) => l.visible).map((l) => l.id).join(","),
+      );
+    const settled = (want) =>
+      tocPage
+        .waitForFunction(
+          (want) =>
+            document.querySelector("map0-viewer").api.layers.state.value.filter((l) => l.visible).map((l) => l.id).join(",") === want,
+          want,
+          { timeout: 5_000 },
+        )
+        .then(() => true)
+        .catch(() => false);
+    const radios = tocPage.locator('map0-viewer [role="radiogroup"] input[type="radio"]');
+    check(
+      "an exclusive group shows radios, its first layer on (F2.3)",
+      (await radios.count()) === 3 && (await on()) === "ortho,parks,noise",
+      await on(),
+    );
+    await tocPage.locator("map0-viewer label", { hasText: "Relief" }).click();
+    check("picking another radio switches the first one off", await settled("relief,parks,noise"), await on());
+    await radios.nth(1).press("ArrowDown");
+    check("arrow keys move the choice like any radio group", await settled("hist,parks,noise"), await on());
+
+    const groupBox = (title) => tocPage.locator(`map0-viewer .group-header input[aria-label$=": ${title}"]`);
+    await groupBox("Environment").click();
+    check("the group box switches every layer of the group off", await settled("hist"), await on());
+    await groupBox("Environment").click();
+    check("and on again", await settled("hist,parks,noise"), await on());
+    await groupBox("Imagery").click();
+    check("a radio group's box switches the group off entirely", await settled("parks,noise"), await on());
+    await tocPage.evaluate(() => document.querySelector("map0-viewer").api.layers.setVisibility("relief", true));
+    check(
+      "the API obeys the radio group too, and the box shows it",
+      (await settled("relief,parks,noise")) && (await groupBox("Imagery").isChecked()),
+      await on(),
+    );
+
+    const filter = tocPage.locator("map0-viewer .toc-filter input");
+    const rows = tocPage.locator("map0-viewer .layer-row");
+    await filter.fill("strassen");
+    const hit = await tocPage.locator("map0-viewer .layer-row mark").allTextContents();
+    check(
+      "the filter keeps the matching layer, ignoring case and ß (F2.7)",
+      (await rows.count()) === 1 && hit.join("|") === "Straßen",
+      `${await rows.count()} rows, marks ${hit.join("|")}`,
+    );
+    await filter.fill("par");
+    await groupBox("Environment").click();
+    check(
+      "filtered, the group box switches only the layers on show",
+      (await settled("relief,noise")) && (await rows.count()) === 1,
+      await on(),
+    );
+    await groupBox("Environment").click();
+    await settled("relief,parks,noise");
+    await filter.fill("imagery");
+    check("a group title match keeps the whole group", (await rows.count()) === 3, `${await rows.count()} rows`);
+    await filter.fill("nothing like it");
+    const empty = await tocPage.locator('map0-viewer .toc-empty[role="status"]').textContent().catch(() => null);
+    check("no match says so", (await rows.count()) === 0 && empty === "No layer matches the filter", String(empty));
+    await filter.press("Escape");
+    check(
+      "Escape clears the filter",
+      (await filter.inputValue()) === "" && (await rows.count()) === 5,
+      `"${await filter.inputValue()}", ${await rows.count()} rows`,
+    );
+  }
+  check("no console errors in the layer tree", tocNoise.length === 0, tocNoise.join(" | "));
+  await tocPage.close();
+
+  /* ------------------------------------- panel layout, every corner pair */
+  /* The layer panel and the legend dock to the corner their `position`
+     names, the measure bar keeps clear of both. Every pair of corners, at a
+     desktop, a tablet and a phone width: nothing may cover anything else. */
+  const layoutNoise = [];
+  const layoutPage = await context.newPage();
+  watchConsole(layoutPage, layoutNoise);
+  await layoutPage.goto(`${BASE}/smoke.html`, { waitUntil: "domcontentloaded" });
+  await layoutPage.waitForFunction(() => !!document.querySelector("map0-viewer")?.api);
+  const layout = async (width, height, opens) =>
+    layoutPage.evaluate(
+      async ({ width, height, opens }) => {
+        const host = document.querySelector("#host");
+        host.style.width = `${width}px`;
+        host.style.height = `${height}px`;
+        const el = document.querySelector("map0-viewer");
+        const square = (id, title, w) => ({
+          id,
+          title,
+          type: "geojson",
+          data: { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [[[w, 0], [w + 5, 0], [w + 5, 5], [w, 5], [w, 0]]] } },
+          legend: [{ label: title, color: "#888" }],
+        });
+        const corners = ["top-left", "top-right", "bottom-left", "bottom-right"];
+        const box = (n) => n && n.getBoundingClientRect();
+        const hit = (a, b) => a && b && a.width > 0 && b.width > 0 &&
+          a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5;
+        const failures = [];
+        for (const open of opens) for (const toc of corners) for (const legend of corners) {
+          el.config = {
+            version: 1,
+            i18n: { locale: "en" },
+            map: { center: [10, 2], zoom: 4 },
+            basemaps: [{ type: "empty", id: "a", title: "Plain" }, { type: "empty", id: "b", title: "Blank" }],
+            search: { provider: "photon" },
+            permalink: false,
+            controls: { geolocate: false, fullscreen: false, layerSwitcher: { position: toc, open }, legend: { position: legend, open } },
+            layers: Array.from({ length: 12 }, (_, i) => square(`l${i}`, `Layer ${i + 1}`, i)),
+          };
+          const deadline = Date.now() + 20_000;
+          /* the old viewer stays in the DOM until the new config has mounted */
+          const mounted = () => {
+            const c = el.api?.config.controls;
+            return c?.layerSwitcher && c.layerSwitcher.position === toc && c.legend && c.legend.position === legend &&
+              el.api.layers.state.value.length === 12 && !!el.shadowRoot.querySelector(".toc") && !!el.shadowRoot.querySelector(".legend");
+          };
+          while (!mounted()) {
+            if (Date.now() > deadline) break;
+            await new Promise((r) => setTimeout(r, 50));
+          }
+          const sr = el.shadowRoot;
+          sr.querySelector('button[aria-label="Measure"]')?.click();
+          while (!sr.querySelector(".measure-bar") && Date.now() < deadline) await new Promise((r) => setTimeout(r, 50));
+          await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+          const q = (sel) => box(sr.querySelector(sel));
+          const r = {
+            toc: q(".toc"), legend: q(".legend"), bar: q(".measure-bar"), search: q(".search"),
+            basemaps: q(".basemaps"), controls: q(".maplibregl-ctrl-top-left"), scale: q(".maplibregl-ctrl-scale"),
+            attribution: q(".maplibregl-ctrl-attrib"),
+          };
+          const bad = [];
+          for (const [a, against] of [
+            ["toc", ["legend", "bar", "search", "basemaps", "controls", "scale", "attribution"]],
+            ["legend", ["bar", "search", "basemaps", "controls", "scale", "attribution"]],
+            ["bar", ["basemaps", "scale", "attribution"]],
+          ]) {
+            if (!r[a]) bad.push(`no ${a}`);
+            for (const b of against) if (hit(r[a], r[b])) bad.push(`${a}×${b}`);
+          }
+          if (bad.length > 0) failures.push(`${open ? "open" : "closed"} toc ${toc}, legend ${legend}: ${bad.join(" ")}`);
+        }
+        return failures;
+      },
+      { width, height, opens },
+    );
+  for (const [width, height, opens] of [[900, 560, [true]], [600, 500, [true]], [375, 667, [true, false]]]) {
+    const failures = await layout(width, height, opens);
+    check(
+      `at ${width}px, no panel covers another for any pair of corners, measuring included`,
+      failures.length === 0,
+      failures.slice(0, 3).join(" | "),
+    );
+  }
+  check("no console errors while moving the panels around", layoutNoise.length === 0, layoutNoise.join(" | "));
+  await layoutPage.close();
+
   await reviewRegressions(context, BASE, check, watchConsole);
 
   /* ------------------------------------------------------------ invalid config */
