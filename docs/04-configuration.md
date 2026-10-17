@@ -135,6 +135,7 @@ Unset, the config decides as usual.
       "type": "group",
       "title": "Umwelt",
       "collapsed": false,
+      "exclusive": false,                   // true = radio group: one child visible at a time (F2.3)
       "children": [
         {
           "id": "noise-2024",
@@ -243,7 +244,8 @@ Unset, the config decides as usual.
     "layerSwitcher": {
       "position": "top-right",
       "open": "auto",                       // open on desktop, collapsed on mobile
-      "allowAdd": true                      // false disables the add-layer dialog and file drop (F3.1, F3.2)
+      "allowAdd": true,                     // false disables the add-layer dialog and file drop (F3.1, F3.2)
+      "filter": "auto"                      // filter box above the tree (F2.7): "auto" = from 10 layers on
     },
     "legend": { "position": "bottom-right", "open": false },
     "print": true,                          // print & export dialog (F7): PNG download + print view
@@ -316,7 +318,7 @@ Result: full-quality map with default controls (zoom, attribution, fullscreen), 
 | `geoparquet` | GeoParquet file URL | fetched whole and decoded in the browser (hyparquet, loaded on demand — snappy/gzip/brotli/zstd/lz4 all work), then rendered through the geojson pipeline: same `style`/`cluster`/`popup`/`hover`/`promoteId` options. A fraction of the transfer size of the same data as GeoJSON; "zoom to layer" comes from the file's `geo` metadata bbox. Coordinates in another CRS are **reprojected on load**: the file's `geo` metadata (PROJJSON) names it — codes the built-in registry knows use map0's proj4 definitions (datum shift included), anything else is handed to proj4 as PROJJSON; `crs` on the layer overrides the metadata for files whose definition cannot be resolved (or lacks the datum shift). A CRS nobody can resolve fails with a per-layer error naming it and the key that fixes it. Plain parquet without `geo` metadata is rejected with a conversion hint. |
 | `vector` | TileJSON / `{z}/{x}/{y}` / `pmtiles://` | needs `sourceLayer` + style layers |
 | `ogcapi-features` | collection URL (…/collections/{id}) | items fetched as GeoJSON (WGS84, the API default) and rendered through the geojson pipeline (same `style`/`cluster`/`popup`/`hover`/`promoteId`). Paging follows the response's `next` links — the spec's own mechanism, chosen because `numberMatched` is optional and missing in the wild; a server capping `limit` just produces more pages. `pageSize` per request (default 1000) until `limit` (default 10000); `params` appends query parameters (`bbox`, `datetime`, CQL2 `filter`, `properties`). JSON problem details surface as the layer error. CORS required. |
-| `group` | — | nesting, collapse, exclusive option |
+| `group` | — | nesting (`children`), `collapsed`, and `exclusive` for a radio group: one child visible at a time, a child group counting as one option. The first child configured visible starts on and the others start hidden (more than one written `"visible": true` is a warning); `setVisibility()` and share links obey the rule as well. The group header carries a box that switches all of the group's layers — one option of a radio group — and shows a dash while only some are on. While the filter box (`controls.layerSwitcher.filter`) narrows the tree, that box acts on the layers on show only |
 
 **Simplified style:** flat paint-property object (`circle-*`, `line-*`, `fill-*`, auto-derived per
 geometry). **Full control:** pass a MapLibre `style: [ …layer objects… ]` array instead. Both are

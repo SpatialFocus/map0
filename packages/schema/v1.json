@@ -177,6 +177,11 @@
         "type": { "const": "group", "description": "node type — a group of layers" },
         "title": { "type": "string", "description": "group label in the layer tree" },
         "collapsed": { "type": "boolean", "default": false, "description": "start collapsed" },
+        "exclusive": {
+          "type": "boolean",
+          "default": false,
+          "description": "radio group: one child visible at a time — a child group counts as one option; the first child configured visible starts on, the others hidden"
+        },
         "children": {
           "type": "array",
           "description": "nested groups and layers",
@@ -819,7 +824,12 @@
           "description": "\"auto\": open on desktop, collapsed on mobile"
         },
         "title": { "type": "string", "description": "panel heading override" },
-        "allowAdd": { "type": "boolean", "default": true, "description": "show the add-layer dialog (paste a WMS/WMTS URL)" }
+        "allowAdd": { "type": "boolean", "default": true, "description": "show the add-layer dialog (paste a WMS/WMTS URL)" },
+        "filter": {
+          "enum": [true, false, "auto"],
+          "default": "auto",
+          "description": "filter box above the layer tree — \"auto\": shown from 10 layers on"
+        }
       }
     },
     "basemapSwitcherOptions": {

@@ -110,7 +110,7 @@ const LAYER_COMMON_KEYS = [
   "legend",
 ];
 export const LAYER_KEYS: Record<string, string[]> = {
-  group: ["type", "title", "collapsed", "children"],
+  group: ["type", "title", "collapsed", "exclusive", "children"],
   wms: [
     ...LAYER_COMMON_KEYS,
     "url",
@@ -197,7 +197,7 @@ export const SCALE_KEYS = ["maxWidth", "unit"];
 export const SCALE_UNITS = ["metric", "imperial"];
 export const GEOLOCATE_KEYS = ["follow"];
 export const ATTRIBUTION_KEYS = ["compact"];
-export const LAYER_SWITCHER_KEYS = ["position", "open", "title", "allowAdd"];
+export const LAYER_SWITCHER_KEYS = ["position", "open", "title", "allowAdd", "filter"];
 export const BASEMAP_SWITCHER_KEYS = ["position"];
 export const LEGEND_CONTROL_KEYS = ["position", "open"];
 export const COORDINATES_KEYS = ["crs"];
@@ -521,6 +521,13 @@ export function validateConfig(input: unknown): ValidationResult {
 
 /* --------------------------------- layers --------------------------------- */
 
+/** a layer with `"visible": true` written out, or a group holding one */
+function explicitlyVisible(node: unknown): boolean {
+  if (!isObject(node)) return false;
+  if (node.type === "group") return Array.isArray(node.children) && node.children.some(explicitlyVisible);
+  return node.visible === true;
+}
+
 function validateLayers(
   layers: unknown[],
   basePath: string,
@@ -539,8 +546,19 @@ function validateLayers(
     if (type === "group") {
       expectString(layer.title, `${p}.title`, err);
       expectBoolean(layer.collapsed, `${p}.collapsed`, err);
+      expectBoolean(layer.exclusive, `${p}.exclusive`, err);
       if (!Array.isArray(layer.children)) err(`${p}.children`, 'a "group" needs a "children" array');
-      else validateLayers(layer.children, `${p}.children`, err, claimId);
+      else {
+        validateLayers(layer.children, `${p}.children`, err, claimId);
+        /* normalization keeps the first and hides the rest — say so, it is a config smell */
+        if (layer.exclusive === true && layer.children.filter(explicitlyVisible).length > 1) {
+          err(
+            `${p}.children`,
+            'an "exclusive" group shows one child at a time — only the first one with "visible": true starts visible',
+            "warning",
+          );
+        }
+      }
       return;
     }
 
@@ -896,6 +914,8 @@ function validateControls(controls: unknown, err: Err): void {
         err("$.controls.layerSwitcher.open", 'open must be true, false, or "auto"');
       expectString(o.title, "$.controls.layerSwitcher.title", err);
       expectBoolean(o.allowAdd, "$.controls.layerSwitcher.allowAdd", err);
+      if (o.filter !== undefined && typeof o.filter !== "boolean" && o.filter !== "auto")
+        err("$.controls.layerSwitcher.filter", 'filter must be true, false, or "auto"');
     },
   );
   expectToggleObject(controls.basemapSwitcher, "$.controls.basemapSwitcher", err, BASEMAP_SWITCHER_KEYS, (o) => {
