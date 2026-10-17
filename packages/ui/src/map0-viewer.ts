@@ -94,9 +94,23 @@ const RADII_SM = { none: "0px", sm: "4px", md: "7px", lg: "10px" } as const;
  * own element), so the width is observed rather than styled.
  */
 const SHEET_BREAKPOINT = 640;
+/**
+ * At most this wide, every panel docks in the right-hand column: two columns
+ * (56px controls + 300px + gap + 300px + 10px) and the search field no longer
+ * fit side by side. styles.ts keys its rules for this to `max-width: 687px`.
+ */
+const COMPACT_MAX = 687;
 
 /** layers from which the panel offers a filter box when `filter` is "auto" (F2.7) */
 const TOC_FILTER_AUTO = 10;
+
+/** the edges with a dock column, as `data-dock` lists them — compact viewers have the right one only */
+const dockSides = (corners: string[], compact: boolean): string =>
+  compact
+    ? corners.length > 0
+      ? "right"
+      : ""
+    : (["left", "right"] as const).filter((side) => corners.some((c) => c.endsWith(side))).join(" ");
 
 /** a title with the filter's hits marked */
 const highlight = (text: string, terms: string[]): unknown =>
@@ -170,6 +184,8 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
   @state() private _measureLoading = false;
   /** the viewer is narrower than SHEET_BREAKPOINT — feature info docks at the bottom */
   @state() private _narrow = false;
+  /** the viewer is at most COMPACT_MAX wide — the panels share one column */
+  @state() private _compact = false;
   /** feature info shown as a bottom sheet (narrow viewers); null = none open */
   @state() private _sheet: { label: string; content: HTMLElement } | null = null;
 
@@ -207,9 +223,9 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
   }
 
   /**
-   * The search and the layer panel both live in the top row, so the layout has
-   * to know which of them is actually there — see the responsive block in
-   * `styles.ts`. Both are mirrored onto `.stage` as `data-search`/`data-toc`.
+   * The search and a panel docked top-right share the top row, so the layout
+   * has to know which of them is actually there — see the responsive block in
+   * `styles.ts`. Both are mirrored onto `.stage` as `data-search`/`data-top-right`.
    */
   private get hasSearch(): boolean {
     return !!this.normalized && this.normalized.search !== false;
@@ -226,6 +242,24 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
     const ls = this.normalized?.controls.layerSwitcher;
     if (!ls) return false;
     return ls.filter === "auto" ? this._layers.length >= TOC_FILTER_AUTO : ls.filter;
+  }
+
+  /** corner the layer panel docks to, null while there is none */
+  private get tocPosition(): string | null {
+    const ls = this.normalized?.controls.layerSwitcher;
+    return ls && this.hasToc ? ls.position : null;
+  }
+
+  /** corner the legend docks to, null while it has nothing to show */
+  private get legendPosition(): string | null {
+    const legend = this.normalized?.controls.legend;
+    if (!legend) return null;
+    return this._layers.some((l) => l.visible && l.inZoomRange && l.legend) ? legend.position : null;
+  }
+
+  /** the corners in use — the top row and the measure bar make room for them */
+  private get dockedCorners(): string[] {
+    return [this.tocPosition, this.legendPosition].filter((p): p is string => p !== null);
   }
 
   /** users may add layers — the dialog's "+" and the file drop share this gate (F3.1, F3.2) */
@@ -258,6 +292,7 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
     this.resizeObserver = new ResizeObserver((entries) => {
       const width = entries[0]?.contentRect.width ?? this.getBoundingClientRect().width;
       this.setNarrow(width < SHEET_BREAKPOINT);
+      this._compact = width <= COMPACT_MAX;
     });
     this.resizeObserver.observe(this);
   }
@@ -600,7 +635,10 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
       const ls = cfg.controls.layerSwitcher;
       this._tocOpen = ls === false ? false : ls.open === "auto" ? width >= 560 : ls.open;
       /* the observer keeps this current; without one, a single measurement has to do */
-      if (!this.resizeObserver) this._narrow = width < SHEET_BREAKPOINT;
+      if (!this.resizeObserver) {
+        this._narrow = width < SHEET_BREAKPOINT;
+        this._compact = width <= COMPACT_MAX;
+      }
       this._legendOpen = cfg.controls.legend === false ? false : cfg.controls.legend.open;
 
       /* the engine, MapLibre and its stylesheet, and the popup renderer */
@@ -877,7 +915,9 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
         class="stage"
         ?data-busy=${this._dialogLoading !== null}
         ?data-search=${this.hasSearch}
-        ?data-toc=${this.hasToc}
+        ?data-top-right=${this.dockedCorners.some((c) => c === "top-right" || (this._compact && c.startsWith("top")))}
+        data-dock=${dockSides(this.dockedCorners, this._compact) || nothing}
+        ?data-measuring=${this._measure !== null}
       >
         <div class="map" aria-label=${this.normalized?.meta.title ?? "Karte"}></div>
         <div class="loading" ?data-done=${this._ready} aria-hidden="true">
@@ -896,7 +936,7 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
               <span>${this.core?.t("addLayer.dropHint")}</span>
             </div>`
           : nothing}
-        ${this.renderSearch()} ${this.renderToc()} ${this.renderBasemaps()} ${this.renderLegend()}
+        ${this.renderSearch()} ${this.renderDocks()} ${this.renderBasemaps()}
         ${this.renderMeasure()}
         ${this._addOpen && this.core
           ? html`<map0-add-layer
@@ -1054,14 +1094,21 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
     `;
   }
 
-  private renderLegend(): TemplateResult | typeof nothing {
+  /** `end`: docked at the bottom corner of its edge */
+  private renderLegend(end = false): TemplateResult | typeof nothing {
     const cfg = this.normalized;
     if (!cfg || cfg.controls.legend === false) return nothing;
     const items = this._layers.filter((l) => l.visible && l.inZoomRange && l.legend);
     if (items.length === 0) return nothing;
     const t = this.core?.t ?? ((k: string) => k);
     return html`
-      <div class="legend panel" part="legend" data-pos=${cfg.controls.legend.position} ?data-open=${this._legendOpen}>
+      <div
+        class="legend panel"
+        part="legend"
+        ?data-open=${this._legendOpen}
+        ?data-end=${end}
+        ?data-left=${this.legendPosition?.endsWith("left")}
+      >
         <button
           class="panel-header"
           @click=${() => (this._legendOpen = !this._legendOpen)}
@@ -1124,7 +1171,29 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
     `;
   }
 
-  private renderToc(): TemplateResult | typeof nothing {
+  /**
+   * The layer panel and the legend, docked to the edge their `position`
+   * names: one column per edge, the top corner's panels first and the bottom
+   * corner's last, so two panels on one edge share its height. A compact
+   * viewer has room for one full-width column only, so everything goes there.
+   */
+  private renderDocks(): unknown[] {
+    const panels = [
+      { corner: this.tocPosition, render: (end: boolean) => this.renderToc(end) },
+      { corner: this.legendPosition, render: (end: boolean) => this.renderLegend(end) },
+    ];
+    const sides = this._compact ? (["right"] as const) : (["left", "right"] as const);
+    return sides.map((side) => {
+      const here = panels.filter((p) => p.corner && (this._compact || p.corner.endsWith(side)));
+      if (here.length === 0) return nothing;
+      const top = here.filter((p) => p.corner!.startsWith("top")).map((p) => p.render(false));
+      const bottom = here.filter((p) => p.corner!.startsWith("bottom")).map((p) => p.render(true));
+      return html`<div class="dock" data-side=${side}>${top}${bottom}</div>`;
+    });
+  }
+
+  /** `end`: docked at the bottom corner of its edge */
+  private renderToc(end = false): TemplateResult | typeof nothing {
     const cfg = this.normalized;
     if (!cfg || cfg.controls.layerSwitcher === false || !this.hasToc) return nothing;
     const allowAdd = this.allowAdd;
@@ -1136,7 +1205,13 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
       terms.length > 0 && extras.length === 0 && !cfg.toc.some((n) => this.pruneToc(n, byId, terms));
     const title = cfg.controls.layerSwitcher.title ?? t("layers.title");
     return html`
-      <div class="toc panel" part="toc" ?data-open=${this._tocOpen}>
+      <div
+        class="toc panel"
+        part="toc"
+        ?data-open=${this._tocOpen}
+        ?data-end=${end}
+        ?data-left=${this.tocPosition?.endsWith("left")}
+      >
         <button
           class="panel-header"
           @click=${() => (this._tocOpen = !this._tocOpen)}

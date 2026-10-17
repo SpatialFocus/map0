@@ -242,7 +242,8 @@ Unset, the config decides as usual.
     "globe": true,
     "home": true,
     "layerSwitcher": {
-      "position": "top-right",
+      "position": "top-right",              // corner the panel docks to, like legend.position: panels on one
+                                            // edge share its height; below 688px all share the right edge
       "open": "auto",                       // open on desktop, collapsed on mobile
       "allowAdd": true,                     // false disables the add-layer dialog and file drop (F3.1, F3.2)
       "filter": "auto"                      // filter box above the tree (F2.7): "auto" = from 10 layers on
