@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { copyFileSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { optionalPeerStubs } from "../scripts/stub-aliases.mjs";
 import { copyMaplibreDist, maplibreExternal } from "../scripts/maplibre-dist.mjs";
+import { minifyCssLiterals } from "../scripts/minify-css-literals.mjs";
 import { i18n } from "./i18n/plugin.js";
 import { prettyPath } from "./i18n/translate.js";
 
@@ -197,7 +198,7 @@ export default defineConfig({
      MapLibre's worker with status 200 and it died without a word. */
   appType: "mpa",
   /* MapLibre's three files land next to the hashed chunks in assets/ */
-  plugins: [copyMaplibreDist(r("../dist-site/assets")), analytics(), sharedChrome(), schemaFile(), i18n(r("../dist-site"))],
+  plugins: [minifyCssLiterals(), copyMaplibreDist(r("../dist-site/assets")), analytics(), sharedChrome(), schemaFile(), i18n(r("../dist-site"))],
   build: {
     /* same target as the library bundle: the demo shell loads @map0/ui with a
        top-level await, which the default (es2020) target rejects */
