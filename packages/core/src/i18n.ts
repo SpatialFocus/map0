@@ -12,6 +12,10 @@ const dictionaries: Record<string, Record<string, string>> = {
     "layers.remove": "Remove layer",
     "layers.added": "Added layers",
     "layers.zoomTo": "Zoom to layer",
+    "layers.filter": "Filter layers",
+    "layers.noMatch": "No layer matches the filter",
+    "layers.toggleGroup": "Show or hide all layers",
+    "layers.showGroup": "Show group",
     "addLayer.title": "Add layer",
     "addLayer.intro":
       "Paste a service URL. The service is queried directly in the browser (it must allow CORS).",
@@ -89,6 +93,10 @@ const dictionaries: Record<string, Record<string, string>> = {
     "layers.remove": "Layer entfernen",
     "layers.added": "Hinzugefügte Layer",
     "layers.zoomTo": "Auf Ebene zoomen",
+    "layers.filter": "Ebenen filtern",
+    "layers.noMatch": "Keine Ebene passt zum Filter",
+    "layers.toggleGroup": "Alle Ebenen ein- oder ausblenden",
+    "layers.showGroup": "Gruppe anzeigen",
     "addLayer.title": "Layer hinzufügen",
     "addLayer.intro":
       "Dienst-URL einfügen. Der Dienst wird direkt im Browser abgefragt (muss CORS erlauben).",

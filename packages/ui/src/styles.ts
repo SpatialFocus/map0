@@ -114,13 +114,25 @@ export const componentStyles = css`
   }
 
   .group-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 4px 4px;
+  }
+  .group-header input {
+    accent-color: var(--map0-primary);
+    width: 15px;
+    height: 15px;
+    flex: none;
+    margin: 0;
+  }
+  .group-toggle {
     all: unset;
     display: flex;
     align-items: center;
     gap: 6px;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 8px 4px 4px;
+    flex: 1;
+    min-width: 0;
     font-weight: 600;
     font-size: 12px;
     color: var(--map0-muted);
@@ -128,18 +140,24 @@ export const componentStyles = css`
     letter-spacing: 0.04em;
     cursor: pointer;
   }
-  .group-header:focus-visible {
+  .group-toggle > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .group-toggle:focus-visible {
     outline: 2px solid var(--map0-primary);
     border-radius: 4px;
   }
   .group-header .chevron {
+    flex: none;
     margin-left: auto;
     transition: transform 0.18s ease;
   }
-  .group[data-collapsed] .group-header .chevron {
+  .group[data-collapsed] > .group-header .chevron {
     transform: rotate(-90deg);
   }
-  .group[data-collapsed] .group-body {
+  .group[data-collapsed] > .group-body {
     display: none;
   }
   .group .group-body {
@@ -171,7 +189,8 @@ export const componentStyles = css`
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .layer-main input[type="checkbox"] {
+  .layer-main input[type="checkbox"],
+  .layer-main input[type="radio"] {
     accent-color: var(--map0-primary);
     width: 15px;
     height: 15px;
@@ -246,6 +265,45 @@ export const componentStyles = css`
   .toc-empty {
     padding: 10px 6px;
     color: var(--map0-muted);
+  }
+
+  /* filter box (F2.7) — stays in view while the tree scrolls under it */
+  .toc-filter {
+    position: sticky;
+    top: -2px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 -8px;
+    padding: 8px 12px 6px;
+    background: var(--map0-bg);
+    color: var(--map0-muted);
+  }
+  .toc-filter svg {
+    flex: none;
+  }
+  .toc-filter input {
+    appearance: none;
+    flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 5px 8px;
+    border: 1px solid var(--map0-border);
+    border-radius: var(--map0-radius-sm);
+    background: transparent;
+    color: var(--map0-fg);
+    font: inherit;
+  }
+  .toc-filter input:focus-visible {
+    outline: 2px solid var(--map0-primary);
+    outline-offset: -1px;
+  }
+  .toc mark {
+    background: color-mix(in srgb, var(--map0-primary) 22%, transparent);
+    color: inherit;
+    border-radius: 2px;
   }
 
   .layer-row[data-out-of-range] .layer-title {

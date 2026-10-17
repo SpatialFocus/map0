@@ -1,5 +1,6 @@
 import { LitElement, html, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { property, query, state } from "lit/decorators.js";
+import { live } from "lit/directives/live.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import type { Popup } from "maplibre-gl"; // type only — erased at build time
 import type {
@@ -14,11 +15,20 @@ import type {
   SearchResult,
   ValidationError,
 } from "@map0/core";
-import { normalizeConfig, resolveConfigExtends, validateConfig, type TocNode } from "@map0/schema";
+import {
+  normalizeConfig,
+  resolveConfigExtends,
+  tocLeafIds,
+  tocShowIds,
+  tocVisibility,
+  validateConfig,
+  type TocNode,
+} from "@map0/schema";
 import type { Map0ViewerElement, Map0ViewerEventDetails } from "./element.js";
 import type { Map0BottomSheet } from "./bottom-sheet.js"; // type only — the sheet ships with the popup chunk
 import { componentStyles } from "./styles.js";
 import { attachDropZone } from "./file-drop.js";
+import { filterTerms, highlightSegments, matchesAll, unmatchedTerms } from "./toc-filter.js";
 
 /**
  * Everything the map itself needs — the engine, MapLibre and its stylesheet, the
@@ -85,6 +95,15 @@ const RADII_SM = { none: "0px", sm: "4px", md: "7px", lg: "10px" } as const;
  */
 const SHEET_BREAKPOINT = 640;
 
+/** layers from which the panel offers a filter box when `filter` is "auto" (F2.7) */
+const TOC_FILTER_AUTO = 10;
+
+/** a title with the filter's hits marked */
+const highlight = (text: string, terms: string[]): unknown =>
+  terms.length === 0
+    ? text
+    : highlightSegments(text, terms).map((s) => (s.hit ? html`<mark>${s.text}</mark>` : s.text));
+
 const icons = {
   layers: html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>`,
   chevron: html`<svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>`,
@@ -135,6 +154,8 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
   /** a file drag is over the viewer — the drop zone overlay is showing (F3.2) */
   @state() private _dropActive = false;
   @state() private _groupCollapsed: Record<string, boolean> = {};
+  /** text in the layer panel's filter box (F2.7) */
+  @state() private _tocFilter = "";
   @state() private _ready = false;
   /** true once initialisation actually starts — before that the element only reserves space */
   @state() private _loading = false;
@@ -198,6 +219,13 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
     const cfg = this.normalized;
     if (!cfg || cfg.controls.layerSwitcher === false) return false;
     return cfg.layers.length > 0 || this._layers.length > 0 || cfg.controls.layerSwitcher.allowAdd;
+  }
+
+  /** the layer panel has a filter box — "auto" from TOC_FILTER_AUTO layers on (F2.7) */
+  private get hasTocFilter(): boolean {
+    const ls = this.normalized?.controls.layerSwitcher;
+    if (!ls) return false;
+    return ls.filter === "auto" ? this._layers.length >= TOC_FILTER_AUTO : ls.filter;
   }
 
   /** users may add layers — the dialog's "+" and the file drop share this gate (F3.1, F3.2) */
@@ -1102,7 +1130,10 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
     const allowAdd = this.allowAdd;
     const t = this.core?.t ?? ((k: string) => k);
     const byId = new Map(this._layers.map((l) => [l.id, l]));
-    const extras = this._layers.filter((l) => l.userAdded);
+    const terms = this.hasTocFilter ? filterTerms(this._tocFilter) : [];
+    const extras = this._layers.filter((l) => l.userAdded && matchesAll(l.title, terms));
+    const noMatch =
+      terms.length > 0 && extras.length === 0 && !cfg.toc.some((n) => this.pruneToc(n, byId, terms));
     const title = cfg.controls.layerSwitcher.title ?? t("layers.title");
     return html`
       <div class="toc panel" part="toc" ?data-open=${this._tocOpen}>
@@ -1137,14 +1168,16 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
         </button>
         ${this._tocOpen
           ? html`<div class="panel-body">
+              ${this.hasTocFilter ? this.renderTocFilter() : nothing}
               ${extras.length > 0
                 ? html`<div class="toc-extras">
                     <div class="group-label">${t("layers.added")}</div>
-                    ${extras.map((l) => this.renderLayerRow(l))}
+                    ${extras.map((l) => this.renderLayerRow(l, terms))}
                   </div>`
                 : nothing}
-              ${this.renderNodes(cfg.toc, byId, "")}
-              ${cfg.layers.length === 0 && extras.length === 0
+              ${this.renderNodes(cfg.toc, byId, "", terms, terms)}
+              ${noMatch ? html`<div class="toc-empty" role="status">${t("layers.noMatch")}</div>` : nothing}
+              ${cfg.layers.length === 0 && this._layers.length === 0
                 ? html`<div class="toc-empty">${t("layers.empty")}</div>`
                 : nothing}
             </div>`
@@ -1153,35 +1186,126 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
     `;
   }
 
+  private renderTocFilter(): TemplateResult {
+    const t = this.core?.t ?? ((k: string) => k);
+    return html`
+      <div class="toc-filter">
+        ${icons.search}
+        <input
+          type="search"
+          autocomplete="off"
+          spellcheck="false"
+          .value=${this._tocFilter}
+          placeholder=${t("layers.filter")}
+          aria-label=${t("layers.filter")}
+          @input=${(e: Event) => (this._tocFilter = (e.target as HTMLInputElement).value)}
+          @keydown=${(e: KeyboardEvent) => {
+            if (e.key === "Escape" && this._tocFilter) {
+              e.preventDefault();
+              e.stopPropagation();
+              this._tocFilter = "";
+            }
+          }}
+        />
+      </div>
+    `;
+  }
+
+  /**
+   * The part of a node the filter terms keep, null when nothing matches. A
+   * group's title takes its share of the terms; one that matches them all
+   * keeps the whole group.
+   */
+  private pruneToc(node: TocNode, byId: Map<string, LayerUIState>, terms: string[]): TocNode | null {
+    if (node.kind === "layer") {
+      const l = byId.get(node.layerId);
+      return l && matchesAll(l.title, terms) ? node : null;
+    }
+    const rest = unmatchedTerms(node.title, terms);
+    if (rest.length === 0) return node;
+    const children = node.children
+      .map((c) => this.pruneToc(c, byId, rest))
+      .filter((c): c is TocNode => c !== null);
+    return children.length > 0 ? { ...node, children } : null;
+  }
+
+  /**
+   * `terms` highlight, `rest` decides — the filter terms no group above has
+   * matched yet. `radio` names the exclusive group these nodes are options of.
+   */
   private renderNodes(
     nodes: TocNode[],
     byId: Map<string, LayerUIState>,
     path: string,
+    terms: string[],
+    rest: string[],
+    radio?: string,
   ): unknown[] {
+    const t = this.core?.t ?? ((k: string) => k);
+    const isVisible = (id: string) => byId.get(id)?.visible ?? false;
     return nodes.map((n, i) => {
       if (n.kind === "group") {
         const key = `${path}/${i}:${n.title}`;
-        const collapsed = this._groupCollapsed[key] ?? n.collapsed;
+        /* filtered, the group's box sees and switches only the layers on show */
+        const scope = rest.length > 0 ? this.pruneToc(n, byId, rest) : n;
+        if (!scope) return nothing;
+        const childRest = unmatchedTerms(n.title, rest);
+        /* a filtered tree shows its hits, collapsed or not */
+        const collapsed = terms.length > 0 ? false : (this._groupCollapsed[key] ?? n.collapsed);
+        const state = tocVisibility(scope, isVisible);
         return html`
           <div class="group" ?data-collapsed=${collapsed}>
-            <button
-              class="group-header"
-              @click=${() =>
-                (this._groupCollapsed = { ...this._groupCollapsed, [key]: !collapsed })}
-              aria-expanded=${collapsed ? "false" : "true"}
+            <div class="group-header">
+              <input
+                type=${radio ? "radio" : "checkbox"}
+                name=${radio ?? nothing}
+                .checked=${live(radio ? state !== "off" : state === "on")}
+                .indeterminate=${live(!radio && state === "mixed")}
+                aria-label=${`${t(radio ? "layers.showGroup" : "layers.toggleGroup")}: ${n.title}`}
+                @change=${(e: Event) => this.toggleGroup(scope, (e.target as HTMLInputElement).checked)}
+              />
+              <button
+                class="group-toggle"
+                @click=${() =>
+                  (this._groupCollapsed = { ...this._groupCollapsed, [key]: !collapsed })}
+                aria-expanded=${collapsed ? "false" : "true"}
+              >
+                <span>${highlight(n.title, terms)}</span>${icons.chevron}
+              </button>
+            </div>
+            <div
+              class="group-body"
+              role=${n.exclusive ? "radiogroup" : nothing}
+              aria-label=${n.exclusive ? n.title : nothing}
             >
-              <span>${n.title}</span>${icons.chevron}
-            </button>
-            <div class="group-body">${this.renderNodes(n.children, byId, key)}</div>
+              ${this.renderNodes(n.children, byId, key, terms, childRest, n.exclusive ? key : undefined)}
+            </div>
           </div>
         `;
       }
       const l = byId.get(n.layerId);
-      return l ? this.renderLayerRow(l) : nothing;
+      if (!l || !matchesAll(l.title, rest)) return nothing;
+      return this.renderLayerRow(l, terms, radio);
     });
   }
 
-  private renderLayerRow(l: LayerUIState): TemplateResult {
+  /**
+   * The group's box: on switches all of it on (one option of an exclusive
+   * group), off switches every layer below it off (F2.3).
+   */
+  private toggleGroup(node: TocNode, on: boolean): void {
+    const core = this.core;
+    if (!core) return;
+    const visible = new Map(this._layers.map((l) => [l.id, l.visible]));
+    const isVisible = (id: string) => visible.get(id) ?? false;
+    const show = new Set(on ? tocShowIds(node, isVisible) : []);
+    for (const id of tocLeafIds(node)) {
+      if (isVisible(id) && !show.has(id)) core.setLayerVisibility(id, false);
+    }
+    for (const id of show) if (!isVisible(id)) core.setLayerVisibility(id, true);
+  }
+
+  private renderLayerRow(l: LayerUIState, terms: string[] = [], radio?: string): TemplateResult {
     const t = this.core?.t ?? ((k: string) => k);
     const outOfRange = l.visible && !l.inZoomRange;
     return html`
@@ -1189,12 +1313,13 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
         <div class="layer-main">
           <label>
             <input
-              type="checkbox"
+              type=${radio ? "radio" : "checkbox"}
+              name=${radio ?? nothing}
               .checked=${l.visible}
               @change=${(e: Event) =>
                 this.core?.setLayerVisibility(l.id, (e.target as HTMLInputElement).checked)}
             />
-            <span class="layer-title" title=${l.title}>${l.title}</span>
+            <span class="layer-title" title=${l.title}>${highlight(l.title, terms)}</span>
           </label>
           ${outOfRange
             ? nothing
