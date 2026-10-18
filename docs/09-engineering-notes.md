@@ -570,3 +570,37 @@ that registry is the intended extension point.
 | Overlays vanish after switching basemap | something added outside an adapter, missing from `transformStyle` (invariant 6) |
 | Console: "Multiple versions of Lit loaded" | page loads both bundle and sources (§5) |
 | Page tier over budget in CI | a value import from `@map0/core` crept into the element (invariant 1) |
+
+## 10. Dependency updates (Renovate) and the security policy
+
+`renovate.json` at the root; the Mend Renovate GitHub app runs it (installed once from
+<https://github.com/apps/renovate> — a repository setting, nothing in the repo). The rules, and
+why:
+
+- **Weekly, grouped.** Everything minor and patch arrives as one PR before Monday 6:00
+  (Europe/Vienna); majors come one by one. A version has to be three days old
+  (`minimumReleaseAge`), which gives a compromised release time to be pulled. Lockfile
+  maintenance once a month. Vulnerabilities reported by OSV skip the schedule.
+- **Automerge only for dev-dependency patches**, and only after CI is green — which here means
+  typecheck, unit tests, the smoke run on the built bundle, the pixel comparison, the size budget
+  and the site build. Everything that ships in the bundle (`dependencies`, the MapLibre peer) is
+  merged by hand; the PR body says what to look at.
+- **Playwright is its own PR and never automerges.** A new Playwright is a new Chromium build,
+  and that changes pixels: the visual step stays red until the baselines are refreshed
+  (`pnpm build && pnpm visual:linux --update` in Docker, `pnpm visual --update` locally) and
+  every rewritten PNG has been looked at. The Docker image tag follows the installed version
+  (`scripts/visual-docker.mjs`), so nothing else needs a bump.
+- **MapLibre is its own PR too.** Three files are copied into `dist` (§3.1), and `maplibre-gl`
+  is an optional peer of `map0-viewer`: peer ranges widen on a major instead of bumping
+  (`rangeStrategy: widen` for `peerDependencies`), and `node e2e/verify-types.mjs` checks a
+  consumer against the packed tarball.
+- **pnpm** (the `packageManager` field) by hand: a pnpm minor can change the lockfile.
+- **`rangeStrategy: bump`** otherwise: the ranges in package.json follow the lockfile, so what a
+  reader sees and what `pnpm install --frozen-lockfile` installs agree.
+- **No preview deployment for Renovate PRs:** `deploy-site.yml` skips pull requests opened by
+  `renovate[bot]` — every one of them would otherwise get an Azure Static Web Apps environment.
+
+`SECURITY.md` is the other half of low-effort maintenance: it sends reporters to GitHub's
+private vulnerability reporting instead of a public issue. That form exists only once
+"Private vulnerability reporting" is switched on under the repository's Settings → Code
+security.
