@@ -43,7 +43,7 @@ See [packages/map0/README.md](packages/map0/README.md) for the whole integration
 
 ## Working on map0
 
-Prerequisites: Node ≥ 22 and pnpm (enable it with `corepack enable`; the version is pinned via
+Prerequisites: Node ≥ 24 and pnpm (enable it with `corepack enable`; the version is pinned via
 `packageManager`).
 
 ```bash
@@ -88,8 +88,8 @@ docs/             specification
 ```
 
 Distribution note: `packages/ui/dist/` is a flat folder containing `map0.js`, its chunks and MapLibre's
-three files shipped verbatim. Deploy the folder as a unit; the embed stays one script tag.
-A page loads **~34 KB gzip** for the element itself; the engine and MapLibre (~316 KB) load when the
+dist files shipped verbatim. Deploy the folder as a unit; the embed stays one script tag.
+A page loads **~34 KB gzip** for the element itself; the engine and MapLibre (~465 KB) load when the
 map approaches the viewport, and capabilities parsing, proj4, PMTiles, the COG decoder, measuring
 and the dialogs only when those features are used. `pnpm size` prints the breakdown and fails when
 the page tier grows.

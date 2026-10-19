@@ -71,7 +71,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
-## @geomatico/maplibre-cog-protocol 0.9.2 — MIT
+## @geomatico/maplibre-cog-protocol 0.9.3 — MIT
 
 ```
 MIT License
@@ -214,7 +214,7 @@ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 ```
 
-## @tmcw/togeojson 7.1.2 — BSD-2-Clause
+## @tmcw/togeojson 7.1.3 — BSD-2-Clause
 
 git://github.com/placemark/togeojson.git
 
@@ -330,7 +330,7 @@ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 ```
 
-## dompurify 3.4.13 — (MPL-2.0 OR Apache-2.0)
+## dompurify 3.4.17 — (MPL-2.0 OR Apache-2.0)
 
 https://github.com/cure53/DOMPurify
 
@@ -650,7 +650,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## hyparquet 1.29.2 — MIT
+## hyparquet 1.31.4 — MIT
 
 https://hyperparam.app
 
@@ -664,7 +664,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-## hyparquet-compressors 1.1.1 — MIT
+## hyparquet-compressors 1.1.2 — MIT
 
 https://hyperparam.app
 
@@ -678,9 +678,9 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-## hysnappy 1.0.0 — MIT
+## hysnappy 1.1.1 — MIT
 
-git+https://github.com/hyparam/hysnappy.git
+https://hyperparam.app
 
 ```
 The MIT License (MIT)
@@ -931,7 +931,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
-## maplibre-gl 6.3.0 — BSD-3-Clause
+## maplibre-gl 6.14.0 — BSD-3-Clause
 
 https://maplibre.org/
 
@@ -1143,7 +1143,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
-## proj4 2.21.0 — MIT
+## proj4 2.22.0 — MIT
 
 https://proj4js.github.io/proj4js/
 
@@ -1403,7 +1403,7 @@ Apache License
    limitations under the License.
 ```
 
-## wkt-parser 1.5.6 — MIT
+## wkt-parser 1.6.0 — MIT
 
 https://github.com/proj4js/wkt-parser#readme
 

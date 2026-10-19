@@ -172,10 +172,11 @@ try {
     vt.vectorFeatures > 500,
     `${vt.vectorFeatures} vector features`,
   );
+  /* since MapLibre 6.13 the worker is self-contained; maplibre-gl-shared.mjs is
+     an empty compatibility file that nothing requests any more */
   record(
-    "maplibre worker + shared served out of the tarball",
-    fromTarball.some((u) => u.includes("maplibre-gl-worker.mjs")) &&
-      fromTarball.some((u) => u.includes("maplibre-gl-shared.mjs")),
+    "maplibre worker served out of the tarball",
+    fromTarball.some((u) => u.includes("maplibre-gl-worker.mjs")),
   );
   record("WMS overlay survives the basemap switch", vt.wmsOverlay);
   record("no dev sources loaded (bundle only)", devLeak.length === 0, devLeak[0] ?? "");

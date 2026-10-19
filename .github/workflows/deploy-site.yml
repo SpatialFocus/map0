@@ -20,14 +20,15 @@ concurrency:
 
 jobs:
   build-and-deploy:
-    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    # Renovate's PRs get CI, not a preview environment of their own
+    if: github.event.pull_request.user.login != 'renovate[bot]' && (github.event_name != 'pull_request' || github.event.action != 'closed')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build:site
@@ -42,7 +43,7 @@ jobs:
 
   # a merged/closed PR takes its preview environment with it
   close-preview:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    if: github.event.pull_request.user.login != 'renovate[bot]' && github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
       - uses: Azure/static-web-apps-deploy@v1

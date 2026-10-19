@@ -155,9 +155,10 @@ cp -r node_modules/map0-viewer/dist ./public/map0   # then load /map0/map0.js
 ```
 
 `map0.js` loads additional modules as needed. MapLibre resolves its worker URL at runtime, so
-`maplibre-gl.mjs`, `maplibre-gl-shared.mjs` and `maplibre-gl-worker.mjs` must remain alongside it.
-Missing files can prevent vector tiles and GeoJSON from appearing. If you bundle map0 into your
-own build, ensure that these three files are emitted next to your chunks.
+`maplibre-gl.mjs` and `maplibre-gl-worker.mjs` must remain alongside it (`maplibre-gl-shared.mjs`
+is an empty compatibility file since MapLibre 6.13). Missing files can prevent vector tiles and
+GeoJSON from appearing. If you bundle map0 into your own build, ensure that the `maplibre-gl*.mjs`
+files are emitted next to your chunks.
 
 Use `type="module"` on script tags to load the ES-module package.
 
@@ -210,7 +211,7 @@ Before 1.0, schema keys may change between releases.
 
 ## Weight
 
-A page loads ~34 KB gzip for the element itself. The engine, MapLibre and its stylesheet (~316 KB
+A page loads ~34 KB gzip for the element itself. The engine, MapLibre and its stylesheet (~465 KB
 gzip) load when a map initialises. Capabilities
 parsing, proj4, PMTiles, the COG and GeoParquet decoders, measuring and the dialogs load on first
 use.

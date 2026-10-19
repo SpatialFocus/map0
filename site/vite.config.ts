@@ -197,7 +197,7 @@ export default defineConfig({
      a 404 in dev and preview too. The SPA fallback once served HTML to
      MapLibre's worker with status 200 and it died without a word. */
   appType: "mpa",
-  /* MapLibre's three files land next to the hashed chunks in assets/ */
+  /* MapLibre's dist files land next to the hashed chunks in assets/ */
   plugins: [minifyCssLiterals(), copyMaplibreDist(r("../dist-site/assets")), analytics(), sharedChrome(), schemaFile(), i18n(r("../dist-site"))],
   build: {
     /* same target as the library bundle: the demo shell loads @map0/ui with a

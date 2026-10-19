@@ -2,7 +2,7 @@
  * Assembles the publishable `map0` package (packages/map0) from the built bundle.
  *
  * packages/ui/dist is already the deployable folder — entry, lazy chunks, and
- * MapLibre's three files copied in verbatim (see scripts/maplibre-dist.mjs). This
+ * MapLibre's dist files copied in verbatim (see scripts/maplibre-dist.mjs). This
  * script copies it to packages/map0/dist without the sourcemaps — together with
  * the bundled type declarations scripts/build-types.mjs puts next to the entries
  * (N11) — and regenerates THIRD-PARTY-NOTICES.md from what the sourcemaps say is
@@ -23,7 +23,8 @@ const PKG = join(root, "packages", "map0");
 const OUT = join(PKG, "dist");
 
 /** MapLibre resolves its worker at runtime from a sibling file: no file, no vector tiles. */
-const MAPLIBRE_FILES = ["maplibre-gl.mjs", "maplibre-gl-shared.mjs", "maplibre-gl-worker.mjs"];
+/* maplibre-gl-shared.mjs is not required: empty since MapLibre 6.13, gone in the next major */
+const MAPLIBRE_FILES = ["maplibre-gl.mjs", "maplibre-gl-worker.mjs"];
 const LICENSE_FILES = ["LICENSE", "LICENSE.md", "LICENSE.txt", "LICENCE", "LICENCE.md", "license", "COPYING"];
 
 /**

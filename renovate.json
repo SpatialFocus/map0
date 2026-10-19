@@ -1,0 +1,88 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Weekly, grouped, conservative — CI decides (typecheck, unit tests, smoke on the built bundle, pixel comparison, size budget, site build). The reasoning is in docs/09-engineering-notes.md §10.",
+  "extends": ["config:recommended", ":semanticCommits"],
+  "timezone": "Europe/Vienna",
+  "schedule": ["before 6am on monday"],
+  "rangeStrategy": "bump",
+  "minimumReleaseAge": "3 days",
+  "prCreation": "not-pending",
+  "osvVulnerabilityAlerts": true,
+  "labels": ["dependencies"],
+  "prConcurrentLimit": 5,
+  "postUpdateOptions": ["pnpmDedupe"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on the first day of the month"]
+  },
+  "packageRules": [
+    {
+      "description": "one PR a week for everything minor and patch",
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "non-major dependencies",
+      "groupSlug": "non-major"
+    },
+    {
+      "description": "dev-only patch updates merge themselves once CI is green",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch"],
+      "groupName": "dev patch updates",
+      "groupSlug": "dev-patch",
+      "automerge": true
+    },
+    {
+      "description": "what ships in the bundle or the npm package is merged by hand",
+      "matchDepTypes": ["dependencies", "peerDependencies", "optionalDependencies"],
+      "groupName": "bundled runtime dependencies",
+      "groupSlug": "runtime",
+      "automerge": false,
+      "prBodyNotes": [
+        "These land in the published bundle (`map0-viewer`). Check the page-tier line of `pnpm size` in the CI log, and the smoke and visual steps."
+      ]
+    },
+    {
+      "description": "a peer range widens on a major instead of leaving older consumers behind",
+      "matchDepTypes": ["peerDependencies"],
+      "rangeStrategy": "widen"
+    },
+    {
+      "description": "MapLibre: three copied files and a worker, and an optional peer of the published package (docs/09 §3.1)",
+      "matchPackageNames": ["maplibre-gl"],
+      "groupName": "maplibre-gl",
+      "groupSlug": "maplibre",
+      "automerge": false,
+      "prBodyNotes": [
+        "MapLibre is copied into dist as three files (docs/09 §3.1) and is an optional peer of `map0-viewer`. On a major, run `pnpm build:npm && node e2e/verify-types.mjs` as well."
+      ]
+    },
+    {
+      "description": "a new Playwright is a new Chromium build, and that changes pixels",
+      "matchPackageNames": ["playwright", "@playwright/**"],
+      "groupName": "playwright",
+      "groupSlug": "playwright",
+      "automerge": false,
+      "prBodyNotes": [
+        "The visual step stays red until the baselines are refreshed: `pnpm build && pnpm visual:linux --update` (Docker) and `pnpm visual --update`, then look at every rewritten PNG under e2e/visual/ and commit them to this branch."
+      ]
+    },
+    {
+      "description": "pnpm itself (the packageManager field): a minor can change the lockfile",
+      "matchDepTypes": ["packageManager"],
+      "groupName": "pnpm",
+      "groupSlug": "pnpm",
+      "automerge": false
+    },
+    {
+      "description": "GitHub Actions, grouped",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions",
+      "groupSlug": "github-actions"
+    },
+    {
+      "description": "Node itself: new LTS majors only, no pinning of node-version or engines to a patch release",
+      "matchPackageNames": ["node"],
+      "matchUpdateTypes": ["minor", "patch", "pin"],
+      "enabled": false
+    }
+  ]
+}

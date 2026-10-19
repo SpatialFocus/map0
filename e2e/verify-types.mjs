@@ -243,7 +243,9 @@ const firstLine = (s) => s.split("\n").find(Boolean) ?? "";
 /* ------------------------------------------------------- full install */
 
 console.log("\n  full: tarball + maplibre-gl");
-const full = install("full", ["maplibre-gl@^6.3.0"]);
+/* the peer range as published, so the gate follows package.json instead of a copy of it */
+const maplibreRange = JSON.parse(readFileSync(join(PKG, "package.json"), "utf8")).peerDependencies["maplibre-gl"];
+const full = install("full", [`maplibre-gl@${maplibreRange}`]);
 record("maplibre-gl installed alongside", existsSync(join(full, "node_modules", "maplibre-gl", "package.json")));
 
 const bundler = typecheck(full, "bundler", ["consumer.ts", "browser.ts", "server.ts", "both.ts"], {
