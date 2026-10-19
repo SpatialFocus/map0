@@ -1008,6 +1008,9 @@ try {
     return layoutPage.evaluate(async () => {
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       const sr = document.querySelector("map0-viewer").shadowRoot;
+      /* the search field animates its width when a panel takes its row (0.16s);
+         a full-width phone panel meets it mid-way, so measure it at rest */
+      await Promise.all((sr.querySelector(".search")?.getAnimations() ?? []).map((a) => a.finished.catch(() => {})));
       const box = (sel) => sr.querySelector(sel)?.getBoundingClientRect() ?? null;
       const hit = (a, b) => a && b && a.width > 0 && b.width > 0 &&
         a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5;

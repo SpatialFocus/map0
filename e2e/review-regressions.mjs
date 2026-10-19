@@ -63,14 +63,14 @@ export async function reviewRegressions(context, base, check, watchConsole) {
     const dialog = document.querySelector("map0-viewer").shadowRoot.querySelector("map0-add-layer");
     let complete;
     const answer = new Promise(resolve => { complete = resolve; });
-    dialog.loadWms = async () => answer;
+    dialog.readCapabilities = () => answer;
     dialog.url = "https://example.org/first";
     const pending = dialog.load();
     await new Promise(resolve => setTimeout(resolve, 50));
     const input = dialog.querySelector("input[type=url]");
     input.value = "https://example.org/second";
     input.dispatchEvent(new Event("input", { bubbles: true }));
-    complete({ candidates: [{ name: "old", title: "Old layer", selected: true }], infoFormat: "text/html" });
+    complete({ kind: "wms", url: "https://example.org/first", infoFormat: "text/html", candidates: [{ name: "old", title: "Old layer" }] });
     await pending;
     await dialog.updateComplete;
     return dialog.querySelectorAll(".add-row").length;
@@ -82,6 +82,7 @@ export async function reviewRegressions(context, base, check, watchConsole) {
     let closed = false;
     dialog.addEventListener("close", () => { closed = true; });
     dialog.core = { addLayer: async () => null };
+    dialog.caps = { kind: "wms", url: "https://example.org/second", candidates: [] };
     dialog.candidates = [{ name: "broken", title: "Broken layer", selected: true }];
     await dialog.add();
     await dialog.updateComplete;

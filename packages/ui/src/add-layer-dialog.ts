@@ -82,9 +82,7 @@ export class Map0AddLayerDialog extends LitElement {
     this.error = "";
     this.candidates = [];
     try {
-      /* capabilities parsing (and the CRS inheritance it corrects) lives in the
-         core, shared with the configurator — see core/capabilities.ts */
-      const caps = service === "wms" ? await readWmsCapabilities(url) : await readWmtsCapabilities(url);
+      const caps = await this.readCapabilities(service, url);
       if (seq !== this.loadSeq) return;
       this.caps = caps;
       this.candidates = caps.candidates.map((c) => ({ ...c, selected: false }));
@@ -95,6 +93,15 @@ export class Map0AddLayerDialog extends LitElement {
     } finally {
       if (seq === this.loadSeq) this.loading = false;
     }
+  }
+
+  /**
+   * Capabilities parsing (and the CRS inheritance it corrects) lives in the
+   * core, shared with the configurator — see core/capabilities.ts. One method
+   * for the network so the smoke test can hand the dialog a canned answer.
+   */
+  private readCapabilities(service: ServiceKind, url: string): Promise<WmsCapabilities | WmtsCapabilities> {
+    return service === "wms" ? readWmsCapabilities(url) : readWmtsCapabilities(url);
   }
 
   private async add(): Promise<void> {
