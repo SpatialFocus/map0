@@ -77,7 +77,7 @@ dead issue links. The initial CHANGELOG.md was backfilled from the tag history w
 
 Two things a release has to get right, both of which fail *silently* if it does not:
 
-- **The folder is the unit.** `dist/` ships `map0.js`, its lazy chunks and MapLibre's three files
+- **The folder is the unit.** `dist/` ships `map0.js`, its lazy chunks and MapLibre's files
   side by side (§4.4). Verify the **packed tarball**, not `packages/ui/dist` — automated in
   `e2e/verify-tarball.mjs` (hook step 5, or by hand: `node e2e/verify-tarball.mjs <tgz>`): it
   unpacks the tarball over `site/public/standalone/`, loads `/demos/standalone.html` (which
@@ -178,14 +178,19 @@ Break one of these and something breaks quietly, usually only in production buil
 
 ## 3. Field notes: MapLibre
 
-### 3.1 The worker is three files, not one
+### 3.1 The worker is a separate file, not part of the bundle
 
-MapLibre v6 ships ESM split into `maplibre-gl.mjs` (main thread), `maplibre-gl-shared.mjs` and
-`maplibre-gl-worker.mjs`; the worker is spawned from a URL **relative to the bundle** and imports the
-shared half itself. Consequences:
+MapLibre v6 ships ESM split into `maplibre-gl.mjs` (main thread) and `maplibre-gl-worker.mjs`; the
+worker is spawned from a URL **relative to the bundle**. Up to 6.12 both imported a third file,
+`maplibre-gl-shared.mjs`; since 6.13 the worker is self-contained (a stale cached worker crashed the
+map after an upgrade, maplibre/maplibre-gl-js#8621) and the shared file ships **empty**, kept only so
+copy steps do not fail — it goes away in the next major, and `scripts/maplibre-dist.mjs` copies it
+only while it exists. The price is that the worker now carries its own copy of the shared code: the
+first-map tier of `pnpm size` grew from ~317 to ~465 KB gz with 6.14 (the page tier is unaffected).
+Consequences:
 
-- Bundling MapLibre ships the shared half twice (once inside our bundle, once as the file the worker
-  needs). We keep `maplibre-gl` external and copy all three files in verbatim — next to the entry in
+- Bundling MapLibre would ship its code twice (once inside our bundle, once as the file the worker
+  needs). We keep `maplibre-gl` external and copy the files in verbatim — next to the entry in
   the library `dist`, next to the hashed chunks in the site's `assets/` (`scripts/maplibre-dist.mjs`).
 - In Vite dev, `optimizeDeps.exclude: ["maplibre-gl"]` is required. Pre-bundling rewrites the worker
   URL into `.vite/deps` where it 404s, and the worker then **dies silently**: raster layers still
@@ -590,7 +595,7 @@ why:
   (`pnpm build && pnpm visual:linux --update` in Docker, `pnpm visual --update` locally) and
   every rewritten PNG has been looked at. The Docker image tag follows the installed version
   (`scripts/visual-docker.mjs`), so nothing else needs a bump.
-- **MapLibre is its own PR too.** Three files are copied into `dist` (§3.1), and `maplibre-gl`
+- **MapLibre is its own PR too.** Its dist files are copied into `dist` (§3.1), and `maplibre-gl`
   is an optional peer of `map0-viewer`: peer ranges widen on a major instead of bumping
   (`rangeStrategy: widen` for `peerDependencies`), and `node e2e/verify-types.mjs` checks a
   consumer against the packed tarball.

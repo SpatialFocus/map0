@@ -144,10 +144,11 @@ key because it decides whether the config is fetched at all.
 
 Two more decisions carry the rest:
 
-- **MapLibre is external, not bundled.** It ships as ESM split across `maplibre-gl.mjs`,
-  `maplibre-gl-shared.mjs` and `maplibre-gl-worker.mjs`; the worker needs the shared half on disk
-  regardless, so bundling would ship those ~130 KB gz twice. Keeping it external also means those
-  files are byte-identical across map0 releases and survive in the HTTP cache.
+- **MapLibre is external, not bundled.** It ships as ESM split across `maplibre-gl.mjs` and
+  `maplibre-gl-worker.mjs` (plus an empty `maplibre-gl-shared.mjs` kept for compatibility since
+  6.13, see 09 §3.1); the worker file is needed on disk regardless, so bundling would ship MapLibre's
+  code twice. Keeping it external also means those files are byte-identical across map0 releases and
+  survive in the HTTP cache.
 - **One import site per heavy dependency.** Every `import()` statement becomes its own chunk, so a
   library imported dynamically from two modules is emitted twice. `core/src/ogc.ts` is the single
   place that loads ogc-client (the WMTS adapter and the add-layer dialog both go through it).
