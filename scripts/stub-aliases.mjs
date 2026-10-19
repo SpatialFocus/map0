@@ -13,8 +13,14 @@ import { fileURLToPath } from "node:url";
 const stub = (p) => fileURLToPath(new URL(`../packages/ui/src/stubs/${p}`, import.meta.url));
 
 export const optionalPeerStubs = {
+  /* ogc-client 2 imports these with their .js extension, which a bare id does
+     not match; and the longer ids go first, because a string alias also
+     matches "<id>/…" — "ol/proj" would otherwise swallow "ol/proj/proj4.js" */
+  "ol/tilegrid/WMTS.js": stub("ol-stub.ts"),
   "ol/tilegrid/WMTS": stub("ol-stub.ts"),
+  "ol/proj/proj4.js": stub("ol-stub.ts"),
   "ol/proj/proj4": stub("ol-stub.ts"),
+  "ol/proj.js": stub("ol-stub.ts"),
   "ol/proj": stub("ol-stub.ts"),
   /* NOT dompurify: jsPDF and our popup renderer share that one for real. */
   html2canvas: stub("pdf-stub.ts"),

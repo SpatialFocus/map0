@@ -13,7 +13,7 @@ export function get(): null {
 export function register(): void {
   /* no-op */
 }
-export function fromEPSGCode(): never {
+export function fromProjectionCode(): never {
   throw new Error("map0: OpenLayers tile-grid support is not bundled");
 }
 export default {};

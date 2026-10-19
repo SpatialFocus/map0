@@ -68,10 +68,10 @@ async function probeWfs(ogc: OgcClient, url: string): Promise<ServiceProbe> {
     let metadataUrl: string | undefined;
     try {
       const summary = endpoint.getFeatureTypeSummary(brief.name);
-      outputFormat = pickOutputFormat(summary.outputFormats ?? []);
-      metadataUrl = summary.metadata?.[0]?.url;
+      outputFormat = pickOutputFormat(summary?.outputFormats ?? []);
+      metadataUrl = summary?.metadata?.[0]?.url;
     } catch {
-      /* a type the capabilities list but do not describe — still offered */
+      /* a type the capabilities list but do not describe (null or a throw) — still offered */
     }
     const bbox = asBbox(brief.boundingBox);
     return {
