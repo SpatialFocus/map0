@@ -43,7 +43,7 @@ See [packages/map0/README.md](packages/map0/README.md) for the whole integration
 
 ## Working on map0
 
-Prerequisites: Node ≥ 22 and pnpm (enable it with `corepack enable`; the version is pinned via
+Prerequisites: Node ≥ 24 and pnpm (enable it with `corepack enable`; the version is pinned via
 `packageManager`).
 
 ```bash
