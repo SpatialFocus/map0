@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist-types",
+    "tsBuildInfoFile": "dist-types/.tsbuildinfo",
+    "resolveJsonModule": true
+  },
+  "include": ["src"],
+  "references": [{ "path": "../schema" }, { "path": "../core" }, { "path": "../ui" }]
+}

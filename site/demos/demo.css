@@ -923,3 +923,39 @@ footer.site a.footmark {
     padding: 8px 14px;
   }
 }
+
+/* ------------------------------ configurator ----------------------------- */
+/* /configurator/: the element brings its own three-column layout and maps the
+   site's tokens onto its own; the page only gives it the playground's
+   break-out width. */
+
+map0-configurator {
+  display: block;
+  --map0c-bg: var(--surface);
+  --map0c-surface: var(--page-bg);
+  --map0c-fg: var(--fg);
+  --map0c-muted: var(--muted);
+  --map0c-border: var(--border);
+  --map0c-accent: var(--accent);
+  --map0c-radius: 12px;
+  --map0c-font: var(--font);
+  --map0c-mono: var(--mono);
+  --map0c-height: min(64vh, 680px);
+}
+:root.dark map0-configurator {
+  --map0c-accent-fg: #0b1220;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) map0-configurator {
+    --map0c-accent-fg: #0b1220;
+  }
+}
+@media (min-width: 1280px) {
+  main:has(> map0-configurator) {
+    max-width: min(1680px, 100% - 80px);
+    --pg-inset: calc((100% - min(var(--wrap) - 48px, 100%)) / 2);
+  }
+  main:has(> map0-configurator) > :not(map0-configurator) {
+    margin-left: var(--pg-inset);
+  }
+}

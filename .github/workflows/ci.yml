@@ -19,6 +19,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - run: pnpm build:check && (cd packages/check && pnpm pack) && node e2e/verify-check-tarball.mjs packages/check/map0-check-*.tgz # the map0-check tarball installs and probes a fixture WMS, offline
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm smoke # component lifecycle + z-order in a real browser, on the BUILT bundle
       - run: pnpm visual # the UI's states against the committed e2e/visual/linux screenshots (N9)

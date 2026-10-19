@@ -21,7 +21,7 @@ What is left for v1.0 is the accessibility pass and repo governance.
 | Sharing | ✅ permalink incl. user-added layers · ⬜ embed-snippet helper |
 | Search | ✅ type-ahead geocoding, pluggable providers, coordinate input |
 | Measuring | ✅ distance & area, geodesic, draggable vertices |
-| Configuration | ✅ one document, validation with JSON-path errors (unknown keys, unique ids, https policy), `extends`, theming, i18n + overrides, published JSON Schema with a generated key-by-key reference |
+| Configuration | ✅ one document, validation with JSON-path errors (unknown keys, unique ids, https policy), `extends`, theming, i18n + overrides, published JSON Schema with a generated key-by-key reference · 🟡 visual configurator (first version) |
 | Performance | ✅ 35 KB page tier (budget 40 KB), engine and features load on demand, CI budget |
 | Testing | ✅ unit tests (Vitest), deterministic browser smoke test and visual regression in CI, live demo pass locally |
 | Accessibility | 🟡 keyboard operation, focus trap, reduced motion · ⬜ audit, DOM-mirrored results |
@@ -149,7 +149,19 @@ What is left for v1.0 is the accessibility pass and repo governance.
 
 - ⬜ **Catalog module** — GeoNetwork CSW / OGC API Records search (D-05, F3.4)
 - ⬜ **Server-side print adapter** for scale-true PDF (D-04, F7.4)
-- ⬜ **Visual config editor** — the CMS killer feature
+- 🟡 **Visual config editor** — the CMS killer feature · first version 2026-09-21: `<map0-configurator>`
+  (`packages/configurator`) at <https://map0.net/configurator/> — sections for view, basemaps, layer
+  tree with drag-and-drop, add-from-capabilities (WMS/WMTS/WFS/OGC API), data URLs and catalog
+  search (CSW, OGC API Records), style presets and colour-by-attribute with generated legends,
+  controls, search, print, theme/i18n, live `<map0-viewer>` preview, JSON/embed export, import,
+  browser drafts, browser smoke check (`e2e/verify-configurator.mjs`); see
+  [12-configurator.md](12-configurator.md) · ⬜ publishing the package, curated catalog list
+- 🟡 **Service checker** — `map0-check` (`packages/check`, 2026-09-22): a Node CLI that probes a
+  WMS/WMTS/WFS/OGC API Features URL with the requests map0 sends (core's capabilities reading,
+  request builders and parsers, bundled) and reports https, CORS, Web Mercator, image formats,
+  GeoJSON, paging, feature counts and axis order per layer, with a verdict, exit code, JSON report
+  and the ready-to-paste layer definition (`--config` wraps it into a validated config); README in
+  the package · ⬜ first npm publish, a mention on the validator page
 - ⬜ **Drawing / annotations** (F9.2)
 - ⬜ **Time-enabled layers** (WMS TIME)
 - ⬜ **Optional deck.gl overlay adapter** for very large datasets

@@ -15,10 +15,14 @@ pnpm build && pnpm smoke        # browser smoke test on the BUILT bundle, networ
 pnpm build && pnpm size         # library bundle + the size budget
 pnpm demo:standalone            # build + copy dist next to the standalone demo page
 pnpm build:npm                  # assemble the publishable `map0` package, types included (§release)
+pnpm build:check                # bundle the map0-check CLI (packages/check/dist) — then:
+node packages/check/bin/map0-check.js <service url> --layer <name>   # probe a live OGC service as map0 would
+node e2e/verify-check-tarball.mjs packages/check/map0-check-<v>.tgz  # the packed CLI: install, run, probe a fixture WMS (§release)
 node e2e/verify-types.mjs       # type-check a fresh consumer against the packed tarball (§release)
 pnpm release                    # the whole release: version, changelog, verify, publish (§release)
 node e2e/verify-demos.mjs       # every demo page, headless, with screenshots
 node e2e/verify-demos.mjs wms   # …or one
+node e2e/verify-configurator.mjs  # the configurator page, driven through its element API (docs/12)
 ```
 
 The loop that catches the most: change something → `pnpm typecheck` → look at it in the browser →
@@ -35,14 +39,25 @@ service adapter, check **both** paths: the dev server (`/demos/*`) and the built
 
 ### Release — the `map0` npm package
 
-`packages/map0` is the only publishable package: **`map0-viewer`** on npm, containing the prebuilt
-bundle (no dependencies, MapLibre included). The folder keeps the product name, the package cannot:
+`packages/map0` is the publishable viewer package: **`map0-viewer`** on npm, containing the prebuilt
+bundle (no dependencies, MapLibre included). The second publishable package is **`map0-check`**
+(`packages/check`), the service-checking CLI: one Node bundle built by `pnpm build:check`
+(Vite SSR build of `src/cli.ts` with `@map0/core` and `@map0/schema` compiled in, tree-shaken with
+`moduleSideEffects: false` so MapLibre and the other browser-only dependencies of core fall out;
+ogc-client is its single runtime dependency). It is versioned in lockstep with the viewer —
+`bump-version-refs.mjs` moves its `package.json` version, and the release builds it, packs it and
+runs `e2e/verify-check-tarball.mjs` on the tarball (npm-installs it into a scratch project, runs
+`--version`, `--help` and a full probe against a WMS served from the script, offline; CI does the
+same). Publishing it is still a manual step after the viewer's release:
+`npm publish packages/check/map0-check-<version>.tgz --access public` — the verified tarball, not a
+fresh pack. The folder keeps the product name, the package cannot:
 npm's typosquatting heuristic rejects the unscoped `map0` as too similar to `mcp1`, `hapi`, `tap`
 and `tape` — short names are normalised (`0` reads as *o*) and compared by edit distance, and the
 check is server-side only, so `npm pack`/`--dry-run` will not warn you. The name is unregistered but
 unavailable; only npm support can release it. Scoped names skip the check entirely, which is why the
 `map0` org is reserved for the day `@map0/core` and `@map0/react` become separate installs. The
-workspace packages stay `private` until then, so a stray `pnpm publish -r` cannot leak them.
+`@map0/*` workspace packages stay `private` until then, so a stray `pnpm publish -r` cannot leak
+them (`map0-check` is deliberately not private — it is meant to be installed).
 
 The release is one command, run from a clean `main` (release-it + `@release-it/conventional-changelog`,
 configured in `packages/map0/.release-it.json`; `scripts/release.mjs` runs it in `packages/map0` —
@@ -310,9 +325,15 @@ parser for this stack, and it works well — but:
   library's default worker is base64-inlined and bundler-safe.
 - Its optional `ol` / `proj4` peers are only needed by `getOpenLayersTileGrid()`, which map0 never
   calls. They are aliased to `src/stubs/ol-stub.ts` so the build does not pull in OpenLayers.
-- CRS inheritance is not resolved for nested layers, so a child layer can appear to offer no
-  EPSG:3857 when its parent declares it. The add-layer dialog therefore warns instead of blocking,
-  and treats an empty CRS list as "probably fine".
+- **CRS lists are replaced, not inherited.** WMS says a child layer supports its own CRS plus every
+  ancestor's; ogc-client keeps only the child's own list when it declares one. GeoServer puts its
+  ~6000 CRS (EPSG:3857 among them) on the unnamed root and only the native CRS on each leaf, so
+  every leaf looked non-Mercator and the add-layer dialog once flagged all of Vienna's 375 layers.
+  `core/capabilities.ts` walks the parsed tree (`endpoint._layers`, which still holds the root)
+  and unions the lists top-down; an empty list everywhere stays "probably fine". Both consumers —
+  the dialog and the configurator — go through that module (2026-09-22).
+- **WMS bounding boxes come back as strings** (the attribute values as parsed); `asBbox` in the same
+  module coerces them, WFS/WMTS boxes are already numbers.
 - In Vite dev it belongs in `optimizeDeps.include`; otherwise the first dialog open triggers dep
   discovery and reloads the page mid-flow.
 
@@ -601,6 +622,8 @@ packages/core     the engine: map creation, basemap manager, source adapters, fe
                   → imports MapLibre; never imports the UI
 packages/ui       <map0-viewer>, panels, dialogs, popup rendering, focus trap, styles
                   → imports core lazily (see invariant 1)
+packages/check    map0-check, the service-checking CLI (Node): detection, live probes, report
+                  → bundles core's capabilities reading, request builders and parsers (§release)
 site/             landing page + /demos (one page per topic) + configs and data
 site/i18n/        German page catalogues + the build-time translation plugin (§5.1)
 site/seo/         what the build does for crawlers: canonical/OG/JSON-LD, static gallery and code

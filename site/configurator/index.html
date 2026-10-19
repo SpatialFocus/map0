@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="title">Configurator | map0</title>
+    <meta
+      name="description"
+      content="Build a map0 config visually: pick services, arrange layers, set up popups, legends and appearance, and copy the JSON into your CMS."
+      data-i18n-attrs="content:meta.description"
+    />
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/demos/demo.css" />
+    <script type="module" src="/configurator/configurator.ts"></script>
+  </head>
+  <body>
+    <main>
+      <div class="page-head">
+        <p class="eyebrow" data-i18n="eyebrow">No JSON by hand</p>
+        <h1 data-i18n="h1">Configurator</h1>
+        <p class="lede" data-i18n="lede">
+          Build a map without writing JSON: add layers from WMS, WMTS, WFS or OGC API services,
+          arrange them, set up popups, legends and appearance, and watch the map update. The result
+          is the same config the viewer reads — copy it into a CMS field or download it.
+        </p>
+      </div>
+
+      <div class="configurator" data-configurator></div>
+
+      <section class="doc">
+        <h2 data-i18n="how.h2">How it works</h2>
+        <ul class="checks">
+          <li data-i18n="how.li1">
+            The preview on the right is the real <code>&lt;map0-viewer&gt;</code> — what you see is
+            what the config produces.
+          </li>
+          <li data-i18n="how.li2">
+            <strong>Layers → From a service</strong> reads the capabilities of a WMS, WMTS, WFS or
+            OGC API and lets you tick the layers to add; feature info, extents and metadata links
+            come along.
+          </li>
+          <li data-i18n="how.li3">
+            <strong>JSON &amp; export</strong> holds the config, a copy-ready embed snippet and the
+            import: paste JSON, load a file or a URL. <code>?config=/configs/wms.map0.json</code> and
+            the <code>?c=</code> links of the demos work here like in the playground.
+          </li>
+          <li data-i18n="how.li4">
+            Your work is kept as a draft in this browser until you discard it. Nothing is sent
+            anywhere.
+          </li>
+        </ul>
+        <p data-i18n="how.p">
+          Every key the forms set is documented in the
+          <a href="https://github.com/SpatialFocus/map0/blob/main/docs/config-reference.md">config reference</a>;
+          the <a href="/playground/">playground</a> is the place for hand-editing the JSON with a
+          live validator.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

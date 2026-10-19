@@ -21,6 +21,7 @@ export function sitePages(): Set<string> {
   for (const f of readdirSync(r(".."))) if (f.endsWith(".html")) pages.add(f);
   for (const f of readdirSync(r("../demos"))) if (f.endsWith(".html")) pages.add(`demos/${f}`);
   for (const f of readdirSync(r("../playground"))) if (f.endsWith(".html")) pages.add(`playground/${f}`);
+  for (const f of readdirSync(r("../configurator"))) if (f.endsWith(".html")) pages.add(`configurator/${f}`);
   return pages;
 }
 

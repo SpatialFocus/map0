@@ -2,40 +2,23 @@ import { LitElement, html, nothing, type TemplateResult } from "lit";
 import { property, query, state } from "lit/decorators.js";
 import {
   declaredGeoJsonCrs,
-  isMercatorCrs,
   isWgs84Code,
   loadGeoFile,
-  loadOgcClient,
+  readWmsCapabilities,
+  readWmtsCapabilities,
+  wmsLayerFromCandidate,
+  wmtsLayerFromCandidate,
   type Map0Core,
-  type OgcClient,
+  type ServiceLayerCandidate,
   type Translate,
+  type WmsCapabilities,
+  type WmtsCapabilities,
 } from "@map0/core";
-import {
-  urlPolicyError,
-  type GeoJsonLayerDef,
-  type LayerDef,
-  type WmsLayerDef,
-  type WmtsLayerDef,
-} from "@map0/schema";
+import { urlPolicyError, type GeoJsonLayerDef, type LayerDef } from "@map0/schema";
 import { trapFocus } from "./focus-trap.js";
 
-interface Candidate {
-  name: string;
-  title: string;
-  abstract?: string;
-  queryable: boolean;
-  has3857: boolean;
-  minZoom?: number;
-  bounds?: [number, number, number, number];
-  metadataUrl?: string;
-  attribution?: string;
-  selected: boolean;
-}
-
-/** WebMercator zoom for a WMS ScaleDenominator (OGC pixel size, 256px tiles). */
-function scaleDenominatorToZoom(sd: number): number {
-  return Math.max(0, Math.ceil(Math.log2(559082264.028 / sd)));
-}
+/** a layer the service offers, plus whether the user ticked it */
+type Candidate = ServiceLayerCandidate & { selected: boolean };
 
 type ServiceKind = "wms" | "wmts" | "geojson";
 
@@ -65,7 +48,8 @@ export class Map0AddLayerDialog extends LitElement {
   @state() private candidates: Candidate[] = [];
   @state() private filter = "";
   @query("input[type=file]") private fileInput?: HTMLInputElement;
-  private infoFormat: string | undefined;
+  /** the parsed service the candidates came from — its URL and info format go into the layers */
+  private caps: WmsCapabilities | WmtsCapabilities | undefined;
   private loadSeq = 0;
 
   private releaseFocus?: () => void;
@@ -98,16 +82,13 @@ export class Map0AddLayerDialog extends LitElement {
     this.error = "";
     this.candidates = [];
     try {
-      const ogc = await loadOgcClient();
+      /* capabilities parsing (and the CRS inheritance it corrects) lives in the
+         core, shared with the configurator — see core/capabilities.ts */
+      const caps = service === "wms" ? await readWmsCapabilities(url) : await readWmtsCapabilities(url);
       if (seq !== this.loadSeq) return;
-      const found =
-        service === "wms"
-          ? await this.loadWms(ogc, url)
-          : { candidates: await this.loadWmts(ogc, url), infoFormat: undefined };
-      if (seq !== this.loadSeq) return;
-      this.candidates = found.candidates;
-      this.infoFormat = found.infoFormat;
-      if (found.candidates.length === 0) this.error = this.t("addLayer.empty");
+      this.caps = caps;
+      this.candidates = caps.candidates.map((c) => ({ ...c, selected: false }));
+      if (caps.candidates.length === 0) this.error = this.t("addLayer.empty");
     } catch (e) {
       if (seq !== this.loadSeq) return;
       this.error = `${this.t("addLayer.failed")}: ${e instanceof Error ? e.message : e}`;
@@ -116,107 +97,16 @@ export class Map0AddLayerDialog extends LitElement {
     }
   }
 
-  private async loadWms(
-    ogc: OgcClient,
-    url: string,
-  ): Promise<{ candidates: Candidate[]; infoFormat?: string }> {
-    const endpoint = new ogc.WmsEndpoint(url);
-    await endpoint.isReady();
-    const infoFormats = endpoint.getServiceInfo()?.infoFormats ?? [];
-    const infoFormat = infoFormats.includes("application/json")
-      ? "application/json"
-      : infoFormats.find((f: string) => f.includes("json") || f.includes("html"));
-
-    const found: Candidate[] = [];
-    const walk = (nodes: Array<{ name?: string; children?: unknown[] }>): void => {
-      for (const node of nodes ?? []) {
-        if (node.name && !node.children?.length) {
-          const full = endpoint.getLayerByName(node.name);
-          const crs = full.availableCrs ?? [];
-          const bbox = full.boundingBoxes?.["EPSG:4326"] ?? full.boundingBoxes?.["CRS:84"];
-          found.push({
-            name: node.name,
-            title: full.title ?? node.name,
-            abstract: full.abstract,
-            queryable: full.queryable,
-            /* unknown CRS list → benefit of the doubt (inheritance quirks) */
-            has3857: crs.length === 0 || crs.some((c: string) => isMercatorCrs(c)),
-            minZoom: full.maxScaleDenominator
-              ? scaleDenominatorToZoom(full.maxScaleDenominator)
-              : undefined,
-            ...(bbox ? { bounds: bbox as [number, number, number, number] } : {}),
-            metadataUrl: full.metadata?.[0]?.url,
-            attribution: full.attribution?.title,
-            selected: false,
-          });
-        }
-        walk((node.children ?? []) as never);
-      }
-    };
-    walk(endpoint.getLayers() as never);
-    return { candidates: found, infoFormat };
-  }
-
-  private async loadWmts(
-    ogc: OgcClient,
-    url: string,
-  ): Promise<Candidate[]> {
-    const endpoint = new ogc.WmtsEndpoint(url);
-    await endpoint.isReady();
-    return endpoint.getLayers().map((layer) => ({
-      name: layer.name,
-      title: layer.name,
-      queryable: false,
-      has3857: layer.matrixSets.some((m) => isMercatorCrs(m.crs)),
-      ...(layer.latLonBoundingBox
-        ? { bounds: layer.latLonBoundingBox as [number, number, number, number] }
-        : {}),
-      selected: false,
-    }));
-  }
-
-  /** base URL without WMS operation params (they are re-added per request) */
-  private cleanedUrl(): string {
-    try {
-      const u = new URL(this.url.trim());
-      for (const key of [...u.searchParams.keys()]) {
-        if (["service", "request", "version"].includes(key.toLowerCase())) {
-          u.searchParams.delete(key);
-        }
-      }
-      return u.toString().replace(/\?$/, "");
-    } catch {
-      return this.url.trim();
-    }
-  }
-
   private async add(): Promise<void> {
-    if (!this.core || this.loading) return;
+    const caps = this.caps;
+    if (!this.core || this.loading || !caps) return;
     this.loading = true;
     const seq = ++this.loadSeq;
     const core = this.core;
-    const service = this.service;
     this.error = "";
     try {
-      const url = this.service === "wms" ? this.cleanedUrl() : this.url.trim();
       for (const c of this.candidates.filter((c) => c.selected)) {
-        const common = {
-          title: c.title,
-          ...(c.minZoom !== undefined ? { minZoom: c.minZoom } : {}),
-          ...(c.bounds ? { bounds: c.bounds } : {}),
-          ...(c.metadataUrl ? { metadata: { url: c.metadataUrl } } : {}),
-          ...(c.attribution ? { attribution: c.attribution } : {}),
-        };
-        const def: LayerDef =
-          service === "wms"
-            ? ({
-                type: "wms",
-                url,
-                layers: c.name,
-                ...(c.queryable ? { info: { format: this.infoFormat ?? "application/json" } } : {}),
-                ...common,
-              } satisfies WmsLayerDef)
-            : ({ type: "wmts", url, layer: c.name, ...common } satisfies WmtsLayerDef);
+        const def: LayerDef = caps.kind === "wms" ? wmsLayerFromCandidate(caps, c) : wmtsLayerFromCandidate(caps, c);
         const id = await core.addLayer(def as Exclude<LayerDef, { type: "group" }>);
         if (seq !== this.loadSeq) return;
         if (!id) throw new Error(this.t("layers.error"));
@@ -233,7 +123,7 @@ export class Map0AddLayerDialog extends LitElement {
   private resetCandidates(): void {
     this.loadSeq++;
     this.candidates = [];
-    this.infoFormat = undefined;
+    this.caps = undefined;
     this.error = "";
     this.loading = false;
   }
