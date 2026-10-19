@@ -71,7 +71,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
-## @geomatico/maplibre-cog-protocol 0.9.2 — MIT
+## @geomatico/maplibre-cog-protocol 0.9.3 — MIT
 
 ```
 MIT License
@@ -1403,7 +1403,7 @@ Apache License
    limitations under the License.
 ```
 
-## wkt-parser 1.5.6 — MIT
+## wkt-parser 1.6.0 — MIT
 
 https://github.com/proj4js/wkt-parser#readme
 
