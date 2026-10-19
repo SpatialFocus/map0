@@ -604,6 +604,17 @@ why:
   reader sees and what `pnpm install --frozen-lockfile` installs agree.
 - **No preview deployment for Renovate PRs:** `deploy-site.yml` skips pull requests opened by
   `renovate[bot]` — every one of them would otherwise get an Azure Static Web Apps environment.
+- **PRs open only once the release age is reached** (`prCreation: "not-pending"`). On its own,
+  `minimumReleaseAge` only attaches a pending `renovate/stability-days` check to a PR that is
+  created immediately; pnpm 12's supply-chain policy (one day by default) then fails
+  `pnpm install --frozen-lockfile` in CI for the too-young entry, and the PR sits red until a
+  rebase. pnpm's own policy stays at its one-day default: raising it to Renovate's three days
+  was tried on 2026-10-19 and makes a fresh resolution fail outright
+  (`ERR_PNPM_NO_MATURE_MATCHING_VERSION`) whenever some dependent demands a version younger than
+  that, and `pnpm update` refuses to run non-interactively under it.
+- **Node itself only as a major.** Renovate reads `node-version: 24` and `engines.node: ">=24"`
+  as the dependency `node` and would pin both to the latest patch release every week; minor,
+  patch and pin updates of `node` are disabled, a new LTS major still arrives as a PR.
 
 `SECURITY.md` is the other half of low-effort maintenance: it sends reporters to GitHub's
 private vulnerability reporting instead of a public issue. That form exists only once

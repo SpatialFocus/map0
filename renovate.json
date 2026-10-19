@@ -6,6 +6,7 @@
   "schedule": ["before 6am on monday"],
   "rangeStrategy": "bump",
   "minimumReleaseAge": "3 days",
+  "prCreation": "not-pending",
   "osvVulnerabilityAlerts": true,
   "labels": ["dependencies"],
   "prConcurrentLimit": 5,
@@ -76,6 +77,12 @@
       "matchManagers": ["github-actions"],
       "groupName": "github actions",
       "groupSlug": "github-actions"
+    },
+    {
+      "description": "Node itself: new LTS majors only, no pinning of node-version or engines to a patch release",
+      "matchPackageNames": ["node"],
+      "matchUpdateTypes": ["minor", "patch", "pin"],
+      "enabled": false
     }
   ]
 }
