@@ -7,6 +7,7 @@ import {
   type NormalizedConfig,
   type NormalizedLayer,
 } from "@map0/schema";
+import { exclusiveRivals } from "@map0/schema/toc";
 import type { OverlayIds } from "./basemaps.js";
 import { createAdapter } from "./adapters/registry.js";
 import { ensurePmtilesProtocol } from "./adapters/vector.js";
@@ -68,11 +69,14 @@ export class LayerManager implements Map0Layers {
   private pendingIds = new Set<string>();
   private destroyed = false;
   private readonly onZoom: () => void;
+  /** layers that switch off when a layer of an exclusive group switches on (F2.3) */
+  private readonly rivals: Map<string, string[]>;
 
   constructor(
     private readonly map: MapLibreMap,
     private readonly cfg: NormalizedConfig,
   ) {
+    this.rivals = exclusiveRivals(cfg.toc);
     /* re-evaluate zoom-range hints; only refresh when a layer enters/leaves its range */
     let rangeSignature = "";
     this.onZoom = () => {
@@ -258,6 +262,15 @@ export class LayerManager implements Map0Layers {
     if (!adapter || !rt) return;
     rt.visible = visible;
     adapter.applyVisibility(visible);
+    /* an exclusive group keeps one option on — here, so the API and shared links obey it too */
+    if (visible) {
+      for (const other of this.rivals.get(id) ?? []) {
+        const ort = this.runtime.get(other);
+        if (!ort?.visible) continue;
+        ort.visible = false;
+        this.adapters.get(other)?.applyVisibility(false);
+      }
+    }
     this.refresh();
   }
 

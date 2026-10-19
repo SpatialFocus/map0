@@ -1,6 +1,6 @@
 # 07 — Roadmap & Status
 
-> Phases, not dates. Status as of 2026-08-19.
+> Phases, not dates. Status as of 2026-10-17.
 > Legend: ✅ done · 🟡 partial · ⬜ open. Requirement IDs refer to
 > [03-requirements.md](03-requirements.md).
 
@@ -9,13 +9,12 @@
 **M0 (walking skeleton) is complete. M1 (MVP) is close** — the map, the layer tree, feature info,
 legends, print, search, measuring and the whole configuration mechanism work against live Austrian
 SDI services, and the package is published (`map0-viewer` on npm, usable via the jsDelivr CDN).
-What is left is mostly polish: the accessibility pass, a filter box for large layer trees,
-visual regression on the demo pages and repo governance.
+What is left for v1.0 is the accessibility pass and repo governance.
 
 | Area | Status |
 |---|---|
 | Data sources | ✅ WMS, WMTS, WFS (paged GetFeature → geojson pipeline), OGC API Features (next-link paging → geojson pipeline), vector tiles/PMTiles, GeoJSON, GeoParquet (decoded in the browser, geojson styling pipeline), COG (RGB, single-band ramps, explicit classes, hillshade), style & raster basemaps |
-| Layer tree | ✅ groups, visibility, opacity, status, zoom hints, zoom-to-layer, metadata links, runtime add/remove (WMS/WMTS from capabilities, GeoJSON by URL, GeoJSON/KML/GPX files dropped on the map) · ⬜ drag reorder, filter box, radio groups |
+| Layer tree | ✅ groups with a toggle-all box, radio groups, filter box, visibility, opacity, status, zoom hints, zoom-to-layer, metadata links, runtime add/remove (WMS/WMTS from capabilities, GeoJSON by URL, GeoJSON/KML/GPX files dropped on the map) · ⬜ drag reorder |
 | Feature info | ✅ GetFeatureInfo + vector query, templates, field tables, multi-hit, hover, highlight, coordinates, bottom sheet on narrow viewers |
 | Legend | ✅ service, style-derived, hand-written; in print |
 | Print | ✅ PNG, PDF (real paper sizes), print view, DPI, configurable sheet · ⬜ server adapter for scale-true output |
@@ -23,7 +22,8 @@ visual regression on the demo pages and repo governance.
 | Search | ✅ type-ahead geocoding, pluggable providers, coordinate input |
 | Measuring | ✅ distance & area, geodesic, draggable vertices |
 | Configuration | ✅ one document, validation with JSON-path errors (unknown keys, unique ids, https policy), `extends`, theming, i18n + overrides, published JSON Schema with a generated key-by-key reference |
-| Performance | ✅ 31 KB page tier, engine and features load on demand, CI budget |
+| Performance | ✅ 35 KB page tier (budget 40 KB), engine and features load on demand, CI budget |
+| Testing | ✅ unit tests (Vitest), deterministic browser smoke test and visual regression in CI, live demo pass locally |
 | Accessibility | 🟡 keyboard operation, focus trap, reduced motion · ⬜ audit, DOM-mirrored results |
 | Packaging | ✅ MIT licence, name, npm package `map0-viewer` published (prebuilt bundle + third-party notices), CDN via jsDelivr, demo site at map0.net, TypeScript declarations in the tarball |
 
@@ -54,11 +54,11 @@ visual regression on the demo pages and repo governance.
 - ✅ **i18n** de/en + per-locale overrides (F11.1–F11.3)
 - ✅ **Config inheritance** via `extends` (C6)
 - ✅ **Error toasts** and TOC zoom-range hints (F2.5)
-- ✅ **Code splitting + lazy loading** — 31 KB page tier, MapLibre deferred until the map is in view, size budget in CI (N1)
+- ✅ **Code splitting + lazy loading** — 35 KB page tier, MapLibre deferred until the map is in view, size budget in CI (N1)
 - ✅ **Dialog focus trap + Escape** (N4, partial)
 - ✅ **Search** — type-ahead geocoding with Photon/Nominatim/custom providers, coordinate input (F8.1, F8.2)
 - ✅ **Measure** — distance and area on the sphere, draggable vertices (F9.1)
-- ✅ **Demo site** — 21 single-topic demos with docs and live configs, including an online
+- ✅ **Demo site** — 25 single-topic demos with docs and live configs, including an online
   config validator
 
 ### Remaining for v1.0
@@ -78,14 +78,36 @@ visual regression on the demo pages and repo governance.
   viewers behave; drag or tap the handle between 45 % and 90 %, Escape, the close button or a tap
   beside the features slide it out and return focus to the map; the anchored popup above 640 px is
   unchanged, no config key
-- ⬜ **TOC filter box** for configs with many layers (F2.7)
+- ✅ **TOC filter box** (F2.7, 2026-10-17) — from 10 layers on (`controls.layerSwitcher.filter`:
+  `"auto"`, or `true`/`false`); matches layer and group titles without case, accents or ß, a
+  group title hit keeps the whole group, hits are highlighted, collapsed groups open while it is
+  active, Escape clears it. Filtered, a group's box switches only the layers on show
+- ✅ **Group toggle-all and radio groups** (F2.3, 2026-10-17) — every group header has a box that
+  switches all its layers (a dash while some are on); `exclusive: true` makes a radio group, one
+  child visible at a time, a child group counting as one option. Enforced in the core, so
+  `setVisibility()` and share links obey it; normalization keeps the first visible option. A long
+  tree also stops running under a bottom-right legend now. Demo: `/demos/layer-tree`
+- ✅ **Panel docking** (2026-10-17) — `controls.layerSwitcher.position` takes effect (it was validated
+  and documented, but the panel sat top-right regardless). The layer panel and the legend dock in one
+  column per edge, top corner first: panels on one edge share its height, the left column starts
+  right of the map controls and below the search, and below 688px every panel shares the right
+  column (full width at 480px and less). The measure bar sits beside the columns where the width
+  allows, otherwise they end above it while measuring. The smoke test checks every pair of corners
+  at three widths for overlaps
+- ✅ **Lit's `css` literal minified at build time** (2026-10-17) — comments and indentation in
+  `styles.ts` had shipped verbatim; `scripts/minify-css-literals.mjs` strips them, the page tier
+  dropped from 38.3 to 35.4 KB
 - ✅ **npm package** `map0-viewer` published (prebuilt bundle, `pnpm build:npm`), CDN via
   jsDelivr, install docs in the package README · ✅ **TypeScript types** (N11, 2026-09-06) — `dist/map0.d.ts`,
   `dist/map0-ssr.d.ts` and the shared `dist/map0-types.d.ts` (dts-bundle-generator over `public.ts`,
   workspace packages inlined; `@types/geojson` is a dependency, `maplibre-gl` an optional peer for
   `api.map`); `e2e/verify-types.mjs` type-checks a strict consumer against the packed tarball
 - ✅ **License (MIT) and name (map0)** decided (O-01, O-02) · ⬜ repo governance (O-07)
-- ⬜ **Visual regression** on the demo pages (N9)
+- ✅ **Visual regression** (N9, 2026-10-17) — `pnpm visual` in CI: ten UI states (layer tree, filter,
+  dark/German theme, legend, popup, measuring, both dialogs, phone bottom sheet, error panel) rebuilt
+  from the demos with fixtures, network-free and with a webfont, compared with committed screenshots
+  per platform (`e2e/visual/<platform>/`). The demo pages themselves draw live SDI tiles and
+  cannot be compared pixel by pixel. `pnpm visual:linux` writes CI's baselines in Docker
 - ✅ **Deterministic browser smoke test in CI** — element lifecycle, z-order and the built bundle,
   network-free (`pnpm smoke`); see [10-review-fixes.md](10-review-fixes.md)
 

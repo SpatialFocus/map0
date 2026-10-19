@@ -21,6 +21,14 @@ jobs:
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm smoke # component lifecycle + z-order in a real browser, on the BUILT bundle
+      - run: pnpm visual # the UI's states against the committed e2e/visual/linux screenshots (N9)
+      - name: Upload visual diffs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: e2e/visual/.out/
+          if-no-files-found: ignore
       - run: pnpm size # fails when the eager bundle outgrows its budget (N1)
       - run: pnpm build:site # the deployed site — a broken site build must fail here, not on deploy
       # The live-service E2E pass (e2e/verify-demos.mjs) stays local/manual: it

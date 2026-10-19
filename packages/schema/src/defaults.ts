@@ -12,6 +12,7 @@ import type {
   Map0Config,
   MapConfig,
 } from "./types.js";
+import { tocLeafIds } from "./toc.js";
 
 export interface NormalizedBasemap extends BasemapDef {
   id: string;
@@ -27,17 +28,9 @@ export type NormalizedLayer = Exclude<LayerDef, GroupLayerDef> & {
   groupPath: string[];
 };
 
-export interface NormalizedGroup {
-  type: "group";
-  title: string;
-  collapsed: boolean;
-  /** ids in tree order (leaves only) */
-  children: TocNode[];
-}
-
 export type TocNode =
   | { kind: "layer"; layerId: string }
-  | { kind: "group"; title: string; collapsed: boolean; children: TocNode[] };
+  | { kind: "group"; title: string; collapsed: boolean; exclusive: boolean; children: TocNode[] };
 
 export interface NormalizedControls {
   navigation: boolean;
@@ -47,7 +40,9 @@ export interface NormalizedControls {
   globe: boolean;
   home: boolean;
   attribution: false | { compact: boolean | "auto" };
-  layerSwitcher: false | { position: string; open: boolean | "auto"; title?: string; allowAdd: boolean };
+  layerSwitcher:
+    | false
+    | { position: string; open: boolean | "auto"; title?: string; allowAdd: boolean; filter: boolean | "auto" };
   basemapSwitcher: false | { position: string };
   legend: false | { position: string; open: boolean };
   print: boolean;
@@ -171,6 +166,8 @@ export function normalizeConfig(cfg: Map0Config): NormalizedConfig {
             title: typeof c.layerSwitcher === "object" ? c.layerSwitcher.title : undefined,
             allowAdd:
               typeof c.layerSwitcher === "object" ? (c.layerSwitcher.allowAdd ?? true) : true,
+            filter:
+              typeof c.layerSwitcher === "object" ? (c.layerSwitcher.filter ?? "auto") : "auto",
           },
     basemapSwitcher:
       c.basemapSwitcher === false || basemaps.length < 2
@@ -288,7 +285,18 @@ function normalizeLayerList(
         out,
         usedIds,
       );
-      nodes.push({ kind: "group", title, collapsed: def.collapsed ?? false, children });
+      const exclusive = def.exclusive ?? false;
+      if (exclusive) {
+        /* one option on: the first child with a visible layer keeps it, the rest start hidden */
+        const byId = new Map(out.map((l) => [l.id, l]));
+        let lit = false;
+        for (const child of children) {
+          const leaves = tocLeafIds(child).map((id) => byId.get(id)!);
+          if (lit) for (const leaf of leaves) leaf.visible = false;
+          else lit = leaves.some((leaf) => leaf.visible);
+        }
+      }
+      nodes.push({ kind: "group", title, collapsed: def.collapsed ?? false, exclusive, children });
     } else {
       const title = def.title ?? def.id ?? `Layer ${out.length + 1}`;
       const id = def.id ?? uniqueId(slugify(title), usedIds);

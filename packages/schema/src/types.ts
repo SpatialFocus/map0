@@ -120,6 +120,11 @@ export interface GroupLayerDef {
   type: "group";
   title?: string;
   collapsed?: boolean;
+  /**
+   * radio group: one child visible at a time (F2.3). A child group counts as
+   * one option; the first child configured visible starts on, the others hidden.
+   */
+  exclusive?: boolean;
   children: LayerDef[];
 }
 
@@ -365,6 +370,8 @@ export interface ControlsConfig {
         title?: string;
         /** show the "add layer by URL" dialog (F3.1); default true */
         allowAdd?: boolean;
+        /** filter box above the tree (F2.7); "auto" (default): from 10 layers on */
+        filter?: boolean | "auto";
       };
   basemapSwitcher?: boolean | { position?: ControlPosition };
   legend?: boolean | { position?: ControlPosition; open?: boolean };

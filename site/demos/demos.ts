@@ -79,6 +79,15 @@ export const DEMOS: Demo[] = [
     icon: "🛰️",
   },
   {
+    id: "layer-tree",
+    title: "Layer tree",
+    titleDe: "Layerbaum",
+    blurb: "Groups that switch as a whole, radio groups and a filter box for configs with many layers.",
+    blurbDe: "Gruppen, die sich als Ganzes schalten, Radiogruppen und ein Filterfeld für Konfigurationen mit vielen Layern.",
+    group: "Map features",
+    icon: "🗂️",
+  },
+  {
     id: "popups",
     title: "Popups & hover",
     titleDe: "Popups & Hover",

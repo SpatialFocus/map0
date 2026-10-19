@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 export default defineConfig({
   resolve: {
     alias: {
+      /* the subpath first: a string alias also matches "<key>/…" */
+      "@map0/schema/toc": fileURLToPath(new URL("./packages/schema/src/toc.ts", import.meta.url)),
       "@map0/schema": fileURLToPath(new URL("./packages/schema/src/index.ts", import.meta.url)),
       "@map0/core": fileURLToPath(new URL("./packages/core/src/index.ts", import.meta.url)),
     },

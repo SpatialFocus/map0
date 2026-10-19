@@ -41,6 +41,7 @@ export interface Map0Layers {
   addLayer(def: Exclude<LayerDef, GroupLayerDef>): Promise<string | null>;
   /** remove a runtime-added layer; configured layers stay */
   removeLayer(id: string): boolean;
+  /** switching a layer of an exclusive group on switches the group's other options off */
   setVisibility(id: string, visible: boolean): void;
   /** 0..1 */
   setOpacity(id: string, opacity: number): void;

@@ -169,7 +169,7 @@ vector tiles, PMTiles, GeoJSON (with clustering), GeoParquet (decoded in the bro
 GeoJSON; both support reprojection on load through `crs`), and COG
 (Cloud Optimized GeoTIFF) as RGB imagery, single-band color ramps, explicit value/range classes, or
 DEM hillshade. Plus a
-layer tree with groups, legends (`"auto"` derives them from the service), feature info with HTML
+layer tree with groups that switch as a whole, radio groups and a filter box, legends (`"auto"` derives them from the service), feature info with HTML
 templates, hover, search, measuring, coordinate readout in projected CRS, print/PDF export,
 layers added by users (WMS and WMTS from their capabilities, GeoJSON by URL, GeoJSON/KML/GPX files
 dropped onto the map), permalinks, `extends` for shared base configs, CSS-variable theming, and per-language label

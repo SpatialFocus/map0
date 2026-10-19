@@ -177,6 +177,7 @@ a group node in the layer tree
 | `type` | `"group"` | **required** | node type — a group of layers |
 | `title` | `string` | — | group label in the layer tree |
 | `collapsed` | `boolean` | `false` | start collapsed |
+| `exclusive` | `boolean` | `false` | radio group: one child visible at a time — a child group counts as one option; the first child configured visible starts on, the others hidden |
 | `children` | array of [layer](#layer) | **required** | nested groups and layers |
 
 ## `wms` layer
@@ -536,6 +537,7 @@ options for the layer tree panel
 | `open` | `true` · `false` · `"auto"` | `"auto"` | "auto": open on desktop, collapsed on mobile |
 | `title` | `string` | — | panel heading override |
 | `allowAdd` | `boolean` | `true` | show the add-layer dialog (paste a WMS/WMTS URL) |
+| `filter` | `true` · `false` · `"auto"` | `"auto"` | filter box above the layer tree — "auto": shown from 10 layers on |
 
 ## `basemapSwitcher` options
 

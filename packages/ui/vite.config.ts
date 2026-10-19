@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import { fileURLToPath } from "node:url";
 import { optionalPeerStubs } from "../../scripts/stub-aliases.mjs";
 import { copyMaplibreDist, maplibreExternal } from "../../scripts/maplibre-dist.mjs";
+import { minifyCssLiterals } from "../../scripts/minify-css-literals.mjs";
 
 /**
  * Distribution: `map0.js` is the entry, everything a first view does not need
@@ -12,7 +13,7 @@ import { copyMaplibreDist, maplibreExternal } from "../../scripts/maplibre-dist.
  * for why, and for the silent failure that follows from getting it wrong.
  */
 export default defineConfig({
-  plugins: [copyMaplibreDist(new URL("./dist", import.meta.url))],
+  plugins: [minifyCssLiterals(), copyMaplibreDist(new URL("./dist", import.meta.url))],
   resolve: {
     /* shared with the site build — see scripts/stub-aliases.mjs */
     alias: { ...optionalPeerStubs },

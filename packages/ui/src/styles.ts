@@ -68,11 +68,62 @@ export const componentStyles = css`
     line-height: 1.45;
   }
 
-  .toc {
+  /* The layer panel and the legend dock to the left or right edge: one column
+     per edge, the top corner's panels first, the bottom corner's last. Two
+     panels on one edge share its height instead of covering each other. */
+  .dock {
+    position: absolute;
+    z-index: 5;
     top: 10px;
+    bottom: 32px; /* clear of the attribution */
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none; /* between the corners it is still map */
+  }
+  .dock[data-side="right"] {
     right: 10px;
+    align-items: flex-end;
+    max-width: calc(100% - 20px);
+  }
+  /* right of the map controls' column, below the search, above the scale bar
+     and the basemap switcher */
+  .dock[data-side="left"] {
+    left: 56px;
+    bottom: 34px;
+    align-items: flex-start;
+    max-width: calc(100% - 66px);
+  }
+  .stage[data-search] .dock[data-side="left"] {
+    top: 56px;
+  }
+  .stage:has(.basemaps) .dock[data-side="left"] {
+    bottom: 84px;
+  }
+  /* the bottom corner's panels sit in the dock itself, not in a wrapper —
+     the legend's max-height: 45% has to mean 45% of the edge. The first of
+     them takes the free space above it. */
+  .dock > :not([data-end]) + [data-end],
+  .dock > [data-end]:first-child {
+    margin-top: auto;
+  }
+  /* an open panel gives way by scrolling its body; a header never shrinks,
+     and a closed panel is nothing but its header */
+  .dock .panel {
+    position: relative;
+    flex: 0 1 auto;
+    min-height: 0;
+    max-width: 100%;
+    pointer-events: auto;
+  }
+  .dock .panel:not([data-open]),
+  .dock .panel-header {
+    flex-shrink: 0;
+  }
+
+  .toc {
     width: 272px;
-    max-height: calc(100% - 20px);
+    max-height: 100%;
     display: flex;
     flex-direction: column;
   }
@@ -114,13 +165,25 @@ export const componentStyles = css`
   }
 
   .group-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 4px 4px;
+  }
+  .group-header input {
+    accent-color: var(--map0-primary);
+    width: 15px;
+    height: 15px;
+    flex: none;
+    margin: 0;
+  }
+  .group-toggle {
     all: unset;
     display: flex;
     align-items: center;
     gap: 6px;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 8px 4px 4px;
+    flex: 1;
+    min-width: 0;
     font-weight: 600;
     font-size: 12px;
     color: var(--map0-muted);
@@ -128,18 +191,28 @@ export const componentStyles = css`
     letter-spacing: 0.04em;
     cursor: pointer;
   }
-  .group-header:focus-visible {
+  .group-toggle > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .group-toggle:focus-visible {
     outline: 2px solid var(--map0-primary);
     border-radius: 4px;
   }
+  /* filtered, every group is open — the chevron has nothing to do */
+  .group-toggle:disabled {
+    cursor: default;
+  }
   .group-header .chevron {
+    flex: none;
     margin-left: auto;
     transition: transform 0.18s ease;
   }
-  .group[data-collapsed] .group-header .chevron {
+  .group[data-collapsed] > .group-header .chevron {
     transform: rotate(-90deg);
   }
-  .group[data-collapsed] .group-body {
+  .group[data-collapsed] > .group-body {
     display: none;
   }
   .group .group-body {
@@ -171,7 +244,8 @@ export const componentStyles = css`
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .layer-main input[type="checkbox"] {
+  .layer-main input[type="checkbox"],
+  .layer-main input[type="radio"] {
     accent-color: var(--map0-primary);
     width: 15px;
     height: 15px;
@@ -248,6 +322,45 @@ export const componentStyles = css`
     color: var(--map0-muted);
   }
 
+  /* filter box (F2.7) — stays in view while the tree scrolls under it */
+  .toc-filter {
+    position: sticky;
+    top: -2px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 -8px;
+    padding: 8px 12px 6px;
+    background: var(--map0-bg);
+    color: var(--map0-muted);
+  }
+  .toc-filter svg {
+    flex: none;
+  }
+  .toc-filter input {
+    appearance: none;
+    flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 5px 8px;
+    border: 1px solid var(--map0-border);
+    border-radius: var(--map0-radius-sm);
+    background: transparent;
+    color: var(--map0-fg);
+    font: inherit;
+  }
+  .toc-filter input:focus-visible {
+    outline: 2px solid var(--map0-primary);
+    outline-offset: -1px;
+  }
+  .toc mark {
+    background: color-mix(in srgb, var(--map0-primary) 22%, transparent);
+    color: inherit;
+    border-radius: 2px;
+  }
+
   .layer-row[data-out-of-range] .layer-title {
     color: var(--map0-muted);
   }
@@ -261,14 +374,52 @@ export const componentStyles = css`
   /* ------------------------------- measure ------------------------------ */
 
   .measure-bar {
-    left: 50%;
-    transform: translateX(-50%);
+    left: 10px;
+    right: 10px;
+    margin-inline: auto;
+    width: fit-content;
     bottom: 34px;
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 7px 8px 7px 10px;
-    max-width: calc(100% - 20px);
+  }
+  /* above the basemap switcher, not across it */
+  .stage:has(.basemaps) .measure-bar {
+    bottom: 84px;
+  }
+  /* The dock columns run from top to bottom, and an open panel can fill one.
+     Where the width allows, the bar sits beside them (a column is at most
+     300px wide, the left one starts at 56px); where it does not, the columns
+     end above the bar while it is out (bar: ~44px tall at bottom 34/84px). */
+  @container map0 (min-width: 720px) {
+    .stage[data-dock~="right"] .measure-bar {
+      right: 320px;
+    }
+    .stage[data-dock~="left"] .measure-bar {
+      left: 366px;
+    }
+  }
+  @container map0 (min-width: 720px) and (max-width: 1099px) {
+    .stage[data-dock~="left"][data-dock~="right"] .measure-bar {
+      left: 10px;
+      right: 10px;
+    }
+    .stage[data-dock~="left"][data-dock~="right"][data-measuring] .dock[data-side] {
+      bottom: 84px;
+    }
+    .stage[data-dock~="left"][data-dock~="right"][data-measuring]:has(.basemaps) .dock[data-side] {
+      bottom: 134px;
+    }
+  }
+  /* [data-side] outranks the compact column rules further down */
+  @container map0 (max-width: 719px) {
+    .stage[data-measuring] .dock[data-side] {
+      bottom: 84px;
+    }
+    .stage[data-measuring]:has(.basemaps) .dock[data-side] {
+      bottom: 134px;
+    }
   }
   .measure-modes {
     display: inline-flex;
@@ -443,26 +594,9 @@ export const componentStyles = css`
     /* wide enough to show a typical GetLegendGraphic image (~290px logical
        width at our standard 20px icons) near its natural size */
     width: 300px;
-    max-width: calc(100% - 20px);
-    max-height: 45%;
+    max-height: 48%; /* of the dock column: about 45% of the viewer, as before docking */
     display: flex;
     flex-direction: column;
-  }
-  .legend[data-pos="bottom-right"] {
-    right: 10px;
-    bottom: 32px;
-  }
-  .legend[data-pos="bottom-left"] {
-    left: 10px;
-    bottom: 76px;
-  }
-  .legend[data-pos="top-right"] {
-    right: 10px;
-    top: 10px;
-  }
-  .legend[data-pos="top-left"] {
-    left: 56px;
-    top: 10px;
   }
   .legend-layer {
     padding: 8px 4px 2px;
@@ -1197,22 +1331,23 @@ export const componentStyles = css`
 
   /* ------------------------- responsive (container) --------------------- */
 
-  /* The top row is shared: map controls (10–48px), the search, and the layer
-     panel on the right — all three fit from 668px up (56 + 320 + 10 + 272 + 10).
-     Below that the search collapses to its icon and expands over the map on
-     focus, so the panel keeps the row and the search keeps the corner. With no
-     panel to share with, the search stays a field at every width. */
-  @container map0 (max-width: 667px) {
-    .stage[data-toc] .search {
+  /* The top row is shared: map controls (10–48px), the search, and a panel
+     docked top-right — all three fit from 696px up (56 + 320 + 10 + 300 + 10;
+     the legend is the wider panel). Below that the search collapses to its
+     icon and expands over the map on focus, so the panel keeps the row and the
+     search keeps the corner. With no panel to share with, the search stays a
+     field at every width. */
+  @container map0 (max-width: 695px) {
+    .stage[data-top-right] .search {
       width: 38px;
     }
-    .stage[data-toc] .search[data-expanded] {
+    .stage[data-top-right] .search[data-expanded] {
       width: calc(100% - 66px);
     }
-    .stage[data-toc] .search input {
+    .stage[data-top-right] .search input {
       opacity: 0;
     }
-    .stage[data-toc] .search[data-expanded] input {
+    .stage[data-top-right] .search[data-expanded] input {
       opacity: 1;
     }
   }
@@ -1222,53 +1357,52 @@ export const componentStyles = css`
     }
   }
 
+  /* Below 688px the viewer docks every panel in the right-hand column (top
+     corners first): two columns and the search field no longer fit side by
+     side. With nothing docked at the top, the search stays a field and keeps
+     the row, so the column starts below it. */
+  @container map0 (max-width: 687px) {
+    .stage[data-search]:not([data-top-right]) .dock {
+      top: 56px;
+    }
+  }
+
   @container map0 (max-width: 480px) {
-    /* not the full width: the map controls keep their top-left column (10px +
-       ~38px buttons + gap), the panel takes the rest of the row */
-    .toc {
+    /* the one column goes full width, minus the map controls' top-left column
+       (10px + ~38px buttons + gap) */
+    .dock[data-side] {
       left: 56px;
       right: 10px;
-      width: auto;
-      max-height: 55%;
+      max-width: none;
+      align-items: stretch;
     }
     /* ...but the collapsed search still holds the corner, so a panel on that
        row starts after it (56px + 38px icon + gap) instead of underneath it */
-    .stage[data-search] .toc {
+    .stage[data-search][data-top-right] .dock {
       left: 104px;
     }
-    .legend {
-      left: 10px;
-      right: 10px;
-      width: auto;
-      max-height: 40%;
-    }
-    /* full-width down here, so a bottom legend must clear the basemap bar
-       (bottom: 34px + 42px bar height + a gap) instead of covering it */
-    .stage:has(.basemaps) .legend[data-pos="bottom-right"],
-    .stage:has(.basemaps) .legend[data-pos="bottom-left"] {
+    /* full-width down here, so the bottom of a column must clear the basemap
+       bar (bottom: 34px + 42px bar height + a gap) instead of covering it */
+    .stage:has(.basemaps) .dock[data-side] {
       bottom: 84px;
+    }
+    /* of the dock column — about 55% and 40% of the viewer */
+    .toc {
+      width: auto;
+      max-height: 64%;
+    }
+    .legend {
+      width: auto;
+      max-height: 46%;
     }
     /* Closed, the panels shrink to their icon — like the search does. The
        full-width stretch above is for the OPEN state; a closed header with
        "Map layers" / "Legend" written out covers half the map for nothing. */
-    .toc:not([data-open]),
-    .stage[data-search] .toc:not([data-open]) {
-      left: auto;
-      right: 10px;
-      width: auto;
+    .dock .panel:not([data-open]) {
+      align-self: flex-end;
     }
-    .legend:not([data-open]) {
-      width: auto;
-      left: auto;
-      right: 10px;
-    }
-    .legend:not([data-open])[data-pos="bottom-left"] {
-      left: 10px;
-      right: auto;
-    }
-    .legend:not([data-open])[data-pos="top-left"] {
-      left: 56px;
-      right: auto;
+    .dock .panel[data-left]:not([data-open]) {
+      align-self: flex-start;
     }
     .toc:not([data-open]) .panel-header > span,
     .toc:not([data-open]) .panel-header .chevron,

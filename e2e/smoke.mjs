@@ -857,6 +857,198 @@ try {
   check("no console errors while displaying ordinary counts and clusters", clusterNoise.length === 0, clusterNoise.join(" | "));
   await clusterPage.close();
 
+  /* ------------------------------------------- layer tree (F2.3, F2.7) */
+  const tocNoise = [];
+  const tocPage = await context.newPage();
+  watchConsole(tocPage, tocNoise);
+  await tocPage.goto(`${BASE}/smoke.html`, { waitUntil: "domcontentloaded" });
+  await tocPage.waitForFunction(() => !!document.querySelector("map0-viewer")?.api);
+  await tocPage.evaluate(() => {
+    const layer = (id, title) => ({ id, title, type: "geojson", data: { type: "FeatureCollection", features: [] } });
+    document.querySelector("map0-viewer").config = {
+      version: 1,
+      map: { center: [0, 0], zoom: 3 },
+      i18n: { locale: "en" },
+      basemaps: [{ type: "empty", title: "None" }],
+      permalink: false,
+      controls: { layerSwitcher: { open: true, filter: true } },
+      layers: [
+        { type: "group", title: "Imagery", exclusive: true, children: [layer("ortho", "Orthophoto"), layer("relief", "Relief"), layer("hist", "Historic map")] },
+        { type: "group", title: "Environment", children: [layer("parks", "Parks"), layer("noise", "Straßenlärm")] },
+      ],
+    };
+  });
+  const tocReady = await tocPage
+    .waitForFunction(() => document.querySelector("map0-viewer")?.api?.layers.state.value.length === 5, undefined, { timeout: 30_000 })
+    .then(() => true)
+    .catch(() => false);
+  check("a viewer with groups and a radio group starts", tocReady);
+  if (tocReady) {
+    const on = () =>
+      tocPage.evaluate(() =>
+        document.querySelector("map0-viewer").api.layers.state.value.filter((l) => l.visible).map((l) => l.id).join(","),
+      );
+    const settled = (want) =>
+      tocPage
+        .waitForFunction(
+          (want) =>
+            document.querySelector("map0-viewer").api.layers.state.value.filter((l) => l.visible).map((l) => l.id).join(",") === want,
+          want,
+          { timeout: 5_000 },
+        )
+        .then(() => true)
+        .catch(() => false);
+    const radios = tocPage.locator('map0-viewer [role="radiogroup"] input[type="radio"]');
+    check(
+      "an exclusive group shows radios, its first layer on (F2.3)",
+      (await radios.count()) === 3 && (await on()) === "ortho,parks,noise",
+      await on(),
+    );
+    await tocPage.locator("map0-viewer label", { hasText: "Relief" }).click();
+    check("picking another radio switches the first one off", await settled("relief,parks,noise"), await on());
+    await radios.nth(1).press("ArrowDown");
+    check("arrow keys move the choice like any radio group", await settled("hist,parks,noise"), await on());
+
+    const groupBox = (title) => tocPage.locator(`map0-viewer .group-header input[aria-label$=": ${title}"]`);
+    await groupBox("Environment").click();
+    check("the group box switches every layer of the group off", await settled("hist"), await on());
+    await groupBox("Environment").click();
+    check("and on again", await settled("hist,parks,noise"), await on());
+    await groupBox("Imagery").click();
+    check("a radio group's box switches the group off entirely", await settled("parks,noise"), await on());
+    await tocPage.evaluate(() => document.querySelector("map0-viewer").api.layers.setVisibility("relief", true));
+    check(
+      "the API obeys the radio group too, and the box shows it",
+      (await settled("relief,parks,noise")) && (await groupBox("Imagery").isChecked()),
+      await on(),
+    );
+
+    const filter = tocPage.locator("map0-viewer .toc-filter input");
+    const rows = tocPage.locator("map0-viewer .layer-row");
+    await filter.fill("strassen");
+    const hit = await tocPage.locator("map0-viewer .layer-row mark").allTextContents();
+    check(
+      "the filter keeps the matching layer, ignoring case and ß (F2.7)",
+      (await rows.count()) === 1 && hit.join("|") === "Straßen",
+      `${await rows.count()} rows, marks ${hit.join("|")}`,
+    );
+    await filter.fill("par");
+    await groupBox("Environment").click();
+    check(
+      "filtered, the group box switches only the layers on show",
+      (await settled("relief,noise")) && (await rows.count()) === 1,
+      await on(),
+    );
+    await groupBox("Environment").click();
+    await settled("relief,parks,noise");
+    await filter.fill("imagery");
+    check("a group title match keeps the whole group", (await rows.count()) === 3, `${await rows.count()} rows`);
+    await filter.fill("nothing like it");
+    const empty = await tocPage.locator('map0-viewer .toc-empty[role="status"]').textContent().catch(() => null);
+    check("no match says so", (await rows.count()) === 0 && empty === "No layer matches the filter", String(empty));
+    await filter.press("Escape");
+    check(
+      "Escape clears the filter",
+      (await filter.inputValue()) === "" && (await rows.count()) === 5,
+      `"${await filter.inputValue()}", ${await rows.count()} rows`,
+    );
+  }
+  check("no console errors in the layer tree", tocNoise.length === 0, tocNoise.join(" | "));
+  await tocPage.close();
+
+  /* ------------------------------------- panel layout, every corner pair */
+  /* The layer panel and the legend dock to the corner their `position`
+     names, the measure bar keeps clear of both. Every pair of corners, at
+     four widths: nothing may cover anything else. */
+  const layoutNoise = [];
+  const layoutPage = await context.newPage();
+  watchConsole(layoutPage, layoutNoise);
+  await layoutPage.goto(`${BASE}/smoke.html`, { waitUntil: "domcontentloaded" });
+  await layoutPage.waitForFunction(() => !!document.querySelector("map0-viewer")?.api);
+  const CORNERS = ["top-left", "top-right", "bottom-left", "bottom-right"];
+  /* twelve layers with legend entries — enough to fill both panels */
+  const layoutLayers = Array.from({ length: 12 }, (_, i) => ({
+    ...square("#888888", `l${i}`, `Layer ${i + 1}`),
+    legend: [{ label: `Layer ${i + 1}`, color: "#888888" }],
+  }));
+  /** what covers what — panels, measure bar, map chrome — for one pair of corners */
+  const layoutOverlaps = async (toc, legend, open) => {
+    await layoutPage.evaluate((config) => void (document.querySelector("map0-viewer").config = config), {
+      version: 1,
+      i18n: { locale: "en" },
+      map: { center: [10, 2], zoom: 4 },
+      basemaps: [{ type: "empty", id: "a", title: "Plain" }, { type: "empty", id: "b", title: "Blank" }],
+      search: { provider: "photon" },
+      permalink: false,
+      controls: { geolocate: false, fullscreen: false, layerSwitcher: { position: toc, open }, legend: { position: legend, open } },
+      layers: layoutLayers,
+    });
+    /* the old viewer stays in the DOM until the new config has mounted */
+    await layoutPage.waitForFunction(
+      ({ toc, legend }) => {
+        const el = document.querySelector("map0-viewer");
+        const c = el.api?.config.controls;
+        return (
+          c?.layerSwitcher && c.layerSwitcher.position === toc && c.legend && c.legend.position === legend &&
+          el.api.layers.state.value.length === 12 &&
+          !!el.shadowRoot.querySelector(".toc") && !!el.shadowRoot.querySelector(".legend")
+        );
+      },
+      { toc, legend },
+      { timeout: 20_000 },
+    );
+    await layoutPage.evaluate(() =>
+      document.querySelector("map0-viewer").shadowRoot.querySelector('button[aria-label="Measure"]').click(),
+    );
+    await layoutPage.waitForFunction(
+      () => !!document.querySelector("map0-viewer").shadowRoot.querySelector(".measure-bar"),
+      undefined,
+      { timeout: 20_000 },
+    );
+    return layoutPage.evaluate(async () => {
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const sr = document.querySelector("map0-viewer").shadowRoot;
+      const box = (sel) => sr.querySelector(sel)?.getBoundingClientRect() ?? null;
+      const hit = (a, b) => a && b && a.width > 0 && b.width > 0 &&
+        a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5;
+      const r = {
+        toc: box(".toc"), legend: box(".legend"), bar: box(".measure-bar"), search: box(".search"),
+        basemaps: box(".basemaps"), controls: box(".maplibregl-ctrl-top-left"), scale: box(".maplibregl-ctrl-scale"),
+        attribution: box(".maplibregl-ctrl-attrib"),
+      };
+      const bad = [];
+      for (const [a, against] of [
+        ["toc", ["legend", "bar", "search", "basemaps", "controls", "scale", "attribution"]],
+        ["legend", ["bar", "search", "basemaps", "controls", "scale", "attribution"]],
+        ["bar", ["basemaps", "scale", "attribution"]],
+      ]) {
+        if (!r[a]) bad.push(`no ${a}`);
+        for (const b of against) if (hit(r[a], r[b])) bad.push(`${a}×${b}`);
+      }
+      return bad;
+    });
+  };
+  /* 680px: the search field and a 300px legend docked top-right once overlapped there */
+  for (const [width, height, opens] of [[900, 560, [true]], [680, 520, [true]], [600, 500, [true]], [375, 667, [true, false]]]) {
+    await layoutPage.evaluate(([w, h]) => {
+      const host = document.querySelector("#host");
+      host.style.width = `${w}px`;
+      host.style.height = `${h}px`;
+    }, [width, height]);
+    const failures = [];
+    for (const open of opens) for (const toc of CORNERS) for (const legend of CORNERS) {
+      const bad = await layoutOverlaps(toc, legend, open).catch((e) => [String(e.message ?? e).split("\n")[0]]);
+      if (bad.length > 0) failures.push(`${open ? "open" : "closed"} toc ${toc}, legend ${legend}: ${bad.join(" ")}`);
+    }
+    check(
+      `at ${width}px, no panel covers another for any pair of corners, measuring included`,
+      failures.length === 0,
+      failures.slice(0, 3).join(" | "),
+    );
+  }
+  check("no console errors while moving the panels around", layoutNoise.length === 0, layoutNoise.join(" | "));
+  await layoutPage.close();
+
   await reviewRegressions(context, BASE, check, watchConsole);
 
   /* ------------------------------------------------------------ invalid config */

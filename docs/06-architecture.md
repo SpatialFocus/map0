@@ -116,6 +116,9 @@ bottom sheet below). All results also exposed via `map0:featureclick` event for 
 - Design tokens as **CSS custom properties** on the host element (`--map0-primary`,
   `--map0-radius`, `--map0-font`, `--map0-bg`, …) — settable from config (`theme`) *or* host CSS.
 - Shadow parts (`::part(panel)`, `::part(toc)`, …) as the documented, semver-stable escape hatch.
+  The layer panel and the legend are laid out inside dock columns, one per edge
+  (`::part(dock)`, `::part(dock-left)`, `::part(dock-right)`); a position override goes on the
+  dock, not on the panel.
 - Dark mode: `prefers-color-scheme` by default, `theme.mode` override; map style swap per basemap
   entry (`darkUrl` optional key — v1.x).
 - Layout responds to **container size** (container queries), not viewport — a map0 in a CMS column
