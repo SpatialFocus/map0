@@ -96,7 +96,7 @@ function watchConsole(page, id) {
 async function openValidateDemo() {
   const page = await context.newPage();
   const messages = watchConsole(page, "validate");
-  await page.goto(`${BASE}/demos/validate.html`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE}/demos/validate`, { waitUntil: "domcontentloaded" });
   /* the page opens on the broken example, so results must show errors — and the
      shell (code figures, pager) renders async too, so wait for it here; the map
      demos get that for free from their much longer map waits */
@@ -124,7 +124,7 @@ async function openValidateDemo() {
 async function openDemo(id) {
   const page = await context.newPage();
   const messages = watchConsole(page, id);
-  await page.goto(`${BASE}/demos/${id}.html`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE}/demos/${id}`, { waitUntil: "domcontentloaded" });
   /* maps load when they approach the viewport — bring it in before waiting */
   await page
     .locator("map0-viewer")

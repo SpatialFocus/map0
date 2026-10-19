@@ -1,16 +1,20 @@
 /**
  * The i18n plugin: emits every page a second time under /de/ (dev middleware +
  * build step), injects the hreflang alternates, and puts the one-time
- * browser-language redirect on the English start page. The transformation
- * itself lives in translate.ts; the catalogues in i18n/de/.
+ * browser-language redirect on the English start page. On the way out, every
+ * variant of every page is also finished for crawlers by site/seo/ — canonical,
+ * Open Graph, JSON-LD, and the gallery, pager and code figures rendered into
+ * the HTML — and the build writes sitemap.xml, robots.txt and llms.txt. The
+ * transformation itself lives in translate.ts; the catalogues in i18n/de/.
  */
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Plugin } from "vite";
-import { SITE_URL, catalogFor, prettyPath, sitePages, translatePage } from "./translate.js";
+import { SITE_URL, catalogFor, pageForPath, prettyPath, sitePages, translatePage } from "./translate.js";
 import { DEMOS } from "../demos/demos.js";
 import { measure } from "../../scripts/check-size.mjs";
+import { finishPage, llmsTxt, robotsTxt, sitemapXml, writeSiteFiles } from "../seo/index.js";
 
 type Sizes = ReturnType<typeof measure>;
 type Lang = "en" | "de";
@@ -88,13 +92,14 @@ function fillNumbers(html: string, lang: Lang): string {
   return out;
 }
 
+/** the /de/ twin of a finished English page: translated, then finished again in German */
 function translateBuilt(html: string, page: string, pages: Set<string>, warnings: string[]): string {
   const { catalog, found } = catalogFor(page);
   if (!found) warnings.push(`${page}: no catalogue under site/i18n/de/ — emitted in English`);
-  const { html: out, missing, stale } = translatePage(html, page, catalog, pages);
+  const { html: translated, missing, stale } = translatePage(html, page, catalog, pages);
   if (missing.length > 0) warnings.push(`${page}: missing keys → ${missing.join(", ")}`);
   if (stale.length > 0) warnings.push(`${page}: stale keys (nothing asks for them) → ${stale.join(", ")}`);
-  return fillNumbers(out, "de");
+  return fillNumbers(finishPage(translated, page, "de"), "de");
 }
 
 export function i18n(outDir: string): Plugin {
@@ -106,12 +111,15 @@ export function i18n(outDir: string): Plugin {
       order: "post",
       handler: (html, ctx) => {
         const page = ctx.path.replace(/^\//, "");
-        const counted = fillNumbers(html, "en");
-        if (page === "404.html") return { html: counted, tags: [] }; // noindex — no alternates, no redirect
+        let out = fillNumbers(html, "en");
+        /* dev finishes pages on the fly; the build finishes the emitted files (closeBundle),
+           after Vite has put the hashed asset names in */
+        if (ctx.server && sitePages().has(page)) out = finishPage(out, page, "en");
+        if (page === "404.html") return { html: out, tags: [] }; // noindex — no alternates, no redirect
         const en = `${SITE_URL}${prettyPath(page)}`;
         const de = `${SITE_URL}/de${prettyPath(page)}`;
         return {
-          html: counted,
+          html: out,
           tags: [
             { tag: "link", attrs: { rel: "alternate", hreflang: "en", href: en }, injectTo: "head" },
             { tag: "link", attrs: { rel: "alternate", hreflang: "de", href: de }, injectTo: "head" },
@@ -125,18 +133,26 @@ export function i18n(outDir: string): Plugin {
     },
 
     /* dev: /de/… is the matching English source, run through Vite's own HTML
-       pipeline (chrome, analytics, this plugin's tags) and then translated */
+       pipeline (chrome, analytics, this plugin's tags) and then translated;
+       sitemap, robots and llms.txt are generated on request */
     configureServer(server) {
       server.watcher.add(r("de"));
       server.watcher.on("change", (file) => {
         if (file.includes("i18n")) server.ws.send({ type: "full-reload" });
       });
+      const text = (res: import("node:http").ServerResponse, type: string, body: string): void => {
+        res.setHeader("Content-Type", type);
+        res.end(body);
+      };
       server.middlewares.use((req, res, next) => {
         const url = (req.url ?? "").split("?")[0]!;
-        if (!url.startsWith("/de/")) return next();
-        const enUrl = url.slice(3) === "/" ? "/index.html" : url.slice(3);
-        const page = enUrl.endsWith("/") ? `${enUrl.slice(1)}index.html` : enUrl.slice(1);
-        if (!page.endsWith(".html") || !sitePages().has(page)) return next();
+        if (url === "/sitemap.xml")
+          return text(res, "application/xml", sitemapXml([...sitePages()].filter((p) => p !== "404.html")));
+        if (url === "/robots.txt") return text(res, "text/plain; charset=utf-8", robotsTxt());
+        if (url === "/llms.txt") return text(res, "text/plain; charset=utf-8", llmsTxt());
+        if (url !== "/de" && !url.startsWith("/de/")) return next();
+        const page = pageForPath(url === "/de" ? "/" : url.slice(3));
+        if (!page || !sitePages().has(page)) return next();
         void (async () => {
           try {
             const raw = readFileSync(r(`../${page}`), "utf8");
@@ -144,8 +160,7 @@ export function i18n(outDir: string): Plugin {
             const warnings: string[] = [];
             const out = translateBuilt(transformed, page, sitePages(), warnings);
             for (const w of warnings) server.config.logger.warn(`[i18n] ${w}`);
-            res.setHeader("Content-Type", "text/html");
-            res.end(out);
+            text(res, "text/html", out);
           } catch (e) {
             next(e);
           }
@@ -153,19 +168,20 @@ export function i18n(outDir: string): Plugin {
       });
     },
 
-    /* build: read every emitted page back and write its /de/ twin */
+    /* build: finish every emitted page in English, write its /de/ twin, then the site files */
     closeBundle() {
       const pages = sitePages();
       const warnings: string[] = [];
-      const files = readdirSync(outDir, { recursive: true }) as string[];
-      for (const file of files) {
-        const page = relative(outDir, join(outDir, file)).replaceAll("\\", "/");
-        if (!page.endsWith(".html") || page.startsWith("de/") || !pages.has(page)) continue;
-        const html = readFileSync(join(outDir, page), "utf8");
+      for (const page of [...pages].sort()) {
+        const file = join(outDir, page);
+        if (!existsSync(file)) continue;
+        const en = finishPage(readFileSync(file, "utf8"), page, "en");
+        writeFileSync(file, en);
         const target = join(outDir, "de", page);
         mkdirSync(dirname(target), { recursive: true });
-        writeFileSync(target, translateBuilt(html, page, pages, warnings));
+        writeFileSync(target, translateBuilt(en, page, pages, warnings));
       }
+      writeSiteFiles(outDir, pages);
       for (const w of warnings) console.warn(`[i18n] ${w}`);
     },
   };

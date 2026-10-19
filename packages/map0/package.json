@@ -58,10 +58,10 @@
     "THIRD-PARTY-NOTICES.md"
   ],
   "dependencies": {
-    "@types/geojson": "^7946.0.14"
+    "@types/geojson": "^7946.0.16"
   },
   "peerDependencies": {
-    "maplibre-gl": "^6.3.0"
+    "maplibre-gl": "^6.4.1"
   },
   "peerDependenciesMeta": {
     "maplibre-gl": {

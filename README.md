@@ -43,7 +43,7 @@ See [packages/map0/README.md](packages/map0/README.md) for the whole integration
 
 ## Working on map0
 
-Prerequisites: Node ≥ 22 and pnpm (enable it with `corepack enable`; the version is pinned via
+Prerequisites: Node ≥ 24 and pnpm (enable it with `corepack enable`; the version is pinned via
 `packageManager`).
 
 ```bash
@@ -69,6 +69,7 @@ pnpm typecheck                  # strict TypeScript project build
 pnpm build                      # library bundle → packages/ui/dist/
 pnpm demo:standalone            # build + copy the bundle for the standalone demo page
 pnpm release                    # version, changelog, npm publish, GitHub release (docs/09 §release)
+pnpm og                         # social preview image (site/public/og.jpg), a Playwright screenshot
 node e2e/verify-demos.mjs       # headless smoke run over every demo, with screenshots
 node e2e/verify-demos.mjs wms   # …or just one (dev server must be running)
 ```
@@ -87,8 +88,8 @@ docs/             specification
 ```
 
 Distribution note: `packages/ui/dist/` is a flat folder containing `map0.js`, its chunks and MapLibre's
-three files shipped verbatim. Deploy the folder as a unit; the embed stays one script tag.
-A page loads **~34 KB gzip** for the element itself; the engine and MapLibre (~316 KB) load when the
+dist files shipped verbatim. Deploy the folder as a unit; the embed stays one script tag.
+A page loads **~34 KB gzip** for the element itself; the engine and MapLibre (~465 KB) load when the
 map approaches the viewport, and capabilities parsing, proj4, PMTiles, the COG decoder, measuring
 and the dialogs only when those features are used. `pnpm size` prints the breakdown and fails when
 the page tier grows.

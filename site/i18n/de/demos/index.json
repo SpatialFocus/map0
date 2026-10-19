@@ -1,4 +1,5 @@
 {
   "h1": "Ein Thema pro Demo",
-  "lede": "Jede Demo enthält eine interaktive Karte, eine Erklärung und ihre Konfiguration. Die meisten verwenden öffentliche Dienste von basemap.at und der Stadt Wien, andere lokale Datendateien."
+  "lede": "Jede Demo enthält eine interaktive Karte, eine Erklärung und ihre Konfiguration. Die meisten verwenden öffentliche Dienste von basemap.at und der Stadt Wien, andere lokale Datendateien.",
+  "meta.description": "Live-Demos des Webkarten-Clients map0, je eine pro Thema: Datenquellen von WMS bis COG, Popups, Legenden, Suche, Messen, Druck, Theming und Sprachen. Jede Demo zeigt die JSON-Konfiguration, mit der sie läuft."
 }

@@ -92,7 +92,7 @@ dead issue links. The initial CHANGELOG.md was backfilled from the tag history w
 
 Two things a release has to get right, both of which fail *silently* if it does not:
 
-- **The folder is the unit.** `dist/` ships `map0.js`, its lazy chunks and MapLibre's three files
+- **The folder is the unit.** `dist/` ships `map0.js`, its lazy chunks and MapLibre's files
   side by side (§4.4). Verify the **packed tarball**, not `packages/ui/dist` — automated in
   `e2e/verify-tarball.mjs` (hook step 5, or by hand: `node e2e/verify-tarball.mjs <tgz>`): it
   unpacks the tarball over `site/public/standalone/`, loads `/demos/standalone.html` (which
@@ -193,14 +193,19 @@ Break one of these and something breaks quietly, usually only in production buil
 
 ## 3. Field notes: MapLibre
 
-### 3.1 The worker is three files, not one
+### 3.1 The worker is a separate file, not part of the bundle
 
-MapLibre v6 ships ESM split into `maplibre-gl.mjs` (main thread), `maplibre-gl-shared.mjs` and
-`maplibre-gl-worker.mjs`; the worker is spawned from a URL **relative to the bundle** and imports the
-shared half itself. Consequences:
+MapLibre v6 ships ESM split into `maplibre-gl.mjs` (main thread) and `maplibre-gl-worker.mjs`; the
+worker is spawned from a URL **relative to the bundle**. Up to 6.12 both imported a third file,
+`maplibre-gl-shared.mjs`; since 6.13 the worker is self-contained (a stale cached worker crashed the
+map after an upgrade, maplibre/maplibre-gl-js#8621) and the shared file ships **empty**, kept only so
+copy steps do not fail — it goes away in the next major, and `scripts/maplibre-dist.mjs` copies it
+only while it exists. The price is that the worker now carries its own copy of the shared code: the
+first-map tier of `pnpm size` grew from ~317 to ~465 KB gz with 6.14 (the page tier is unaffected).
+Consequences:
 
-- Bundling MapLibre ships the shared half twice (once inside our bundle, once as the file the worker
-  needs). We keep `maplibre-gl` external and copy all three files in verbatim — next to the entry in
+- Bundling MapLibre would ship its code twice (once inside our bundle, once as the file the worker
+  needs). We keep `maplibre-gl` external and copy the files in verbatim — next to the entry in
   the library `dist`, next to the hashed chunks in the site's `assets/` (`scripts/maplibre-dist.mjs`).
 - In Vite dev, `optimizeDeps.exclude: ["maplibre-gl"]` is required. Pre-bundling rewrites the worker
   URL into `.vite/deps` where it 404s, and the worker then **dies silently**: raster layers still
@@ -470,6 +475,43 @@ the same way at the other end: an inline chrome script applies the stored choice
 paint, CSS carries the dark tokens twice (`@media` for the OS default, `:root.dark` for the
 explicit choice), and embedded maps follow through the viewer's `theme` attribute.
 
+### 5.2 Site SEO: what the build does for crawlers
+
+Everything a crawler needs is in the emitted HTML — for search engines and for AI systems
+(GPTBot, ClaudeBot, PerplexityBot …) alike, and the latter do not run JavaScript. `site/seo/` does
+it; the i18n plugin calls `finishPage` for the English and the German variant of every page
+(build: on the emitted files in `closeBundle`, after Vite has hashed the assets; dev: on the fly in
+`transformIndexHtml`), so every step in there is idempotent:
+
+- **render.ts** — the demo gallery, the prev/next pager, the quick-start snippet (generated from
+  the inline JSON of `#quickstart`) and every `<pre data-src>` / `<pre data-lang>` code figure are
+  rendered at build time. A `data-src` that points at nothing fails the build. The browser
+  (`site/code.ts`) only binds the Copy buttons.
+- **head.ts** — `rel=canonical`, Open Graph, Twitter card and schema.org JSON-LD: Organization
+  (from the imprint), WebSite, WebPage, SoftwareApplication on the start page (version from
+  `packages/map0/package.json`), BreadcrumbList on subpages, FAQPage generated from the
+  `<details>` of `#faq`. Demo pages get their description from the registry (`blurb`/`blurbDe`).
+- **sitemap.ts / llms.ts** — `sitemap.xml` (both languages, `xhtml:link` alternates, no lastmod:
+  the deploy is a shallow checkout), `robots.txt` (allow all, Content Signals, Sitemap line),
+  `llms.txt` and `llms-full.txt` (llmstxt.org: a Markdown map of the site, and the full text of
+  FAQ, README and every demo with its config, converted from the finished pages).
+
+URLs carry no `.html`: Azure Static Web Apps redirects `/demos/wms.html` to `/demos/wms` anyway, so
+links, hreflang, canonical and sitemap all use the short form (`prettyPath`, and `pageForPath` for
+the way back). Vite's dev server and `vite preview` resolve `/demos/wms` to the file as well.
+`staticwebapp.config.json` redirects the one odd normalisation, `/index` → `/`.
+
+The social image `site/public/og.jpg` (2400×1260, a 1200×630 card at 2×) is a Playwright screenshot
+of `site/og/card.html`: the landing basemap with the water bodies, the layer panel and the wordmark over it — `pnpm og` regenerates it after a change to the landing
+config or the card. The PNG is committed, so the deploy needs neither a browser nor the live
+services; the build references it only if the file exists.
+
+Outside the repo: map0.net sits behind Cloudflare. Its *Managed robots.txt* prepends the Content
+Signals Policy text to ours, *AI Crawl Control* decides which AI crawlers get through at all, and
+*Markdown for Agents* (Pro plan and up) serves pages as Markdown to clients that send
+`Accept: text/markdown`. Check there before trusting a crawler test from the outside — a spoofed
+user agent is not a verified bot and tells you nothing about the block list.
+
 ## 6. Field notes: component and browser
 
 - **Focus lives in the shadow root.** `document.activeElement` returns the host element, never what
@@ -532,6 +574,9 @@ packages/check    map0-check, the service-checking CLI (Node): detection, live p
                   → bundles core's capabilities reading, request builders and parsers (§release)
 site/             landing page + /demos (one page per topic) + configs and data
 site/i18n/        German page catalogues + the build-time translation plugin (§5.1)
+site/seo/         what the build does for crawlers: canonical/OG/JSON-LD, static gallery and code
+                  figures, sitemap, robots, llms.txt (§5.2)
+site/og/          the social card page, photographed into site/public/og.jpg by `pnpm og`
 e2e/              headless verification
 scripts/          build-adjacent tooling (size budget, release, config reference generator)
 ```
@@ -553,3 +598,48 @@ that registry is the intended extension point.
 | Overlays vanish after switching basemap | something added outside an adapter, missing from `transformStyle` (invariant 6) |
 | Console: "Multiple versions of Lit loaded" | page loads both bundle and sources (§5) |
 | Page tier over budget in CI | a value import from `@map0/core` crept into the element (invariant 1) |
+
+## 10. Dependency updates (Renovate) and the security policy
+
+`renovate.json` at the root; the Mend Renovate GitHub app runs it (installed once from
+<https://github.com/apps/renovate> — a repository setting, nothing in the repo). The rules, and
+why:
+
+- **Weekly, grouped.** Everything minor and patch arrives as one PR before Monday 6:00
+  (Europe/Vienna); majors come one by one. A version has to be three days old
+  (`minimumReleaseAge`), which gives a compromised release time to be pulled. Lockfile
+  maintenance once a month. Vulnerabilities reported by OSV skip the schedule.
+- **Automerge only for dev-dependency patches**, and only after CI is green — which here means
+  typecheck, unit tests, the smoke run on the built bundle, the pixel comparison, the size budget
+  and the site build. Everything that ships in the bundle (`dependencies`, the MapLibre peer) is
+  merged by hand; the PR body says what to look at.
+- **Playwright is its own PR and never automerges.** A new Playwright is a new Chromium build,
+  and that changes pixels: the visual step stays red until the baselines are refreshed
+  (`pnpm build && pnpm visual:linux --update` in Docker, `pnpm visual --update` locally) and
+  every rewritten PNG has been looked at. The Docker image tag follows the installed version
+  (`scripts/visual-docker.mjs`), so nothing else needs a bump.
+- **MapLibre is its own PR too.** Its dist files are copied into `dist` (§3.1), and `maplibre-gl`
+  is an optional peer of `map0-viewer`: peer ranges widen on a major instead of bumping
+  (`rangeStrategy: widen` for `peerDependencies`), and `node e2e/verify-types.mjs` checks a
+  consumer against the packed tarball.
+- **pnpm** (the `packageManager` field) by hand: a pnpm minor can change the lockfile.
+- **`rangeStrategy: bump`** otherwise: the ranges in package.json follow the lockfile, so what a
+  reader sees and what `pnpm install --frozen-lockfile` installs agree.
+- **No preview deployment for Renovate PRs:** `deploy-site.yml` skips pull requests opened by
+  `renovate[bot]` — every one of them would otherwise get an Azure Static Web Apps environment.
+- **PRs open only once the release age is reached** (`prCreation: "not-pending"`). On its own,
+  `minimumReleaseAge` only attaches a pending `renovate/stability-days` check to a PR that is
+  created immediately; pnpm 12's supply-chain policy (one day by default) then fails
+  `pnpm install --frozen-lockfile` in CI for the too-young entry, and the PR sits red until a
+  rebase. pnpm's own policy stays at its one-day default: raising it to Renovate's three days
+  was tried on 2026-10-19 and makes a fresh resolution fail outright
+  (`ERR_PNPM_NO_MATURE_MATCHING_VERSION`) whenever some dependent demands a version younger than
+  that, and `pnpm update` refuses to run non-interactively under it.
+- **Node itself only as a major.** Renovate reads `node-version: 24` and `engines.node: ">=24"`
+  as the dependency `node` and would pin both to the latest patch release every week; minor,
+  patch and pin updates of `node` are disabled, a new LTS major still arrives as a PR.
+
+`SECURITY.md` is the other half of low-effort maintenance: it sends reporters to GitHub's
+private vulnerability reporting instead of a public issue. That form exists only once
+"Private vulnerability reporting" is switched on under the repository's Settings → Code
+security.

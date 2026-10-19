@@ -692,6 +692,56 @@ table.compare tbody tr:last-child td:last-child {
   text-wrap: pretty;
 }
 
+/* ----------------------------------- faq ---------------------------------- */
+
+/* Questions as <details>: the answers are in the HTML for anyone who quotes
+   them (search engines, language models), folded away for anyone who scans. */
+.faq {
+  max-width: 860px;
+  margin: 0 auto;
+  display: grid;
+  gap: 10px;
+}
+.faq details {
+  padding: 0 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.faq summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 0;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq summary::after {
+  content: "+";
+  flex: none;
+  color: var(--accent);
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 500;
+}
+.faq details[open] summary::after {
+  content: "−";
+}
+.faq details p {
+  margin: 0 0 18px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
 /* ---------------------------------- misc --------------------------------- */
 
 .cta-row {

@@ -101,6 +101,8 @@ Canvas maps have structural a11y limits; map0 must add its own layer:
    anyway, *bundling* MapLibre ships that half twice — once inside our bundle, once as the file.
    map0 therefore keeps `maplibre-gl` external and copies all three files verbatim into dist
    (~130 KB gz saved, and MapLibre stays cacheable across map0 releases).
+   *Update 2026-10:* since MapLibre 6.13 the worker is self-contained and `maplibre-gl-shared.mjs`
+   is an empty compatibility file — see 09 §3.1.
 2. **basemap.at styles need URL fixing**: the bmapv style declares a *relative* sprite path
    (`../sprites/sprite`, rejected by MapLibre v6) and its ESRI-style TileJSON returns *relative*
    `tiles` templates (`tile/{z}/{y}/{x}.pbf`) that MapLibre does not resolve → no tile requests at
