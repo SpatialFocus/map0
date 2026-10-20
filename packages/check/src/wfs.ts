@@ -121,6 +121,8 @@ export async function analyzeWfs(det: Detection, opts: Options): Promise<Service
     const lf: Finding[] = [];
     const facts: string[] = [];
     const summary = endpoint.getFeatureTypeSummary(brief.name);
+    // null only for names missing from the capabilities; these come from getFeatureTypes()
+    if (!summary) continue;
     const formats = summary.outputFormats?.length ? summary.outputFormats : (info.outputFormats ?? []);
     const jsonFormat = pickJsonFormat(formats);
     const crsList = [summary.defaultCrs, ...(summary.otherCrs ?? [])].filter(Boolean);
