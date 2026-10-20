@@ -200,8 +200,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(proj4@2.22.0(geotiff@3.0.5))
       '@geomatico/maplibre-cog-protocol':
-        specifier: ^0.9.3
-        version: 0.9.3(maplibre-gl@6.14.0)
+        specifier: ^0.10.0
+        version: 0.10.0(maplibre-gl@6.14.0)
       '@map0/schema':
         specifier: workspace:*
         version: link:../schema
@@ -466,8 +466,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@geomatico/maplibre-cog-protocol@0.9.3':
-    resolution: {integrity: sha512-SHEX/SWvX1Oc1uInG4/0GZYpr+7iUFJusLE/7H8WrBfOo1S8H05QF9vGQAPnBDManIOL5TnJmrW2cvr7TP2PJg==}
+  '@geomatico/maplibre-cog-protocol@0.10.0':
+    resolution: {integrity: sha512-6E0VdMJdozai6hbTIKcfaJAlUmYkKPVaiXvEZ8e6BH0tP9dy86p2zDiehExsG4eivzfBY+t196ThBhkYkDAwXA==}
     peerDependencies:
       maplibre-gl: ^4.5.0 || ^5.0.0 || ^6.0.0
 
@@ -2116,7 +2116,7 @@ snapshots:
   '@esbuild/win32-x64@0.25.12':
     optional: true
 
-  '@geomatico/maplibre-cog-protocol@0.9.3(maplibre-gl@6.14.0)':
+  '@geomatico/maplibre-cog-protocol@0.10.0(maplibre-gl@6.14.0)':
     dependencies:
       '@mapbox/sphericalmercator': 2.0.2
       d3-scale: 4.0.2
