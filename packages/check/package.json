@@ -49,7 +49,7 @@
   "devDependencies": {
     "@map0/core": "workspace:*",
     "@map0/schema": "workspace:*",
-    "@types/node": "^22.15.0"
+    "@types/node": "^22.20.5"
   },
   "publishConfig": {
     "access": "public"
