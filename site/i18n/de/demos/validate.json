@@ -15,6 +15,9 @@
   "ci.h3": "In der CI, bevor sie ausgeliefert wird",
   "ci.p1": "Ein JSON-Schema-Validator kann in der Build-Pipeline oder beim Speichern im CMS eingesetzt werden:",
   "ci.p2": "<code>check-jsonschema</code> bietet eine Python-Variante. Das Schema prüft Schlüssel, Typen, Wertebereiche und Pflichtfelder.",
+  "service.h3": "Vor der Config: der Dienst selbst",
+  "service.p1": "Eine gültige Config kann trotzdem eine leere Karte zeigen, wenn der Dienst dahinter keine Cross-Origin-Anfragen erlaubt, keine Web-Mercator-Kacheln hat oder kein echtes GeoJSON liefert. <code>map0-check</code> prüft eine WMS-, WMTS-, WFS- oder OGC-API-Features-URL mit genau den Anfragen, die map0 stellt, und gibt Urteil, Gründe und die Layer-Definition zum Einfügen aus:",
+  "service.p2": "<code>--config</code> verpackt das Ergebnis in eine vollständige Config, <code>--json</code> liefert einen maschinenlesbaren Bericht mit Exit-Code für die CI. Details auf der <a href=\"https://www.npmjs.com/package/map0-check\">Paketseite von map0-check</a>.",
   "code.h3": "Im eigenen Code",
   "code.p": "Das npm-Paket exportiert den Validator über seinen SSR-Einstiegspunkt. Er läuft in Node ohne DOM und kann beispielsweise eine Konfiguration vor dem Speichern prüfen:",
   "viewer.h3": "Im Viewer, immer",
@@ -22,7 +25,7 @@
   "schema.h2": "Das veröffentlichte Schema",
   "schema.p1": "Dasselbe Schema ist an drei Stellen verfügbar:",
   "schema.li1": "<code>https://map0.net/schema/v1.json</code>: folgt der neuesten Version, für den <code>$schema</code>-Eintrag der Konfiguration",
-  "schema.li2": "<code>https://cdn.jsdelivr.net/npm/map0-viewer@0.3.0/schema/v1.json</code>: an eine Paketversion gebunden",
+  "schema.li2": "<code>https://cdn.jsdelivr.net/npm/map0-viewer@0.4.0/schema/v1.json</code>: an eine Paketversion gebunden",
   "schema.li3": "<code>node_modules/map0-viewer/schema/v1.json</code>: lokal mit dem installierten Paket verfügbar",
   "schema.p2": "Der Dateiname bezieht sich auf die Version des Konfigurationsformats (<code>\"version\": 1</code>). Die Beschreibungen im Schema liefern die Editor-Dokumentation. Tests vergleichen seine Schlüssel und Aufzählungswerte mit dem Laufzeit-Validator."
 }
