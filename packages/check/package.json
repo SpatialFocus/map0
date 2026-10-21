@@ -1,6 +1,6 @@
 {
   "name": "map0-check",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Can map0 show this OGC service? Probes a WMS, WMTS, WFS or OGC API Features endpoint with the requests map0 sends and prints the verdict plus the layer definition",
   "keywords": [
     "map0",

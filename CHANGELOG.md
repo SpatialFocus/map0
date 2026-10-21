@@ -4,6 +4,35 @@ Releases of the `map0-viewer` npm package. Generated from the
 [conventional commits](https://www.conventionalcommits.org) by `pnpm release` (release-it) —
 do not edit by hand.
 
+## [0.4.0](https://github.com/SpatialFocus/map0/compare/v0.3.0...v0.4.0) (2026-10-21)
+
+### Features
+
+* **check:** add map0-check, a CLI that probes OGC services with map0's own requests ([9e14a2e](https://github.com/SpatialFocus/map0/commit/9e14a2e9f74c213b32b811f3c6dfc41120a34348))
+* **configurator:** add <map0-configurator>, a visual editor for map0 configs ([a975a7d](https://github.com/SpatialFocus/map0/commit/a975a7d9378c176e5d7e619293d41d65887084c3))
+* **configurator:** catalog search as a layer source, and a browser smoke check ([9cb4798](https://github.com/SpatialFocus/map0/commit/9cb4798ff407ece8e468247727c2216cf8ab97ca))
+* **configurator:** drag-and-drop in the layer tree and style presets ([f90acdf](https://github.com/SpatialFocus/map0/commit/f90acdf56f2691526fc554ff81c94e9716f34cfd))
+* **core:** switching on an option of an exclusive group switches its rivals off ([f5a668c](https://github.com/SpatialFocus/map0/commit/f5a668c31836f0013f172da45c044317cad5aac1))
+* **schema:** exclusive groups and a filter option for the layer panel (F2.3, F2.7) ([045aeb0](https://github.com/SpatialFocus/map0/commit/045aeb03fe96ee1adbe4b0561195822443282f91))
+* **site:** announce the 0.3.0 release in a banner on the start page ([915b50b](https://github.com/SpatialFocus/map0/commit/915b50b943d49bfe83f81989747878cc337499ee))
+* **site:** announce the 0.4.0 release in the start page banner ([b30221a](https://github.com/SpatialFocus/map0/commit/b30221ac2189f99399949f01b506eeab8ffd92ca))
+* **site:** configurator page at /configurator/ with topbar link and German catalogue ([33982b2](https://github.com/SpatialFocus/map0/commit/33982b2e5c75a8ccbdff390ff68151bfd6eb2c80))
+* **site:** layer tree demo ([bbd450d](https://github.com/SpatialFocus/map0/commit/bbd450d47f5893f150ba799e007c5d14359add4a))
+* **site:** make the site crawlable for search engines and AI ([e5f30cd](https://github.com/SpatialFocus/map0/commit/e5f30cdc3b6f0e4a638681d8c441fe9f4c34916c))
+* **ui:** group boxes, radio groups and a filter box in the layer panel (F2.3, F2.7) ([9b88022](https://github.com/SpatialFocus/map0/commit/9b8802218ef90279083506591d9919a720fd5c11))
+
+### Bug Fixes
+
+* **check:** handle null feature type summary from ogc-client 2 ([bbb9aaf](https://github.com/SpatialFocus/map0/commit/bbb9aaf710822416bc93481a0518e5f1b1955dda))
+* **configurator:** read WMS bounding boxes that arrive as attribute strings ([cc0fbdf](https://github.com/SpatialFocus/map0/commit/cc0fbdf180ead221c73c1ca274cef8bf8348fa25))
+* **configurator:** show style, popup and cluster sections by layer type, dedupe sampled features by properties ([9d38537](https://github.com/SpatialFocus/map0/commit/9d38537e1811c8a316dc70a4f4cc69c8d5593072))
+* **deps:** update @camptocamp/ogc-client to 2.0.2 ([4e4a3cc](https://github.com/SpatialFocus/map0/commit/4e4a3ccc9c69523578d4d0a60924a233c7038796))
+* **deps:** update dependencies (maplibre-gl 6.14, dompurify 3.4.17, vitest 4, playwright 1.64) ([88d9ca2](https://github.com/SpatialFocus/map0/commit/88d9ca2610c330373530c58885597f04c11ad955))
+* **e2e:** hand the tarball to tar on stdin ([2ee9590](https://github.com/SpatialFocus/map0/commit/2ee9590489e0fd0cc7dc1f0dd0817bdf930e1dad))
+* review follow-ups — public types, search collapse, dock parts ([1391408](https://github.com/SpatialFocus/map0/commit/1391408de37071b49a22e6a6a0f3574929e19a80))
+* **ui:** dock the layer panel and the legend to their corners, keep the measure bar clear ([7ac92b9](https://github.com/SpatialFocus/map0/commit/7ac92b94d4a12d13890ea14d35264e04bc9942ac))
+* **ui:** offer WMS layers whose Mercator CRS is inherited in the add-layer dialog ([e196e6c](https://github.com/SpatialFocus/map0/commit/e196e6c5c213b0a7e60df7a80386b30d21b20faf))
+
 ## [0.3.0](https://github.com/SpatialFocus/map0/compare/v0.2.1...v0.3.0) (2026-09-09)
 
 ### Features
