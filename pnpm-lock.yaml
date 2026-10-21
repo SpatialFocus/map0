@@ -241,7 +241,7 @@ importers:
         version: 2.0.2(proj4@2.22.0(geotiff@3.0.5))
       '@geomatico/maplibre-cog-protocol':
         specifier: ^0.9.3
-        version: 0.9.3(maplibre-gl@6.14.0)
+        version: 0.9.3(maplibre-gl@6.15.0)
       '@map0/schema':
         specifier: workspace:*
         version: link:../schema
@@ -258,8 +258,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1
       maplibre-gl:
-        specifier: ^6.14.0
-        version: 6.14.0
+        specifier: ^6.15.0
+        version: 6.15.0
       pmtiles:
         specifier: ^4.5.0
         version: 4.5.0
@@ -281,7 +281,7 @@ importers:
         version: 7946.0.16
       maplibre-gl:
         specifier: ^6.4.1
-        version: 6.14.0
+        version: 6.15.0
 
   packages/schema:
     devDependencies:
@@ -310,8 +310,8 @@ importers:
         specifier: ^3.3.3
         version: 3.3.3
       maplibre-gl:
-        specifier: ^6.14.0
-        version: 6.14.0
+        specifier: ^6.15.0
+        version: 6.15.0
     devDependencies:
       vite:
         specifier: ^6.4.4
@@ -1530,8 +1530,8 @@ packages:
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
-  maplibre-gl@6.14.0:
-    resolution: {integrity: sha512-L7U9y9TyPJ3P/JJbW+eH+A3FzdPq+3fnZFqqeCwf/S6cRGganHwVI5b/C8/zOYzreUzsloDPZVVaMQA94wOt4A==}
+  maplibre-gl@6.15.0:
+    resolution: {integrity: sha512-kxFetbvUHDOVaAP1CYb226Mdk2QhzIPddqM0xJTFD35wu78Mpd6NM7+H68ALjc6Oa0kAOX5EAdMKyvD2u3qfcg==}
     engines: {node: '>=16.14.0', npm: '>=8.1.0'}
 
   mgrs@1.0.0:
@@ -2150,12 +2150,12 @@ snapshots:
 
   '@fontsource-variable/inter@5.3.0': {}
 
-  '@geomatico/maplibre-cog-protocol@0.9.3(maplibre-gl@6.14.0)':
+  '@geomatico/maplibre-cog-protocol@0.9.3(maplibre-gl@6.15.0)':
     dependencies:
       '@mapbox/sphericalmercator': 2.0.2
       d3-scale: 4.0.2
       geotiff: 3.0.5
-      maplibre-gl: 6.14.0
+      maplibre-gl: 6.15.0
       quick-lru: 7.3.0
 
   '@inquirer/ansi@2.0.9': {}
@@ -3120,7 +3120,7 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  maplibre-gl@6.14.0:
+  maplibre-gl@6.15.0:
     dependencies:
       '@mapbox/point-geometry': 1.1.0
       '@mapbox/tiny-sdf': 2.3.0
