@@ -80,6 +80,22 @@
           value ranges and required fields.
         </p>
 
+        <h3 data-i18n="service.h3">Before the config: the service itself</h3>
+        <p data-i18n="service.p1">
+          A valid config can still show an empty map when the service behind it blocks cross-origin
+          requests, has no Web Mercator tiles or serves no real GeoJSON. <code>map0-check</code>
+          probes a WMS, WMTS, WFS or OGC API Features URL with the requests map0 sends and prints the
+          verdict, the reasons and the layer definition to paste:
+        </p>
+        <pre data-lang="text" data-label="shell">
+          npx map0-check "https://data.wien.gv.at/daten/geo?service=WMS&amp;request=GetCapabilities" --layer TRINKBRUNNENOGD
+        </pre>
+        <p data-i18n="service.p2">
+          <code>--config</code> wraps the result into a complete config, <code>--json</code> gives a
+          machine-readable report with an exit code for CI. Details on the
+          <a href="https://www.npmjs.com/package/map0-check">map0-check package page</a>.
+        </p>
+
         <h3 data-i18n="code.h3">In your own code</h3>
         <p data-i18n="code.p">
           The npm package exports the validator through its SSR entry. It can run in Node without a

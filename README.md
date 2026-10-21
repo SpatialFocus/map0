@@ -41,6 +41,10 @@ npm install map0-viewer   # prebuilt bundle with MapLibre included
 See [packages/map0/README.md](packages/map0/README.md) for the whole integration, and
 [docs/09-engineering-notes.md](docs/09-engineering-notes.md) for how the package is released.
 
+Not sure a service will work in the browser? `npx map0-check <service url>` probes a WMS, WMTS,
+WFS or OGC API Features endpoint with the requests map0 sends and prints the verdict and the layer
+definition to paste — see [packages/check/README.md](packages/check/README.md).
+
 ## Working on map0
 
 Prerequisites: Node ≥ 24 and pnpm (enable it with `corepack enable`; the version is pinned via
@@ -80,6 +84,9 @@ node e2e/verify-demos.mjs wms   # …or just one (dev server must be running)
 packages/schema   config types, validation (JSON-path errors), defaults, published JSON Schema (v1.json)
 packages/core     headless engine: basemap manager, source adapters, feature info, i18n
 packages/ui       the <map0-viewer> web component (Lit) + panels, popups, theming
+packages/map0     the published map0-viewer package: prebuilt bundle, declarations, schema
+packages/check    map0-check, the service-checking CLI (published separately)
+packages/configurator  the <map0-configurator> visual config editor (site: /configurator/)
 site/              landing page, /demos gallery and demo pages (EN, with /de/ built from
                    per-page catalogues in site/i18n/)
 site/public/       demo configs and data served as-is
