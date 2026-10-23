@@ -12,16 +12,21 @@ import "@map0/ui";
 /* Ace, hand-picked: the blanket esm-resolver would register every mode and
    worker Ace ships and Rollup would emit them all as chunks — megabytes of
    PHP/XQuery/Vim nobody here can ever load. This page needs exactly four
-   pieces: the core, the JSON mode, one theme, and the search box (Ctrl-F). */
+   pieces: the core, the JSON mode, one theme, and the search box (Ctrl-F).
+
+   No linting worker (`useWorker: false` on the editor): Ace's JSON worker is
+   wired without a schema request service, so a document with a `$schema` URL —
+   every map0 config — makes it throw on each update, after which it reports
+   nothing, not even syntax errors, and logs a TypeError every time (ace-builds
+   1.45). This page parses and validates on every change anyway, so it places
+   the gutter marks itself: jsonc-parser says where the JSON breaks, and the
+   validator's paths say which line a config problem belongs to. That also
+   saves the worker's 280 KB download. */
 import ace from "ace-builds";
 import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/theme-tomorrow_night";
 import "ace-builds/src-noconflict/ext-searchbox";
-/* the linting worker is fetched by URL at runtime — hand Ace the URL Vite
-   actually serves (dev) or emits (build) the file at */
-import workerJsonUrl from "ace-builds/src-noconflict/worker-json.js?url";
-
-ace.config.setModuleUrl("ace/mode/json_worker", workerJsonUrl);
+import { findNodeAtLocation, parseTree, type Node, type ParseError } from "jsonc-parser";
 import { resolveConfigExtends, validateConfig } from "@map0/schema";
 import type { Map0Config } from "@map0/schema";
 import type { Map0Viewer } from "@map0/ui";
@@ -81,6 +86,7 @@ const applyButton = document.querySelector<HTMLButtonElement>("[data-pg-apply]")
 if (!editorHost || !output || !mapPane || !applyButton) throw new Error("playground markup missing");
 
 const editor = ace.edit(editorHost, {
+  useWorker: false, // before `mode`, or the mode starts the worker first — see the Ace note above
   mode: "ace/mode/json",
   theme: "ace/theme/tomorrow_night",
   tabSize: 2,
@@ -113,12 +119,71 @@ function row(list: HTMLUListElement, kind: "error" | "warning", path: string, me
   list.appendChild(li);
 }
 
+/* ------------------------------ gutter marks ----------------------------- */
+
+/** an Ace annotation: a mark in the gutter with the message as its tooltip */
+interface GutterMark {
+  row: number;
+  column: number;
+  text: string;
+  type: "error" | "warning";
+}
+
+/** 0-based row and column of a character offset in `text` */
+function positionAt(text: string, offset: number): { row: number; column: number } {
+  const before = text.slice(0, Math.max(0, Math.min(offset, text.length)));
+  const lineStart = before.lastIndexOf("\n") + 1;
+  return { row: before.split("\n").length - 1, column: before.length - lineStart };
+}
+
+/** the validator's path grammar: `$.layers[0].url` → ["layers", 0, "url"], `$` → [] */
+function segmentsOf(path: string): (string | number)[] {
+  const segments: (string | number)[] = [];
+  for (const m of path.slice(1).matchAll(/\.([^.[\]]+)|\[(\d+)\]/g)) {
+    segments.push(m[1] !== undefined ? m[1] : Number(m[2]));
+  }
+  return segments;
+}
+
+/**
+ * Where the JSON breaks: the first error jsonc-parser finds, which is where
+ * JSON.parse gave up too (comments and trailing commas count as errors here,
+ * as they do for the viewer). Undefined when it finds none.
+ */
+function syntaxErrorAt(text: string): number | undefined {
+  const errors: ParseError[] = [];
+  parseTree(text, errors, { disallowComments: true });
+  return errors[0]?.offset;
+}
+
+/** marks for the validator's findings — those whose path exists in the text */
+function marksFor(
+  text: string,
+  tree: Node | undefined,
+  findings: { path: string; message: string }[],
+  type: GutterMark["type"],
+): GutterMark[] {
+  if (!tree) return [];
+  const marks: GutterMark[] = [];
+  for (const { path, message } of findings) {
+    /* absent: a key the config lacks, or one the base of an `extends` contributed —
+       the list below the editor still has it */
+    const node = findNodeAtLocation(tree, segmentsOf(path));
+    if (!node) continue;
+    /* the key rather than the value: a value on its own line would mark the wrong row */
+    const at = node.parent?.type === "property" ? node.parent : node;
+    marks.push({ ...positionAt(text, at.offset), text: message, type });
+  }
+  return marks;
+}
+
 let checkSeq = 0;
 
 /**
  * Parse, resolve `extends`, validate — and render the outcome below the
- * editor. Resolving before validating matches what the viewer itself does, so
- * a child config that leaves `basemaps` to its base validates here too.
+ * editor and in its gutter. Resolving before validating matches what the
+ * viewer itself does, so a child config that leaves `basemaps` to its base
+ * validates here too.
  */
 async function check(raw: string): Promise<CheckResult> {
   const seq = ++checkSeq;
@@ -135,6 +200,7 @@ async function check(raw: string): Promise<CheckResult> {
   if (!raw.trim()) {
     status.textContent = STR.empty;
     show();
+    editor.session.clearAnnotations();
     return { ok: false };
   }
 
@@ -142,22 +208,30 @@ async function check(raw: string): Promise<CheckResult> {
   try {
     parsed = JSON.parse(raw);
   } catch (e) {
+    const message = (e as Error).message;
     status.textContent = STR.notJson;
     status.classList.add("bad");
-    row(list, "error", "$", (e as Error).message);
+    row(list, "error", "$", message);
     show();
+    const offset = syntaxErrorAt(raw);
+    editor.session.setAnnotations(
+      offset === undefined ? [] : [{ ...positionAt(raw, offset), text: message, type: "error" }],
+    );
     return { ok: false };
   }
+  const tree = parseTree(raw);
 
   let resolved: unknown;
   try {
     resolved = await resolveConfigExtends(parsed);
   } catch (e) {
     if (stale()) return { ok: false };
+    const message = e instanceof Error ? e.message : String(e);
     status.textContent = STR.invalid(1, "");
     status.classList.add("bad");
-    row(list, "error", "$.extends", e instanceof Error ? e.message : String(e));
+    row(list, "error", "$.extends", message);
     show();
+    editor.session.setAnnotations(marksFor(raw, tree, [{ path: "$.extends", message }], "error"));
     return { ok: false };
   }
   if (stale()) return { ok: false };
@@ -175,6 +249,10 @@ async function check(raw: string): Promise<CheckResult> {
   for (const e of result.errors) row(list, "error", e.path, e.message);
   for (const w of result.warnings) row(list, "warning", w.path, w.message);
   show();
+  editor.session.setAnnotations([
+    ...marksFor(raw, tree, result.errors, "error"),
+    ...marksFor(raw, tree, result.warnings, "warning"),
+  ]);
   return result.valid ? { ok: true, config: resolved as Map0Config } : { ok: false };
 }
 
