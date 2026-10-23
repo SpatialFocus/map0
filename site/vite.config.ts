@@ -10,12 +10,21 @@ import { prettyPath } from "./i18n/translate.js";
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
 /* Every page is its own entry — an .html file added here or under demos/ is
-   picked up by the next build without touching this file. */
+   picked up by the next build without touching this file.
+
+   The key names the page's entry chunk, assets/<key>-<hash>.js, and it joins
+   the directory with a dash on purpose: "configurator/index" put the chunk in
+   assets/configurator/, where the hoisted `import "./maplibre-gl.mjs"` (Rollup
+   adds the imports of an entry's dependencies to the entry) resolved to a file
+   that was not there, and the page died on a 404. Every chunk that reaches
+   MapLibre has to sit in assets/ itself — scripts/maplibre-dist.mjs fails the
+   build otherwise. The HTML still lands at its own path (configurator/index.html);
+   only the chunk name comes from the key. */
 const pagesIn = (dir: string): Record<string, string> =>
   Object.fromEntries(
     readdirSync(r(dir))
       .filter((f) => f.endsWith(".html"))
-      .map((f) => [`${dir === "." ? "" : `${dir}/`}${f.slice(0, -5)}`, r(`${dir}/${f}`)]),
+      .map((f) => [`${dir === "." ? "" : `${dir}-`}${f.slice(0, -5)}`, r(`${dir}/${f}`)]),
   );
 
 /**

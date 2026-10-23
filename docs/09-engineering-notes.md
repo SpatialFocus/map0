@@ -399,6 +399,14 @@ it, or drop it when a real dependency arrives.
   chunks must sit in the same directory as the entry. A `chunks/` subfolder made
   `./maplibre-gl.mjs` resolve one level too deep — and the standalone demo *looked* fine because it
   silently fell back to the dev sources. Demo pages that test the bundle must not have a fallback.
+- **The same bug one level up, in the site build.** Rollup hoists the imports of an entry's
+  dependencies into the entry chunk (`output.hoistTransitiveImports`), externals included, so a page
+  whose own code never mentions MapLibre still carries `import "./maplibre-gl.mjs"`. The configurator
+  page's entry was emitted at `assets/configurator/` (its input key was `configurator/index`) and
+  404'd on that import in production — the whole module graph, so no element at all — while `pnpm
+  dev` and the configurator smoke check, both on the unbundled sources, stayed green. The site's entry
+  keys are flat now (`configurator-index`), and `copyMaplibreDist` refuses a bundle that emits a
+  MapLibre-importing chunk outside the directory it copies into, so the next variant fails in CI.
 - **The entry is a facade.** Because the lazy chunks import our shared code, Rollup emits `map0.js`
   as a small re-export shim in front of the real chunk. That is normal for a code-split library; it
   costs one extra request, which a `modulepreload` hint can remove if it ever matters.

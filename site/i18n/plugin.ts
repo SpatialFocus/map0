@@ -168,8 +168,10 @@ export function i18n(outDir: string): Plugin {
       });
     },
 
-    /* build: finish every emitted page in English, write its /de/ twin, then the site files */
-    closeBundle() {
+    /* build: finish every emitted page in English, write its /de/ twin, then the site files.
+       writeBundle rather than closeBundle: this must not run when the build itself failed, or
+       its ENOENT on the files that were never written would hide the real error */
+    writeBundle() {
       const pages = sitePages();
       const warnings: string[] = [];
       for (const page of [...pages].sort()) {
