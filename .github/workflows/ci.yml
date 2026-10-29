@@ -2,11 +2,14 @@ name: CI
 
 on:
   push:
-    branches: [main, dev, "feat/**", "feature/**"]
+    branches: [main, dev, "feat/**", "feature/**", "renovate/**"]
   pull_request:
 
 jobs:
   ci:
+    # Renovate's branches run on push, before their PR exists: prCreation "not-pending" waits for
+    # this result (docs/09 §10). The pull_request run of the same PR would only repeat it.
+    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'renovate/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -25,7 +28,7 @@ jobs:
       - run: pnpm visual # the UI's states against the committed e2e/visual/linux screenshots (N9)
       - name: Upload visual diffs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: visual-diffs
           path: e2e/visual/.out/

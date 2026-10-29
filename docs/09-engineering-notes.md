@@ -665,10 +665,17 @@ that registry is the intended extension point.
 <https://github.com/apps/renovate> — a repository setting, nothing in the repo). The rules, and
 why:
 
-- **Weekly, grouped.** Everything minor and patch arrives as one PR before Monday 6:00
-  (Europe/Vienna); majors come one by one. A version has to be three days old
-  (`minimumReleaseAge`), which gives a compromised release time to be pulled. Lockfile
-  maintenance once a month. Vulnerabilities reported by OSV skip the schedule.
+- **Weekly, grouped.** Everything minor and patch arrives as one PR on Monday (Europe/Vienna).
+  A major waits in the Dependency Dashboard issue until someone ticks it there, then comes as a
+  PR of its own. A version has to be three days old (`minimumReleaseAge`), which gives a
+  compromised release time to be pulled. Lockfile maintenance once a month. Vulnerabilities
+  reported by OSV skip the schedule.
+- **Why majors wait for a tick, and why the window is the whole Monday.** Renovate keeps at
+  most five branches (`branchConcurrentLimit` inherits `prConcurrentLimit`), and a branch
+  without a PR counts too. In October 2026 TypeScript 7, Vite 8 and Vitest 5 sat on three of
+  the five slots, so every other update showed up as "Rate-Limited" on the dashboard. A
+  window of a few hours on Monday morning also left room for only one or two Renovate runs a
+  week, so `prHourlyLimit` is off as well (0).
 - **Automerge only for dev-dependency patches**, and only after CI is green — which here means
   typecheck, unit tests, the smoke run on the built bundle, the pixel comparison, the size budget
   and the site build. Everything that ships in the bundle (`dependencies`, the MapLibre peer) is
@@ -695,9 +702,20 @@ why:
   was tried on 2026-10-19 and makes a fresh resolution fail outright
   (`ERR_PNPM_NO_MATURE_MATCHING_VERSION`) whenever some dependent demands a version younger than
   that, and `pnpm update` refuses to run non-interactively under it.
-- **Node itself only as a major.** Renovate reads `node-version: 24` and `engines.node: ">=24"`
-  as the dependency `node` and would pin both to the latest patch release every week; minor,
-  patch and pin updates of `node` are disabled, a new LTS major still arrives as a PR.
+- **CI runs on every push to `renovate/**`**, and skips the `pull_request` run of those PRs.
+  `not-pending` waits for a check on the branch, and Renovate does not count its own
+  `renovate/stability-days` as one. Without a CI run before the PR existed it waited the full
+  `prNotPendingHours` (25 h). By then the Monday window was over, so the branches sat on the
+  dashboard under "Awaiting Schedule": no Renovate PR opened between 2026-10-19 and 2026-10-29.
+- **Node in the workflows only as a major.** Renovate reads `node-version: 24` as the dependency
+  `node` and would pin it to the latest patch release every week. Minor, patch, pin and bump
+  updates of `node` are disabled. `bump` is what `rangeStrategy: bump` makes of `24` →
+  `24.22.1`, and without it that weekly PR came back. A new LTS major waits on the dashboard
+  like any other major.
+- **`engines.node` by hand.** It says which Node a user may run (`>=24` for the workspace,
+  `>=22` for `map0-check`). Raising it is a breaking change for `map0-check` users, not a
+  dependency update, so Renovate leaves `engines` alone. `@types/node` stays below 23 to match
+  `map0-check`'s oldest supported Node. Raise both together.
 
 `SECURITY.md` is the other half of low-effort maintenance: it sends reporters to GitHub's
 private vulnerability reporting instead of a public issue. That form exists only once
