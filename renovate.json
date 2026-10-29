@@ -3,17 +3,18 @@
   "description": "Weekly, grouped, conservative — CI decides (typecheck, unit tests, smoke on the built bundle, pixel comparison, size budget, site build). The reasoning is in docs/09-engineering-notes.md §10.",
   "extends": ["config:recommended", ":semanticCommits"],
   "timezone": "Europe/Vienna",
-  "schedule": ["before 6am on monday"],
+  "schedule": ["on monday"],
   "rangeStrategy": "bump",
   "minimumReleaseAge": "3 days",
   "prCreation": "not-pending",
   "osvVulnerabilityAlerts": true,
   "labels": ["dependencies"],
   "prConcurrentLimit": 5,
+  "prHourlyLimit": 0,
   "postUpdateOptions": ["pnpmDedupe"],
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["before 6am on the first day of the month"]
+    "schedule": ["on the first day of the month"]
   },
   "packageRules": [
     {
@@ -21,6 +22,11 @@
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "non-major dependencies",
       "groupSlug": "non-major"
+    },
+    {
+      "description": "majors wait in the Dependency Dashboard until someone ticks them — an open major would otherwise hold one of the five branch slots for weeks",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
     },
     {
       "description": "dev-only patch updates merge themselves once CI is green",
@@ -79,10 +85,20 @@
       "groupSlug": "github-actions"
     },
     {
-      "description": "Node itself: new LTS majors only, no pinning of node-version or engines to a patch release",
+      "description": "Node in the workflows (node-version): new LTS majors only, never pinned or bumped to a patch release",
       "matchPackageNames": ["node"],
-      "matchUpdateTypes": ["minor", "patch", "pin"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "bump"],
       "enabled": false
+    },
+    {
+      "description": "engines.node says which Node a user may run, so it moves by hand, never with a release",
+      "matchDepTypes": ["engines"],
+      "enabled": false
+    },
+    {
+      "description": "@types/node follows the oldest Node map0-check supports (engines.node >=22), not the newest",
+      "matchPackageNames": ["@types/node"],
+      "allowedVersions": "<23"
     }
   ]
 }
