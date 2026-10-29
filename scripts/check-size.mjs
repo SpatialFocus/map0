@@ -35,15 +35,15 @@ export function measure() {
   const jsFiles = readdirSync(DIST).filter((f) => f.endsWith(".js") || f.endsWith(".mjs"));
   const isVendorMaplibre = (f) => f.startsWith("maplibre-gl");
 
-  /** static (non-`import()`) chunk-to-chunk edges */
+  /** static (non-`import()`) chunk-to-chunk edges. `import(` never matches the
+      pattern, so a chunk that imports a file both ways — the engine chunk does
+      that with MapLibre — keeps its static edge. */
   const staticImports = new Map();
   for (const file of jsFiles) {
     const src = readFileSync(join(DIST, file), "utf8");
-    const dynamic = new Set([...src.matchAll(/import\(\s*["']\.\/([^"']+)["']/g)].map((m) => m[1]));
-    const all = [...src.matchAll(/(?:from|import)\s*["']\.\/([^"']+)["']/g)].map((m) => m[1]);
     staticImports.set(
       file,
-      all.filter((f) => !dynamic.has(f)),
+      [...src.matchAll(/(?:from|import)\s*["']\.\/([^"']+)["']/g)].map((m) => m[1]),
     );
   }
 

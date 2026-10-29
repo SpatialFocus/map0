@@ -32,7 +32,7 @@ export default defineConfig({
       },
       formats: ["es"],
     },
-    rollupOptions: {
+    rolldownOptions: {
       external: maplibreExternal.external,
       output: {
         /* the copied files sit next to the entry, so every chunk that imports
@@ -41,6 +41,10 @@ export default defineConfig({
         paths: maplibreExternal.paths,
         entryFileNames: "[name].js",
         chunkFileNames: "[name]-[hash].js",
+        /* the licence headers of what we bundle (Lit, DOMPurify, jsPDF …) stay
+           in the chunks, as they did up to Vite 6; Vite 8 strips them when it
+           minifies */
+        comments: { legal: true },
       },
     },
   },

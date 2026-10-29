@@ -395,23 +395,41 @@ it, or drop it when a real dependency arrives.
 
 ## 5. Field notes: build and bundler
 
-- **Rollup writes `output.paths` verbatim** into every chunk that imports the external module, so
-  chunks must sit in the same directory as the entry. A `chunks/` subfolder made
+- **The bundler writes `output.paths` verbatim** (Rollup did, Rolldown does) into every chunk that
+  imports the external module, so chunks must sit in the same directory as the entry. A `chunks/` subfolder made
   `./maplibre-gl.mjs` resolve one level too deep — and the standalone demo *looked* fine because it
   silently fell back to the dev sources. Demo pages that test the bundle must not have a fallback.
-- **The same bug one level up, in the site build.** Rollup hoists the imports of an entry's
-  dependencies into the entry chunk (`output.hoistTransitiveImports`), externals included, so a page
-  whose own code never mentions MapLibre still carries `import "./maplibre-gl.mjs"`. The configurator
+- **The same bug one level up, in the site build.** Rollup (up to Vite 6) hoisted the imports of an
+  entry's dependencies into the entry chunk (`output.hoistTransitiveImports`), externals included, so
+  a page whose own code never mentioned MapLibre still carried `import "./maplibre-gl.mjs"`. The configurator
   page's entry was emitted at `assets/configurator/` (its input key was `configurator/index`) and
   404'd on that import in production — the whole module graph, so no element at all — while `pnpm
   dev` and the configurator smoke check, both on the unbundled sources, stayed green. The site's entry
   keys are flat now (`configurator-index`), and `copyMaplibreDist` refuses a bundle that emits a
   MapLibre-importing chunk outside the directory it copies into, so the next variant fails in CI.
-- **The entry is a facade.** Because the lazy chunks import our shared code, Rollup emits `map0.js`
-  as a small re-export shim in front of the real chunk. That is normal for a code-split library; it
-  costs one extra request, which a `modulepreload` hint can remove if it ever matters.
+  Rolldown (Vite 8) does not hoist (`hoistTransitiveImports` is "not implemented yet"), so the
+  configurator entry no longer imports MapLibre at all. Keys and guard stay: the chunk layout is the
+  bundler's to choose, and the guard was checked to still fire under Rolldown.
+- **The entry is not a facade any more.** Rollup emitted `map0.js` as a small re-export shim in front
+  of the real chunk, because the lazy chunks import our shared code. Rolldown puts the element's code
+  into `map0.js` itself and moves Lit into a chunk of its own (`decorate-*.js`), so the page tier is
+  still four files but without the extra request.
 - **Chunk names come from module names**, which is why `popup-*.js` and `add-layer-dialog-*.js` are
-  readable. `scripts/check-size.mjs` uses that plus the sourcemaps to classify tiers.
+  readable. For an `index` module Rolldown takes the directory name instead: core is `src-*.js` (as
+  are the hyparquet chunks), geotiff and PMTiles are `esm-*.js`, proj4 is `lib-*.js`, ogc-client is
+  `dist-*.js`. `scripts/check-size.mjs` reads what is inside from the sourcemaps.
+- **Rolldown emits a facade for an ineffective dynamic import.** An `import()` of a module that
+  already sits in a static chunk (the `INEFFECTIVE_DYNAMIC_IMPORT` warnings: `basemaps.ts`,
+  `bbox.ts`, `adapters/vector.ts`) becomes a 50-byte `export { … } from "./src-*.js"` chunk, one tiny
+  request on first use, where Rollup referenced the chunk directly. CommonJS interop helpers sit in
+  `rolldown-runtime-*.js` (deferred: geotiff, ogc-client; on the site also Ace).
+- **Licence headers stay in the chunks on purpose.** Vite 8 drops legal comments (`@license`,
+  `/*!`) whenever it minifies; esbuild under Vite 6 kept them inline. The library and the site build
+  both set `output.comments: { legal: true }`, so Lit's, DOMPurify's and jsPDF's headers still ship
+  with the code. That is ~0.3 KB gzip of the page tier, mostly Lit's twelve headers.
+- **`check-size.mjs` once dropped a static edge** when the same chunk also `import()`ed the same
+  file. Under Rolldown the core chunk imports MapLibre both ways, and the whole map tier was
+  reported as deferred. The static pattern never matches `import(`, so the filter is gone.
 - **Fat optional dependencies are worth stubbing.** jsPDF dynamically imports html2canvas and canvg
   for `doc.html()` and SVG rasterisation, which map0 never calls — ~110 KB gzip that shipped in the
   folder and would only ever be dead weight. Aliased to `src/stubs/pdf-stub.ts`, same trick as
@@ -427,8 +445,9 @@ it, or drop it when a real dependency arrives.
   build Rollup emitted the re-export but dropped the corresponding import, so the chunk referenced an
   undefined name (`Popup is not defined`, only in the bundle). Wrap it in a function that *uses* the
   binding instead — `createPopup()` — and the import survives.
-- **Lit's `css` literals are not minified by anybody.** esbuild minifies the code around a
-  template literal, never the string inside, so every comment and indent in `styles.ts` shipped in
+- **Lit's `css` literals are not minified by anybody.** The minifier (esbuild up to Vite 6, Oxc
+  since Vite 8) minifies the code around a template literal, never the string inside, so every
+  comment and indent in `styles.ts` shipped in
   the page tier — ~3 KB gzip. `scripts/minify-css-literals.mjs` (a pre-transform in the package
   and the site build) strips comments, collapses white space and drops the spaces around `{ } ; , >`;
   it leaves the spaces around `:` alone (`.a :hover` is not `.a:hover`) and fails the build on

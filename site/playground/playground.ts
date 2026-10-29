@@ -10,7 +10,7 @@
  */
 import "@map0/ui";
 /* Ace, hand-picked: the blanket esm-resolver would register every mode and
-   worker Ace ships and Rollup would emit them all as chunks — megabytes of
+   worker Ace ships and the build would emit them all as chunks — megabytes of
    PHP/XQuery/Vim nobody here can ever load. This page needs exactly four
    pieces: the core, the JSON mode, one theme, and the search box (Ctrl-F).
 

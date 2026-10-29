@@ -1,6 +1,7 @@
 /**
- * Lit's css`` literals reach the bundle exactly as written: esbuild minifies
- * the code around them, never the string inside. By volume, styles.ts is
+ * Lit's css`` literals reach the bundle exactly as written: the minifier (Oxc
+ * since Vite 8, esbuild before) minifies the code around them, never the
+ * string inside. By volume, styles.ts is
  * mostly comments and indentation — about 3 KB of the page tier's gzip — so
  * this strips both from every css`` literal in packages/ui/src before the
  * build sees it.
