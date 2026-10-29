@@ -4,6 +4,13 @@ Releases of the `map0-viewer` npm package. Generated from the
 [conventional commits](https://www.conventionalcommits.org) by `pnpm release` (release-it) —
 do not edit by hand.
 
+## [0.4.1](https://github.com/SpatialFocus/map0/compare/v0.4.0...v0.4.1) (2026-10-29)
+
+### Bug Fixes
+
+* **site:** drop Ace's JSON worker on the playground, mark errors in the gutter ourselves ([a9719d7](https://github.com/SpatialFocus/map0/commit/a9719d7298ca2f9755417cf57b29494debfba528))
+* **site:** keep every entry chunk in assets/ so the hoisted MapLibre import resolves ([02a7600](https://github.com/SpatialFocus/map0/commit/02a7600c847af0884416915aa4720e6602691a67))
+
 ## [0.4.0](https://github.com/SpatialFocus/map0/compare/v0.3.0...v0.4.0) (2026-10-21)
 
 ### Features

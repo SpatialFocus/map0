@@ -71,7 +71,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
-## @geomatico/maplibre-cog-protocol 0.9.3 — MIT
+## @geomatico/maplibre-cog-protocol 0.10.0 — MIT
 
 ```
 MIT License
@@ -650,7 +650,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## hyparquet 1.31.4 — MIT
+## hyparquet 1.31.5 — MIT
 
 https://hyperparam.app
 
@@ -931,7 +931,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
-## maplibre-gl 6.14.0 — BSD-3-Clause
+## maplibre-gl 6.16.0 — BSD-3-Clause
 
 https://maplibre.org/
 
