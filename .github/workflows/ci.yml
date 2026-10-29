@@ -25,7 +25,7 @@ jobs:
       - run: pnpm visual # the UI's states against the committed e2e/visual/linux screenshots (N9)
       - name: Upload visual diffs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: visual-diffs
           path: e2e/visual/.out/

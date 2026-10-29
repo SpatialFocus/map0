@@ -13,6 +13,6 @@
     "@map0/core": "workspace:*",
     "@map0/schema": "workspace:*",
     "@map0/ui": "workspace:*",
-    "lit": "^3.2.0"
+    "lit": "^3.3.3"
   }
 }
