@@ -12,7 +12,7 @@
   "hero.zero3": "<b>0</b> <strong>Build-Schritte</strong> <span>Ein Script-Tag und ein Kartenelement ergänzen die bestehende Seite. Das Paket ist fertig gebaut.</span>",
   "hero.zero4": "<b>0</b> <strong>Tracking</strong> <span>Der Viewer enthält keine Analysefunktionen und setzt keine Cookies. Die Datenquellen werden in der Konfiguration festgelegt.</span>",
 
-  "release.banner": "<b>Neu</b> map0-viewer 0.4.0 ist da<span class=\"detail\">: ein visueller Konfigurator, das CLI map0-check zum Prüfen von OGC-Diensten, Radiogruppen, Gruppenschalter und ein Filterfeld im Layerbaum, Panels in jeder Ecke und eine Reihe von Fehlerbehebungen</span>. <a href=\"https://github.com/SpatialFocus/map0/releases/tag/v0.4.0\">Release Notes →</a>",
+  "release.banner": "<b>Neu</b> map0-viewer 0.4.1 ist da<span class=\"detail\">: ein visueller Konfigurator, das CLI map0-check zum Prüfen von OGC-Diensten, Radiogruppen, Gruppenschalter und ein Filterfeld im Layerbaum, Panels in jeder Ecke, eine Reihe von Fehlerbehebungen und jetzt MapLibre 6.16</span>. <a href=\"https://github.com/SpatialFocus/map0/releases\">Release Notes →</a>",
 
   "stage.caption": "<strong>Die Karte ausprobieren:</strong> Sie kombiniert WMS, Vektorkacheln und GeoJSON-Punkte aus einem WFS. Den Layerbaum öffnen, den Flächenwidmungsplan einblenden, auf einen Brunnen klicken, zum Luftbild wechseln, eine Adresse suchen oder eine Strecke messen. Die <a href=\"#config\">Konfiguration</a> steht weiter unten.",
 

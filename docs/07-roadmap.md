@@ -161,7 +161,7 @@ What is left for v1.0 is the accessibility pass and repo governance.
   request builders and parsers, bundled) and reports https, CORS, Web Mercator, image formats,
   GeoJSON, paging, feature counts and axis order per layer, with a verdict, exit code, JSON report
   and the ready-to-paste layer definition (`--config` wraps it into a validated config); README in
-  the package · ✅ on npm since 0.4.0 (2026-10-21), linked from the validator page and the README
+  the package · ✅ on npm since 2026-10-21 (the 0.4 release), linked from the validator page and the README
 - ⬜ **Drawing / annotations** (F9.2)
 - ⬜ **Time-enabled layers** (WMS TIME)
 - ⬜ **Optional deck.gl overlay adapter** for very large datasets
