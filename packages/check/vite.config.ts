@@ -8,7 +8,7 @@ import { optionalPeerStubs } from "../../scripts/stub-aliases.mjs";
  * resolve), ogc-client stays a runtime dependency. Tree-shaking with
  * `moduleSideEffects: false` is what keeps MapLibre, jsPDF and the other
  * browser-only dependencies of core out: the checker reaches core's
- * capabilities reading and request builders only, and Rollup may drop every
+ * capabilities reading and request builders only, and Rolldown may drop every
  * module whose exports it never uses — including their import statements.
  */
 export default defineConfig({
@@ -22,7 +22,7 @@ export default defineConfig({
     sourcemap: false,
     minify: false,
     ssr: fileURLToPath(new URL("./src/cli.ts", import.meta.url)),
-    rollupOptions: {
+    rolldownOptions: {
       output: { entryFileNames: "map0-check.js", format: "es" },
       treeshake: { moduleSideEffects: false },
     },

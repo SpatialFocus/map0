@@ -14,11 +14,11 @@ const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
    The key names the page's entry chunk, assets/<key>-<hash>.js, and it joins
    the directory with a dash on purpose: "configurator/index" put the chunk in
-   assets/configurator/, where the hoisted `import "./maplibre-gl.mjs"` (Rollup
-   adds the imports of an entry's dependencies to the entry) resolved to a file
-   that was not there, and the page died on a 404. Every chunk that reaches
-   MapLibre has to sit in assets/ itself — scripts/maplibre-dist.mjs fails the
-   build otherwise. The HTML still lands at its own path (configurator/index.html);
+   assets/configurator/, where the hoisted `import "./maplibre-gl.mjs"` (Rollup,
+   up to Vite 6, added the imports of an entry's dependencies to the entry;
+   Rolldown does not hoist them) resolved to a file that was not there, and the
+   page died on a 404. Every chunk that reaches MapLibre has to sit in assets/
+   itself — scripts/maplibre-dist.mjs fails the build otherwise. The HTML still lands at its own path (configurator/index.html);
    only the chunk name comes from the key. */
 const pagesIn = (dir: string): Record<string, string> =>
   Object.fromEntries(
@@ -215,10 +215,11 @@ export default defineConfig({
     target: "es2022",
     outDir: r("../dist-site"),
     emptyOutDir: true,
-    rollupOptions: {
+    rolldownOptions: {
       input: { ...pagesIn("."), ...pagesIn("demos"), ...pagesIn("playground"), ...pagesIn("configurator") },
       external: maplibreExternal.external,
-      output: { paths: maplibreExternal.paths },
+      /* licence headers stay, as in the library build (packages/ui/vite.config.ts) */
+      output: { paths: maplibreExternal.paths, comments: { legal: true } },
     },
   },
   resolve: {

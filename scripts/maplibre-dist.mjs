@@ -37,11 +37,13 @@ const importsMaplibre = (chunk) =>
  * refuse a bundle that emits a MapLibre-importing chunk anywhere else.
  *
  * The import path is relative to the importing chunk, so a chunk one directory
- * down 404s on it, and with it everything that chunk is an entry for. An entry
- * does not even have to import MapLibre itself: Rollup hoists the imports of
- * its dependencies into it (output.hoistTransitiveImports), which is how the
- * site's configurator page broke at assets/configurator/ while every chunk
- * that visibly used MapLibre sat in assets/. The build fails here instead.
+ * down 404s on it, and with it everything that chunk is an entry for. Up to
+ * Vite 6 an entry did not even have to import MapLibre itself: Rollup hoisted
+ * the imports of its dependencies into it (output.hoistTransitiveImports),
+ * which is how the site's configurator page broke at assets/configurator/
+ * while every chunk that visibly used MapLibre sat in assets/. Rolldown does
+ * not hoist, but the chunk layout is still the bundler's to choose. The build
+ * fails here instead.
  */
 export function copyMaplibreDist(targetDir) {
   const to = typeof targetDir === "string" ? targetDir : fileURLToPath(targetDir);
@@ -75,7 +77,7 @@ export function copyMaplibreDist(targetDir) {
   };
 }
 
-/** rollup settings that keep MapLibre out of our chunks and next to them */
+/** bundler settings (build.rolldownOptions) that keep MapLibre out of our chunks and next to them */
 export const maplibreExternal = {
   /* the bare specifier only — "maplibre-gl/dist/maplibre-gl.css?inline" stays inlined */
   external: (id) => id === "maplibre-gl",

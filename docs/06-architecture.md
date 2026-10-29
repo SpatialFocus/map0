@@ -156,7 +156,7 @@ Two more decisions carry the rest:
   library imported dynamically from two modules is emitted twice. `core/src/ogc.ts` is the single
   place that loads ogc-client (the WMTS adapter and the add-layer dialog both go through it).
 
-Chunks are emitted flat next to the entry: Rollup writes the external MapLibre specifier verbatim
+Chunks are emitted flat next to the entry: the bundler writes the external MapLibre specifier verbatim
 into every chunk, so a `chunks/` subdirectory would resolve `./maplibre-gl.mjs` one level too deep.
 
 Keeping the page tier this small requires discipline in the element: it may only import types from
