@@ -11,6 +11,14 @@ do not edit by hand.
 * **site:** drop Ace's JSON worker on the playground, mark errors in the gutter ourselves ([a9719d7](https://github.com/SpatialFocus/map0/commit/a9719d7298ca2f9755417cf57b29494debfba528))
 * **site:** keep every entry chunk in assets/ so the hoisted MapLibre import resolves ([02a7600](https://github.com/SpatialFocus/map0/commit/02a7600c847af0884416915aa4720e6602691a67))
 
+### Dependencies
+
+* **deps:** ship maplibre-gl 6.16 (was 6.14), @geomatico/maplibre-cog-protocol 0.10 (was 0.9.3) and hyparquet 1.31.5 ([4bd5994](https://github.com/SpatialFocus/map0/commit/4bd5994b9f67aadc9d27af13cc7edcdfb2ce8975))
+
+### Build
+
+* **build:** bundle with Vite 8 (Rolldown). The page-load part is 34.1 KB gzip (was 35.3 KB), the lazy chunks have new file names, and the licence headers of the bundled libraries stay in the chunks. map0-check 0.4.1 is the same CLI, built with Vite 8 ([e6bf482](https://github.com/SpatialFocus/map0/commit/e6bf48203aef9822b65c12dc9b00e4a7888c7a70))
+
 ## [0.4.0](https://github.com/SpatialFocus/map0/compare/v0.3.0...v0.4.0) (2026-10-21)
 
 ### Features
