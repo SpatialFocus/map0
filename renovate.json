@@ -85,8 +85,8 @@
       "groupSlug": "github-actions"
     },
     {
-      "description": "Node in the workflows (node-version): new LTS majors only, never pinned or bumped to a patch release",
-      "matchPackageNames": ["node"],
+      "description": "Node in the workflows (node-version): new LTS majors only, never pinned or bumped to a patch release. By depName: setup-node's packageName is actions/node-versions",
+      "matchDepNames": ["node"],
       "matchUpdateTypes": ["minor", "patch", "pin", "bump"],
       "enabled": false
     },

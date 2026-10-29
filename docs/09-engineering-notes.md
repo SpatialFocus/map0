@@ -709,9 +709,13 @@ why:
   dashboard under "Awaiting Schedule": no Renovate PR opened between 2026-10-19 and 2026-10-29.
 - **Node in the workflows only as a major.** Renovate reads `node-version: 24` as the dependency
   `node` and would pin it to the latest patch release every week. Minor, patch, pin and bump
-  updates of `node` are disabled. `bump` is what `rangeStrategy: bump` makes of `24` →
-  `24.22.1`, and without it that weekly PR came back. A new LTS major waits on the dashboard
-  like any other major.
+  updates of `node` are disabled. The rule matches by `matchDepNames`: Renovate looks up
+  `actions/setup-node`'s `node-version` with the packageName `actions/node-versions` (GitHub
+  releases), so `matchPackageNames: ["node"]` never matched, and the weekly PR kept coming back
+  until 2026-10-29. A new LTS major waits on the dashboard like any other major.
+- **A branch that already exists skips the dashboard approval.** Only majors that had no branch
+  yet moved to "Pending Approval" when the approval rule came in. The branches Renovate had
+  already made for TypeScript 7 and Vite 8 had to be deleted by hand.
 - **`engines.node` by hand.** It says which Node a user may run (`>=24` for the workspace,
   `>=22` for `map0-check`). Raising it is a breaking change for `map0-check` users, not a
   dependency update, so Renovate leaves `engines` alone. `@types/node` stays below 23 to match
