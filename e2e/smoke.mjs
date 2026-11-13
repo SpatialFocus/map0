@@ -14,6 +14,7 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import { reviewRegressions } from "./review-regressions.mjs";
+import { encodeMvt, rangeResponse, wholeTile, writePmtiles } from "../packages/core/src/testing/vector-tiles.mjs";
 
 const DIST = new URL("../packages/ui/dist/", import.meta.url);
 
@@ -73,6 +74,28 @@ const SRC_CONFIG = {
 
 const INVALID_CONFIG = { version: 1, basemaps: [{ type: "wms", url: "https://e.org/x" }] };
 
+/* A PMTiles archive for the host API (getTile, setFilter), served with HTTP
+   Range like any static host: at every zoom up to 14 the tile around PARCEL_AT
+   holds parcel 17 over the whole tile; at 14 also parcel 23 in one corner. */
+const PARCEL_AT = [16.358642578125, 48.20270976533689];
+const tileOf = ([lng, lat], z) => {
+  const n = 2 ** z;
+  const phi = (lat * Math.PI) / 180;
+  return [Math.floor(((lng + 180) / 360) * n), Math.floor(((1 - Math.asinh(Math.tan(phi)) / Math.PI) / 2) * n)];
+};
+const ARCHIVE = writePmtiles(
+  Object.fromEntries(
+    Array.from({ length: 15 }, (_, z) => {
+      const parcels = [{ id: 17, type: 3, properties: { number: 17 }, rings: wholeTile() }];
+      if (z === 14) parcels.push({ id: 23, type: 3, properties: { number: 23 }, rings: [[[0, 0], [512, 0], [512, 512], [0, 512]]] });
+      return [`${z}/${tileOf(PARCEL_AT, z).join("/")}`, encodeMvt([{ name: "parcels", features: parcels }])];
+    }),
+  ),
+  { minZoom: 0, maxZoom: 14 },
+);
+/** the Range header of every request for the archive, in order */
+const archiveRequests = [];
+
 const HTML = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>map0 smoke</title>
 <style>
@@ -124,6 +147,12 @@ const server = createServer((req, res) => {
   if (path === "/data/vienna.geojson") {
     res.writeHead(200, { "content-type": "application/geo+json" });
     return res.end(JSON.stringify(VIENNA_GEOJSON));
+  }
+  if (path === "/tiles/parcels.pmtiles") {
+    archiveRequests.push(req.headers.range ?? "");
+    const { status, headers, body } = rangeResponse(ARCHIVE, req.headers.range ?? null);
+    res.writeHead(status, { ...headers, "content-type": "application/octet-stream" });
+    return res.end(body);
   }
   readFile(new URL(`.${path}`, DIST))
     .then((body) => {
@@ -856,6 +885,103 @@ try {
   check("clicking a generated cluster still zooms in", expandedCluster);
   check("no console errors while displaying ordinary counts and clusters", clusterNoise.length === 0, clusterNoise.join(" | "));
   await clusterPage.close();
+
+  /* The host API on a PMTiles layer: getTile reads a finer zoom level through
+     the archive the map already opened (header and directory fetched once), and
+     setFilter reaches one style layer by its config id. */
+  const hostNoise = [];
+  const hostPage = await context.newPage();
+  watchConsole(hostPage, hostNoise);
+  await hostPage.goto(`${BASE}/smoke.html`, { waitUntil: "domcontentloaded" });
+  await hostPage.waitForFunction(() => !!document.querySelector("map0-viewer")?.api);
+  archiveRequests.length = 0;
+  await hostPage.evaluate(
+    ([center]) => {
+      const viewer = document.querySelector("map0-viewer");
+      viewer.config = {
+        version: 1,
+        map: { center, zoom: 11 },
+        basemaps: [{ type: "empty", title: "None" }],
+        controls: { layerSwitcher: false }, search: { enabled: false }, permalink: false,
+        layers: [{
+          id: "parcels", type: "vector", title: "Parcels", sourceLayer: "parcels", popup: false,
+          url: `pmtiles://${location.origin}/tiles/parcels.pmtiles`,
+          style: [
+            { type: "fill", paint: { "fill-color": "#cccccc", "fill-opacity": 0.5 } },
+            { type: "line", id: "selected", filter: ["==", ["get", "number"], -1], paint: { "line-color": "#d6246e", "line-width": 4 } },
+          ],
+        }],
+      };
+    },
+    [PARCEL_AT],
+  );
+  await hostPage.waitForFunction(() => {
+    const api = document.querySelector("map0-viewer")?.api;
+    return api?.config.layers[0]?.id === "parcels" && api.layers.state.value[0]?.status === "ready";
+  }, null, { timeout: 30_000 });
+  await hostPage.evaluate(() => new Promise((r) => {
+    const { map } = document.querySelector("map0-viewer").api;
+    if (map.loaded()) r();
+    map.once("idle", r);
+  }));
+  const headerReads = () => archiveRequests.filter((r) => r.startsWith("bytes=0-")).length;
+  const drawnBefore = headerReads();
+  const tile = await hostPage.evaluate(
+    ([lng, lat]) => document.querySelector("map0-viewer").api.layers
+      .getTile("parcels", { zoom: 14, lngLat: { lng, lat }, sourceLayer: "parcels", geometry: false })
+      .then((t) => ({ z: t.z, numbers: t.features.map((f) => f.properties.number) }))
+      .catch((e) => ({ error: String(e) })),
+    PARCEL_AT,
+  );
+  check(
+    "getTile reads the finer zoom level of a PMTiles layer",
+    tile.z === 14 && JSON.stringify(tile.numbers) === "[17,23]",
+    JSON.stringify(tile),
+  );
+  check(
+    "…through the archive the map opened: header and directory fetched once",
+    drawnBefore === 1 && headerReads() === 1,
+    `${archiveRequests.length} archive requests, ${headerReads()} header reads`,
+  );
+
+  const selected = () => hostPage.evaluate(() => {
+    const { api } = document.querySelector("map0-viewer");
+    const ids = api.layers.all.find((l) => l.def.id === "parcels").layerIds;
+    /* an idle map fires no further "idle" by itself: repaint, and never wait forever */
+    return new Promise((done) => {
+      const read = () => done({
+        selected: api.map.queryRenderedFeatures({ layers: [ids[1]] }).length,
+        fill: api.map.queryRenderedFeatures({ layers: [ids[0]] }).length,
+      });
+      const timer = setTimeout(read, 5_000);
+      api.map.once("idle", () => {
+        clearTimeout(timer);
+        read();
+      });
+      api.map.triggerRepaint();
+    });
+  });
+  const setFilter = (filter, options) => hostPage.evaluate(
+    ([f, o]) => document.querySelector("map0-viewer").api.layers.setFilter("parcels", f, o),
+    [filter, options],
+  );
+  const initially = await selected();
+  const applied = await setFilter(["==", ["get", "number"], 17], { styleLayer: "selected", replace: true });
+  const afterSelect = await selected();
+  const restored = await setFilter(null, { styleLayer: "selected" });
+  const afterReset = await selected();
+  check(
+    "setFilter outlines a parcel on one named style layer and leaves the others alone",
+    initially.selected === 0 && applied && afterSelect.selected > 0 && afterSelect.fill === initially.fill,
+    `before ${JSON.stringify(initially)}, after ${JSON.stringify(afterSelect)}`,
+  );
+  check("setFilter(null) restores the configured filter", restored && afterReset.selected === 0, JSON.stringify(afterReset));
+  check(
+    "setFilter answers false for a style layer id the layer does not have",
+    (await setFilter(["==", ["get", "number"], 17], { styleLayer: "typo" })) === false,
+  );
+  check("no console errors while reading tiles and filtering", hostNoise.length === 0, hostNoise.join(" | "));
+  await hostPage.close();
 
   /* ------------------------------------------- layer tree (F2.3, F2.7) */
   const tocNoise = [];

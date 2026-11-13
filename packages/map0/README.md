@@ -97,6 +97,44 @@ import { createMap } from "map0-viewer";
 const viewer = createMap(document.querySelector("#map"), config);
 ```
 
+### Filters and tiles for host pages
+
+A page that drives the map from its own state, for example to outline the features a user picked,
+filters a layer by its map0 id rather than by the MapLibre layer ids map0 generates. Give the style
+layer an `id` in the config and address it:
+
+```js
+// config: "style": [{ "type": "fill", … }, { "type": "line", "id": "selected", "filter": false, … }]
+viewer.api.layers.setFilter("parcels", ["in", ["get", "number"], ["literal", [17, 23]]], {
+  styleLayer: "selected",
+  replace: true, // replaces the config's filter instead of ["all", <config filter>, <this one>]
+});
+viewer.api.layers.setFilter("parcels", null, { styleLayer: "selected" }); // the config's filter again
+```
+
+Without `styleLayer` the filter goes on every style layer of the layer. `setFilter` returns `false`
+when the layer has nothing to filter, `styleLayer` matches none of its style layers, or MapLibre
+rejects the filter.
+
+`api.layers.getTile` reads one tile of a `vector` layer, decoded to GeoJSON, for example to read
+attributes from a finer zoom level than the map currently shows:
+
+```js
+viewer.api.map.on("click", async (event) => {
+  const tile = await viewer.api.layers.getTile("parcels", {
+    zoom: 14,               // capped at the source's maxzoom
+    lngLat: event.lngLat,   // the tile that contains this position
+    sourceLayer: "parcels", // default: every source layer of the tile
+    geometry: false,        // properties only; default true (coordinates in WGS84)
+  });
+  const parcel = tile?.features.find((f) => f.properties.number === 17);
+});
+```
+
+A PMTiles archive is read through the instance the map already opened, so its header and
+directories are not fetched again. Tile templates and TileJSON sources are fetched; a tile the
+map has drawn usually comes from the HTTP cache.
+
 ### TypeScript
 
 Both entries include TypeScript declarations:
@@ -118,7 +156,8 @@ viewer.addEventListener("map0:ready", (event) => {
 `Map0Config` describes the configuration. `Map0Viewer` describes the element's properties, API and
 DOM events. `Map0Api` describes the API available through `viewer.api` and `map0:ready`.
 
-- `Map0Layers` describes `api.layers`: layer state, handles, add/remove, visibility, opacity and zoom.
+- `Map0Layers` describes `api.layers`: layer state, handles, add/remove, visibility, opacity, zoom,
+  filters (`setFilter`) and single vector tiles (`getTile`).
 - `LayerHandle` exposes a layer's definition, status, MapLibre IDs and `bounds()`.
 - `Map0Basemaps` describes `api.basemaps`: `current`, `all` and `switchTo`.
 - `Map0Events` describes subscriptions through `api.events.on`.
@@ -154,13 +193,20 @@ Deploy the complete `dist/` folder:
 cp -r node_modules/map0-viewer/dist ./public/map0   # then load /map0/map0.js
 ```
 
-`map0.js` loads additional modules as needed. MapLibre resolves its worker URL at runtime, so
-`maplibre-gl.mjs` and `maplibre-gl-worker.mjs` must remain alongside it (`maplibre-gl-shared.mjs`
-is an empty compatibility file since MapLibre 6.13). Missing files can prevent vector tiles and
-GeoJSON from appearing. If you bundle map0 into your own build, ensure that the `maplibre-gl*.mjs`
-files are emitted next to your chunks.
+`map0.js` loads additional modules as needed. `maplibre-gl.mjs` and `maplibre-gl-worker.mjs` must
+stay next to it, since MapLibre starts its worker from that file (`maplibre-gl-shared.mjs` is an
+empty compatibility file since MapLibre 6.13). Missing files can prevent vector tiles and GeoJSON
+from appearing. Use `type="module"` on script tags to load the ES-module package.
 
-Use `type="module"` on script tags to load the ES-module package.
+### Importing it through a bundler
+
+An app built with Vite or Nuxt can import the package like any other dependency, without copying
+`dist/` (e.g. `await import("map0-viewer")` in a client-only component). map0 tells MapLibre where
+its worker is with `new URL("./maplibre-gl-worker.mjs", import.meta.url)`, a pattern bundlers
+follow: the build emits the worker as an asset, and the dev server serves it. CI checks this with
+Vite 8, both `vite build` and the dev server; Nuxt 4.6 runs on Vite 8. With Vite 7 the build
+works but its dev server does not start the worker, so vector tiles and GeoJSON stay empty
+there. webpack 5 follows the same pattern; that combination is not tested.
 
 ## What is in the config
 

@@ -35,7 +35,8 @@
       "node ../../e2e/verify-check-tarball.mjs ../check/map0-check-${version}.tgz",
       "npm pack",
       "node ../../e2e/verify-tarball.mjs map0-viewer-${version}.tgz",
-      "node ../../e2e/verify-types.mjs map0-viewer-${version}.tgz"
+      "node ../../e2e/verify-types.mjs map0-viewer-${version}.tgz",
+      "node ../../e2e/verify-bundler.mjs map0-viewer-${version}.tgz"
     ],
     "before:git:release": [
       "node ../../scripts/normalize-changelog.mjs",

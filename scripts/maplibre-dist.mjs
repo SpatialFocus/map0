@@ -33,6 +33,15 @@ const importsMaplibre = (chunk) =>
   [...chunk.imports, ...chunk.dynamicImports].some((id) => id === "maplibre-gl" || id === IMPORT_PATH);
 
 /**
+ * The worker pin (packages/core/src/maplibre-worker.ts) as a host's bundler has
+ * to find it: `new URL("./maplibre-gl-worker.mjs", import.meta.url)` with a
+ * literal, nothing in between — Vite and webpack match exactly that shape.
+ */
+const WORKER_PIN = /new\s+URL\s*\(\s*(["'`])\.\/maplibre-gl-worker\.mjs\1\s*,\s*import\.meta\.url\s*\)/;
+/** the comment that kept our own build from rewriting the pin */
+const PIN_IGNORE = /\/\*\s*@vite-ignore\s*\*\/(?=\s*["'`]\.\/maplibre-gl-worker\.mjs)/g;
+
+/**
  * Copy MapLibre's dist files into `targetDir` (a URL or absolute path), and
  * refuse a bundle that emits a MapLibre-importing chunk anywhere else.
  *
@@ -44,6 +53,15 @@ const importsMaplibre = (chunk) =>
  * while every chunk that visibly used MapLibre sat in assets/. Rolldown does
  * not hoist, but the chunk layout is still the bundler's to choose. The build
  * fails here instead.
+ *
+ * It also hands the worker pin to whoever bundles the output next. The source
+ * marks the pin `@vite-ignore` (the worker does not sit next to the source, so
+ * our build would rewrite the URL into a shape no bundler recognises), and the
+ * library build keeps comments — so the comment is blanked out here, with as
+ * many spaces as it had characters: line and column of everything else stay
+ * put, and so does the sourcemap. A bundle that imports MapLibre without
+ * carrying the plain pin fails the build: a host's bundler would lose the
+ * worker without a word.
  */
 export function copyMaplibreDist(targetDir) {
   const to = typeof targetDir === "string" ? targetDir : fileURLToPath(targetDir);
@@ -53,13 +71,25 @@ export function copyMaplibreDist(targetDir) {
       const outDir = resolve(options.dir ?? dirname(options.file));
       const expected = posix(relative(outDir, to));
       const dirOf = (fileName) => posix(dirname(fileName)).replace(/^\.$/, "");
-      const misplaced = Object.values(bundle)
-        .filter((out) => out.type === "chunk" && importsMaplibre(out) && dirOf(out.fileName) !== expected)
+      const chunks = Object.values(bundle).filter((out) => out.type === "chunk");
+      const misplaced = chunks
+        .filter((chunk) => importsMaplibre(chunk) && dirOf(chunk.fileName) !== expected)
         .map((chunk) => chunk.fileName);
       if (misplaced.length > 0) {
         this.error(
           `MapLibre is imported as "${IMPORT_PATH}", so every chunk that imports it must be emitted in ` +
             `${expected || "the output root"}/ next to the copied file; these are not: ${misplaced.join(", ")}`,
+        );
+      }
+
+      for (const chunk of chunks) {
+        if (PIN_IGNORE.test(chunk.code)) chunk.code = chunk.code.replace(PIN_IGNORE, (c) => " ".repeat(c.length));
+        PIN_IGNORE.lastIndex = 0;
+      }
+      if (chunks.some(importsMaplibre) && !chunks.some((chunk) => WORKER_PIN.test(chunk.code))) {
+        this.error(
+          'no chunk carries the MapLibre worker pin `new URL("./maplibre-gl-worker.mjs", import.meta.url)` ' +
+            "(packages/core/src/maplibre-worker.ts) — a host's bundler would not find the worker",
         );
       }
     },

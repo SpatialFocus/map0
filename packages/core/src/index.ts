@@ -17,6 +17,7 @@ import { HighlightManager } from "./highlight.js";
 import { makeT, maplibreLocale, resolveLocale, type Translate } from "./i18n.js";
 import { LayerManager } from "./layers.js";
 import { attachLongPress } from "./long-press.js";
+import { pinMaplibreWorker } from "./maplibre-worker.js";
 import {
   claimShareParam,
   decodeShareState,
@@ -121,7 +122,17 @@ export {
   type ShareState,
 } from "./permalink.js";
 export { Emitter, Signal, type EventSubscriber, type ReadonlySignal, type Unsubscribe } from "./signals.js";
-export type { LayerHandle, Map0Basemaps, Map0Events, Map0Layers } from "./api.js";
+export type {
+  LayerFilter,
+  LayerFilterOptions,
+  LayerHandle,
+  Map0Basemaps,
+  Map0Events,
+  Map0Layers,
+  TileFeature,
+  TileQuery,
+  TileResult,
+} from "./api.js";
 export {
   collectAttributions,
   composePrint,
@@ -234,6 +245,7 @@ async function buildCore(
   const geolocateOk = cfg.controls.geolocate !== false && (await geolocationAvailable());
   const m = cfg.map;
 
+  pinMaplibreWorker();
   const map = new MaplibreMap({
     container: opts.container,
     style: initialStyle as never,

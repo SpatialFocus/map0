@@ -193,7 +193,9 @@ Unset, the config decides as usual.
           "sourceLayer": "widmung",
           "style": [                        // MapLibre style-spec layers; source/source-layer injected
             { "type": "fill", "paint": { "fill-color": ["get", "farbe"], "fill-opacity": 0.45 } },
-            { "type": "line", "paint": { "line-color": "#555", "line-width": 0.5 } }
+            { "type": "line", "paint": { "line-color": "#555", "line-width": 0.5 } },
+            { "type": "line", "id": "selected", "filter": false,  // "id": addressed by
+              "paint": { "line-color": "#d6246e", "line-width": 3 } } // api.layers.setFilter
           ],
           "popup": { "title": "{{widmung_text}}" },
           "visible": false

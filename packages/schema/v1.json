@@ -728,7 +728,12 @@
       "description": "a MapLibre style-spec layer — \"source\"/\"source-layer\" are injected by map0",
       "required": ["type"],
       "properties": {
-        "type": { "type": "string", "description": "style layer type, e.g. \"fill\", \"line\", \"circle\", \"symbol\"" }
+        "type": { "type": "string", "description": "style layer type, e.g. \"fill\", \"line\", \"circle\", \"symbol\"" },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "name of this style layer for the JS API — api.layers.setFilter(layerId, filter, { styleLayer: \"<id>\" }) filters only it; unique within the layer. map0 still generates the MapLibre layer id"
+        }
       }
     },
     "controls": {

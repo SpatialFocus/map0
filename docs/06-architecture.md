@@ -108,6 +108,13 @@ bottom sheet below). All results also exposed via `map0:featureclick` event for 
   (visibility/opacity/order/status), active tool, locale, theme.
 - **Imperative API** mirrors config (C7): `api.setLayerVisibility(id, v)`, `api.addLayer(def)`,
   `api.flyTo(…)`, `api.getState()` → serializable diff usable as share-state or config export.
+- **Host-app API** on `api.layers`, for pages that keep their own state and draw it on the map:
+  `setFilter(id, filter, { styleLayer, replace })` reaches a style layer by the `id` it carries in
+  the config's `style` array, never by the MapLibre ids map0 generates, and combines with the style
+  layer's own filter (`"all"`) unless told to replace it; `getTile(id, { zoom, lngLat })` decodes one
+  tile of a `vector` layer on the main thread (`@mapbox/vector-tile` + `pbf` in a lazy chunk), a
+  PMTiles archive through the instance the map's `pmtiles://` protocol already holds, so header
+  and directories are fetched once for both. Neither is part of the share state.
 - **DOM CustomEvents** from the element: `map0:ready`, `map0:error`, `map0:featureclick`,
   `map0:statechange` — the CMS-friendly integration surface (no imports needed).
 

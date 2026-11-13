@@ -719,17 +719,31 @@ function validateLayers(
           err(`${p}.url`, 'a "vector" layer needs a "url" (TileJSON, tile template, or pmtiles://)');
         if (!Array.isArray(layer.style))
           err(`${p}.style`, 'a "vector" layer needs "style": an array of MapLibre layer objects');
-        else
-          layer.style.forEach((s, j) => {
-            if (!isObject(s) || typeof s.type !== "string")
-              err(`${p}.style[${j}]`, 'a style layer needs at least a "type"');
-          });
+        else validateStyleLayers(layer.style, `${p}.style`, err);
         expectString(layer.sourceLayer, `${p}.sourceLayer`, err);
         validatePopup(layer.popup, `${p}.popup`, err);
         validateHover(layer.hover, `${p}.hover`, err);
         break;
     }
     if (type !== "geojson") checkUrl(layer.url, `${p}.url`, err);
+  });
+}
+
+/**
+ * Style-spec layers (`style` as an array). Each needs a "type". An optional "id"
+ * names the style layer for the JS API (`api.layers.setFilter(…, { styleLayer })`)
+ * and must be unique within its layer; the MapLibre layer id stays map0's own,
+ * so two map0 layers may well use the same names.
+ */
+function validateStyleLayers(style: unknown[], p: string, err: Err): void {
+  const names = new Set<string>();
+  style.forEach((s, j) => {
+    const sp = `${p}[${j}]`;
+    if (!isObject(s) || typeof s.type !== "string") return err(sp, 'a style layer needs at least a "type"');
+    if (s.id === undefined) return;
+    if (typeof s.id !== "string" || s.id === "") return err(`${sp}.id`, "must be a non-empty string");
+    if (names.has(s.id)) return err(`${sp}.id`, `duplicate style layer id "${s.id}" in this layer`);
+    names.add(s.id);
   });
 }
 
@@ -755,7 +769,8 @@ function validateLayerCrs(crs: unknown, p: string, err: Err): void {
  * same pipeline, so they accept exactly the same options.
  */
 function validateFeatureOptions(layer: Record<string, unknown>, p: string, err: Err): void {
-  if (layer.style !== undefined && !isObject(layer.style) && !Array.isArray(layer.style))
+  if (Array.isArray(layer.style)) validateStyleLayers(layer.style, `${p}.style`, err);
+  else if (layer.style !== undefined && !isObject(layer.style))
     err(`${p}.style`, "style must be a paint object or an array of style-spec layers");
   if (
     layer.cluster !== undefined &&

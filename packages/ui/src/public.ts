@@ -18,6 +18,8 @@ export type {
 export type {
   CoreEvents,
   FeatureInfoResult,
+  LayerFilter,
+  LayerFilterOptions,
   LayerHandle,
   LayerStatus,
   LayerUIState,
@@ -26,5 +28,8 @@ export type {
   Map0Layers,
   ReadonlySignal,
   SearchResult,
+  TileFeature,
+  TileQuery,
+  TileResult,
   Unsubscribe,
 } from "@map0/core";

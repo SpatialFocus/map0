@@ -1,5 +1,5 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
-import type { Map0Layers } from "./api.js";
+import type { LayerFilter, LayerFilterOptions, Map0Layers, TileQuery, TileResult } from "./api.js";
 import {
   normalizeSingleLayer,
   type GroupLayerDef,
@@ -281,6 +281,17 @@ export class LayerManager implements Map0Layers {
     rt.opacity = opacity;
     adapter.applyOpacity(opacity);
     this.refresh();
+  }
+
+  /* host state, like the selection it usually draws: not in the layer panel's
+     state and not in shared links — the host sets it again from its own state */
+  setFilter(id: string, filter: LayerFilter | null, options?: LayerFilterOptions): boolean {
+    return this.adapters.get(id)?.setFilter(filter, options) ?? false;
+  }
+
+  async getTile(id: string, query: TileQuery): Promise<TileResult | null> {
+    const adapter = this.adapters.get(id);
+    return adapter?.readTile ? adapter.readTile(query) : null;
   }
 
   private refresh(): void {

@@ -1,7 +1,19 @@
 import type { Map as MapLibreMap, LngLat, MapGeoJSONFeature, Point } from "maplibre-gl";
 import type { LegendEntryDef, NormalizedLayer, PopupConfig } from "@map0/schema";
-import type { LayerHandle } from "../api.js";
+import type { LayerFilter, LayerFilterOptions, LayerHandle, TileQuery, TileResult } from "../api.js";
 import { Signal } from "../signals.js";
+
+/** one style layer a host may filter (api.layers.setFilter) */
+export interface FilterableStyleLayer {
+  /** the MapLibre layer id map0 generated */
+  layerId: string;
+  /** its `id` in the config's `style` array, when the author named it */
+  name?: string;
+  /** the filter it was added with — from the config, or map0's own */
+  own?: unknown;
+}
+
+const sameFilter = (a: unknown, b: unknown): boolean => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
 export type LayerStatus = "loading" | "ready" | "error";
 
@@ -46,6 +58,8 @@ export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer>
   protected ctx!: AdapterContext;
   /** [maplibre layer id, opacity paint property, base value] triplets for opacity control */
   protected opacityEntries: Array<[string, string, number | unknown[]]> = [];
+  /** the style layers setFilter() reaches — adapters drawing their own register them in addToMap() */
+  protected filterable: FilterableStyleLayer[] = [];
   /** everything registered on the map, undone by unmount() */
   private disposers: Array<() => void> = [];
   private unmounted = false;
@@ -169,6 +183,36 @@ export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer>
   }
 
   featureInfo?(query: FeatureInfoQuery): Promise<FeatureInfoResult | null>;
+
+  /** one decoded tile of the layer's source — only tiled vector adapters implement it */
+  readTile?(query: TileQuery): Promise<TileResult>;
+
+  /**
+   * A host filter on this layer's style layers (Map0Layers.setFilter has the
+   * contract). MapLibre validates a filter and, when it rejects one, reports an
+   * error event and keeps the previous filter — so success is read back from
+   * the map rather than assumed.
+   */
+  setFilter(filter: LayerFilter | null, options: LayerFilterOptions = {}): boolean {
+    const targets =
+      options.styleLayer === undefined
+        ? this.filterable
+        : this.filterable.filter((t) => t.name === options.styleLayer);
+    if (targets.length === 0) return false;
+    const { map } = this.ctx;
+    let applied = true;
+    for (const { layerId, own } of targets) {
+      if (!map.getLayer(layerId)) {
+        applied = false;
+        continue;
+      }
+      const next =
+        filter === null ? own : own === undefined || options.replace ? filter : ["all", own, filter];
+      map.setFilter(layerId, (next ?? null) as never);
+      if (!sameFilter(map.getFilter(layerId), next)) applied = false;
+    }
+    return applied;
+  }
 
   /** Whether a rendered hit is a generated cluster belonging to this adapter. */
   isCluster(_feature: MapGeoJSONFeature): boolean {

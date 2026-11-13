@@ -19,6 +19,7 @@ pnpm build:check                # bundle the map0-check CLI (packages/check/dist
 node packages/check/bin/map0-check.js <service url> --layer <name>   # probe a live OGC service as map0 would
 node e2e/verify-check-tarball.mjs packages/check/map0-check-<v>.tgz  # the packed CLI: install, run, probe a fixture WMS (§release)
 node e2e/verify-types.mjs       # type-check a fresh consumer against the packed tarball (§release)
+node e2e/verify-bundler.mjs     # a Vite app takes the packed tarball in: build + dev server (§3.1)
 pnpm release                    # the whole release: version, changelog, verify, publish (§release)
 node e2e/verify-demos.mjs       # every demo page, headless, with screenshots
 node e2e/verify-demos.mjs wms   # …or one
@@ -78,8 +79,8 @@ What it does, in order — any failing step aborts before anything is public:
    standalone demo page — reference counts are asserted, a reworded sentence fails the release;
 4. `pnpm build:npm` (bundle without sourcemaps, bundled declarations, regenerated notices) and
    `npm pack`;
-5. `e2e/verify-tarball.mjs` — the folder-is-the-unit gate, see below — and `e2e/verify-types.mjs`,
-   the types gate;
+5. `e2e/verify-tarball.mjs` — the folder-is-the-unit gate, see below — `e2e/verify-types.mjs`,
+   the types gate, and `e2e/verify-bundler.mjs`, the bundler gate (§3.1);
 6. `npm publish` (the account has 2FA at auth-and-writes — release-it prompts for the OTP;
    npm versions are immutable, an unpublish is only possible within 72 h and burns the name for 24 h);
 7. release commit + annotated tag `v<version>`, push, and a **GitHub release** with the changelog
@@ -220,6 +221,21 @@ Consequences:
   for the demo site and no `navigationFallback` in `staticwebapp.config.json`.
 - Diagnostic: `page.workers()` in Playwright, or the Sources → Threads panel in DevTools. Cheapest
   check after a deploy: request a path that cannot exist and confirm it answers 404, not 200.
+- The same failure in **a host's bundler**: a Vite or Nuxt app importing `map0-viewer` puts
+  `maplibre-gl.mjs` into one of its own chunks, and the runtime-built URL points next to that chunk.
+  So map0 sets the URL itself before the first map — `pinMaplibreWorker()` in
+  `packages/core/src/maplibre-worker.ts`, `setWorkerUrl(new URL("./maplibre-gl-worker.mjs",
+  import.meta.url).href)`, a literal bundlers follow: Vite's build emits the worker as an asset,
+  Vite 8's dep optimizer carries it along in dev (Vite 7's does not). The pin must reach the
+  published chunk verbatim: in the source it is marked `@vite-ignore` (the worker does not sit next
+  to `src/`, and our build would otherwise rewrite it into `new URL(…, '' + import.meta.url)`, which
+  no bundler recognises), and since the library build keeps comments, `copyMaplibreDist` blanks the
+  comment out, space for space so the sourcemap stays valid, and fails the build when no chunk
+  carries the plain pattern. Not on our dev server (`import.meta.env.DEV`), where the module is
+  served from `src/`. Gate: `e2e/verify-bundler.mjs` (CI and release) installs the packed tarball
+  into a scratch Vite app and checks that an inline GeoJSON square is drawn after `vite build` and
+  on the dev server, pre-bundled and with `optimizeDeps.exclude`. Without the pin the build and the
+  pre-bundled run draw nothing (checked once with a tarball whose pin was patched out).
 
 ### 3.2 `isStyleLoaded()` is not a readiness signal
 
@@ -595,7 +611,8 @@ user agent is not a verified bot and tells you nothing about the block list.
 |---|---|---|
 | Pure logic | Vitest (`packages/**/*.test.ts`) | URL building, templates, merge rules, projections, permalink codec |
 | Whole demos | `e2e/verify-demos.mjs` (Playwright) | every demo page renders, key interactions, **console must stay clean** |
-| Built bundle | `e2e/smoke.mjs` (`pnpm smoke`, CI) | element lifecycle, z-order, layer tree, bottom sheet, panel layout for every corner pair — network-free |
+| Built bundle | `e2e/smoke.mjs` (`pnpm smoke`, CI) | element lifecycle, z-order, layer tree, bottom sheet, panel layout for every corner pair, `getTile`/`setFilter` on a PMTiles archive served with Range — network-free |
+| Host bundler | `e2e/verify-bundler.mjs` (CI, release) | the packed tarball in a scratch Vite app: `vite build` and dev server draw GeoJSON, so MapLibre's worker came along (§3.1) |
 | Pixels | `e2e/visual.mjs` (`pnpm visual`, CI) | ten UI states against committed screenshots per platform (N9) |
 | Bundle | `scripts/check-size.mjs` | tier sizes, page-tier budget |
 | Docs | `scripts/config-reference.mjs` + `config-reference.test.ts` | `docs/config-reference.md` is generated from `v1.json` (`pnpm docs:reference`); the test fails while the committed page is stale |

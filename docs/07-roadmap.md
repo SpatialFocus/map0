@@ -73,6 +73,19 @@ What is left for v1.0 is the accessibility pass and repo governance.
 - ✅ **Unknown-key warnings** (C5 — reported, never fatal), id uniqueness, nested shapes and the
   https policy in the validator (N6)
 - ⬜ **Accessibility pass** — audit, keyboard TOC review, DOM-mirrored feature results (N4)
+- ✅ **Host-app API** (2026-11-13) — for pages that drive the map from their own state:
+  - **tile access on a layer** — `api.layers.getTile(id, { zoom, lngLat, sourceLayer?, geometry? })`
+    returns one tile of a `vector` layer decoded to GeoJSON (decoder in a lazy chunk), the zoom
+    capped at the source's maxzoom; PMTiles are read through the archive instance the map's
+    protocol already holds, so header and directories are not fetched a second time
+  - **filters on a layer's style layers** — `api.layers.setFilter(id, filter, { styleLayer?, replace? })`
+    addresses a style layer by an `id` in the config's `style` array instead of the MapLibre layer
+    ids map0 generates (`LayerHandle.layerIds`); combined with the style layer's own filter via
+    `"all"` unless `replace`, `null` restores it
+  - **an entry a bundler can take in as it is** — map0 pins MapLibre's worker URL in a form bundlers
+    follow (`new URL("./maplibre-gl-worker.mjs", import.meta.url)`), so Vite/Nuxt import
+    `map0-viewer` without copying `dist/` next to the page; `e2e/verify-bundler.mjs` (CI, release)
+    builds and serves a Vite app from the packed tarball
 - ✅ **Mobile popup as bottom sheet** below 640 px (F5.5, 2026-09-06) — `<map0-bottom-sheet>` in the
   lazy popup chunk; a ResizeObserver on the host decides by the element's own width, so embedded
   viewers behave; drag or tap the handle between 45 % and 90 %, Escape, the close button or a tap

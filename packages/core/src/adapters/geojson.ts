@@ -140,6 +140,7 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
         const id = `m0l-${this.def.id}-${i}`;
         map.addLayer({ ...(spec as object), id, source: this.srcId, ...zoomRange } as never);
         this.ids.push(id);
+        this.filterable.push({ layerId: id, name: spec.id, own: spec.filter });
         this.registerOpacity(id, spec.type, (spec as { paint?: Record<string, unknown> }).paint);
         if (spec.type !== "symbol") this.interactive.push(id);
       });
@@ -165,29 +166,33 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
 
       if (expanded.fill) {
         const id = `m0l-${this.def.id}-fill`;
+        const filter = ["==", ["geometry-type"], "Polygon"];
         map.addLayer({
           id,
           type: "fill",
           source: this.srcId,
-          filter: ["==", ["geometry-type"], "Polygon"],
+          filter,
           paint: expanded.fill as never,
           ...zoomRange,
         } as never);
         this.ids.push(id);
+        this.filterable.push({ layerId: id, own: filter });
         this.interactive.push(id);
         this.registerOpacity(id, "fill", expanded.fill);
       }
       if (expanded.line) {
         const id = `m0l-${this.def.id}-line`;
+        const filter = ["==", ["geometry-type"], "LineString"];
         map.addLayer({
           id,
           type: "line",
           source: this.srcId,
-          filter: ["==", ["geometry-type"], "LineString"],
+          filter,
           paint: expanded.line as never,
           ...zoomRange,
         } as never);
         this.ids.push(id);
+        this.filterable.push({ layerId: id, own: filter });
         this.interactive.push(id);
         this.registerOpacity(id, "line", expanded.line);
       }
@@ -205,6 +210,7 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
           ...zoomRange,
         } as never);
         this.ids.push(id);
+        this.filterable.push({ layerId: id, own: filter });
         this.interactive.push(id);
         this.registerOpacity(id, "circle", expanded.circle);
       }
@@ -234,6 +240,8 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
           } as never,
         } as never);
         this.ids.push(id);
+        /* a property filter hides the bubbles too: a cluster has no properties of its own */
+        this.filterable.push({ layerId: id, own: clusterFilter });
         this.interactive.push(id);
         this.registerOpacity(id, "circle", { "circle-opacity": 0.75 });
       }

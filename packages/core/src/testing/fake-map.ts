@@ -7,8 +7,14 @@ import { vi } from "vitest";
  */
 export function fakeMap() {
   const sources = new Map<string, unknown>();
-  const specs = new Map<string, { id: string }>();
+  const specs = new Map<string, { id: string; filter?: unknown }>();
   return {
+    /* like MapLibre: the filter lives on the layer, getFilter hands out a copy */
+    setFilter: vi.fn((id: string, filter: unknown) => {
+      const spec = specs.get(id);
+      if (spec) spec.filter = filter ?? undefined;
+    }),
+    getFilter: (id: string) => structuredClone(specs.get(id)?.filter),
     on: vi.fn(),
     off: vi.fn(),
     getZoom: () => 5,

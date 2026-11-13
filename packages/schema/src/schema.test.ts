@@ -180,6 +180,35 @@ describe("validateConfig", () => {
     expect(paths).toContain("$.layers[0].params");
   });
 
+  it("accepts a style-layer id, unique within its layer, on vector and feature layers", () => {
+    const fill = { type: "fill", paint: { "fill-color": "#ccc" } };
+    const ok = validateConfig({
+      ...minimal,
+      layers: [
+        { type: "vector", id: "a", title: "A", url: "pmtiles://https://e.org/a.pmtiles", style: [{ ...fill, id: "base" }, { type: "line", id: "selected" }] },
+        /* the same names in another layer: the namespace is per layer */
+        { type: "geojson", id: "b", title: "B", data: "https://e.org/b.geojson", style: [{ ...fill, id: "base" }, fill] },
+      ],
+    });
+    expect(ok.errors).toEqual([]);
+    expect(ok.warnings).toEqual([]);
+
+    const bad = validateConfig({
+      ...minimal,
+      layers: [
+        { type: "vector", id: "a", title: "A", url: "https://e.org/{z}/{x}/{y}.pbf", style: [{ ...fill, id: "x" }, { type: "line", id: "x" }] },
+        { type: "geojson", id: "b", title: "B", data: "https://e.org/b.geojson", style: [{ ...fill, id: "" }, { paint: {} }] },
+        { type: "wfs", id: "c", title: "C", url: "https://e.org/wfs", typeNames: "t", style: [{ ...fill, id: 7 }] },
+      ],
+    } as never);
+    expect(bad.errors.map((e) => e.path)).toEqual([
+      "$.layers[0].style[1].id",
+      "$.layers[1].style[0].id",
+      "$.layers[1].style[1]",
+      "$.layers[2].style[0].id",
+    ]);
+  });
+
   it("rejects a non-boolean cooperativeGestures", () => {
     const result = validateConfig({
       version: 1,
