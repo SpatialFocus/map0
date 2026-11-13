@@ -25,7 +25,18 @@ const OUT = join(PKG, "dist");
 /** MapLibre resolves its worker at runtime from a sibling file: no file, no vector tiles. */
 /* maplibre-gl-shared.mjs is not required: empty since MapLibre 6.13, gone in the next major */
 const MAPLIBRE_FILES = ["maplibre-gl.mjs", "maplibre-gl-worker.mjs"];
-const LICENSE_FILES = ["LICENSE", "LICENSE.md", "LICENSE.txt", "LICENCE", "LICENCE.md", "license", "COPYING"];
+/* matched case-insensitively: mgrs ships `license.md`, which Windows finds as LICENSE.md and Linux (CI) does not */
+const LICENSE_FILES = ["license", "license.md", "license.txt", "licence", "licence.md", "copying"];
+
+/** the first licence file in `dir`, in LICENSE_FILES order, whatever its case */
+const findLicenseFile = (dir) => {
+  const entries = readdirSync(dir);
+  for (const candidate of LICENSE_FILES) {
+    const hit = entries.find((entry) => entry.toLowerCase() === candidate);
+    if (hit) return join(dir, hit);
+  }
+  return undefined;
+};
 
 /**
  * Packages whose npm tarball ships no licence text at all. Reproducing it is our
@@ -157,7 +168,7 @@ for (const name of [...bundled].sort()) {
   const meta = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
   const fallback = FALLBACK_LICENSES[name];
   const licenseFile =
-    LICENSE_FILES.map((f) => join(dir, f)).find(existsSync) ??
+    findLicenseFile(dir) ??
     (fallback ? join(root, "scripts", "third-party", fallback.file) : undefined);
   if (!licenseFile || !existsSync(licenseFile)) {
     missing.push(`${name} (no licence text in ${dir} and no entry in FALLBACK_LICENSES)`);
