@@ -9,11 +9,17 @@ export interface FilterableStyleLayer {
   layerId: string;
   /** its `id` in the config's `style` array, when the author named it */
   name?: string;
-  /** the filter it was added with — from the config, or map0's own */
+  /** the filter the config's author gave it — what `replace` replaces */
   own?: unknown;
+  /**
+   * a filter map0 needs to draw the layer right (the geometry type a default
+   * style layer is for) — always kept, whatever the host asks for
+   */
+  internal?: unknown;
 }
 
-const sameFilter = (a: unknown, b: unknown): boolean => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+export const sameFilter = (a: unknown, b: unknown): boolean =>
+  JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
 export type LayerStatus = "loading" | "ready" | "error";
 
@@ -201,13 +207,15 @@ export abstract class SourceAdapter<D extends NormalizedLayer = NormalizedLayer>
     if (targets.length === 0) return false;
     const { map } = this.ctx;
     let applied = true;
-    for (const { layerId, own } of targets) {
+    for (const { layerId, own, internal } of targets) {
       if (!map.getLayer(layerId)) {
         applied = false;
         continue;
       }
-      const next =
+      const authored =
         filter === null ? own : own === undefined || options.replace ? filter : ["all", own, filter];
+      const next =
+        internal === undefined ? authored : authored === undefined ? internal : ["all", internal, authored];
       map.setFilter(layerId, (next ?? null) as never);
       if (!sameFilter(map.getFilter(layerId), next)) applied = false;
     }

@@ -112,9 +112,12 @@ viewer.api.layers.setFilter("parcels", ["in", ["get", "number"], ["literal", [17
 viewer.api.layers.setFilter("parcels", null, { styleLayer: "selected" }); // the config's filter again
 ```
 
-Without `styleLayer` the filter goes on every style layer of the layer. `setFilter` returns `false`
-when the layer has nothing to filter, `styleLayer` matches none of its style layers, or MapLibre
-rejects the filter.
+Without `styleLayer` the filter goes on every style layer of the layer. On a clustered layer it
+goes on the source instead and is applied before the clustering, so the bubbles count only what
+passes; such a filter sees a feature's properties and geometry type, not the zoom level.
+`replace` replaces the filter from the config, never the ones map0 needs for its default styling.
+`setFilter` returns `false` when the layer has nothing to filter, `styleLayer` matches none of its
+style layers, or MapLibre rejects the filter.
 
 `api.layers.getTile` reads one tile of a `vector` layer, decoded to GeoJSON, for example to read
 attributes from a finer zoom level than the map currently shows:

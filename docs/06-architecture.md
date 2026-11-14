@@ -111,7 +111,12 @@ bottom sheet below). All results also exposed via `map0:featureclick` event for 
 - **Host-app API** on `api.layers`, for pages that keep their own state and draw it on the map:
   `setFilter(id, filter, { styleLayer, replace })` reaches a style layer by the `id` it carries in
   the config's `style` array, never by the MapLibre ids map0 generates, and combines with the style
-  layer's own filter (`"all"`) unless told to replace it; `getTile(id, { zoom, lngLat })` decodes one
+  layer's own filter (`"all"`) unless told to replace it. The filters map0 puts on its default
+  GeoJSON styling (one style layer per geometry type) are not the author's and always stay. On a
+  clustered layer a filter for the whole layer becomes the `filter` of the GeoJSON source, which
+  MapLibre applies before clustering — on the style layers it would hide every bubble and leave
+  the points it lets through inside them; MapLibre has no setter for it, so the adapter adds the
+  source and its style layers anew, in place. `getTile(id, { zoom, lngLat })` decodes one
   tile of a `vector` layer on the main thread (`@mapbox/vector-tile` + `pbf` in a lazy chunk), a
   PMTiles archive through the instance the map's `pmtiles://` protocol already holds, so header
   and directories are fetched once for both. Neither is part of the share state.

@@ -1,5 +1,7 @@
 import { vi } from "vitest";
 
+type LayerSpec = { id: string; filter?: unknown };
+
 /**
  * The slice of a MapLibre map the LayerManager and the adapters touch — enough
  * to mount layers in a unit test, with no WebGL and no DOM. Adding a source
@@ -7,14 +9,16 @@ import { vi } from "vitest";
  */
 export function fakeMap() {
   const sources = new Map<string, unknown>();
-  const specs = new Map<string, { id: string; filter?: unknown }>();
+  /* in style order, bottom first */
+  let specs: LayerSpec[] = [];
+  const find = (id: string) => specs.find((spec) => spec.id === id);
   return {
     /* like MapLibre: the filter lives on the layer, getFilter hands out a copy */
     setFilter: vi.fn((id: string, filter: unknown) => {
-      const spec = specs.get(id);
+      const spec = find(id);
       if (spec) spec.filter = filter ?? undefined;
     }),
-    getFilter: (id: string) => structuredClone(specs.get(id)?.filter),
+    getFilter: (id: string) => structuredClone(find(id)?.filter),
     on: vi.fn(),
     off: vi.fn(),
     getZoom: () => 5,
@@ -24,9 +28,20 @@ export function fakeMap() {
     },
     getSource: (id: string) => sources.get(id),
     removeSource: (id: string) => sources.delete(id),
-    addLayer: (spec: { id: string }) => specs.set(spec.id, spec),
-    getLayer: (id: string) => specs.get(id),
-    removeLayer: (id: string) => specs.delete(id),
+    /* like MapLibre: on top, or below the layer named `before` */
+    addLayer: (spec: LayerSpec, before?: string) => {
+      const at = before === undefined ? -1 : specs.findIndex((other) => other.id === before);
+      if (at < 0) specs.push(spec);
+      else specs.splice(at, 0, spec);
+    },
+    getLayer: (id: string) => {
+      const spec = find(id);
+      return spec && { ...spec, serialize: () => structuredClone(spec) };
+    },
+    getLayersOrder: () => specs.map((spec) => spec.id),
+    removeLayer: (id: string) => {
+      specs = specs.filter((spec) => spec.id !== id);
+    },
     setLayoutProperty: vi.fn(),
     setPaintProperty: vi.fn(),
   };

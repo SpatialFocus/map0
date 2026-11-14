@@ -55,6 +55,12 @@ export interface Map0Layers {
    * It is combined with the style layer's own filter (`["all", own, filter]`)
    * unless `options.replace` is set; `null` restores the own filter.
    *
+   * On a clustered layer a filter without `styleLayer` goes on the source
+   * instead and acts before the clustering, so bubbles and counts follow it.
+   * It is evaluated once per feature, on its properties and geometry type:
+   * the zoom level and feature state are not available there. The source is
+   * added anew for it, so hover and selection state on its features is lost.
+   *
    * false when the layer is unknown, draws no style layers of its own (wms,
    * wmts, raster, cog), `styleLayer` names none of them, or MapLibre rejects
    * the filter — its reason then goes out as an `error` event.
@@ -87,8 +93,9 @@ export interface LayerFilterOptions {
   /** only the style layer with this `id` in the layer's `style` array (default: all of them) */
   styleLayer?: string;
   /**
-   * replace the style layer's own filter — the one in the config, or the one
-   * map0 gives its default GeoJSON styling — instead of combining with it
+   * replace the filter the config gives the style layer instead of combining
+   * with it. The filters map0 itself puts on its default GeoJSON styling (one
+   * style layer per geometry type) always stay.
    */
   replace?: boolean;
 }

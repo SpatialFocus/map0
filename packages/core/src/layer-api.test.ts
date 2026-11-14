@@ -77,6 +77,83 @@ describe("api.layers.setFilter", () => {
     ]);
   });
 
+  it("keeps them when the host asks to replace: there is no configured filter to replace", async () => {
+    const { manager, filters } = await mounted([
+      { type: "geojson", id: "pois", title: "POIs", data: { type: "FeatureCollection", features: [] } },
+    ]);
+    expect(manager.setFilter("pois", SELECTED, { replace: true })).toBe(true);
+    /* without its geometry filter the circle layer would draw every vertex of a polygon */
+    expect(filters("pois")).toEqual([
+      ["all", ["==", ["geometry-type"], "Polygon"], SELECTED],
+      ["all", ["==", ["geometry-type"], "LineString"], SELECTED],
+      ["all", ["==", ["geometry-type"], "Point"], SELECTED],
+    ]);
+    expect(manager.setFilter("pois", null)).toBe(true);
+    expect(filters("pois")).toEqual([
+      ["==", ["geometry-type"], "Polygon"],
+      ["==", ["geometry-type"], "LineString"],
+      ["==", ["geometry-type"], "Point"],
+    ]);
+  });
+
+  describe("on a clustered layer", () => {
+    const clustered: LayerDef = {
+      type: "geojson",
+      id: "pois",
+      title: "POIs",
+      cluster: true,
+      data: { type: "FeatureCollection", features: [] },
+    };
+    const above: LayerDef = { ...parcels, id: "above" };
+    const source = (map: Awaited<ReturnType<typeof mounted>>["map"]) =>
+      map.getSource("m0s-pois") as { cluster?: boolean; filter?: unknown };
+
+    it("filters the source, before the clustering, and leaves the style layers alone", async () => {
+      const { map, manager, filters } = await mounted([clustered]);
+      const before = filters("pois");
+      expect(manager.setFilter("pois", SELECTED)).toBe(true);
+      expect(source(map)).toMatchObject({ cluster: true, filter: SELECTED });
+      /* the bubbles included: on the style layers the filter would hide every one of them */
+      expect(filters("pois")).toEqual(before);
+      expect(manager.setFilter("pois", null)).toBe(true);
+      expect(source(map)).not.toHaveProperty("filter");
+    });
+
+    it("puts the style layers back where they were in the stack, as they were", async () => {
+      /* drawn bottom-up: "above" is configured first, so it lies on top */
+      const { map, manager } = await mounted([above, clustered]);
+      const order = map.getLayersOrder();
+      const bubbles = order.find((id) => id.endsWith("-cluster"))!;
+      expect(order.indexOf(bubbles)).toBeLessThan(order.indexOf("m0l-above-0"));
+      expect(manager.setFilter("pois", SELECTED)).toBe(true);
+      expect(map.getLayersOrder()).toEqual(order);
+      expect(map.getFilter(bubbles)).toEqual(expect.arrayContaining(["all"]));
+    });
+
+    it("answers false and keeps the previous source when MapLibre refuses the filter", async () => {
+      const { map, manager } = await mounted([clustered]);
+      expect(manager.setFilter("pois", SELECTED)).toBe(true);
+      const order = map.getLayersOrder();
+      /* MapLibre validates the source, reports an error event and adds nothing */
+      const addSource = map.addSource;
+      map.addSource = (id: string, spec: unknown) => {
+        if ((spec as { filter?: unknown[] }).filter?.[0] !== "no-such-operator") addSource(id, spec);
+      };
+      expect(manager.setFilter("pois", ["no-such-operator"])).toBe(false);
+      expect(source(map)).toMatchObject({ cluster: true, filter: SELECTED });
+      expect(map.getLayersOrder()).toEqual(order);
+    });
+
+    it("still filters one named style layer on the style layer", async () => {
+      const { map, manager, filters } = await mounted([
+        { ...clustered, style: [{ type: "circle", id: "dots", paint: { "circle-radius": 4 } }] },
+      ]);
+      expect(manager.setFilter("pois", SELECTED, { styleLayer: "dots" })).toBe(true);
+      expect(filters("pois")).toEqual([SELECTED]);
+      expect(source(map)).not.toHaveProperty("filter");
+    });
+  });
+
   it("answers false and changes nothing when there is nothing to filter", async () => {
     const { manager, filters } = await mounted([
       parcels,

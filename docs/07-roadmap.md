@@ -81,7 +81,8 @@ What is left for v1.0 is the accessibility pass and repo governance.
   - **filters on a layer's style layers** — `api.layers.setFilter(id, filter, { styleLayer?, replace? })`
     addresses a style layer by an `id` in the config's `style` array instead of the MapLibre layer
     ids map0 generates (`LayerHandle.layerIds`); combined with the style layer's own filter via
-    `"all"` unless `replace`, `null` restores it
+    `"all"` unless `replace`, `null` restores it; on a clustered layer the filter goes on the
+    source, before the clustering
   - **an entry a bundler can take in as it is** — map0 pins MapLibre's worker URL in a form bundlers
     follow (`new URL("./maplibre-gl-worker.mjs", import.meta.url)`), so Vite/Nuxt import
     `map0-viewer` without copying `dist/` next to the page; `e2e/verify-bundler.mjs` (CI, release)

@@ -9,8 +9,10 @@ import {
   reprojectGeoJson,
   type CrsSource,
 } from "../reproject.js";
+import type { LayerFilter, LayerFilterOptions } from "../api.js";
 import {
   SourceAdapter,
+  sameFilter,
   type FeatureInfoQuery,
   type FeatureInfoResult,
   type LegendEntry,
@@ -77,6 +79,8 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
   private ids: string[] = [];
   private interactive: string[] = [];
   private derivedLegend: LegendEntry[] = [];
+  /** a host filter on the source itself — clustered layers only, see setFilter() */
+  private sourceFilter: LayerFilter | undefined;
 
   get sourceIds(): string[] {
     return [this.srcId];
@@ -118,15 +122,7 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
     const { map, accent } = this.ctx;
     const cluster = this.clusterOpts;
 
-    map.addSource(this.srcId, {
-      type: "geojson",
-      data: this.data as never,
-      ...(cluster.enabled
-        ? { cluster: true, clusterRadius: cluster.radius, clusterMaxZoom: cluster.maxZoom }
-        : {}),
-      ...(this.def.promoteId ? { promoteId: this.def.promoteId } : {}),
-      ...(this.def.attribution ? { attribution: this.def.attribution } : {}),
-    });
+    map.addSource(this.srcId, this.sourceSpec() as never);
 
     const zoomRange = {
       ...(this.def.minZoom !== undefined ? { minzoom: this.def.minZoom } : {}),
@@ -176,7 +172,7 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
           ...zoomRange,
         } as never);
         this.ids.push(id);
-        this.filterable.push({ layerId: id, own: filter });
+        this.filterable.push({ layerId: id, internal: filter });
         this.interactive.push(id);
         this.registerOpacity(id, "fill", expanded.fill);
       }
@@ -192,7 +188,7 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
           ...zoomRange,
         } as never);
         this.ids.push(id);
-        this.filterable.push({ layerId: id, own: filter });
+        this.filterable.push({ layerId: id, internal: filter });
         this.interactive.push(id);
         this.registerOpacity(id, "line", expanded.line);
       }
@@ -210,7 +206,7 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
           ...zoomRange,
         } as never);
         this.ids.push(id);
-        this.filterable.push({ layerId: id, own: filter });
+        this.filterable.push({ layerId: id, internal: filter });
         this.interactive.push(id);
         this.registerOpacity(id, "circle", expanded.circle);
       }
@@ -240,12 +236,75 @@ export class GeoJsonAdapter extends SourceAdapter<NormalizedGeoJson> {
           } as never,
         } as never);
         this.ids.push(id);
-        /* a property filter hides the bubbles too: a cluster has no properties of its own */
-        this.filterable.push({ layerId: id, own: clusterFilter });
+        /* not filterable: a cluster has no properties of its own. A host filter on a
+           clustered layer goes on the source instead (setFilter), and the bubbles follow */
         this.interactive.push(id);
         this.registerOpacity(id, "circle", { "circle-opacity": 0.75 });
       }
     }
+  }
+
+  /** the source as MapLibre gets it — again whenever the host filter on it changes */
+  private sourceSpec(): Record<string, unknown> {
+    const cluster = this.clusterOpts;
+    return {
+      type: "geojson",
+      data: this.data,
+      ...(cluster.enabled
+        ? { cluster: true, clusterRadius: cluster.radius, clusterMaxZoom: cluster.maxZoom }
+        : {}),
+      ...(this.def.promoteId ? { promoteId: this.def.promoteId } : {}),
+      ...(this.def.attribution ? { attribution: this.def.attribution } : {}),
+      ...(this.sourceFilter !== undefined ? { filter: this.sourceFilter } : {}),
+    };
+  }
+
+  /**
+   * On a clustered layer a filter for the whole layer has to act before the
+   * clustering: on the style layers it would hide every bubble (a cluster has
+   * none of the features' properties) while the points it lets through stay
+   * inside those bubbles. So it becomes the `filter` of the GeoJSON source,
+   * and bubbles and counts follow it. A filter for one named style layer
+   * (`styleLayer`) stays a style-layer filter, as on any other layer.
+   */
+  override setFilter(filter: LayerFilter | null, options: LayerFilterOptions = {}): boolean {
+    if (!this.clusterOpts.enabled || options.styleLayer !== undefined) return super.setFilter(filter, options);
+    const applied = this.setSourceFilter(filter ?? undefined);
+    /* null puts the whole layer back as configured, named style layers included */
+    return filter === null ? super.setFilter(null) && applied : applied;
+  }
+
+  /**
+   * MapLibre has no setter for a source's filter, so the source is added anew,
+   * and with it the style layers on it: as they are now (visibility, opacity,
+   * filters set on them), each back in front of the layer it was in front of.
+   * MapLibre validates the filter with the source; when it refuses, it reports
+   * an `error` event and adds nothing — the previous source comes back then.
+   */
+  private setSourceFilter(filter: LayerFilter | undefined): boolean {
+    const { map } = this.ctx;
+    if (!map.getSource(this.srcId)) return false;
+    if (sameFilter(this.sourceFilter, filter)) return true;
+
+    const order = map.getLayersOrder();
+    const mine = new Set(this.ids);
+    const layers = order.flatMap((id, i) => {
+      const layer = mine.has(id) ? map.getLayer(id) : undefined;
+      return layer ? [{ spec: layer.serialize(), before: order.slice(i + 1).find((next) => !mine.has(next)) }] : [];
+    });
+    for (const { spec } of layers) map.removeLayer(spec.id);
+    map.removeSource(this.srcId);
+
+    const previous = this.sourceFilter;
+    this.sourceFilter = filter;
+    map.addSource(this.srcId, this.sourceSpec() as never);
+    const applied = !!map.getSource(this.srcId);
+    if (!applied) {
+      this.sourceFilter = previous;
+      map.addSource(this.srcId, this.sourceSpec() as never);
+    }
+    for (const { spec, before } of layers) map.addLayer(spec, before);
+    return applied;
   }
 
   protected override autoLegend(): LegendSpec | null {

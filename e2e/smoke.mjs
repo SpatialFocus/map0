@@ -889,6 +889,102 @@ try {
   check("no console errors while displaying ordinary counts and clusters", clusterNoise.length === 0, clusterNoise.join(" | "));
   await clusterPage.close();
 
+  /* A host filter on a clustered layer acts on the source, before the clustering:
+     bubbles and counts follow it, and a point it lets through is drawn instead of
+     staying inside a bubble the filter hid. The source is added anew for that, so
+     the style layers have to come back where they were. */
+  const filterNoise = [];
+  const filterPage = await context.newPage();
+  watchConsole(filterPage, filterNoise);
+  await filterPage.goto(`${BASE}/smoke.html`, { waitUntil: "domcontentloaded" });
+  await filterPage.waitForFunction(() => !!document.querySelector("map0-viewer")?.api);
+  await filterPage.evaluate(() => {
+    const point = (name, kind, lng) => ({ type: "Feature", properties: { name, kind }, geometry: { type: "Point", coordinates: [lng, 0] } });
+    document.querySelector("map0-viewer").config = {
+      version: 1,
+      map: { center: [10, 0], zoom: 3 },
+      basemaps: [{ type: "empty", title: "None" }],
+      controls: { layerSwitcher: false }, search: { enabled: false }, permalink: false,
+      layers: [
+        {
+          id: "top", type: "geojson", title: "Top", popup: false,
+          data: { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [[[5, -5], [15, -5], [15, 5], [5, 5], [5, -5]]] } },
+        },
+        {
+          id: "shops", type: "geojson", title: "Shops", cluster: true, popup: false,
+          data: {
+            type: "FeatureCollection",
+            features: [point("A1", "a", 20), point("A2", "a", 20.001), point("B1", "b", 20.002), point("B2", "b", 0)],
+          },
+        },
+      ],
+    };
+  });
+  await filterPage.waitForFunction(() => {
+    const api = document.querySelector("map0-viewer")?.api;
+    return api?.config.layers[1]?.id === "shops" && api.map.loaded();
+  });
+  const shops = () => filterPage.evaluate(() => {
+    const { api } = document.querySelector("map0-viewer");
+    return new Promise((done) => {
+      const read = () => {
+        const hits = api.map.queryRenderedFeatures({ layers: ["m0l-shops-cluster", "m0l-shops-circle"] });
+        const of = (suffix, key) => [...new Set(hits.filter((f) => f.layer.id.endsWith(suffix)).map((f) => f.properties[key]))].sort();
+        done({
+          bubbles: of("-cluster", "point_count"),
+          points: of("-circle", "name"),
+          order: api.map.getLayersOrder().filter((id) => id.startsWith("m0l-")).join(" "),
+          source: api.map.getStyle().sources["m0s-shops"],
+        });
+      };
+      const timer = setTimeout(read, 5_000);
+      api.map.once("idle", () => {
+        clearTimeout(timer);
+        read();
+      });
+      api.map.triggerRepaint();
+    });
+  });
+  const filterShops = (filter, options) => filterPage.evaluate(
+    ([f, o]) => document.querySelector("map0-viewer").api.layers.setFilter("shops", f, o),
+    [filter, options],
+  );
+  const unfiltered = await shops();
+  const onlyA = { ok: await filterShops(["==", ["get", "kind"], "a"]), ...(await shops()) };
+  const onlyB = { ok: await filterShops(["==", ["get", "kind"], "b"], { replace: true }), ...(await shops()) };
+  check(
+    "a filter on a clustered layer is applied before the clustering: the bubble counts what passes",
+    JSON.stringify(unfiltered.bubbles) === "[3]" && onlyA.ok && JSON.stringify(onlyA.bubbles) === "[2]" && onlyA.points.length === 0,
+    `before ${JSON.stringify([unfiltered.bubbles, unfiltered.points])}, after ${JSON.stringify([onlyA.bubbles, onlyA.points])}`,
+  );
+  check(
+    "…and a point it lets through is drawn, not left inside a hidden bubble",
+    onlyB.ok && onlyB.bubbles.length === 0 && JSON.stringify(onlyB.points) === '["B1","B2"]',
+    JSON.stringify([onlyB.bubbles, onlyB.points]),
+  );
+  check(
+    "the source keeps its clustering and carries the filter, the style layers are back in their places",
+    onlyB.source.cluster === true && JSON.stringify(onlyB.source.filter) === '["==",["get","kind"],"b"]' && onlyB.order === unfiltered.order,
+    `${onlyB.order} — ${JSON.stringify({ ...onlyB.source, data: "…" })}`,
+  );
+  const quietSoFar = filterNoise.length === 0;
+  const quietDetail = filterNoise.join(" | ");
+  /* MapLibre refuses this one and reports it — the layer must come back as it was */
+  const refused = { ok: await filterShops(["no-such-operator"]), ...(await shops()) };
+  check(
+    "a filter MapLibre refuses answers false and leaves the layer as it was",
+    refused.ok === false && JSON.stringify(refused.points) === '["B1","B2"]' && refused.order === unfiltered.order,
+    JSON.stringify([refused.ok, refused.bubbles, refused.points]),
+  );
+  const reset = { ok: await filterShops(null), ...(await shops()) };
+  check(
+    "setFilter(null) clusters all features again",
+    reset.ok && JSON.stringify(reset.bubbles) === "[3]" && reset.source.filter === undefined,
+    JSON.stringify([reset.bubbles, reset.points]),
+  );
+  check("no console errors while filtering a clustered layer", quietSoFar, quietDetail);
+  await filterPage.close();
+
   /* The host API on a PMTiles layer: getTile reads a finer zoom level through
      the archive the map already opened (header and directory fetched once), and
      setFilter reaches one style layer by its config id. */
