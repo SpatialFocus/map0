@@ -59,6 +59,7 @@ interface TileSource {
   tiles: string[];
   minzoom?: number;
   maxzoom?: number;
+  scheme?: "xyz" | "tms";
 }
 
 const OPACITY_PROPS: Record<string, string[]> = {
@@ -106,8 +107,10 @@ export class VectorAdapter extends SourceAdapter<NormalizedVector> {
           ...(tj.minzoom !== undefined ? { minzoom: tj.minzoom } : {}),
           ...(tj.maxzoom !== undefined ? { maxzoom: tj.maxzoom } : {}),
           ...(tj.attribution ? { attribution: tj.attribution } : {}),
+          /* inlining must not drop it: MapLibre would read a TMS pyramid upside down */
+          ...(tj.scheme ? { scheme: tj.scheme } : {}),
         };
-        this.tileSource = { tiles: tj.tiles, minzoom: tj.minzoom, maxzoom: tj.maxzoom };
+        this.tileSource = { tiles: tj.tiles, minzoom: tj.minzoom, maxzoom: tj.maxzoom, scheme: tj.scheme };
         if (!this.def.bounds && tj.bounds) this.def.bounds = tj.bounds;
       }
     }
@@ -168,14 +171,16 @@ export class VectorAdapter extends SourceAdapter<NormalizedVector> {
     }
     const z = tileZoom(query.zoom, source.minzoom, source.maxzoom);
     const { x, y } = tileAt(query.lngLat, z);
-    const data = await fetchTile(tileUrl(source.tiles, z, x, y));
+    const data = await fetchTile(tileUrl(source.tiles, z, x, y, source.scheme));
     return { z, x, y, features: data ? decodeTile(data, { z, x, y }, query) : [] };
   }
 
   /** a TileJSON map0 could not read itself, as MapLibre resolved it */
   private loadedSource(): TileSource | undefined {
     const src = this.ctx.map.getSource(this.srcId) as Partial<TileSource> | undefined;
-    return src?.tiles ? { tiles: src.tiles, minzoom: src.minzoom, maxzoom: src.maxzoom } : undefined;
+    return src?.tiles
+      ? { tiles: src.tiles, minzoom: src.minzoom, maxzoom: src.maxzoom, scheme: src.scheme }
+      : undefined;
   }
 
   override async featureInfo(query: FeatureInfoQuery): Promise<FeatureInfoResult | null> {

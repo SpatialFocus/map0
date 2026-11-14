@@ -731,9 +731,11 @@ function validateLayers(
 
 /**
  * Style-spec layers (`style` as an array). Each needs a "type". An optional "id"
- * names the style layer for the JS API (`api.layers.setFilter(…, { styleLayer })`)
- * and must be unique within its layer; the MapLibre layer id stays map0's own,
- * so two map0 layers may well use the same names.
+ * names the style layer for the JS API (`api.layers.setFilter(…, { styleLayer })`);
+ * the MapLibre layer id stays map0's own, so two map0 layers may well use the
+ * same names. An "id" that cannot serve as a name only warns: until the JS API
+ * gave it a meaning, map0 ignored the key, and style layers pasted from a
+ * style.json carry whatever ids they had — the map must still come up.
  */
 function validateStyleLayers(style: unknown[], p: string, err: Err): void {
   const names = new Set<string>();
@@ -741,8 +743,10 @@ function validateStyleLayers(style: unknown[], p: string, err: Err): void {
     const sp = `${p}[${j}]`;
     if (!isObject(s) || typeof s.type !== "string") return err(sp, 'a style layer needs at least a "type"');
     if (s.id === undefined) return;
-    if (typeof s.id !== "string" || s.id === "") return err(`${sp}.id`, "must be a non-empty string");
-    if (names.has(s.id)) return err(`${sp}.id`, `duplicate style layer id "${s.id}" in this layer`);
+    if (typeof s.id !== "string" || s.id === "")
+      return err(`${sp}.id`, "should be a non-empty string — api.layers.setFilter cannot address this style layer", "warning");
+    if (names.has(s.id))
+      err(`${sp}.id`, `style layer id "${s.id}" is used more than once in this layer — api.layers.setFilter filters them together`, "warning");
     names.add(s.id);
   });
 }

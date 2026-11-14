@@ -27,6 +27,10 @@ export function tileZoom(zoom: number, minzoom?: number, maxzoom?: number): numb
 /** the tile of zoom level `z` that contains a position; longitudes wrap, latitudes clamp */
 export function tileAt(lngLat: TileQuery["lngLat"], z: number): { x: number; y: number } {
   const [lng, lat] = "lng" in lngLat ? [lngLat.lng, lngLat.lat] : lngLat;
+  /* NaN would travel on as tile NaN/NaN, and the answer would look like an empty tile */
+  if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
+    throw new RangeError(`getTile: lngLat must be two numbers, got ${lng}, ${lat}`);
+  }
   const n = 2 ** z;
   const fx = ((((lng + 180) % 360) + 360) % 360) / 360;
   const phi = (Math.max(-MAX_LAT, Math.min(MAX_LAT, lat)) * Math.PI) / 180;
@@ -35,14 +39,40 @@ export function tileAt(lngLat: TileQuery["lngLat"], z: number): { x: number; y: 
   return { x: cell(fx), y: cell(fy) };
 }
 
+/** half the extent of Web Mercator in metres */
+const MERCATOR_HALF = Math.PI * 6378137;
+
 /**
- * The URL of one tile. With several templates (subdomains), the same pick as
- * MapLibre's — `(x + y) % n` — so a tile the map has drawn is the same URL and
- * comes from the HTTP cache.
+ * The URL of one tile, built the way MapLibre builds it (CanonicalTileID.url):
+ * the same pick among several templates — `(x + y) % n` — and the same
+ * placeholders, `{quadkey}`, `{bbox-epsg-3857}`, `{prefix}` and `{ratio}`
+ * included, with `y` counted from the south for `scheme: "tms"`. So the host
+ * gets the tile the map draws, and from the HTTP cache when the map drew it.
  */
-export function tileUrl(templates: readonly string[], z: number, x: number, y: number): string {
+export function tileUrl(
+  templates: readonly string[],
+  z: number,
+  x: number,
+  y: number,
+  scheme?: "xyz" | "tms",
+): string {
   const template = templates[(x + y) % templates.length]!;
-  return template.replace(/\{z\}/g, String(z)).replace(/\{x\}/g, String(x)).replace(/\{y\}/g, String(y));
+  const n = 2 ** z;
+  let quadkey = "";
+  for (let i = z; i > 0; i--) {
+    const mask = 1 << (i - 1);
+    quadkey += (x & mask ? 1 : 0) + (y & mask ? 2 : 0);
+  }
+  const merc = (cell: number): number => (cell / n) * 2 * MERCATOR_HALF - MERCATOR_HALF;
+  const bbox = [merc(x), merc(n - y - 1), merc(x + 1), merc(n - y)].join(",");
+  return template
+    .replace(/\{prefix\}/g, (x % 16).toString(16) + (y % 16).toString(16))
+    .replace(/\{z\}/g, String(z))
+    .replace(/\{x\}/g, String(x))
+    .replace(/\{y\}/g, String(scheme === "tms" ? n - y - 1 : y))
+    .replace(/\{ratio\}/g, (globalThis.devicePixelRatio ?? 1) > 1 ? "@2x" : "")
+    .replace(/\{quadkey\}/g, quadkey)
+    .replace(/\{bbox-epsg-3857\}/g, bbox);
 }
 
 /**

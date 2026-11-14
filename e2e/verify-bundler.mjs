@@ -25,7 +25,7 @@
  *        MAP0_VITE=<dir of a vite package> runs it with another Vite
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -43,15 +43,16 @@ const win = process.platform === "win32";
 const keep = process.argv.includes("--keep");
 const tgzArg = process.argv.slice(2).find((a) => !a.startsWith("--"));
 
-const die = (message) => {
-  console.error(`✗ ${message}`);
-  process.exit(1);
-};
-
 /* the long path: Windows hands out 8.3 names (CHRIST~1) for the temp folder, and a dev
    server comparing them with the real path refuses to serve its own root (403) */
 const work = mkdtempSync(join(realpathSync.native(tmpdir()), "map0-bundler-"));
 console.log(`  scratch project: ${work}`);
+
+const die = (message) => {
+  console.error(`✗ ${message}`);
+  if (!keep) rmSync(work, { recursive: true, force: true });
+  process.exit(1);
+};
 
 /* ------------------------------------------------------------- tarball */
 
@@ -92,7 +93,7 @@ const CONFIG = {
 
 writeFileSync(
   join(work, "package.json"),
-  JSON.stringify({ name: "map0-bundler-host", private: true, type: "module", dependencies: { "map0-viewer": `file:${tarball}` } }, null, 2),
+  JSON.stringify({ name: "map0-bundler-host", private: true, type: "module" }, null, 2),
 );
 writeFileSync(
   join(work, "index.html"),
@@ -113,12 +114,16 @@ window.__viewer = viewer;
 `,
 );
 
-const install = spawnSync("npm", ["install", "--no-audit", "--no-fund", "--loglevel=error"], {
-  cwd: work,
-  shell: win,
-  stdio: "inherit",
-});
-if (install.status !== 0) die("npm install of the tarball failed");
+/* Unpacked where a package manager would put it, without one: the bundle has no
+   runtime dependency (its one dependency is type declarations), and a registry
+   that is down must not turn this gate red. No path reaches tar — the archive
+   goes in on stdin and tar runs inside the target folder; Git for Windows puts
+   MSYS's GNU tar first on PATH, which reads "C:\…" as a remote host. */
+const installed = join(work, "node_modules", "map0-viewer");
+mkdirSync(installed, { recursive: true });
+const untar = spawnSync("tar", ["-xzf", "-", "--strip-components=1"], { cwd: installed, input: readFileSync(tarball) });
+if (untar.status !== 0) die(`unpacking the tarball failed: ${String(untar.stderr ?? untar.error ?? "").trim()}`);
+if (!existsSync(join(installed, "dist", "map0.js"))) die("the tarball has no dist/map0.js — run `pnpm build:npm` before packing");
 
 /* ------------------------------------------------------------- browser */
 

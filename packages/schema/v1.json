@@ -732,7 +732,7 @@
         "id": {
           "type": "string",
           "minLength": 1,
-          "description": "name of this style layer for the JS API — api.layers.setFilter(layerId, filter, { styleLayer: \"<id>\" }) filters only it; unique within the layer. map0 still generates the MapLibre layer id"
+          "description": "name of this style layer for the JS API — api.layers.setFilter(layerId, filter, { styleLayer: \"<id>\" }) filters only it; style layers that share an id within a layer are filtered together. map0 still generates the MapLibre layer id"
         }
       }
     },

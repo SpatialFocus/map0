@@ -422,7 +422,7 @@ a MapLibre style-spec layer — "source"/"source-layer" are injected by map0
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |
 | `type` | `string` | **required** | style layer type, e.g. "fill", "line", "circle", "symbol" |
-| `id` | `string` (non-empty) | — | name of this style layer for the JS API — api.layers.setFilter(layerId, filter, { styleLayer: "&lt;id&gt;" }) filters only it; unique within the layer. map0 still generates the MapLibre layer id |
+| `id` | `string` (non-empty) | — | name of this style layer for the JS API — api.layers.setFilter(layerId, filter, { styleLayer: "&lt;id&gt;" }) filters only it; style layers that share an id within a layer are filtered together. map0 still generates the MapLibre layer id |
 
 Other keys are allowed here (not checked by the schema).
 

@@ -180,7 +180,7 @@ describe("validateConfig", () => {
     expect(paths).toContain("$.layers[0].params");
   });
 
-  it("accepts a style-layer id, unique within its layer, on vector and feature layers", () => {
+  it("accepts a style-layer id on vector and feature layers, and only warns about one that is no name", () => {
     const fill = { type: "fill", paint: { "fill-color": "#ccc" } };
     const ok = validateConfig({
       ...minimal,
@@ -201,10 +201,11 @@ describe("validateConfig", () => {
         { type: "wfs", id: "c", title: "C", url: "https://e.org/wfs", typeNames: "t", style: [{ ...fill, id: 7 }] },
       ],
     } as never);
-    expect(bad.errors.map((e) => e.path)).toEqual([
+    /* a style layer without a type cannot be drawn; an id nobody can address can be ignored, as it was before the JS API read it */
+    expect(bad.errors.map((e) => e.path)).toEqual(["$.layers[1].style[1]"]);
+    expect(bad.warnings.map((e) => e.path)).toEqual([
       "$.layers[0].style[1].id",
       "$.layers[1].style[0].id",
-      "$.layers[1].style[1]",
       "$.layers[2].style[0].id",
     ]);
   });

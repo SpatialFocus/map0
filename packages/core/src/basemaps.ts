@@ -52,6 +52,8 @@ export interface ResolvedTileJson {
   maxzoom?: number;
   bounds?: [number, number, number, number];
   attribution?: string;
+  /** "tms" counts tile rows from the south; absent means "xyz" */
+  scheme?: "xyz" | "tms";
 }
 
 /**
@@ -70,6 +72,7 @@ export async function fetchTileJson(url: string): Promise<ResolvedTileJson | nul
     maxzoom: typeof tj.maxzoom === "number" ? tj.maxzoom : undefined,
     bounds: Array.isArray(tj.bounds) ? (tj.bounds as [number, number, number, number]) : undefined,
     attribution: typeof tj.attribution === "string" ? tj.attribution : undefined,
+    scheme: tj.scheme === "tms" || tj.scheme === "xyz" ? tj.scheme : undefined,
   };
 }
 

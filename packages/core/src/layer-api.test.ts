@@ -57,6 +57,22 @@ describe("api.layers.setFilter", () => {
     expect(filters("parcels")).toEqual([OWN, null, NOTHING, NOTHING]);
   });
 
+  it("filters style layers that share an id together", async () => {
+    /* the validator only warns about a repeated id: pasted style layers must not keep a map from loading */
+    const { manager, filters } = await mounted([
+      {
+        ...parcels,
+        style: [
+          { type: "fill", id: "selected", filter: NOTHING, paint: { "fill-color": "#d6246e" } },
+          { type: "line", paint: { "line-color": "#333" } },
+          { type: "line", id: "selected", filter: NOTHING, paint: { "line-color": "#d6246e" } },
+        ],
+      } as LayerDef,
+    ]);
+    expect(manager.setFilter("parcels", SELECTED, { styleLayer: "selected", replace: true })).toBe(true);
+    expect(filters("parcels")).toEqual([SELECTED, null, SELECTED]);
+  });
+
   it("works on a layer added at runtime", async () => {
     const { manager, filters } = await mounted([]);
     const id = await manager.addLayer({ ...parcels, id: "parcels-2024" } as never);
@@ -193,6 +209,21 @@ describe("tile math", () => {
     const templates = ["https://a.test/{z}/{x}/{y}", "https://b.test/{z}/{x}/{y}"];
     expect(tileUrl(templates, 14, 8936, 5681)).toBe("https://b.test/14/8936/5681");
     expect(tileUrl(templates, 14, 8936, 5680)).toBe("https://a.test/14/8936/5680");
+  });
+
+  it("fills in the other placeholders MapLibre knows, and counts rows from the south for TMS", () => {
+    expect(tileUrl(["https://t.test/{z}/{x}/{y}"], 3, 3, 5, "tms")).toBe("https://t.test/3/3/2");
+    expect(tileUrl(["https://t.test/{quadkey}"], 3, 3, 5)).toBe("https://t.test/213");
+    expect(tileUrl(["https://t.test/{prefix}/{z}/{x}/{y}{ratio}"], 14, 8936, 5681)).toBe("https://t.test/81/14/8936/5681");
+    /* the north-west quadrant of the world, west,south,east,north in metres */
+    expect(tileUrl(["https://t.test/?bbox={bbox-epsg-3857}"], 1, 0, 0)).toBe(
+      "https://t.test/?bbox=-20037508.342789244,0,0,20037508.342789244",
+    );
+  });
+
+  it("refuses a position that is not two numbers instead of answering with an empty tile", () => {
+    expect(() => tileAt([16.36, Number.NaN], 14)).toThrow(RangeError);
+    expect(() => tileAt({ lng: undefined as never, lat: 48.2 }, 14)).toThrow(/lngLat must be two numbers/);
   });
 });
 
@@ -334,6 +365,19 @@ describe("api.layers.getTile", () => {
     const { manager } = await mounted([vectorLayer("tj", "https://tiles.test/tiles.json")]);
     const tile = await manager.getTile("tj", { zoom: 15, lngLat: IN_TILE });
     expect(tile).toMatchObject({ z: 12, x: 2234, y: 1420 });
+    expect(tile!.features).toHaveLength(3);
+  });
+
+  it("reads a TMS pyramid the way the map does: the source keeps the scheme, the row is counted from the south", async () => {
+    serve({
+      "https://tiles.test/tms.json": { tiles: ["https://tiles.test/tms/{z}/{x}/{y}.pbf"], scheme: "tms", maxzoom: 14 },
+      [`https://tiles.test/tms/14/8936/${2 ** 14 - 1 - 5681}.pbf`]: parcelTile(),
+    });
+    const { map, manager } = await mounted([vectorLayer("tms", "https://tiles.test/tms.json")]);
+    expect(map.getSource("m0s-tms")).toMatchObject({ scheme: "tms" });
+    const tile = await manager.getTile("tms", { zoom: 14, lngLat: IN_TILE });
+    /* the answer names the tile in XYZ terms, like everything else in the API */
+    expect(tile).toMatchObject(PARCEL_TILE);
     expect(tile!.features).toHaveLength(3);
   });
 

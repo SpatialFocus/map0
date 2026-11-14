@@ -82,10 +82,7 @@ export function copyMaplibreDist(targetDir) {
         );
       }
 
-      for (const chunk of chunks) {
-        if (PIN_IGNORE.test(chunk.code)) chunk.code = chunk.code.replace(PIN_IGNORE, (c) => " ".repeat(c.length));
-        PIN_IGNORE.lastIndex = 0;
-      }
+      for (const chunk of chunks) chunk.code = chunk.code.replace(PIN_IGNORE, (c) => " ".repeat(c.length));
       if (chunks.some(importsMaplibre) && !chunks.some((chunk) => WORKER_PIN.test(chunk.code))) {
         this.error(
           'no chunk carries the MapLibre worker pin `new URL("./maplibre-gl-worker.mjs", import.meta.url)` ' +

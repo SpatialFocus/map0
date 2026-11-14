@@ -291,8 +291,9 @@ export type SimpleStyle = Record<string, unknown>;
 
 /**
  * full MapLibre style-spec layer objects (source/source-layer injected by map0).
- * `id` names the style layer for the JS API (`api.layers.setFilter`), unique
- * within its layer; map0 generates the MapLibre layer id itself.
+ * `id` names the style layer for the JS API (`api.layers.setFilter`); style
+ * layers sharing an id within a layer are filtered together. map0 generates
+ * the MapLibre layer id itself.
  */
 export type StyleLayerSpec = Record<string, unknown> & { type: string; id?: string };
 
