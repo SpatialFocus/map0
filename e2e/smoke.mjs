@@ -95,6 +95,8 @@ const ARCHIVE = writePmtiles(
 );
 /** the Range header of every request for the archive, in order */
 const archiveRequests = [];
+/** every request for MapLibre's worker, as the browser sent it (path and query) */
+const workerRequests = [];
 
 const HTML = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>map0 smoke</title>
@@ -154,6 +156,7 @@ const server = createServer((req, res) => {
     res.writeHead(status, { ...headers, "content-type": "application/octet-stream" });
     return res.end(body);
   }
+  if (path === "/maplibre-gl-worker.mjs") workerRequests.push(req.url);
   readFile(new URL(`.${path}`, DIST))
     .then((body) => {
       res.writeHead(200, { "content-type": MIME[extname(path)] ?? "application/octet-stream" });
@@ -982,6 +985,15 @@ try {
   );
   check("no console errors while reading tiles and filtering", hostNoise.length === 0, hostNoise.join(" | "));
   await hostPage.close();
+
+  /* map0 pins the worker URL (maplibre-worker.ts) and so replaces the one MapLibre
+     builds; without the version a dist/ copied over an older one starts the worker
+     the browser still has cached */
+  check(
+    "MapLibre's worker is requested with its version, so an upgrade does not start a cached one",
+    workerRequests.length > 0 && workerRequests.every((url) => /[?&]v=\d+\.\d+\.\d+/.test(url)),
+    [...new Set(workerRequests)].join(", "),
+  );
 
   /* ------------------------------------------- layer tree (F2.3, F2.7) */
   const tocNoise = [];

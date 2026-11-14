@@ -1,4 +1,4 @@
-import { getWorkerUrl, setWorkerUrl } from "maplibre-gl";
+import { getVersion, getWorkerUrl, setWorkerUrl } from "maplibre-gl";
 
 /**
  * Tell MapLibre where its worker is, in a form a bundler can see.
@@ -21,8 +21,17 @@ import { getWorkerUrl, setWorkerUrl } from "maplibre-gl";
  * sits, while maplibre-gl is served un-bundled (site/vite.config.ts,
  * optimizeDeps.exclude) and finds its worker by itself.
  * A worker URL the host set itself wins.
+ *
+ * The URL MapLibre builds itself carries `?v=<its version>`, so that a worker
+ * left in the HTTP cache by an older release is not started against a newer
+ * main thread (maplibre/maplibre-gl-js#8621) — a dist/ folder copied over the
+ * previous one keeps its file names. The pin replaces that URL, so it carries
+ * the same parameter; behind a host's bundler, whose asset names are hashed,
+ * it is merely redundant.
  */
 export function pinMaplibreWorker(): void {
   if (import.meta.env.DEV || getWorkerUrl()) return;
-  setWorkerUrl(new URL(/* @vite-ignore */ "./maplibre-gl-worker.mjs", import.meta.url).href);
+  const url = new URL(/* @vite-ignore */ "./maplibre-gl-worker.mjs", import.meta.url);
+  url.searchParams.set("v", getVersion());
+  setWorkerUrl(url.href);
 }
