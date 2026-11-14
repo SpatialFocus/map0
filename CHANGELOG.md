@@ -4,6 +4,18 @@ Releases of the `map0-viewer` npm package. Generated from the
 [conventional commits](https://www.conventionalcommits.org) by `pnpm release` (release-it) —
 do not edit by hand.
 
+## [0.5.0](https://github.com/SpatialFocus/map0/compare/v0.4.1...v0.5.0) (2026-11-14)
+
+### Features
+
+* host-app API — setFilter, getTile, and a package bundlers take in as it is ([186f43a](https://github.com/SpatialFocus/map0/commit/186f43aff8b52ca3dcaf7eb3e5933fb3074a1c68))
+
+### Bug Fixes
+
+* **core:** filter clustered layers on the source, keep map0's own filters under replace ([499c6e8](https://github.com/SpatialFocus/map0/commit/499c6e8d40b48f7c496bd6d421bb18f7a3e713b8))
+* **core:** keep MapLibre's version on the pinned worker URL ([f05b578](https://github.com/SpatialFocus/map0/commit/f05b578a1af333bc757d9c063fbbf203a82f191b))
+* review follow-ups for getTile, style-layer ids and the bundler gate ([e4ada34](https://github.com/SpatialFocus/map0/commit/e4ada34863d03c9167be375fede42391dbdc9a2f))
+
 ## [0.4.1](https://github.com/SpatialFocus/map0/compare/v0.4.0...v0.4.1) (2026-10-29)
 
 ### Bug Fixes
