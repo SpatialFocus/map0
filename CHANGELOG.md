@@ -4,6 +4,12 @@ Releases of the `map0-viewer` npm package. Generated from the
 [conventional commits](https://www.conventionalcommits.org) by `pnpm release` (release-it) —
 do not edit by hand.
 
+## [0.5.1](https://github.com/SpatialFocus/map0/compare/v0.5.0...v0.5.1) (2026-11-16)
+
+### Bug Fixes
+
+* a host page's own search in the search box (searchProvider), map0:searchclear when emptied ([f47919c](https://github.com/SpatialFocus/map0/commit/f47919ca6353e10a12d1c17be42c9c1475f22e9d))
+
 ## [0.5.0](https://github.com/SpatialFocus/map0/compare/v0.4.1...v0.5.0) (2026-11-14)
 
 ### Features
