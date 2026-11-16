@@ -12,7 +12,7 @@
   "hero.zero3": "<b>0</b> <strong>Build-Schritte</strong> <span>Ein Script-Tag und ein Kartenelement ergänzen die bestehende Seite. Das Paket ist fertig gebaut.</span>",
   "hero.zero4": "<b>0</b> <strong>Tracking</strong> <span>Der Viewer enthält keine Analysefunktionen und setzt keine Cookies. Die Datenquellen werden in der Konfiguration festgelegt.</span>",
 
-  "release.banner": "<b>Neu</b> map0-viewer 0.5.0 ist da<span class=\"detail\">: setFilter und getTile für Host-Anwendungen, ein Paket, das Bundler wie Vite unverändert übernehmen, und Fehlerbehebungen bei geclusterten Layern und beim MapLibre-Worker</span>. <a href=\"https://github.com/SpatialFocus/map0/releases\">Release Notes →</a>",
+  "release.banner": "<b>Neu</b> map0-viewer 0.5.1 ist da<span class=\"detail\">: Suche über eine eigene Suchfunktion der Host-Anwendung (searchProvider) samt Event beim Leeren; seit dem vorigen Release außerdem Layer-Filter (setFilter), einzelne Kacheln (getTile) und ein Paket, das Bundler wie Vite unverändert übernehmen</span>. <a href=\"https://github.com/SpatialFocus/map0/releases\">Release Notes →</a>",
 
   "stage.caption": "<strong>Die Karte ausprobieren:</strong> Sie kombiniert WMS, Vektorkacheln und GeoJSON-Punkte aus einem WFS. Den Layerbaum öffnen, den Flächenwidmungsplan einblenden, auf einen Brunnen klicken, zum Luftbild wechseln, eine Adresse suchen oder eine Strecke messen. Die <a href=\"#config\">Konfiguration</a> steht weiter unten.",
 
