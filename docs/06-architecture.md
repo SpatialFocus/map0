@@ -120,8 +120,17 @@ bottom sheet below). All results also exposed via `map0:featureclick` event for 
   tile of a `vector` layer on the main thread (`@mapbox/vector-tile` + `pbf` in a lazy chunk), a
   PMTiles archive through the instance the map's `pmtiles://` protocol already holds, so header
   and directories are fetched once for both. Neither is part of the share state.
+- **A host page's search** is a property of the element, not of `api`: `viewer.searchProvider`
+  takes a function from query and `{ limit, signal, center, lang }` to results, asked by
+  `core.search()` in place of the geocoder fetch (coordinate parsing, `minLength` and `limit` stay
+  map0's). The search box is UI, and the element is where a page can set it before the map starts
+  and where it survives `reload()`. A result may carry a `value` of the page, which map0 never
+  reads and returns with `map0:search`; emptying the field fires `map0:searchclear` and takes the
+  marker of `showLocation` off the map (`api.clearLocation()`, which leaves a feature selection
+  that replaced it alone).
 - **DOM CustomEvents** from the element: `map0:ready`, `map0:error`, `map0:featureclick`,
-  `map0:statechange` — the CMS-friendly integration surface (no imports needed).
+  `map0:search`, `map0:searchclear`, `map0:statechange` — the CMS-friendly integration surface
+  (no imports needed).
 
 ## Theming (F12)
 

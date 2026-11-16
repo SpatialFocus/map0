@@ -11,6 +11,7 @@ import type {
   LayerDef,
   Map0Config,
   MapConfig,
+  SearchConfig,
 } from "./types.js";
 import { tocLeafIds } from "./toc.js";
 
@@ -224,19 +225,26 @@ export function normalizeConfig(cfg: Map0Config): NormalizedConfig {
       dpi: cfg.print?.dpi ?? [96, 150, 300],
       elements: cfg.print?.elements ?? ["title", "legend", "scalebar", "attribution", "date"],
     },
-    search:
-      !cfg.search || cfg.search.enabled === false
-        ? false
-        : {
-            provider: cfg.search.provider ?? "photon",
-            url: cfg.search.url,
-            country: cfg.search.country,
-            bias: cfg.search.bias ?? true,
-            limit: cfg.search.limit ?? 8,
-            minLength: cfg.search.minLength ?? 3,
-            placeholder: cfg.search.placeholder,
-            coordinates: cfg.search.coordinates ?? true,
-          },
+    search: !cfg.search || cfg.search.enabled === false ? false : normalizeSearch(cfg.search),
+  };
+}
+
+/**
+ * The search settings with their defaults, `enabled` aside — `normalizeConfig`
+ * decides on that. Exported for the viewer: a host page's search function
+ * (`searchProvider`) brings up the search box without a `search` key in the
+ * config, and the box then runs on these defaults.
+ */
+export function normalizeSearch(search: SearchConfig = {}): Exclude<NormalizedConfig["search"], false> {
+  return {
+    provider: search.provider ?? "photon",
+    url: search.url,
+    country: search.country,
+    bias: search.bias ?? true,
+    limit: search.limit ?? 8,
+    minLength: search.minLength ?? 3,
+    placeholder: search.placeholder,
+    coordinates: search.coordinates ?? true,
   };
 }
 

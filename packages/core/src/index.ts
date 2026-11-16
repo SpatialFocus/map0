@@ -110,6 +110,8 @@ export {
   parseCoordinates,
   search,
   type SearchContext,
+  type SearchProvider,
+  type SearchProviderContext,
   type SearchResult,
 } from "./search.js";
 export {
@@ -178,6 +180,8 @@ export interface Map0Core {
   clearHighlight(): void;
   /** fly to a search hit and mark it (bbox when known, otherwise a close zoom) */
   showLocation(location: { center: [number, number]; bbox?: [number, number, number, number] }): void;
+  /** remove the marker of `showLocation`, unless a selection has replaced it since */
+  clearLocation(): void;
   /** register sources/layers added outside an adapter so they survive basemap changes */
   registerOverlay(ids: () => OverlayIds): void;
   /** suspend feature info while a modal map interaction (measuring) owns the pointer */
@@ -458,10 +462,12 @@ async function buildCore(
       } else {
         map.flyTo({ center, zoom: Math.max(map.getZoom(), 16) });
       }
-      highlight.set([
-        { type: "Feature", geometry: { type: "Point", coordinates: center }, properties: {} },
-      ]);
+      highlight.set(
+        [{ type: "Feature", geometry: { type: "Point", coordinates: center }, properties: {} }],
+        "location",
+      );
     },
+    clearLocation: () => highlight.clear("location"),
     getShareUrl,
     destroy: () => {
       if (destroyed) return;

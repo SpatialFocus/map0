@@ -4,6 +4,8 @@
  * Two services ship built in — Photon for type-ahead search and Nominatim for
  * the classic OSM endpoint — but the point of the abstraction is the third
  * option: an SDI pointing the client at its own gazetteer with a URL template.
+ * The fourth is no service at all: a host page hands the viewer a search
+ * function (`searchProvider`) over an index it holds itself.
  * Nothing here knows about the map; the UI decides what to do with a result.
  */
 import type { CustomGeocoderDef, NormalizedConfig } from "@map0/schema";
@@ -13,12 +15,41 @@ export interface SearchResult {
   label: string;
   /** secondary line, e.g. postcode, city, country */
   detail?: string;
+  /** [lng, lat] */
   center: [number, number];
   /** [west, south, east, north] when the service knows the extent */
   bbox?: [number, number, number, number];
   /** true for a parsed coordinate rather than a service hit */
   isCoordinate?: boolean;
+  /**
+   * anything a host page's search function attaches, typically the id of its
+   * own record; map0 never reads it and hands it back with `map0:search`
+   */
+  value?: unknown;
 }
+
+/** what a host page's search function gets besides the query */
+export interface SearchProviderContext {
+  /** the most results the box shows (`search.limit`, default 8); any beyond are cut off */
+  limit: number;
+  /** aborted when the query is superseded: typed on, picked, cleared or dismissed */
+  signal: AbortSignal;
+  /** the map centre, [lng, lat], for ranking nearby hits first */
+  center?: [number, number];
+  /** the UI locale */
+  lang: string;
+}
+
+/**
+ * A host page's own search, used in place of the configured geocoder: from the
+ * (trimmed) query to results, synchronously or as a promise. map0 still parses
+ * coordinates first (`search.coordinates`) and waits for `search.minLength`
+ * characters; a rejection shows the same notice as a failing geocoder.
+ */
+export type SearchProvider = (
+  query: string,
+  context: SearchProviderContext,
+) => SearchResult[] | Promise<SearchResult[]>;
 
 export interface SearchContext {
   /** current map centre, for result bias */
@@ -26,6 +57,8 @@ export interface SearchContext {
   /** UI locale, passed to services that localise names */
   lang?: string;
   signal?: AbortSignal;
+  /** ask this function instead of the configured geocoder */
+  provider?: SearchProvider;
 }
 
 export type SearchConfig = Exclude<NormalizedConfig["search"], false>;
@@ -183,7 +216,29 @@ export function buildSearchUrl(
   return url.toString();
 }
 
-/** Run a query against the configured geocoder. Coordinate input short-circuits. */
+const isPosition = (v: unknown): v is [number, number] =>
+  Array.isArray(v) && v.length >= 2 && Number.isFinite(v[0]) && Number.isFinite(v[1]);
+
+/**
+ * A host function's results as the box can show them. Its code is not checked
+ * the way a config is, and one result without a centre would make picking it
+ * throw inside MapLibre — so such a result is skipped, a broken bbox dropped.
+ */
+function fromProvider(body: unknown): SearchResult[] {
+  if (!Array.isArray(body)) throw new Error("the search function did not return an array");
+  return body.flatMap((raw: unknown) => {
+    const r = raw as Partial<SearchResult> | null;
+    if (!r || typeof r.label !== "string" || !isPosition(r.center)) return [];
+    const result: SearchResult = { ...r, label: r.label, center: [r.center[0], r.center[1]] };
+    if (!(Array.isArray(r.bbox) && r.bbox.length === 4 && r.bbox.every(Number.isFinite))) delete result.bbox;
+    return [result];
+  });
+}
+
+/**
+ * Run a query against the configured geocoder, or the host page's function
+ * when `ctx.provider` is set. Coordinate input short-circuits either.
+ */
 export async function search(
   config: SearchConfig,
   query: string,
@@ -197,6 +252,16 @@ export async function search(
     if (coordinate) return [coordinate];
   }
   if (trimmed.length < config.minLength) return [];
+
+  if (ctx.provider) {
+    const body = await ctx.provider(trimmed, {
+      limit: config.limit,
+      signal: ctx.signal ?? new AbortController().signal,
+      center: ctx.center,
+      lang: ctx.lang ?? "en",
+    });
+    return fromProvider(body).slice(0, config.limit);
+  }
 
   const res = await fetch(buildSearchUrl(config, trimmed, ctx), { signal: ctx.signal });
   if (!res.ok) throw new Error(`geocoder responded with HTTP ${res.status}`);

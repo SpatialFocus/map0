@@ -138,6 +138,49 @@ A PMTiles archive is read through the instance the map already opened, so its he
 directories are not fetched again. Tile templates and TileJSON sources are fetched; a tile the
 map has drawn usually comes from the HTTP cache.
 
+### A search of the host page
+
+The search box asks a geocoder (Photon, Nominatim or a URL template, see the config). A page that
+holds its own index, for example a static list of municipalities, hands map0 a search function
+instead. map0 shows its results like geocoder hits, with keyboard use and the phone layout, and
+the page keeps the index and the matching:
+
+```js
+viewer.searchProvider = (query, { limit, signal, center, lang }) =>
+  places
+    .filter((place) => matches(place, query))
+    .slice(0, limit)
+    .map((place) => ({
+      label: place.name,
+      detail: `${place.kind} · ${place.district}`,
+      center: place.center,                 // [lng, lat]
+      bbox: place.bbox,                     // optional, [west, south, east, north]
+      value: place.id,                      // anything; map0 hands it back
+    }));
+
+viewer.addEventListener("map0:search", (event) => outline(event.detail.result.value));
+viewer.addEventListener("map0:searchclear", () => outline(null));
+```
+
+The function may return the results or a promise of them; `signal` is aborted when the query is
+superseded, `center` is the map centre. A rejection shows the same notice as a failing geocoder.
+Results without a `label` or a valid `center` are skipped.
+
+- `searchProvider` is a property of the element: it can be set before or after `map0:ready`,
+  outlives `reload()`, and `null` hands the box back to the config.
+- It brings up the search box even when the config has no `search` key. The config's
+  `search.limit` (default 8), `minLength` (default 3), `placeholder` and `coordinates` still
+  apply: with `coordinates` on, `48.2083, 16.3725` is a coordinate, not a query.
+- Picking a result zooms to its `bbox` (or close to `center`), marks the place and fires
+  `map0:search` with the result, `value` included.
+- `map0:searchclear` fires when the user empties the field: deleting the text, the ✕ button in the
+  field, or Escape once the list is closed (the first Escape closes the list). map0 takes its
+  marker off the map; the page does the same with what it drew. It fires for geocoder searches
+  too.
+- Key events from the field leave the shadow root with `<map0-viewer>` as their target. A page
+  with keyboard shortcuts of its own, such as arrow keys, skips events whose
+  `event.composedPath()[0]` is an `input`.
+
 ### TypeScript
 
 Both entries include TypeScript declarations:
@@ -164,6 +207,8 @@ DOM events. `Map0Api` describes the API available through `viewer.api` and `map0
 - `LayerHandle` exposes a layer's definition, status, MapLibre IDs and `bounds()`.
 - `Map0Basemaps` describes `api.basemaps`: `current`, `all` and `switchTo`.
 - `Map0Events` describes subscriptions through `api.events.on`.
+- `SearchProvider` types `viewer.searchProvider`; `SearchResult` is what it returns and what
+  `map0:search` carries.
 
 Members outside these interfaces are internal. GeoJSON declarations are installed automatically
 through `@types/geojson`. To type `api.map`, install the optional peer `maplibre-gl` (6.x).

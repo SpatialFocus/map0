@@ -527,8 +527,17 @@ export const componentStyles = css`
     font-size: 13.5px;
     padding: 9px 0;
   }
+  /* the field has a ✕ of its own, in every browser and with the clear event behind it */
   .search input::-webkit-search-cancel-button {
-    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    display: none;
+  }
+  .search .search-clear {
+    /* two classes: .icon-btn comes later and starts with all: unset */
+    flex: none;
+    font-size: 13px;
+    margin-right: -4px;
   }
   .search-spinner {
     flex: none;
@@ -1349,6 +1358,9 @@ export const componentStyles = css`
     }
     .stage[data-top-right] .search[data-expanded] input {
       opacity: 1;
+    }
+    .stage[data-top-right] .search:not([data-expanded]) .search-clear {
+      display: none;
     }
   }
   @media (prefers-reduced-motion: reduce) {

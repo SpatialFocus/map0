@@ -268,7 +268,9 @@ Unset, the config decides as usual.
     "minLength": 3,
     "coordinates": true,                    // accept "48.2083, 16.3725" (latitude first)
     "placeholder": "Adresse oder Ort suchen…"
-  },
+  },                                        // a host page's own search: the element's
+                                            // `searchProvider` property, asked instead of the
+                                            // provider; it shows the box without this key too
 
   "print": {                                // what the dialog offers; all keys optional
     "formats": ["png", "pdf"],              // download buttons (browser print is always there)

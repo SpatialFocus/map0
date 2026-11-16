@@ -27,6 +27,8 @@ export type {
   Map0Events,
   Map0Layers,
   ReadonlySignal,
+  SearchProvider,
+  SearchProviderContext,
   SearchResult,
   TileFeature,
   TileQuery,

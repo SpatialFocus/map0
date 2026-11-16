@@ -897,7 +897,7 @@
     },
     "search": {
       "type": "object",
-      "description": "type-ahead geocoding search box — present in the UI once this key exists",
+      "description": "type-ahead geocoding search box — present in the UI once this key exists, or once the host page sets the element's searchProvider (its own search function, asked instead of the provider)",
       "additionalProperties": false,
       "properties": {
         "enabled": { "type": "boolean", "default": true, "description": "false removes the search box" },

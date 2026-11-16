@@ -12,10 +12,17 @@ import type {
   MeasureMode,
   MeasureState,
   NormalizedConfig,
+  SearchProvider,
   SearchResult,
   ValidationError,
 } from "@map0/core";
-import { normalizeConfig, resolveConfigExtends, validateConfig, type TocNode } from "@map0/schema";
+import {
+  normalizeConfig,
+  normalizeSearch,
+  resolveConfigExtends,
+  validateConfig,
+  type TocNode,
+} from "@map0/schema";
 import { tocLeafIds, tocShowIds, tocVisibility } from "@map0/schema/toc";
 import type { Map0ViewerElement, Map0ViewerEventDetails } from "./element.js";
 import type { Map0BottomSheet } from "./bottom-sheet.js"; // type only — the sheet ships with the popup chunk
@@ -158,6 +165,13 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
    * own dark-mode toggle — the config cannot know what the page around it did.
    */
   @property({ attribute: "theme" }) theme?: "light" | "dark";
+  /**
+   * A host page's search function, asked instead of the configured geocoder
+   * (see `Map0ViewerElement`). A property rather than an `api` method: the page
+   * can hand it over before the map starts, so the box is there from the
+   * start, and it is the element's, so it survives `reload()`.
+   */
+  @property({ attribute: false }) searchProvider?: SearchProvider | null;
 
   @state() private _errors: ValidationError[] | null = null;
   @state() private _fatal: string | null = null;
@@ -183,6 +197,8 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
   @state() private _searchActive = -1;
   @state() private _searchExpanded = false;
   @state() private _searchEmpty = false;
+  /** the search field holds text — shows its ✕ button */
+  @state() private _searchHasText = false;
   @state() private _measure: MeasureState | null = null;
   @state() private _measureLoading = false;
   /** the viewer is narrower than SHEET_BREAKPOINT — feature info docks at the bottom */
@@ -201,6 +217,7 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
   private searchAbort?: AbortController;
 
   @query(".map") private mapEl?: HTMLDivElement;
+  @query(".search input") private searchInput?: HTMLInputElement;
 
   private core?: Map0Core;
   private normalized?: NormalizedConfig;
@@ -231,7 +248,20 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
    * `styles.ts`. Both are mirrored onto `.stage` as `data-search`/`data-top-right`.
    */
   private get hasSearch(): boolean {
-    return !!this.normalized && this.normalized.search !== false;
+    return this.searchSettings !== null;
+  }
+
+  /**
+   * What the search box runs on: the config's settings, or — when a host page
+   * set a `searchProvider` — the defaults for a config without a `search` key.
+   * A provider wins over `search: false`, as the `theme` attribute wins over
+   * `theme.mode`: the page knows what it put next to the map.
+   */
+  private get searchSettings(): Exclude<NormalizedConfig["search"], false> | null {
+    const cfg = this.normalized;
+    if (!cfg) return null;
+    if (cfg.search) return cfg.search;
+    return this.searchProvider ? normalizeSearch() : null;
   }
 
   private get hasToc(): boolean {
@@ -348,6 +378,16 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
   protected override updated(changed: PropertyValues): void {
     /* the theme attribute restyles the running map in place — no reload */
     if (changed.has("theme") && this.normalized) this.applyTheme(this.normalized);
+    /* a new search function answers the text in the field anew; without one
+       (and no config search) the box is gone, and with it its text */
+    if (changed.has("searchProvider") && this.normalized) {
+      this.cancelSearch();
+      this._searchResults = [];
+      this._searchEmpty = false;
+      this._searchActive = -1;
+      if (!this.hasSearch) this.resetSearchText();
+      else if (this.searchInput?.value) this.queueSearch(this.searchInput.value);
+    }
     /* while init() is still running too — the generation token retires it */
     if (!this.initialized || !this.initStarted || !this.activeSource) return;
     if (!changed.has("config") && !changed.has("configSrc")) return;
@@ -399,6 +439,8 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
     this._searchBusy = false;
     this._searchEmpty = false;
     this._searchActive = -1;
+    /* the marker the text stood for goes with the map */
+    this.resetSearchText();
     this._hover = null;
     this._dropActive = false;
     this._ready = false;
@@ -496,8 +538,10 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
   private queueSearch(query: string): void {
     const seq = ++this.searchSeq;
     clearTimeout(this.searchTimer);
+    this.searchTimer = undefined;
     this.searchAbort?.abort();
-    const config = this.normalized?.search;
+    const config = this.searchSettings;
+    const provider = this.searchProvider ?? undefined;
     const core = this.core;
     if (!config || !core) return;
     if (!query.trim()) {
@@ -507,6 +551,7 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
       return;
     }
     this.searchTimer = setTimeout(() => {
+      this.searchTimer = undefined;
       void (async () => {
         const abort = new AbortController();
         this.searchAbort = abort;
@@ -519,6 +564,7 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
             center: [center.lng, center.lat],
             lang: core.locale,
             signal: abort.signal,
+            provider,
           });
           if (seq !== this.searchSeq) return;
           this._searchResults = results;
@@ -537,12 +583,47 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
   }
 
   private pickSearchResult(result: SearchResult): void {
-    this.cancelSearch();
+    this.closeSearchList();
     this.core?.showLocation({ center: result.center, bbox: result.bbox });
+    this.emit("map0:search", { result });
+  }
+
+  /** typing, deleting, or the browser's own clearing — an emptied field is a clear */
+  private onSearchInput(value: string): void {
+    if (!value) {
+      this.clearSearch();
+      return;
+    }
+    this._searchHasText = true;
+    this.queueSearch(value);
+  }
+
+  /**
+   * Empty the field and take the location marker off the map, then tell the
+   * host page (`map0:searchclear`) — only when there was text, so a second
+   * Escape or ✕ is not a second clear.
+   */
+  private clearSearch(): void {
+    const had = this._searchHasText;
+    this.closeSearchList();
+    this.resetSearchText();
+    if (!had) return;
+    this.core?.clearLocation();
+    this.emit("map0:searchclear", {});
+  }
+
+  /** the field and its state back to empty, without telling anybody */
+  private resetSearchText(): void {
+    if (this.searchInput) this.searchInput.value = "";
+    this._searchHasText = false;
+  }
+
+  /** stop any query in flight and close the list; the text stays */
+  private closeSearchList(): void {
+    this.cancelSearch();
     this._searchResults = [];
     this._searchActive = -1;
     this._searchEmpty = false;
-    this.emit("map0:search", { result });
   }
 
   private onSearchKey(event: KeyboardEvent): void {
@@ -557,17 +638,23 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
       const hit = this._searchResults[Math.max(this._searchActive, 0)];
       if (hit) this.pickSearchResult(hit);
     } else if (event.key === "Escape") {
+      /* the combobox pattern of the WAI-ARIA APG, one step per press: close the
+         list (also a query still running), then empty the field, then leave it.
+         preventDefault: Chromium and Safari would empty a search field on their
+         own at the first press, Firefox never. */
+      event.preventDefault();
       event.stopPropagation();
-      this.cancelSearch();
-      this._searchResults = [];
-      this._searchEmpty = false;
-      (event.target as HTMLInputElement).blur();
+      const open = count > 0 || this._searchEmpty || this._searchBusy || this.searchTimer !== undefined;
+      if (open) this.closeSearchList();
+      else if (this._searchHasText) this.clearSearch();
+      else (event.target as HTMLInputElement).blur();
     }
   }
 
   private cancelSearch(): void {
     this.searchSeq++;
     clearTimeout(this.searchTimer);
+    this.searchTimer = undefined;
     this.searchAbort?.abort();
     this._searchBusy = false;
   }
@@ -1034,8 +1121,8 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
   }
 
   private renderSearch(): TemplateResult | typeof nothing {
-    const cfg = this.normalized;
-    if (!cfg || cfg.search === false) return nothing;
+    const settings = this.searchSettings;
+    if (!settings) return nothing;
     const t = this.core?.t ?? ((k: string) => k);
     const open = this._searchResults.length > 0 || this._searchEmpty;
     return html`
@@ -1059,14 +1146,35 @@ export class Map0Viewer extends LitElement implements Map0ViewerElement {
             aria-expanded=${open ? "true" : "false"}
             aria-controls="m0-search-list"
             aria-label=${t("search.label")}
-            placeholder=${cfg.search.placeholder ?? t("search.placeholder")}
+            placeholder=${settings.placeholder ?? t("search.placeholder")}
             autocomplete="off"
             @focus=${() => (this._searchExpanded = true)}
-            @blur=${() => setTimeout(() => (this._searchExpanded = false), 150)}
-            @input=${(e: Event) => this.queueSearch((e.target as HTMLInputElement).value)}
+            @blur=${(e: FocusEvent) => {
+              const input = e.target as HTMLInputElement;
+              /* unless the field has the focus back by then (a tap right after Escape) */
+              setTimeout(() => {
+                if (this.shadowRoot?.activeElement !== input) this._searchExpanded = false;
+              }, 150);
+            }}
+            @input=${(e: Event) => this.onSearchInput((e.target as HTMLInputElement).value)}
             @keydown=${(e: KeyboardEvent) => this.onSearchKey(e)}
           />
           ${this._searchBusy ? html`<span class="search-spinner" aria-hidden="true"></span>` : nothing}
+          ${this._searchHasText
+            ? html`<button
+                type="button"
+                class="icon-btn search-clear"
+                aria-label=${t("search.clear")}
+                title=${t("search.clear")}
+                @mousedown=${(e: Event) => e.preventDefault() /* keep the focus in the field */}
+                @click=${() => {
+                  this.clearSearch();
+                  this.searchInput?.focus();
+                }}
+              >
+                ✕
+              </button>`
+            : nothing}
         </div>
         ${open
           ? html`<ul class="search-results" id="m0-search-list" role="listbox">

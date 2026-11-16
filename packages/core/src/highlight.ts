@@ -49,7 +49,11 @@ export class HighlightManager {
     } as never);
   }
 
-  set(features: Feature[]): void {
+  /** who set what is showing — "location" for the marker of `showLocation` */
+  private owner?: string;
+
+  set(features: Feature[], owner?: string): void {
+    this.owner = owner;
     this.ensure();
     (this.map.getSource(this.sourceId) as GeoJSONSource | undefined)?.setData({
       type: "FeatureCollection",
@@ -57,7 +61,10 @@ export class HighlightManager {
     } as never);
   }
 
-  clear(): void {
+  /** clear everything, or with `owner` only while that owner's features are still showing */
+  clear(owner?: string): void {
+    if (owner !== undefined && owner !== this.owner) return;
+    this.owner = undefined;
     if (this.map.getSource(this.sourceId)) this.set([]);
   }
 }

@@ -76,7 +76,7 @@ Types read as follows: `T[]` and "array of X" are arrays, `a` or `b` accepts eit
 | `basemaps` | array of [basemap](#basemap) (at least 1) | required unless `extends` is set | exclusive background layers — exactly one is active at a time; at least one is required |
 | `layers` | array of [layer](#layer) | — | overlay tree (groups + layers) — top of the list = top of the map; runtime-added layers go above all of them |
 | `controls` | [`controls`](#controls) | — | which UI controls exist and where — every control has a sensible default; set one to false to remove it |
-| `search` | [`search`](#search) | — | type-ahead geocoding search box — present in the UI once this key exists |
+| `search` | [`search`](#search) | — | type-ahead geocoding search box — present in the UI once this key exists, or once the host page sets the element's searchProvider (its own search function, asked instead of the provider) |
 | `print` | [`print`](#print) | — | what the print & export dialog offers — the dialog itself is toggled by "controls.print" |
 | `theme` | [`theme`](#theme) | — | design tokens for the UI |
 | `i18n` | [`i18n`](#i18n) | — | language of the UI |
@@ -575,7 +575,7 @@ options for the coordinate readout
 
 Used by: [Top level](#top-level) `search`
 
-type-ahead geocoding search box — present in the UI once this key exists
+type-ahead geocoding search box — present in the UI once this key exists, or once the host page sets the element's searchProvider (its own search function, asked instead of the provider)
 
 | Key | Type | Required · default | Description |
 | --- | --- | --- | --- |

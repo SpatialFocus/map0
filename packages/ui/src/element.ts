@@ -12,7 +12,7 @@
  * entry lives here too, so `document.querySelector("map0-viewer")` is typed
  * through either entry, browser or SSR.
  */
-import type { FeatureInfoResult, Map0Core, SearchResult } from "@map0/core";
+import type { FeatureInfoResult, Map0Core, SearchProvider, SearchResult } from "@map0/core";
 import type { Map0Config, ValidationError } from "@map0/schema";
 
 /**
@@ -32,8 +32,13 @@ export interface Map0ViewerEventDetails {
     | { message: string; layerId?: string; sourceId?: string; control?: "geolocate" };
   /** a click hit one or more queryable layers; the popup shows the same results */
   "map0:featureclick": { lngLat: [number, number]; results: FeatureInfoResult[] };
-  /** the user picked a search result */
+  /** the user picked a search result — with the `value` a `searchProvider` attached to it */
   "map0:search": { result: SearchResult };
+  /**
+   * the user emptied the search field (deleted the text, its ✕ button, Escape);
+   * map0 has taken its location marker off the map
+   */
+  "map0:searchclear": Record<string, never>;
 }
 
 /** the DOM event map of `<map0-viewer>`: its own events plus everything an HTMLElement fires */
@@ -42,6 +47,7 @@ export interface Map0ViewerEventMap extends HTMLElementEventMap {
   "map0:error": CustomEvent<Map0ViewerEventDetails["map0:error"]>;
   "map0:featureclick": CustomEvent<Map0ViewerEventDetails["map0:featureclick"]>;
   "map0:search": CustomEvent<Map0ViewerEventDetails["map0:search"]>;
+  "map0:searchclear": CustomEvent<Map0ViewerEventDetails["map0:searchclear"]>;
 }
 
 /**
@@ -63,6 +69,14 @@ export interface Map0ViewerElement extends HTMLElement {
    * `theme.mode`, and flipping it restyles a running map.
    */
   theme?: "light" | "dark";
+  /**
+   * A search function of the host page, asked in place of the configured
+   * geocoder. Setting it brings up the search box even without a `search` key
+   * in the config (the config's `limit`, `minLength`, `placeholder` and
+   * `coordinates` still apply); `null` hands the box back to the config. It can
+   * be set before or after the map starts and outlives `reload()`.
+   */
+  searchProvider?: SearchProvider | null;
   /** imperative access to the running map (available after `map0:ready`) */
   readonly api: Map0Api | undefined;
   /** start loading now, whatever `loading` says (tabs, accordions, tests) */

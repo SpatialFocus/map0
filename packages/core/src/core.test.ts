@@ -966,6 +966,101 @@ describe("search", () => {
     expect(await search(base, "st")).toEqual([]);
     vi.unstubAllGlobals();
   });
+
+  describe("with a host page's search function", () => {
+    const place = (label: string, value: unknown) => ({
+      label,
+      detail: "Katastralgemeinde · Kirchdorf an der Krems",
+      center: [14.12, 47.9] as [number, number],
+      bbox: [14.1, 47.88, 14.14, 47.92] as [number, number, number, number],
+      value,
+    });
+
+    it("asks the function instead of the geocoder and keeps its value", async () => {
+      const { search } = await import("./search.js");
+      vi.stubGlobal("fetch", async () => {
+        throw new Error("the geocoder must not be asked");
+      });
+      const provider = vi.fn(() => [place("Kirchdorf", { kg: "41010" })]);
+      const signal = new AbortController().signal;
+      const results = await search(base, "  kirch ", {
+        provider,
+        signal,
+        center: [14, 48],
+        lang: "de",
+      });
+      vi.unstubAllGlobals();
+
+      expect(provider).toHaveBeenCalledWith("kirch", { limit: 5, signal, center: [14, 48], lang: "de" });
+      expect(results).toEqual([place("Kirchdorf", { kg: "41010" })]);
+    });
+
+    it("takes a promise as well and cuts the answer to the limit", async () => {
+      const { search } = await import("./search.js");
+      const many = Array.from({ length: 9 }, (_, i) => place(`Place ${i}`, i));
+      const results = await search(base, "place", { provider: async () => many });
+      expect(results.map((r) => r.value)).toEqual([0, 1, 2, 3, 4]);
+    });
+
+    it("still parses coordinates and waits for minLength", async () => {
+      const { search } = await import("./search.js");
+      const provider = vi.fn(() => [place("Kirchdorf", 1)]);
+      expect((await search(base, "47.9, 14.12", { provider }))[0]?.isCoordinate).toBe(true);
+      expect(await search(base, "ki", { provider })).toEqual([]);
+      expect(provider).not.toHaveBeenCalled();
+      /* a five-digit KG-Nummer is no coordinate pair */
+      await search(base, "41010", { provider });
+      expect(provider).toHaveBeenCalledOnce();
+    });
+
+    it("skips results it could not show and drops a broken bbox", async () => {
+      const { search } = await import("./search.js");
+      const results = await search(base, "kirch", {
+        provider: () =>
+          [
+            { label: "no centre" },
+            { label: "bad centre", center: [Number.NaN, 47] },
+            { center: [14, 47] },
+            null,
+            { label: "ok", center: [14, 47], bbox: [1, 2, 3] },
+          ] as never,
+      });
+      expect(results).toEqual([{ label: "ok", center: [14, 47] }]);
+    });
+
+    it("rejects an answer that is not a list, like a failing geocoder", async () => {
+      const { search } = await import("./search.js");
+      await expect(search(base, "kirch", { provider: () => ({}) as never })).rejects.toThrow(/array/);
+      await expect(
+        search(base, "kirch", {
+          provider: () => {
+            throw new Error("index not loaded");
+          },
+        }),
+      ).rejects.toThrow("index not loaded");
+    });
+  });
+});
+
+describe("highlight", () => {
+  it("clears the location marker only while it is still showing", async () => {
+    const { HighlightManager } = await import("./highlight.js");
+    const data: unknown[] = [];
+    const source = { setData: (d: { features: unknown[] }) => data.push(d.features.length) };
+    const map = { getSource: () => source, addSource: () => {}, addLayer: () => {} };
+    const highlight = new HighlightManager(map as never, "#f00");
+
+    highlight.set([{ type: "Feature", geometry: { type: "Point", coordinates: [0, 0] }, properties: {} }], "location");
+    highlight.clear("location");
+    expect(data).toEqual([1, 0]);
+
+    highlight.set([{ type: "Feature", geometry: { type: "Point", coordinates: [0, 0] }, properties: {} }], "location");
+    highlight.set([{ type: "Feature", geometry: { type: "Point", coordinates: [1, 1] }, properties: {} }]); // a click
+    highlight.clear("location");
+    expect(data).toEqual([1, 0, 1, 1]); // the clicked feature stays
+    highlight.clear();
+    expect(data).toEqual([1, 0, 1, 1, 0]);
+  });
 });
 
 describe("coordinates", () => {

@@ -122,6 +122,26 @@ const HTML = `<!doctype html>
   for (const type of ["map0:ready", "map0:error"]) {
     el.addEventListener(type, (e) => window.__events.push({ type, detail: e.detail?.message ?? null }));
   }
+  /* a host page's own place search (searchProvider), handed over before the
+     element upgrades; the config has no search key */
+  window.__places = [
+    { label: "Kirchdorf an der Krems", detail: "Gemeinde · Bezirk Kirchdorf", center: [14.12, 47.9],
+      bbox: [14.08, 47.87, 14.16, 47.93], value: { kind: "gemeinde", id: "40909" } },
+    { label: "Kirchdorf", detail: "Katastralgemeinde 41010 · Kirchdorf an der Krems", center: [14.12, 47.905],
+      bbox: [14.1, 47.89, 14.14, 47.92], value: { kind: "kg", id: "41010" } },
+  ];
+  window.__hostCalls = [];
+  window.__searchEvents = [];
+  window.__hostSearch = (query, context) => {
+    window.__hostCalls.push({ query, limit: context.limit, aborted: context.signal.aborted });
+    const q = query.toLowerCase();
+    return window.__places.filter((p) => p.label.toLowerCase().includes(q) || p.value.id === query);
+  };
+  if (params.get("hostsearch")) {
+    el.searchProvider = window.__hostSearch;
+    el.addEventListener("map0:search", (e) => window.__searchEvents.push({ type: "search", value: e.detail.result.value }));
+    el.addEventListener("map0:searchclear", () => window.__searchEvents.push({ type: "clear" }));
+  }
   if (params.get("src")) el.setAttribute("config-src", "/config.json");
   else el.config = params.get("invalid") ? ${JSON.stringify(INVALID_CONFIG)} : window.__config;
 </script>
@@ -253,6 +273,118 @@ const ready = (page) =>
     },
     { timeout: 60_000 },
   );
+
+/**
+ * A host page's search function (`searchProvider`, see `?hostsearch` in the
+ * page above) in map0's search box. `viewport` null: a phone, driven by taps.
+ */
+async function hostSearch(ctx, viewport) {
+  const phone = viewport === null;
+  const tag = phone ? " (phone)" : "";
+  const noise = [];
+  const page = await ctx.newPage();
+  watchConsole(page, noise);
+  await page.goto(`${BASE}/smoke.html?hostsearch=1${phone ? "&mobile=1" : ""}`, { waitUntil: "domcontentloaded" });
+  await ready(page);
+  const field = page.locator("map0-viewer input[type=search]");
+  const options = () => page.locator("map0-viewer [role=option]");
+  const press = (locator) => (phone ? locator.tap() : locator.click());
+  /** the events since the last call, as "search:<id>,clear" */
+  const events = () =>
+    page.evaluate(() => window.__searchEvents.splice(0).map((e) => e.type + (e.value ? `:${e.value.id}` : "")).join(","));
+  /** features in map0's highlight — the location marker after a pick */
+  const pins = () =>
+    page.evaluate(async () => {
+      const source = document.querySelector("map0-viewer").api.map.getSource("m0s-highlight");
+      return source ? (await source.getData()).features.length : 0;
+    });
+  const focused = () =>
+    page.evaluate(() => document.querySelector("map0-viewer").shadowRoot.activeElement?.getAttribute("type") === "search");
+  const type = async (text) => {
+    await field.pressSequentially(text);
+    await options().first().waitFor();
+  };
+
+  check(`a search function handed over before the upgrade brings up the box, with no search key in the config${tag}`, (await field.count()) === 1);
+  if (phone) {
+    const width = await page.evaluate(() => document.querySelector("map0-viewer").shadowRoot.querySelector(".search").getBoundingClientRect().width);
+    check("…collapsed to its icon while a panel shares the top row (phone)", width < 50, `${width}px`);
+  }
+  await press(page.locator("map0-viewer .search-field"));
+  await type("kirch");
+  const listed = (await options().allTextContents()).map((text) => text.replace(/\s+/g, " ").trim());
+  const call = await page.evaluate(() => window.__hostCalls.at(-1));
+  check(
+    `the box lists the function's results with label and detail${tag}`,
+    listed.length === 2 && listed[1].includes("Katastralgemeinde 41010"),
+    JSON.stringify(listed),
+  );
+  check(
+    `the function gets the query, the limit and a live abort signal${tag}`,
+    call?.query === "kirch" && call.limit === 8 && call.aborted === false,
+    JSON.stringify(call),
+  );
+
+  if (phone) await press(options().nth(1));
+  else {
+    await field.press("ArrowDown");
+    await field.press("Enter");
+  }
+  check(`picking hands the page its value with map0:search${tag}`, (await events()) === "search:41010");
+  check(
+    `…closes the list, keeps the text and marks the place${tag}`,
+    (await options().count()) === 0 && (await field.inputValue()) === "kirch" && (await pins()) === 1,
+  );
+  const zoomed = await page
+    .waitForFunction(() => {
+      const { map } = document.querySelector("map0-viewer").api;
+      const c = map.getCenter();
+      return !map.isMoving() && Math.abs(c.lng - 14.12) < 0.01 && Math.abs(c.lat - 47.905) < 0.01;
+    }, null, { timeout: 10_000 })
+    .then(() => true, () => false);
+  check(`…and zooms to its bounding box${tag}`, zoomed);
+
+  const clear = page.locator("map0-viewer .search-clear");
+  check(`the field shows its ✕ button${tag}`, ((await clear.boundingBox())?.width ?? 0) > 0);
+  await press(clear);
+  check(`the ✕ button empties the field and sends map0:searchclear once${tag}`, (await events()) === "clear" && (await field.inputValue()) === "");
+  check(`…takes the marker off the map and keeps the focus in the field${tag}`, (await pins()) === 0 && (await focused()));
+  check(`…and goes itself${tag}`, (await clear.count()) === 0);
+
+  if (!phone) {
+    await type("41010");
+    await field.press("Escape");
+    const first = { options: await options().count(), text: await field.inputValue(), events: await events() };
+    check("Escape closes the list first and keeps the text", first.options === 0 && first.text === "41010" && first.events === "", JSON.stringify(first));
+    await field.press("Escape");
+    check("a second Escape empties the field and sends map0:searchclear", (await field.inputValue()) === "" && (await events()) === "clear");
+    await field.press("Escape");
+    check("a third Escape leaves the field, without another clear", !(await focused()) && (await events()) === "");
+
+    await page.locator("map0-viewer .search-field").click();
+    await type("kirch");
+    await field.press("Enter");
+    await field.fill("");
+    const deleted = await events();
+    check("deleting the text after a pick is a clear, and the marker goes", deleted === "search:40909,clear" && (await pins()) === 0, deleted);
+
+    await page.evaluate(async () => {
+      const viewer = document.querySelector("map0-viewer");
+      const restarted = new Promise((r) => viewer.addEventListener("map0:ready", r, { once: true }));
+      viewer.reload();
+      await restarted;
+    });
+    check("the function outlives reload()", (await field.count()) === 1);
+    await page.evaluate(async () => {
+      const viewer = document.querySelector("map0-viewer");
+      viewer.searchProvider = null;
+      await viewer.updateComplete;
+    });
+    check("without the function, and no search key in the config, the box goes", (await field.count()) === 0);
+  }
+  check(`no console errors around the host search${tag}`, noise.length === 0, noise.join(" | "));
+  await page.close();
+}
 
 try {
   /* ---------------------------------------------------------------- happy path */
@@ -1081,6 +1213,15 @@ try {
   );
   check("no console errors while reading tiles and filtering", hostNoise.length === 0, hostNoise.join(" | "));
   await hostPage.close();
+
+  /* A host page's own search (searchProvider): its results in map0's box, its
+     value back with map0:search, and every way of emptying the field told
+     with map0:searchclear. */
+  await hostSearch(context, { width: 800, height: 600 });
+  /* the same on a phone, where the search shares the top row and starts collapsed */
+  const searchPhone = await browser.newContext({ viewport: { width: 375, height: 812 }, hasTouch: true, isMobile: true });
+  await hostSearch(searchPhone, null);
+  await searchPhone.close();
 
   /* map0 pins the worker URL (maplibre-worker.ts) and so replaces the one MapLibre
      builds; without the version a dist/ copied over an older one starts the worker

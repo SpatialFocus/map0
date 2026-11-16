@@ -87,6 +87,11 @@ What is left for v1.0 is the accessibility pass and repo governance.
     follow (`new URL("./maplibre-gl-worker.mjs", import.meta.url)`), so Vite/Nuxt import
     `map0-viewer` without copying `dist/` next to the page; `e2e/verify-bundler.mjs` (CI, release)
     builds and serves a Vite app from the packed tarball
+  - **a search of the host page** (2026-11-16) — `viewer.searchProvider = (query, { limit, signal,
+    center, lang }) => results` replaces the geocoder with the page's own index (first user:
+    Schlag nach's place search); results show like geocoder hits and carry a `value` back with
+    `map0:search`; `map0:searchclear` when the field is emptied (deleted, its new ✕ button,
+    Escape after the list is closed), which also removes map0's location marker
 - ✅ **Mobile popup as bottom sheet** below 640 px (F5.5, 2026-09-06) — `<map0-bottom-sheet>` in the
   lazy popup chunk; a ResizeObserver on the host decides by the element's own width, so embedded
   viewers behave; drag or tap the handle between 45 % and 90 %, Escape, the close button or a tap
