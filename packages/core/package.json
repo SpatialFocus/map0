@@ -18,7 +18,7 @@
     "hyparquet": "^1.31.5",
     "hyparquet-compressors": "^1.1.2",
     "jspdf": "^4.2.1",
-    "maplibre-gl": "^6.16.0",
+    "maplibre-gl": "^6.19.0",
     "pbf": "^5.1.2",
     "pmtiles": "^4.5.0",
     "proj4": "^2.22.0"
