@@ -440,6 +440,68 @@
         </div>
       </section>
 
+      <!-- --------------------------------- in use --------------------------------- -->
+
+      <section class="section tinted" id="in-use">
+        <div class="wrap">
+          <div class="sec-head center reveal">
+            <p class="kicker" data-i18n="use.kicker">In use</p>
+            <h2 data-i18n="use.h2">24 million parcels from static files.</h2>
+            <p data-i18n="use.p">
+              A map0 map in production: no tile server and no database, only files in object
+              storage that the browser reads with range requests.
+            </p>
+          </div>
+
+          <article class="case reveal">
+            <figure>
+              <img
+                src="/in-use/schlag-nach.webp"
+                width="1600"
+                height="1200"
+                loading="lazy"
+                decoding="async"
+                alt="Schlag nach near Amstetten: grassland and arable parcels in green and yellow, one parcel open with its land use from 2017 to 2025"
+                data-i18n-attrs="alt:use.sn.alt"
+              />
+              <figcaption data-i18n="use.sn.caption">
+                Near Amstetten, 2025. The open parcel was grassland until 2022 and has been arable
+                land since 2023.
+              </figcaption>
+            </figure>
+            <div>
+              <h3>Schlag nach</h3>
+              <p data-i18n="use.sn.p">
+                Every agricultural parcel declared in Austria from 2017 to 2025, and what was
+                declared on its area in the years before. The page is static Nuxt, the map is map0.
+              </p>
+              <ul>
+                <li data-i18n="use.sn.li1">
+                  <strong>Vector tiles:</strong> one PMTiles archive per year, 5.1&nbsp;GB in all,
+                  with the history in the attributes.
+                </li>
+                <li data-i18n="use.sn.li2">
+                  <strong>Thematic maps:</strong> style expressions over that history, no extra data.
+                </li>
+                <li data-i18n="use.sn.li3">
+                  <strong>Overview:</strong> one Cloud Optimized GeoTIFF per year as a
+                  <code>cog</code> layer, 34&nbsp;MB in all.
+                </li>
+                <li data-i18n="use.sn.li4">
+                  <strong>History and place search:</strong> <code>getTile</code> and
+                  <code>searchProvider</code>, both added to map0 for Schlag nach.
+                </li>
+              </ul>
+              <p class="credit" data-i18n="use.sn.credit">
+                Data: INVEKOS Schläge by Agrarmarkt Austria (geometries cleaned) and administrative
+                units by BEV, both CC BY 4.0. Basemap: basemap.at.
+              </p>
+              <p><a class="go" href="https://www.schlagnach.at" data-i18n="use.sn.link">Open the map →</a></p>
+            </div>
+          </article>
+        </div>
+      </section>
+
       <!-- ------------------------------ configuration ----------------------------- -->
 
       <section class="section" id="config">
