@@ -477,6 +477,66 @@ figure.code.full pre {
   min-height: 0;
 }
 
+/* -------------------------------- in use --------------------------------- */
+
+/* A map built with map0: a screenshot of it, the larger part, beside what it is and how it uses
+   map0. One column below 900px, the picture first. */
+.case {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 32px;
+  align-items: center;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.case figure {
+  margin: 0;
+}
+.case img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 20px 50px -28px rgba(15, 23, 42, 0.45);
+}
+.case figcaption {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.case h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+.case p,
+.case li {
+  font-size: 14.5px;
+  color: var(--muted);
+}
+.case p {
+  margin: 0 0 12px;
+}
+.case p:last-child {
+  margin-bottom: 0;
+}
+.case ul {
+  margin: 0 0 12px;
+  padding-left: 1.1em;
+}
+.case li + li {
+  margin-top: 6px;
+}
+.case li strong {
+  color: var(--fg);
+}
+.case .credit {
+  font-size: 12.5px;
+}
+
 /* ------------------------------- feature grid ---------------------------- */
 
 .feature-grid {
@@ -791,7 +851,8 @@ body.js .reveal.in {
 }
 
 @media (max-width: 900px) {
-  .split {
+  .split,
+  .case {
     grid-template-columns: minmax(0, 1fr);
   }
   /* 2×2 rather than 3 + a lonely one */
