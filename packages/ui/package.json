@@ -16,7 +16,7 @@
     "@camptocamp/ogc-client": "^2.0.2",
     "@map0/core": "workspace:*",
     "@map0/schema": "workspace:*",
-    "dompurify": "^3.4.17",
+    "dompurify": "^3.5.0",
     "lit": "^3.3.3",
     "maplibre-gl": "^6.16.0"
   },
